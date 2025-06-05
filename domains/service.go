@@ -5,7 +5,6 @@ package domains
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/absmach/supermq"
@@ -359,28 +358,23 @@ func (svc *service) RoleRemoveMembers(ctx context.Context, session authn.Session
 
 	ro, err := svc.repo.RetrieveEntityRole(ctx, entityID, roleID)
 	if err != nil {
-		return errors.Wrap(svcerr.ErrViewEntity, fmt.Errorf("failed to retrieve role '%s' for entity '%s': %w", roleID, entityID, err))
+		return errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	isBuiltInRole := false
 	if _, ok := svc.ProvisionManageService.BuiltInRoles[roles.BuiltInRoleName(ro.Name)]; ok {
-		isBuiltInRole = true
-	}
-
-	if isBuiltInRole {
-		membersPage, listErr := svc.repo.RoleListMembers(ctx, ro.ID, 0, 0)
-		if listErr != nil {
-			return errors.Wrap(svcerr.ErrViewEntity, fmt.Errorf("failed to list members for built-in role '%s' to check count: %w", ro.Name, listErr))
+		membersPage, err := svc.repo.RoleListMembers(ctx, ro.ID, 0, 0)
+		if err != nil {
+			return errors.Wrap(svcerr.ErrViewEntity, err)
 		}
-
 		if membersPage.Total <= uint64(len(members)) {
-			return errors.Wrap(svcerr.ErrRemoveEntity, fmt.Errorf("built-in role '%s' must retain at least one member. Attempting to remove %d member(s) from %d would leave too few.", ro.Name, len(members), membersPage.Total))
+			errAtLeastOneMemberRetain := errors.New("at least one member should be in built-in role")
+			return errors.Wrap(svcerr.ErrRemoveEntity, errAtLeastOneMemberRetain)
 		}
 	}
 
 	for _, memberID := range members {
 		if err := svc.repo.DeleteInvitation(ctx, memberID, entityID); err != nil && err != repoerr.ErrNotFound {
-			return errors.Wrap(svcerr.ErrRemoveEntity, fmt.Errorf("failed to delete invitation for member '%s' in domain '%s' from role '%s': %w", memberID, entityID, ro.Name, err))
+			return errors.Wrap(svcerr.ErrRemoveEntity, err)
 		}
 	}
 
@@ -390,37 +384,19 @@ func (svc *service) RoleRemoveMembers(ctx context.Context, session authn.Session
 func (svc *service) RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleID string) error {
 	ro, err := svc.repo.RetrieveEntityRole(ctx, entityID, roleID)
 	if err != nil {
-		return errors.Wrap(svcerr.ErrViewEntity, fmt.Errorf("failed to retrieve role '%s' for entity '%s': %w", roleID, entityID, err))
+		return errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	isBuiltInRole := false
 	if _, ok := svc.ProvisionManageService.BuiltInRoles[roles.BuiltInRoleName(ro.Name)]; ok {
-		isBuiltInRole = true
-	}
-
-	if isBuiltInRole {
-		membersPage, listErr := svc.repo.RoleListMembers(ctx, ro.ID, 0, 0)
-		if listErr != nil {
-			return errors.Wrap(svcerr.ErrViewEntity, fmt.Errorf("failed to list members for built-in role '%s' to check count: %w", ro.Name, listErr))
+		membersPage, err := svc.repo.RoleListMembers(ctx, ro.ID, 0, 0)
+		if err != nil {
+			return errors.Wrap(svcerr.ErrViewEntity, err)
 		}
-
 		if membersPage.Total > 0 {
-			return errors.Wrap(svcerr.ErrRemoveEntity, fmt.Errorf("built-in role '%s' must retain at least one member and cannot have all members removed", ro.Name))
+			errAtLeastOneMemberRetain := errors.New("at least one member should be in built-in role")
+			return errors.Wrap(svcerr.ErrRemoveEntity, errAtLeastOneMemberRetain)
 		}
 	}
 
-	currentMembersPage, listErr := svc.repo.RoleListMembers(ctx, ro.ID, 0, 0)
-	if listErr != nil {
-		return errors.Wrap(svcerr.ErrViewEntity, fmt.Errorf("failed to list members of role '%s' for invitation cleanup: %w", ro.Name, listErr))
-	}
-
-	if len(currentMembersPage.Members) > 0 {
-		for _, member := range currentMembersPage.Members {
-			memberID := string(member)
-			if err := svc.repo.DeleteInvitation(ctx, memberID, entityID); err != nil && err != repoerr.ErrNotFound {
-				return errors.Wrap(svcerr.ErrRemoveEntity, fmt.Errorf("failed to delete invitation for member '%s' in domain '%s' from role '%s': %w", memberID, entityID, ro.Name, err))
-			}
-		}
-	}
 	return svc.ProvisionManageService.RoleRemoveAllMembers(ctx, session, entityID, roleID)
 }
