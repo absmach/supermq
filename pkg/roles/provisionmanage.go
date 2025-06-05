@@ -34,7 +34,7 @@ type ProvisionManageService struct {
 	sidProvider  supermq.IDProvider
 	policy       policies.Service
 	actions      []Action
-	builtInRoles map[BuiltInRoleName][]Action
+	BuiltInRoles map[BuiltInRoleName][]Action
 }
 
 func NewProvisionManageService(entityType string, repo Repository, policy policies.Service, sidProvider supermq.IDProvider, actions []Action, builtInRoles map[BuiltInRoleName][]Action) (ProvisionManageService, error) {
@@ -44,7 +44,7 @@ func NewProvisionManageService(entityType string, repo Repository, policy polici
 		sidProvider:  sidProvider,
 		policy:       policy,
 		actions:      actions,
-		builtInRoles: builtInRoles,
+		BuiltInRoles: builtInRoles,
 	}
 	return rm, nil
 }
@@ -143,7 +143,7 @@ func (r ProvisionManageService) AddNewEntitiesRoles(ctx context.Context, domainI
 
 	for _, entityID := range entityIDs {
 		for defaultRole, defaultRoleMembers := range newBuiltInRoleMembers {
-			actions, ok := r.builtInRoles[defaultRole]
+			actions, ok := r.BuiltInRoles[defaultRole]
 			if !ok {
 				return []RoleProvision{}, fmt.Errorf("default role %s not found in in-built roles", defaultRole)
 			}
@@ -559,16 +559,6 @@ func (r ProvisionManageService) RoleRemoveMembers(ctx context.Context, session a
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
-	if _, ok := r.builtInRoles[BuiltInRoleName(ro.Name)]; ok {
-		page, err := r.repo.RoleListMembers(ctx, ro.ID, 0, 0)
-		if err != nil {
-			return errors.Wrap(svcerr.ErrViewEntity, err)
-		}
-		if page.Total <= uint64(len(members)) {
-			return errors.Wrap(svcerr.ErrRemoveEntity, fmt.Errorf("built-in role '%s' must retain at least one member", ro.Name))
-		}
-	}
-
 	if len(members) == 0 {
 		return svcerr.ErrMalformedEntity
 	}
@@ -600,10 +590,6 @@ func (r ProvisionManageService) RoleRemoveAllMembers(ctx context.Context, sessio
 	ro, err := r.repo.RetrieveEntityRole(ctx, entityID, roleID)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
-	}
-
-	if _, ok := r.builtInRoles[BuiltInRoleName(ro.Name)]; ok {
-		return errors.Wrap(svcerr.ErrRemoveEntity, fmt.Errorf("removing all members from built-in role '%s' is not permitted", ro.Name))
 	}
 
 	prs := policies.Policy{
