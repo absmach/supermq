@@ -50,7 +50,7 @@ func TestCreateUsersCmd(t *testing.T) {
 	cases := []struct {
 		desc          string
 		args          []string
-		sdkerr        errors.SDKError
+		sdkErr        errors.SDKError
 		errLogMessage string
 		user          mgsdk.User
 		logType       outputLog
@@ -90,7 +90,7 @@ func TestCreateUsersCmd(t *testing.T) {
 				user.Credentials.Username,
 				validToken,
 			},
-			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrCreateEntity, http.StatusUnprocessableEntity),
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrCreateEntity, http.StatusUnprocessableEntity),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrCreateEntity, http.StatusUnprocessableEntity).Error()),
 			logType:       errLog,
 		},
@@ -103,7 +103,7 @@ func TestCreateUsersCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("CreateUser", mock.Anything, mock.Anything, mock.Anything).Return(tc.user, tc.sdkerr)
+			sdkCall := sdkMock.On("CreateUser", mock.Anything, mock.Anything, mock.Anything).Return(tc.user, tc.sdkErr)
 			if len(tc.args) == 4 {
 				sdkUser := mgsdk.User{
 					FirstName: tc.args[0],
@@ -113,7 +113,7 @@ func TestCreateUsersCmd(t *testing.T) {
 						Secret: tc.args[3],
 					},
 				}
-				sdkCall = sdkMock.On("CreateUser", mock.Anything, mock.Anything, sdkUser).Return(tc.user, tc.sdkerr)
+				sdkCall = sdkMock.On("CreateUser", mock.Anything, mock.Anything, sdkUser).Return(tc.user, tc.sdkErr)
 			}
 			out := executeCommand(t, rootCmd, append([]string{createCmd}, tc.args...)...)
 
@@ -147,7 +147,7 @@ func TestGetUsersCmd(t *testing.T) {
 	cases := []struct {
 		desc          string
 		args          []string
-		sdkerr        errors.SDKError
+		sdkErr        errors.SDKError
 		errLogMessage string
 		user          mgsdk.User
 		page          mgsdk.UsersPage
@@ -159,7 +159,7 @@ func TestGetUsersCmd(t *testing.T) {
 				all,
 				validToken,
 			},
-			sdkerr: nil,
+			sdkErr: nil,
 			page: mgsdk.UsersPage{
 				Users: []mgsdk.User{user},
 			},
@@ -171,7 +171,7 @@ func TestGetUsersCmd(t *testing.T) {
 				userID,
 				validToken,
 			},
-			sdkerr:  nil,
+			sdkErr:  nil,
 			user:    user,
 			logType: entityLog,
 		},
@@ -181,7 +181,7 @@ func TestGetUsersCmd(t *testing.T) {
 				invalidID,
 				validToken,
 			},
-			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest).Error()),
 			user:          mgsdk.User{},
 			logType:       errLog,
@@ -194,7 +194,7 @@ func TestGetUsersCmd(t *testing.T) {
 				"--offset=2",
 				"--limit=5",
 			},
-			sdkerr: nil,
+			sdkErr: nil,
 			page: mgsdk.UsersPage{
 				Users: []mgsdk.User{user},
 			},
@@ -206,7 +206,7 @@ func TestGetUsersCmd(t *testing.T) {
 				all,
 				invalidToken,
 			},
-			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden).Error()),
 			page:          mgsdk.UsersPage{},
 			logType:       errLog,
@@ -231,7 +231,7 @@ func TestGetUsersCmd(t *testing.T) {
 				userID,
 				validToken,
 			},
-			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusInternalServerError),
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusInternalServerError),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusInternalServerError).Error()),
 			user:          mgsdk.User{},
 			logType:       errLog,
@@ -240,8 +240,8 @@ func TestGetUsersCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("Users", mock.Anything, mock.Anything, mock.Anything).Return(tc.page, tc.sdkerr)
-			sdkCall1 := sdkMock.On("User", mock.Anything, tc.args[0], tc.args[1]).Return(tc.user, tc.sdkerr)
+			sdkCall := sdkMock.On("Users", mock.Anything, mock.Anything, mock.Anything).Return(tc.page, tc.sdkErr)
+			sdkCall1 := sdkMock.On("User", mock.Anything, tc.args[0], tc.args[1]).Return(tc.user, tc.sdkErr)
 
 			out = executeCommand(t, rootCmd, append([]string{getCmd}, tc.args...)...)
 
@@ -298,7 +298,7 @@ func TestIssueTokenCmd(t *testing.T) {
 	cases := []struct {
 		desc          string
 		args          []string
-		sdkerr        errors.SDKError
+		sdkErr        errors.SDKError
 		errLogMessage string
 		token         mgsdk.Token
 		logType       outputLog
@@ -309,7 +309,7 @@ func TestIssueTokenCmd(t *testing.T) {
 				user.Email,
 				user.Credentials.Secret,
 			},
-			sdkerr:  nil,
+			sdkErr:  nil,
 			logType: entityLog,
 			token:   token,
 		},
@@ -319,7 +319,7 @@ func TestIssueTokenCmd(t *testing.T) {
 				user.Email,
 				invalidPassword,
 			},
-			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden).Error()),
 			logType:       errLog,
 			token:         mgsdk.Token{},
@@ -341,7 +341,7 @@ func TestIssueTokenCmd(t *testing.T) {
 				Username: tc.args[0],
 				Password: tc.args[1],
 			}
-			sdkCall := sdkMock.On("CreateToken", mock.Anything, lg).Return(tc.token, tc.sdkerr)
+			sdkCall := sdkMock.On("CreateToken", mock.Anything, lg).Return(tc.token, tc.sdkErr)
 
 			out := executeCommand(t, rootCmd, append([]string{tokCmd}, tc.args...)...)
 
@@ -377,7 +377,7 @@ func TestRefreshIssueTokenCmd(t *testing.T) {
 	cases := []struct {
 		desc          string
 		args          []string
-		sdkerr        errors.SDKError
+		sdkErr        errors.SDKError
 		errLogMessage string
 		token         mgsdk.Token
 		logType       outputLog
@@ -387,7 +387,7 @@ func TestRefreshIssueTokenCmd(t *testing.T) {
 			args: []string{
 				"token",
 			},
-			sdkerr:  nil,
+			sdkErr:  nil,
 			logType: entityLog,
 			token:   token,
 		},
@@ -404,7 +404,7 @@ func TestRefreshIssueTokenCmd(t *testing.T) {
 			args: []string{
 				"invalidToken",
 			},
-			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden).Error()),
 			logType:       errLog,
 			token:         mgsdk.Token{},
@@ -413,7 +413,7 @@ func TestRefreshIssueTokenCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("RefreshToken", mock.Anything, mock.Anything).Return(tc.token, tc.sdkerr)
+			sdkCall := sdkMock.On("RefreshToken", mock.Anything, mock.Anything).Return(tc.token, tc.sdkErr)
 
 			out := executeCommand(t, rootCmd, append([]string{refTokCmd}, tc.args...)...)
 
@@ -454,7 +454,7 @@ func TestUpdateUserCmd(t *testing.T) {
 	cases := []struct {
 		desc          string
 		args          []string
-		sdkerr        errors.SDKError
+		sdkErr        errors.SDKError
 		errLogMessage string
 		user          mgsdk.User
 		logType       outputLog
@@ -467,7 +467,7 @@ func TestUpdateUserCmd(t *testing.T) {
 				newTagsJSON,
 				validToken,
 			},
-			sdkerr:  nil,
+			sdkErr:  nil,
 			logType: entityLog,
 			user:    user,
 		},
@@ -479,7 +479,7 @@ func TestUpdateUserCmd(t *testing.T) {
 				"[\"tag1\", \"tag2\"",
 				validToken,
 			},
-			sdkerr:        errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			sdkErr:        errors.NewSDKError(errors.New("unexpected end of JSON input")),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.New("unexpected end of JSON input")),
 			logType:       errLog,
 		},
@@ -492,7 +492,7 @@ func TestUpdateUserCmd(t *testing.T) {
 				invalidToken,
 			},
 			logType:       errLog,
-			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden)),
 		},
 		{
@@ -515,7 +515,7 @@ func TestUpdateUserCmd(t *testing.T) {
 				invalidToken,
 			},
 			logType:       errLog,
-			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden)),
 		},
 		{
@@ -536,7 +536,7 @@ func TestUpdateUserCmd(t *testing.T) {
 				invalidToken,
 			},
 			logType:       errLog,
-			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden)),
 		},
 		{
@@ -546,7 +546,7 @@ func TestUpdateUserCmd(t *testing.T) {
 				"{\"name\":\"new name\", \"metadata\":{\"key\": \"value\"}",
 				validToken,
 			},
-			sdkerr:        errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			sdkErr:        errors.NewSDKError(errors.New("unexpected end of JSON input")),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.New("unexpected end of JSON input")),
 			logType:       errLog,
 		},
@@ -570,7 +570,7 @@ func TestUpdateUserCmd(t *testing.T) {
 				invalidToken,
 			},
 			logType:       errLog,
-			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden)),
 		},
 		{
@@ -588,34 +588,34 @@ func TestUpdateUserCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("UpdateUser", mock.Anything, mock.Anything, mock.Anything).Return(tc.user, tc.sdkerr)
-			sdkCall1 := sdkMock.On("UpdateUserTags", mock.Anything, mock.Anything, mock.Anything).Return(tc.user, tc.sdkerr)
-			sdkCall2 := sdkMock.On("UpdateUserIdentity", mock.Anything, mock.Anything, mock.Anything).Return(tc.user, tc.sdkerr)
-			sdkCall3 := sdkMock.On("UpdateUserRole", mock.Anything, mock.Anything, mock.Anything).Return(tc.user, tc.sdkerr)
+			sdkCall := sdkMock.On("UpdateUser", mock.Anything, mock.Anything, mock.Anything).Return(tc.user, tc.sdkErr)
+			sdkCall1 := sdkMock.On("UpdateUserTags", mock.Anything, mock.Anything, mock.Anything).Return(tc.user, tc.sdkErr)
+			sdkCall2 := sdkMock.On("UpdateUserIdentity", mock.Anything, mock.Anything, mock.Anything).Return(tc.user, tc.sdkErr)
+			sdkCall3 := sdkMock.On("UpdateUserRole", mock.Anything, mock.Anything, mock.Anything).Return(tc.user, tc.sdkErr)
 			switch {
 			case tc.args[0] == tagUpdateType:
 				var u mgsdk.User
 				u.Tags = []string{"tag1", "tag2"}
 				u.ID = tc.args[1]
 
-				sdkCall1 = sdkMock.On("UpdateUserTags", mock.Anything, u, tc.args[3]).Return(tc.user, tc.sdkerr)
+				sdkCall1 = sdkMock.On("UpdateUserTags", mock.Anything, u, tc.args[3]).Return(tc.user, tc.sdkErr)
 			case tc.args[0] == emailUpdateType:
 				var u mgsdk.User
 				u.Email = tc.args[2]
 				u.ID = tc.args[1]
 
-				sdkCall2 = sdkMock.On("UpdateUserEmail", mock.Anything, u, tc.args[3]).Return(tc.user, tc.sdkerr)
+				sdkCall2 = sdkMock.On("UpdateUserEmail", mock.Anything, u, tc.args[3]).Return(tc.user, tc.sdkErr)
 			case tc.args[0] == roleUpdateType && len(tc.args) == 4:
 				sdkCall3 = sdkMock.On("UpdateUserRole", mock.Anything, mgsdk.User{
 					Role: tc.args[2],
-				}, tc.args[3]).Return(tc.user, tc.sdkerr)
+				}, tc.args[3]).Return(tc.user, tc.sdkErr)
 			case tc.args[0] == userID:
 				sdkCall = sdkMock.On("UpdateUser", mock.Anything, mgsdk.User{
 					FirstName: "new name",
 					Metadata: mgsdk.Metadata{
 						"key": "value",
 					},
-				}, tc.args[2]).Return(tc.user, tc.sdkerr)
+				}, tc.args[2]).Return(tc.user, tc.sdkErr)
 			}
 			out := executeCommand(t, rootCmd, append([]string{updCmd}, tc.args...)...)
 
@@ -649,7 +649,7 @@ func TestGetUserProfileCmd(t *testing.T) {
 	cases := []struct {
 		desc          string
 		args          []string
-		sdkerr        errors.SDKError
+		sdkErr        errors.SDKError
 		errLogMessage string
 		user          mgsdk.User
 		logType       outputLog
@@ -659,7 +659,7 @@ func TestGetUserProfileCmd(t *testing.T) {
 			args: []string{
 				validToken,
 			},
-			sdkerr:  nil,
+			sdkErr:  nil,
 			logType: entityLog,
 		},
 		{
@@ -676,14 +676,14 @@ func TestGetUserProfileCmd(t *testing.T) {
 				invalidToken,
 			},
 			logType:       errLog,
-			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden)),
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("UserProfile", mock.Anything, tc.args[0]).Return(tc.user, tc.sdkerr)
+			sdkCall := sdkMock.On("UserProfile", mock.Anything, tc.args[0]).Return(tc.user, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{profCmd}, tc.args...)...)
 
 			switch tc.logType {
@@ -711,7 +711,7 @@ func TestResetPasswordRequestCmd(t *testing.T) {
 	cases := []struct {
 		desc          string
 		args          []string
-		sdkerr        errors.SDKError
+		sdkErr        errors.SDKError
 		errLogMessage string
 		logType       outputLog
 	}{
@@ -720,7 +720,7 @@ func TestResetPasswordRequestCmd(t *testing.T) {
 			args: []string{
 				exampleEmail,
 			},
-			sdkerr:  nil,
+			sdkErr:  nil,
 			logType: okLog,
 		},
 		{
@@ -736,7 +736,7 @@ func TestResetPasswordRequestCmd(t *testing.T) {
 			args: []string{
 				exampleEmail,
 			},
-			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrUpdateEntity, http.StatusUnprocessableEntity),
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrUpdateEntity, http.StatusUnprocessableEntity),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrUpdateEntity, http.StatusUnprocessableEntity).Error()),
 			logType:       errLog,
 		},
@@ -744,7 +744,7 @@ func TestResetPasswordRequestCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("ResetPasswordRequest", mock.Anything, tc.args[0]).Return(tc.sdkerr)
+			sdkCall := sdkMock.On("ResetPasswordRequest", mock.Anything, tc.args[0]).Return(tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{resPassReqCmd}, tc.args...)...)
 
 			switch tc.logType {
@@ -770,7 +770,7 @@ func TestResetPasswordCmd(t *testing.T) {
 	cases := []struct {
 		desc          string
 		args          []string
-		sdkerr        errors.SDKError
+		sdkErr        errors.SDKError
 		errLogMessage string
 		logType       outputLog
 	}{
@@ -781,7 +781,7 @@ func TestResetPasswordCmd(t *testing.T) {
 				newPassword,
 				validToken,
 			},
-			sdkerr:  nil,
+			sdkErr:  nil,
 			logType: okLog,
 		},
 		{
@@ -802,14 +802,14 @@ func TestResetPasswordCmd(t *testing.T) {
 				invalidToken,
 			},
 			logType:       errLog,
-			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden)),
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("ResetPassword", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.sdkerr)
+			sdkCall := sdkMock.On("ResetPassword", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{resPassCmd}, tc.args...)...)
 
 			switch tc.logType {
@@ -838,7 +838,7 @@ func TestUpdatePasswordCmd(t *testing.T) {
 	cases := []struct {
 		desc          string
 		args          []string
-		sdkerr        errors.SDKError
+		sdkErr        errors.SDKError
 		errLogMessage string
 		user          mgsdk.User
 		logType       outputLog
@@ -850,7 +850,7 @@ func TestUpdatePasswordCmd(t *testing.T) {
 				newPassword,
 				validToken,
 			},
-			sdkerr:  nil,
+			sdkErr:  nil,
 			logType: entityLog,
 			user:    user,
 		},
@@ -862,7 +862,7 @@ func TestUpdatePasswordCmd(t *testing.T) {
 				validToken,
 				extraArg,
 			},
-			sdkerr:  nil,
+			sdkErr:  nil,
 			logType: usageLog,
 			user:    user,
 		},
@@ -874,14 +874,14 @@ func TestUpdatePasswordCmd(t *testing.T) {
 				invalidToken,
 			},
 			logType:       errLog,
-			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden)),
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("UpdatePassword", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.user, tc.sdkerr)
+			sdkCall := sdkMock.On("UpdatePassword", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.user, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{passCmd}, tc.args...)...)
 
 			switch tc.logType {
@@ -910,7 +910,7 @@ func TestEnableUserCmd(t *testing.T) {
 	cases := []struct {
 		desc          string
 		args          []string
-		sdkerr        errors.SDKError
+		sdkErr        errors.SDKError
 		errLogMessage string
 		user          mgsdk.User
 		logType       outputLog
@@ -921,7 +921,7 @@ func TestEnableUserCmd(t *testing.T) {
 				user.ID,
 				validToken,
 			},
-			sdkerr:  nil,
+			sdkErr:  nil,
 			user:    user,
 			logType: entityLog,
 		},
@@ -941,14 +941,14 @@ func TestEnableUserCmd(t *testing.T) {
 				invalidToken,
 			},
 			logType:       errLog,
-			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden)),
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("EnableUser", mock.Anything, tc.args[0], tc.args[1]).Return(tc.user, tc.sdkerr)
+			sdkCall := sdkMock.On("EnableUser", mock.Anything, tc.args[0], tc.args[1]).Return(tc.user, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{enableCmd}, tc.args...)...)
 
 			switch tc.logType {
@@ -978,7 +978,7 @@ func TestDisableUserCmd(t *testing.T) {
 	cases := []struct {
 		desc          string
 		args          []string
-		sdkerr        errors.SDKError
+		sdkErr        errors.SDKError
 		errLogMessage string
 		user          mgsdk.User
 		logType       outputLog
@@ -989,7 +989,7 @@ func TestDisableUserCmd(t *testing.T) {
 				user.ID,
 				validToken,
 			},
-			sdkerr:  nil,
+			sdkErr:  nil,
 			logType: entityLog,
 			user:    user,
 		},
@@ -1009,14 +1009,14 @@ func TestDisableUserCmd(t *testing.T) {
 				invalidToken,
 			},
 			logType:       errLog,
-			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden)),
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("DisableUser", mock.Anything, tc.args[0], tc.args[1]).Return(tc.user, tc.sdkerr)
+			sdkCall := sdkMock.On("DisableUser", mock.Anything, tc.args[0], tc.args[1]).Return(tc.user, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{disableCmd}, tc.args...)...)
 
 			switch tc.logType {
@@ -1046,7 +1046,7 @@ func TestDeleteUserCmd(t *testing.T) {
 	cases := []struct {
 		desc          string
 		args          []string
-		sdkerr        errors.SDKError
+		sdkErr        errors.SDKError
 		errLogMessage string
 		logType       outputLog
 	}{
@@ -1073,7 +1073,7 @@ func TestDeleteUserCmd(t *testing.T) {
 				user.ID,
 				invalidToken,
 			},
-			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden).Error()),
 			logType:       errLog,
 		},
@@ -1083,7 +1083,7 @@ func TestDeleteUserCmd(t *testing.T) {
 				invalidID,
 				validToken,
 			},
-			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden).Error()),
 			logType:       errLog,
 		},
@@ -1093,7 +1093,7 @@ func TestDeleteUserCmd(t *testing.T) {
 				user.ID,
 				validToken,
 			},
-			sdkerr:        errors.NewSDKErrorWithStatus(svcerr.ErrUpdateEntity, http.StatusUnprocessableEntity),
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrUpdateEntity, http.StatusUnprocessableEntity),
 			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrUpdateEntity, http.StatusUnprocessableEntity).Error()),
 			logType:       errLog,
 		},
@@ -1109,7 +1109,7 @@ func TestDeleteUserCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("DeleteUser", mock.Anything, mock.Anything, mock.Anything).Return(tc.sdkerr)
+			sdkCall := sdkMock.On("DeleteUser", mock.Anything, mock.Anything, mock.Anything).Return(tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{delCmd}, tc.args...)...)
 
 			switch tc.logType {
