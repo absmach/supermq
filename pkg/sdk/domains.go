@@ -45,9 +45,9 @@ func (sdk mgSDK) CreateDomain(ctx context.Context, domain Domain, token string) 
 
 	url := fmt.Sprintf("%s/%s", sdk.domainsURL, domainsEndpoint)
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusCreated)
-	if sdkerr != nil {
-		return Domain{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusCreated)
+	if sdkErr != nil {
+		return Domain{}, sdkErr
 	}
 
 	var d Domain
@@ -63,9 +63,9 @@ func (sdk mgSDK) Domains(ctx context.Context, pm PageMetadata, token string) (Do
 		return DomainsPage{}, errors.NewSDKError(err)
 	}
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
-	if sdkerr != nil {
-		return DomainsPage{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
+	if sdkErr != nil {
+		return DomainsPage{}, sdkErr
 	}
 
 	var dp DomainsPage
@@ -82,9 +82,9 @@ func (sdk mgSDK) Domain(ctx context.Context, domainID, token string) (Domain, er
 	}
 	url := fmt.Sprintf("%s/%s/%s", sdk.domainsURL, domainsEndpoint, domainID)
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
-	if sdkerr != nil {
-		return Domain{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
+	if sdkErr != nil {
+		return Domain{}, sdkErr
 	}
 
 	var domain Domain
@@ -106,9 +106,9 @@ func (sdk mgSDK) UpdateDomain(ctx context.Context, domain Domain, token string) 
 		return Domain{}, errors.NewSDKError(err)
 	}
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPatch, url, token, data, nil, http.StatusOK)
-	if sdkerr != nil {
-		return Domain{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodPatch, url, token, data, nil, http.StatusOK)
+	if sdkErr != nil {
+		return Domain{}, sdkErr
 	}
 
 	var d Domain
@@ -132,8 +132,8 @@ func (sdk mgSDK) FreezeDomain(ctx context.Context, domainID, token string) error
 
 func (sdk mgSDK) changeDomainStatus(ctx context.Context, token, id, status string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s/%s", sdk.domainsURL, domainsEndpoint, id, status)
-	_, _, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, nil, nil, http.StatusOK)
-	return sdkerr
+	_, _, sdkErr := sdk.processRequest(ctx, http.MethodPost, url, token, nil, nil, http.StatusOK)
+	return sdkErr
 }
 
 func (sdk mgSDK) CreateDomainRole(ctx context.Context, id string, rq RoleReq, token string) (Role, errors.SDKError) {

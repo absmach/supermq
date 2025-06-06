@@ -464,11 +464,11 @@ func (svc *service) checkSuperAdmin(ctx context.Context, session authn.Session) 
 }
 
 func (svc service) OAuthCallback(ctx context.Context, user User) (User, error) {
-	ruser, err := svc.users.RetrieveByEmail(ctx, user.Email)
+	u, err := svc.users.RetrieveByEmail(ctx, user.Email)
 	if err != nil {
 		switch errors.Contains(err, repoerr.ErrNotFound) {
 		case true:
-			ruser, err = svc.Register(ctx, authn.Session{}, user, true)
+			u, err = svc.Register(ctx, authn.Session{}, user, true)
 			if err != nil {
 				return User{}, err
 			}
@@ -478,8 +478,8 @@ func (svc service) OAuthCallback(ctx context.Context, user User) (User, error) {
 	}
 
 	return User{
-		ID:   ruser.ID,
-		Role: ruser.Role,
+		ID:   u.ID,
+		Role: u.Role,
 	}, nil
 }
 

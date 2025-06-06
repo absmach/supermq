@@ -32,7 +32,7 @@ const (
 	usersType       = "users"
 	description     = "Description"
 	groupName       = "smqx"
-	adminpermission = "admin"
+	adminPermission = "admin"
 
 	authoritiesObj  = "authorities"
 	memberRelation  = "member"
@@ -134,7 +134,7 @@ func TestAuthorize(t *testing.T) {
 				Object:      authoritiesObj,
 				ObjectType:  usersType,
 				Relation:    memberRelation,
-				Permission:  adminpermission,
+				Permission:  adminPermission,
 			},
 			authResponse: &grpcAuthV1.AuthZRes{Authorized: true},
 			err:          nil,
@@ -148,7 +148,7 @@ func TestAuthorize(t *testing.T) {
 				Object:      authoritiesObj,
 				ObjectType:  usersType,
 				Relation:    memberRelation,
-				Permission:  adminpermission,
+				Permission:  adminPermission,
 			},
 			authResponse: &grpcAuthV1.AuthZRes{Authorized: false},
 			err:          svcerr.ErrAuthorization,
@@ -162,7 +162,7 @@ func TestAuthorize(t *testing.T) {
 				Object:      authoritiesObj,
 				ObjectType:  usersType,
 				Relation:    memberRelation,
-				Permission:  adminpermission,
+				Permission:  adminPermission,
 			},
 			authResponse: &grpcAuthV1.AuthZRes{Authorized: false},
 			err:          apiutil.ErrMissingPolicySub,
@@ -176,7 +176,7 @@ func TestAuthorize(t *testing.T) {
 				Object:      authoritiesObj,
 				ObjectType:  usersType,
 				Relation:    memberRelation,
-				Permission:  adminpermission,
+				Permission:  adminPermission,
 			},
 			authResponse: &grpcAuthV1.AuthZRes{Authorized: false},
 			err:          apiutil.ErrMissingPolicySub,
@@ -190,7 +190,7 @@ func TestAuthorize(t *testing.T) {
 				Object:      "",
 				ObjectType:  usersType,
 				Relation:    memberRelation,
-				Permission:  adminpermission,
+				Permission:  adminPermission,
 			},
 			authResponse: &grpcAuthV1.AuthZRes{Authorized: false},
 			err:          apiutil.ErrMissingPolicyObj,
@@ -204,7 +204,7 @@ func TestAuthorize(t *testing.T) {
 				Object:      authoritiesObj,
 				ObjectType:  "",
 				Relation:    memberRelation,
-				Permission:  adminpermission,
+				Permission:  adminPermission,
 			},
 			authResponse: &grpcAuthV1.AuthZRes{Authorized: false},
 			err:          apiutil.ErrMissingPolicyObj,
@@ -226,13 +226,13 @@ func TestAuthorize(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			svccall := svc.On("Authorize", mock.Anything, mock.Anything).Return(tc.err)
+			svcCall := svc.On("Authorize", mock.Anything, mock.Anything).Return(tc.err)
 			ar, err := grpcClient.Authorize(context.Background(), tc.authRequest)
 			if ar != nil {
 				assert.Equal(t, tc.authResponse, ar, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.authResponse, ar))
 			}
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-			svccall.Unset()
+			svcCall.Unset()
 		})
 	}
 }
@@ -354,7 +354,7 @@ func TestAuthorizePAT(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			svccall := svc.On("AuthorizePAT",
+			svcCall := svc.On("AuthorizePAT",
 				mock.Anything,
 				tc.authRequest.UserId,
 				tc.authRequest.PatId,
@@ -368,7 +368,7 @@ func TestAuthorizePAT(t *testing.T) {
 				assert.Equal(t, tc.authResponse, ar, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.authResponse, ar))
 			}
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-			svccall.Unset()
+			svcCall.Unset()
 		})
 	}
 }

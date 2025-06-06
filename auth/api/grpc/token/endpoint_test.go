@@ -32,7 +32,7 @@ const (
 	usersType       = "users"
 	description     = "Description"
 	groupName       = "smqx"
-	adminpermission = "admin"
+	adminPermission = "admin"
 
 	authoritiesObj  = "authorities"
 	memberRelation  = "member"

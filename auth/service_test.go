@@ -321,12 +321,12 @@ func TestIssue(t *testing.T) {
 
 func TestRevoke(t *testing.T) {
 	svc, _ := newService()
-	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, errIssueUser)
+	repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, errIssueUser)
 	policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
 	secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Role: auth.UserRole, IssuedAt: time.Now(), Subject: userID})
-	repocall.Unset()
+	repoCall.Unset()
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	repocall1 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
+	repoCall1 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	key := auth.Key{
 		Type:     auth.APIKey,
 		Role:     auth.UserRole,
@@ -335,7 +335,7 @@ func TestRevoke(t *testing.T) {
 	}
 	_, err = svc.Issue(context.Background(), secret.AccessToken, key)
 	assert.Nil(t, err, fmt.Sprintf("Issuing user's key expected to succeed: %s", err))
-	repocall1.Unset()
+	repoCall1.Unset()
 	policyCall.Unset()
 
 	cases := []struct {
@@ -368,20 +368,20 @@ func TestRevoke(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repocall := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(tc.err)
+		repoCall := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(tc.err)
 		err := svc.Revoke(context.Background(), tc.token, tc.id)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-		repocall.Unset()
+		repoCall.Unset()
 	}
 }
 
 func TestRetrieve(t *testing.T) {
 	svc, _ := newService()
-	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-	repocall1 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
+	repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
+	repoCall1 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
 	secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Subject: userID, Role: auth.UserRole, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	repocall.Unset()
+	repoCall.Unset()
 	key := auth.Key{
 		ID:       "id",
 		Type:     auth.APIKey,
@@ -390,21 +390,21 @@ func TestRetrieve(t *testing.T) {
 		IssuedAt: time.Now(),
 	}
 
-	repocall3 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
+	repoCall3 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	userToken, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Subject: userID, Role: auth.UserRole, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	repocall3.Unset()
+	repoCall3.Unset()
 
-	repocall4 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
+	repoCall4 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	apiToken, err := svc.Issue(context.Background(), secret.AccessToken, key)
 	assert.Nil(t, err, fmt.Sprintf("Issuing login's key expected to succeed: %s", err))
-	repocall4.Unset()
+	repoCall4.Unset()
 
-	repocall5 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
+	repoCall5 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	resetToken, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.RecoveryKey, Subject: userID, Role: auth.UserRole, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing reset key expected to succeed: %s", err))
-	repocall5.Unset()
-	repocall1.Unset()
+	repoCall5.Unset()
+	repoCall1.Unset()
 
 	cases := []struct {
 		desc  string
@@ -441,18 +441,18 @@ func TestRetrieve(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repocall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(auth.Key{}, tc.err)
+		repoCall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(auth.Key{}, tc.err)
 		_, err := svc.RetrieveKey(context.Background(), tc.token, tc.id)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-		repocall.Unset()
+		repoCall.Unset()
 	}
 }
 
 func TestIdentify(t *testing.T) {
 	svc, _ := newService()
 
-	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-	repocall1 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
+	repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
+	repoCall1 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
 	loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Subject: userID, Role: auth.UserRole, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
@@ -466,8 +466,8 @@ func TestIdentify(t *testing.T) {
 	exp1 := time.Now().UTC().Add(-1 * time.Minute).Round(time.Second)
 	expSecret, err := svc.Issue(context.Background(), loginSecret.AccessToken, auth.Key{Type: auth.APIKey, Role: auth.UserRole, IssuedAt: exp0, ExpiresAt: exp1})
 	assert.Nil(t, err, fmt.Sprintf("Issuing expired login key expected to succeed: %s", err))
-	repocall.Unset()
-	repocall1.Unset()
+	repoCall.Unset()
+	repoCall1.Unset()
 
 	te := jwt.New([]byte(secret))
 	key := auth.Key{
@@ -536,13 +536,13 @@ func TestIdentify(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repocall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(auth.Key{}, tc.err)
-		repocall1 := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(tc.err)
+		repoCall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(auth.Key{}, tc.err)
+		repoCall1 := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(tc.err)
 		idt, err := svc.Identify(context.Background(), tc.key)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.subject, idt.Subject, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.subject, idt))
-		repocall.Unset()
-		repocall1.Unset()
+		repoCall.Unset()
+		repoCall1.Unset()
 	}
 }
 

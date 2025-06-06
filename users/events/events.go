@@ -185,21 +185,21 @@ type updateProfilePictureEvent struct {
 	requestID string
 }
 
-func (uppe updateProfilePictureEvent) Encode() (map[string]interface{}, error) {
+func (req updateProfilePictureEvent) Encode() (map[string]interface{}, error) {
 	val := map[string]interface{}{
 		"operation":   userUpdateProfilePicture,
-		"updated_at":  uppe.UpdatedAt,
-		"updated_by":  uppe.UpdatedBy,
-		"token_type":  uppe.Type.String(),
-		"super_admin": uppe.SuperAdmin,
-		"request_id":  uppe.requestID,
+		"updated_at":  req.UpdatedAt,
+		"updated_by":  req.UpdatedBy,
+		"token_type":  req.Type.String(),
+		"super_admin": req.SuperAdmin,
+		"request_id":  req.requestID,
 	}
 
-	if uppe.ID != "" {
-		val["id"] = uppe.ID
+	if req.ID != "" {
+		val["id"] = req.ID
 	}
-	if uppe.ProfilePicture != "" {
-		val["profile_picture"] = uppe.ProfilePicture
+	if req.ProfilePicture != "" {
+		val["profile_picture"] = req.ProfilePicture
 	}
 
 	return val, nil
@@ -428,12 +428,12 @@ type generateResetTokenEvent struct {
 	requestID string
 }
 
-func (grte generateResetTokenEvent) Encode() (map[string]interface{}, error) {
+func (req generateResetTokenEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"operation":  generateResetToken,
-		"email":      grte.email,
-		"host":       grte.host,
-		"request_id": grte.requestID,
+		"email":      req.email,
+		"host":       req.host,
+		"request_id": req.requestID,
 	}, nil
 }
 
@@ -479,13 +479,13 @@ type sendPasswordResetEvent struct {
 	requestID string
 }
 
-func (spre sendPasswordResetEvent) Encode() (map[string]interface{}, error) {
+func (req sendPasswordResetEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"operation":  sendPasswordReset,
-		"host":       spre.host,
-		"email":      spre.email,
-		"user":       spre.user,
-		"request_id": spre.requestID,
+		"host":       req.host,
+		"email":      req.email,
+		"user":       req.user,
+		"request_id": req.requestID,
 	}, nil
 }
 
@@ -525,13 +525,13 @@ type addUserPolicyEvent struct {
 	requestID string
 }
 
-func (acpe addUserPolicyEvent) Encode() (map[string]interface{}, error) {
+func (req addUserPolicyEvent) Encode() (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"operation":   addClientPolicy,
-		"id":          acpe.id,
-		"role":        acpe.role,
-		"token_type":  acpe.Type.String(),
-		"super_admin": acpe.SuperAdmin,
-		"request_id":  acpe.requestID,
+		"id":          req.id,
+		"role":        req.role,
+		"token_type":  req.Type.String(),
+		"super_admin": req.SuperAdmin,
+		"request_id":  req.requestID,
 	}, nil
 }

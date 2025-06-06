@@ -97,12 +97,12 @@ func (svc service) CreateGroup(ctx context.Context, session smqauthn.Session, g 
 	newBuiltInRoleMembers := map[roles.BuiltInRoleName][]roles.Member{
 		BuiltInRoleAdmin: {roles.Member(session.UserID)},
 	}
-	nrps, err := svc.AddNewEntitiesRoles(ctx, session.DomainID, session.UserID, []string{saved.ID}, oprs, newBuiltInRoleMembers)
+	rp, err := svc.AddNewEntitiesRoles(ctx, session.DomainID, session.UserID, []string{saved.ID}, oprs, newBuiltInRoleMembers)
 	if err != nil {
 		return Group{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrAddPolicies, err)
 	}
 
-	return saved, nrps, nil
+	return saved, rp, nil
 }
 
 func (svc service) ViewGroup(ctx context.Context, session smqauthn.Session, id string, withRoles bool) (Group, error) {

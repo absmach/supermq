@@ -275,12 +275,12 @@ func (req tokenReq) validate() error {
 	return nil
 }
 
-type passwResetReq struct {
+type passResetReq struct {
 	Email string `json:"email"`
 	Host  string `json:"host"`
 }
 
-func (req passwResetReq) validate() error {
+func (req passResetReq) validate() error {
 	if req.Email == "" {
 		return apiutil.ErrMissingEmail
 	}

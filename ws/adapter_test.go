@@ -203,10 +203,10 @@ func TestSubscribe(t *testing.T) {
 			ChannelId:  tc.chanID,
 			DomainId:   tc.domainID,
 		}).Return(tc.authZRes, tc.authZErr)
-		repocall := pubsub.On("Subscribe", mock.Anything, subConfig).Return(tc.subErr)
+		repoCall := pubsub.On("Subscribe", mock.Anything, subConfig).Return(tc.subErr)
 		err := svc.Subscribe(context.Background(), sessionID, tc.clientKey, tc.domainID, tc.chanID, tc.subtopic, c)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		repocall.Unset()
+		repoCall.Unset()
 		clientsCall.Unset()
 		channelsCall.Unset()
 	}

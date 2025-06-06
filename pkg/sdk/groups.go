@@ -59,9 +59,9 @@ func (sdk mgSDK) CreateGroup(ctx context.Context, g Group, domainID, token strin
 	}
 	url := fmt.Sprintf("%s/%s/%s", sdk.groupsURL, domainID, groupsEndpoint)
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusCreated)
-	if sdkerr != nil {
-		return Group{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusCreated)
+	if sdkErr != nil {
+		return Group{}, sdkErr
 	}
 
 	g = Group{}
@@ -79,9 +79,9 @@ func (sdk mgSDK) Groups(ctx context.Context, pm PageMetadata, domainID, token st
 		return GroupsPage{}, errors.NewSDKError(err)
 	}
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
-	if sdkerr != nil {
-		return GroupsPage{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
+	if sdkErr != nil {
+		return GroupsPage{}, sdkErr
 	}
 
 	gp := GroupsPage{}
@@ -99,9 +99,9 @@ func (sdk mgSDK) Group(ctx context.Context, id, domainID, token string) (Group, 
 
 	url := fmt.Sprintf("%s/%s/%s/%s", sdk.groupsURL, domainID, groupsEndpoint, id)
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
-	if sdkerr != nil {
-		return Group{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
+	if sdkErr != nil {
+		return Group{}, sdkErr
 	}
 
 	var t Group
@@ -123,9 +123,9 @@ func (sdk mgSDK) UpdateGroup(ctx context.Context, g Group, domainID, token strin
 	}
 	url := fmt.Sprintf("%s/%s/%s/%s", sdk.groupsURL, domainID, groupsEndpoint, g.ID)
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPut, url, token, data, nil, http.StatusOK)
-	if sdkerr != nil {
-		return Group{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodPut, url, token, data, nil, http.StatusOK)
+	if sdkErr != nil {
+		return Group{}, sdkErr
 	}
 
 	g = Group{}
@@ -147,9 +147,9 @@ func (sdk mgSDK) UpdateGroupTags(ctx context.Context, g Group, domainID, token s
 		return Group{}, errors.NewSDKError(err)
 	}
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPatch, url, token, data, nil, http.StatusOK)
-	if sdkerr != nil {
-		return Group{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodPatch, url, token, data, nil, http.StatusOK)
+	if sdkErr != nil {
+		return Group{}, sdkErr
 	}
 
 	g = Group{}
@@ -168,22 +168,22 @@ func (sdk mgSDK) SetGroupParent(ctx context.Context, id, domainID, groupID, toke
 	}
 
 	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.groupsURL, domainID, groupsEndpoint, id, parentEndpoint)
-	_, _, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusOK)
+	_, _, sdkErr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusOK)
 
-	return sdkerr
+	return sdkErr
 }
 
 func (sdk mgSDK) RemoveGroupParent(ctx context.Context, id, domainID, groupID, token string) errors.SDKError {
-	rcpg := groupParentReq{ParentID: groupID}
-	data, err := json.Marshal(rcpg)
+	pgr := groupParentReq{ParentID: groupID}
+	data, err := json.Marshal(pgr)
 	if err != nil {
 		return errors.NewSDKError(err)
 	}
 
 	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.groupsURL, domainID, groupsEndpoint, id, parentEndpoint)
-	_, _, sdkerr := sdk.processRequest(ctx, http.MethodDelete, url, token, data, nil, http.StatusNoContent)
+	_, _, sdkErr := sdk.processRequest(ctx, http.MethodDelete, url, token, data, nil, http.StatusNoContent)
 
-	return sdkerr
+	return sdkErr
 }
 
 func (sdk mgSDK) AddChildren(ctx context.Context, id, domainID string, groupIDs []string, token string) errors.SDKError {
@@ -194,9 +194,9 @@ func (sdk mgSDK) AddChildren(ctx context.Context, id, domainID string, groupIDs 
 	}
 
 	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.groupsURL, domainID, groupsEndpoint, id, childrenEndpoint)
-	_, _, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusOK)
+	_, _, sdkErr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusOK)
 
-	return sdkerr
+	return sdkErr
 }
 
 func (sdk mgSDK) RemoveChildren(ctx context.Context, id, domainID string, groupIDs []string, token string) errors.SDKError {
@@ -207,16 +207,16 @@ func (sdk mgSDK) RemoveChildren(ctx context.Context, id, domainID string, groupI
 	}
 
 	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.groupsURL, domainID, groupsEndpoint, id, childrenEndpoint)
-	_, _, sdkerr := sdk.processRequest(ctx, http.MethodDelete, url, token, data, nil, http.StatusNoContent)
+	_, _, sdkErr := sdk.processRequest(ctx, http.MethodDelete, url, token, data, nil, http.StatusNoContent)
 
-	return sdkerr
+	return sdkErr
 }
 
 func (sdk mgSDK) RemoveAllChildren(ctx context.Context, id, domainID, token string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s/%s/%s/%s", sdk.groupsURL, domainID, groupsEndpoint, id, childrenEndpoint, "all")
-	_, _, sdkerr := sdk.processRequest(ctx, http.MethodDelete, url, token, nil, nil, http.StatusNoContent)
+	_, _, sdkErr := sdk.processRequest(ctx, http.MethodDelete, url, token, nil, nil, http.StatusNoContent)
 
-	return sdkerr
+	return sdkErr
 }
 
 func (sdk mgSDK) Children(ctx context.Context, id, domainID string, pm PageMetadata, token string) (GroupsPage, errors.SDKError) {
@@ -226,9 +226,9 @@ func (sdk mgSDK) Children(ctx context.Context, id, domainID string, pm PageMetad
 		return GroupsPage{}, errors.NewSDKError(err)
 	}
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
-	if sdkerr != nil {
-		return GroupsPage{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
+	if sdkErr != nil {
+		return GroupsPage{}, sdkErr
 	}
 
 	gp := GroupsPage{}
@@ -250,9 +250,9 @@ func (sdk mgSDK) DisableGroup(ctx context.Context, id, domainID, token string) (
 func (sdk mgSDK) changeGroupStatus(ctx context.Context, id, status, domainID, token string) (Group, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.groupsURL, domainID, groupsEndpoint, id, status)
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, nil, nil, http.StatusOK)
-	if sdkerr != nil {
-		return Group{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodPost, url, token, nil, nil, http.StatusOK)
+	if sdkErr != nil {
+		return Group{}, sdkErr
 	}
 	g := Group{}
 	if err := json.Unmarshal(body, &g); err != nil {
@@ -267,8 +267,8 @@ func (sdk mgSDK) DeleteGroup(ctx context.Context, id, domainID, token string) er
 		return errors.NewSDKError(apiutil.ErrMissingID)
 	}
 	url := fmt.Sprintf("%s/%s/%s/%s", sdk.groupsURL, domainID, groupsEndpoint, id)
-	_, _, sdkerr := sdk.processRequest(ctx, http.MethodDelete, url, token, nil, nil, http.StatusNoContent)
-	return sdkerr
+	_, _, sdkErr := sdk.processRequest(ctx, http.MethodDelete, url, token, nil, nil, http.StatusNoContent)
+	return sdkErr
 }
 
 func (sdk mgSDK) Hierarchy(ctx context.Context, id, domainID string, pm PageMetadata, token string) (GroupsHierarchyPage, errors.SDKError) {
@@ -278,9 +278,9 @@ func (sdk mgSDK) Hierarchy(ctx context.Context, id, domainID string, pm PageMeta
 		return GroupsHierarchyPage{}, errors.NewSDKError(err)
 	}
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
-	if sdkerr != nil {
-		return GroupsHierarchyPage{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
+	if sdkErr != nil {
+		return GroupsHierarchyPage{}, sdkErr
 	}
 
 	hp := GroupsHierarchyPage{}

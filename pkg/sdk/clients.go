@@ -55,9 +55,9 @@ func (sdk mgSDK) CreateClient(ctx context.Context, client Client, domainID, toke
 
 	url := fmt.Sprintf("%s/%s/%s", sdk.clientsURL, domainID, clientsEndpoint)
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusCreated)
-	if sdkerr != nil {
-		return Client{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusCreated)
+	if sdkErr != nil {
+		return Client{}, sdkErr
 	}
 
 	client = Client{}
@@ -76,9 +76,9 @@ func (sdk mgSDK) CreateClients(ctx context.Context, clients []Client, domainID, 
 
 	url := fmt.Sprintf("%s/%s/%s/%s", sdk.clientsURL, domainID, clientsEndpoint, "bulk")
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusOK)
-	if sdkerr != nil {
-		return []Client{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusOK)
+	if sdkErr != nil {
+		return []Client{}, sdkErr
 	}
 
 	var ctr createClientsRes
@@ -96,9 +96,9 @@ func (sdk mgSDK) Clients(ctx context.Context, pm PageMetadata, domainID, token s
 		return ClientsPage{}, errors.NewSDKError(err)
 	}
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
-	if sdkerr != nil {
-		return ClientsPage{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
+	if sdkErr != nil {
+		return ClientsPage{}, sdkErr
 	}
 
 	var cp ClientsPage
@@ -115,9 +115,9 @@ func (sdk mgSDK) Client(ctx context.Context, id, domainID, token string) (Client
 	}
 	url := fmt.Sprintf("%s/%s/%s/%s", sdk.clientsURL, domainID, clientsEndpoint, id)
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
-	if sdkerr != nil {
-		return Client{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
+	if sdkErr != nil {
+		return Client{}, sdkErr
 	}
 
 	var t Client
@@ -139,9 +139,9 @@ func (sdk mgSDK) UpdateClient(ctx context.Context, t Client, domainID, token str
 		return Client{}, errors.NewSDKError(err)
 	}
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPatch, url, token, data, nil, http.StatusOK)
-	if sdkerr != nil {
-		return Client{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodPatch, url, token, data, nil, http.StatusOK)
+	if sdkErr != nil {
+		return Client{}, sdkErr
 	}
 
 	t = Client{}
@@ -160,9 +160,9 @@ func (sdk mgSDK) UpdateClientTags(ctx context.Context, t Client, domainID, token
 
 	url := fmt.Sprintf("%s/%s/%s/%s/tags", sdk.clientsURL, domainID, clientsEndpoint, t.ID)
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPatch, url, token, data, nil, http.StatusOK)
-	if sdkerr != nil {
-		return Client{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodPatch, url, token, data, nil, http.StatusOK)
+	if sdkErr != nil {
+		return Client{}, sdkErr
 	}
 
 	t = Client{}
@@ -183,9 +183,9 @@ func (sdk mgSDK) UpdateClientSecret(ctx context.Context, id, secret, domainID, t
 
 	url := fmt.Sprintf("%s/%s/%s/%s/secret", sdk.clientsURL, domainID, clientsEndpoint, id)
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPatch, url, token, data, nil, http.StatusOK)
-	if sdkerr != nil {
-		return Client{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodPatch, url, token, data, nil, http.StatusOK)
+	if sdkErr != nil {
+		return Client{}, sdkErr
 	}
 
 	var t Client
@@ -207,9 +207,9 @@ func (sdk mgSDK) DisableClient(ctx context.Context, id, domainID, token string) 
 func (sdk mgSDK) changeClientStatus(ctx context.Context, id, status, domainID, token string) (Client, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.clientsURL, domainID, clientsEndpoint, id, status)
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, nil, nil, http.StatusOK)
-	if sdkerr != nil {
-		return Client{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodPost, url, token, nil, nil, http.StatusOK)
+	if sdkErr != nil {
+		return Client{}, sdkErr
 	}
 
 	t := Client{}
@@ -228,22 +228,22 @@ func (sdk mgSDK) SetClientParent(ctx context.Context, id, domainID, groupID, tok
 	}
 
 	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.clientsURL, domainID, clientsEndpoint, id, parentEndpoint)
-	_, _, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusOK)
+	_, _, sdkErr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusOK)
 
-	return sdkerr
+	return sdkErr
 }
 
 func (sdk mgSDK) RemoveClientParent(ctx context.Context, id, domainID, groupID, token string) errors.SDKError {
-	rcpg := parentGroupReq{ParentGroupID: groupID}
-	data, err := json.Marshal(rcpg)
+	pgr := parentGroupReq{ParentGroupID: groupID}
+	data, err := json.Marshal(pgr)
 	if err != nil {
 		return errors.NewSDKError(err)
 	}
 
 	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.clientsURL, domainID, clientsEndpoint, id, parentEndpoint)
-	_, _, sdkerr := sdk.processRequest(ctx, http.MethodDelete, url, token, data, nil, http.StatusNoContent)
+	_, _, sdkErr := sdk.processRequest(ctx, http.MethodDelete, url, token, data, nil, http.StatusNoContent)
 
-	return sdkerr
+	return sdkErr
 }
 
 func (sdk mgSDK) DeleteClient(ctx context.Context, id, domainID, token string) errors.SDKError {
@@ -251,8 +251,8 @@ func (sdk mgSDK) DeleteClient(ctx context.Context, id, domainID, token string) e
 		return errors.NewSDKError(apiutil.ErrMissingID)
 	}
 	url := fmt.Sprintf("%s/%s/%s/%s", sdk.clientsURL, domainID, clientsEndpoint, id)
-	_, _, sdkerr := sdk.processRequest(ctx, http.MethodDelete, url, token, nil, nil, http.StatusNoContent)
-	return sdkerr
+	_, _, sdkErr := sdk.processRequest(ctx, http.MethodDelete, url, token, nil, nil, http.StatusNoContent)
+	return sdkErr
 }
 
 func (sdk mgSDK) CreateClientRole(ctx context.Context, id, domainID string, rq RoleReq, token string) (Role, errors.SDKError) {

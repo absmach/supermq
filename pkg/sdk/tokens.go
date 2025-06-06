@@ -33,9 +33,9 @@ func (sdk mgSDK) CreateToken(ctx context.Context, lt Login) (Token, errors.SDKEr
 
 	url := fmt.Sprintf("%s/%s/%s", sdk.usersURL, usersEndpoint, issueTokenEndpoint)
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, "", data, nil, http.StatusCreated)
-	if sdkerr != nil {
-		return Token{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodPost, url, "", data, nil, http.StatusCreated)
+	if sdkErr != nil {
+		return Token{}, sdkErr
 	}
 	var token Token
 	if err := json.Unmarshal(body, &token); err != nil {
@@ -48,9 +48,9 @@ func (sdk mgSDK) CreateToken(ctx context.Context, lt Login) (Token, errors.SDKEr
 func (sdk mgSDK) RefreshToken(ctx context.Context, token string) (Token, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.usersURL, usersEndpoint, refreshTokenEndpoint)
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, nil, nil, http.StatusCreated)
-	if sdkerr != nil {
-		return Token{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodPost, url, token, nil, nil, http.StatusCreated)
+	if sdkErr != nil {
+		return Token{}, sdkErr
 	}
 
 	t := Token{}

@@ -1437,9 +1437,9 @@ func (sdk mgSDK) processRequest(ctx context.Context, method, reqUrl, token strin
 	}
 	defer resp.Body.Close()
 
-	sdkerr := errors.CheckError(resp, expectedRespCodes...)
-	if sdkerr != nil {
-		return make(http.Header), []byte{}, sdkerr
+	sdkErr := errors.CheckError(resp, expectedRespCodes...)
+	if sdkErr != nil {
+		return make(http.Header), []byte{}, sdkErr
 	}
 
 	body, err := io.ReadAll(resp.Body)

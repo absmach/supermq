@@ -201,12 +201,12 @@ func TestIssue(t *testing.T) {
 			token:       tc.token,
 			body:        strings.NewReader(tc.req),
 		}
-		repocall := krepo.On("Save", mock.Anything, mock.Anything).Return("", nil)
+		repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return("", nil)
 		policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		repocall.Unset()
+		repoCall.Unset()
 		policyCall.Unset()
 	}
 }
@@ -218,10 +218,10 @@ func TestRetrieve(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	key := auth.Key{Type: auth.APIKey, IssuedAt: time.Now(), Subject: id}
 
-	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
+	repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	k, err := svc.Issue(context.Background(), token.AccessToken, key)
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	repocall.Unset()
+	repoCall.Unset()
 	policyCall.Unset()
 
 	ts := newServer(svc)
@@ -280,11 +280,11 @@ func TestRetrieve(t *testing.T) {
 			token:  tc.token,
 		}
 		policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-		repocall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(tc.key, tc.err)
+		repoCall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(tc.key, tc.err)
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		repocall.Unset()
+		repoCall.Unset()
 		policyCall.Unset()
 	}
 }
@@ -296,10 +296,10 @@ func TestRevoke(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	key := auth.Key{Type: auth.APIKey, IssuedAt: time.Now(), Subject: id}
 
-	repocall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
+	repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	k, err := svc.Issue(context.Background(), token.AccessToken, key)
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	repocall.Unset()
+	repoCall.Unset()
 	policyCall.Unset()
 
 	ts := newServer(svc)
@@ -345,10 +345,10 @@ func TestRevoke(t *testing.T) {
 			url:    fmt.Sprintf("%s/keys/%s", ts.URL, tc.id),
 			token:  tc.token,
 		}
-		repocall := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		repoCall := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		repocall.Unset()
+		repoCall.Unset()
 	}
 }

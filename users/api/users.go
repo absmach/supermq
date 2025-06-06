@@ -436,7 +436,7 @@ func decodePasswordResetRequest(_ context.Context, r *http.Request) (interface{}
 		return nil, apiutil.ErrUnsupportedContentType
 	}
 
-	var req passwResetReq
+	var req passResetReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
 	}

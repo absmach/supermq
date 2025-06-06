@@ -110,11 +110,11 @@ func (svc service) CreateChannels(ctx context.Context, session authn.Session, ch
 			},
 		)
 	}
-	nrps, err := svc.AddNewEntitiesRoles(ctx, session.DomainID, session.UserID, chIDs, optionalPolicies, newBuiltInRoleMembers)
+	rp, err := svc.AddNewEntitiesRoles(ctx, session.DomainID, session.UserID, chIDs, optionalPolicies, newBuiltInRoleMembers)
 	if err != nil {
 		return []Channel{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrAddPolicies, err)
 	}
-	return savedChs, nrps, nil
+	return savedChs, rp, nil
 }
 
 func (svc service) UpdateChannel(ctx context.Context, session authn.Session, ch Channel) (Channel, error) {

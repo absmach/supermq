@@ -43,9 +43,9 @@ func (sdk mgSDK) IssueCert(ctx context.Context, clientID, validity, domainID, to
 
 	url := fmt.Sprintf("%s/%s/%s", sdk.certsURL, domainID, certsEndpoint)
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, d, nil, http.StatusCreated)
-	if sdkerr != nil {
-		return Cert{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodPost, url, token, d, nil, http.StatusCreated)
+	if sdkErr != nil {
+		return Cert{}, sdkErr
 	}
 
 	var c Cert
