@@ -80,6 +80,7 @@ func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig)
 		return ErrEmptyTopic
 	}
 
+	// nolint:contextcheck
 	nh := ps.natsHandler(cfg.Handler, cfg.HandlerErr, cfg.HandlerAck)
 
 	consumerConfig := jetstream.ConsumerConfig{
