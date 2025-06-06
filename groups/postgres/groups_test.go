@@ -1503,6 +1503,8 @@ func TestRetrieveHierarchy(t *testing.T) {
 
 	repo := postgres.New(database)
 
+	userID := testsutil.GenerateUUID(t)
+	domainID := testsutil.GenerateUUID(t)
 	num := 10
 
 	var items []groups.Group
@@ -1511,7 +1513,7 @@ func TestRetrieveHierarchy(t *testing.T) {
 		name := namegen.Generate()
 		group := groups.Group{
 			ID:          testsutil.GenerateUUID(t),
-			Domain:      testsutil.GenerateUUID(t),
+			Domain:      domainID,
 			Parent:      parentID,
 			Name:        name,
 			Description: strings.Repeat("a", 64),
