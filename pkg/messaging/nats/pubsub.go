@@ -80,13 +80,14 @@ func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig)
 		return ErrEmptyTopic
 	}
 
-	nh := ps.natsHandler(cfg.Handler, cfg.AckErr)
+	nh := ps.natsHandler(cfg.Handler, cfg.HandlerErr, cfg.HandlerAck)
 
 	consumerConfig := jetstream.ConsumerConfig{
 		Name:          formatConsumerName(cfg.Topic, cfg.ID),
 		Durable:       formatConsumerName(cfg.Topic, cfg.ID),
 		Description:   fmt.Sprintf("SuperMQ consumer of id %s for cfg.Topic %s", cfg.ID, cfg.Topic),
 		DeliverPolicy: jetstream.DeliverNewPolicy,
+		MaxDeliver:    cfg.MaxDelivery,
 		FilterSubject: cfg.Topic,
 	}
 
@@ -130,25 +131,45 @@ func (ps *pubsub) Unsubscribe(ctx context.Context, id, topic string) error {
 	}
 }
 
-func (ps *pubsub) natsHandler(h messaging.MessageHandler, ackErr bool) func(m jetstream.Msg) {
+func (ps *pubsub) natsHandler(h messaging.MessageHandler, ack, ackErr messaging.AckType) func(m jetstream.Msg) {
 	return func(m jetstream.Msg) {
 		var msg messaging.Message
 		if err := proto.Unmarshal(m.Data(), &msg); err != nil {
-			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
+			ps.logger.Warn(fmt.Sprintf("failed to unmarshal message: %s", err))
 			return
 		}
 
-		if err := h.Handle(&msg); err != nil {
-			ps.logger.Warn(fmt.Sprintf("Failed to handle SuperMQ message: %s", err))
-			if ackErr {
-				if err := m.Ack(); err != nil {
-					ps.logger.Warn(fmt.Sprintf("Failed to ack message: %s", err))
-				}
-			}
+		err := h.Handle(&msg)
+		if err != nil {
+			ps.logger.Warn(fmt.Sprintf("failed to handle SMQ message: %s", err))
+			ps.handleAck(ackErr, m)
 			return
 		}
+		ps.handleAck(ack, m)
+	}
+}
+
+func (ps *pubsub) handleAck(at messaging.AckType, m jetstream.Msg) {
+	switch at {
+	case messaging.Ack:
 		if err := m.Ack(); err != nil {
-			ps.logger.Warn(fmt.Sprintf("Failed to ack message: %s", err))
+			ps.logger.Warn(fmt.Sprintf("failed to ack message: %s", err))
+		}
+	case messaging.DoubleAck:
+		if err := m.DoubleAck(context.Background()); err != nil {
+			ps.logger.Warn(fmt.Sprintf("failed to double ack message: %s", err))
+		}
+	case messaging.Nack:
+		if err := m.Nak(); err != nil {
+			ps.logger.Warn(fmt.Sprintf("failed to negatively ack message: %s", err))
+		}
+	case messaging.InProgress:
+		if err := m.InProgress(); err != nil {
+			ps.logger.Warn(fmt.Sprintf("failed to set message in progress: %s", err))
+		}
+	case messaging.Term:
+		if err := m.Term(); err != nil {
+			ps.logger.Warn(fmt.Sprintf("failed to terminate message: %s", err))
 		}
 	}
 }
