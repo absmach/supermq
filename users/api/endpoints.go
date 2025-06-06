@@ -249,7 +249,7 @@ func updateEmailEndpoint(svc users.Service) endpoint.Endpoint {
 // must be sent as PUT request to 'password/reset' passwordResetEndpoint.
 func passwordResetRequestEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(passwResetReq)
+		req := request.(passResetReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
@@ -258,7 +258,7 @@ func passwordResetRequestEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		return passwResetReqRes{Msg: MailSent}, nil
+		return passResetReqRes{Msg: MailSent}, nil
 	}
 }
 
@@ -280,7 +280,7 @@ func passwordResetEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		return passwChangeRes{}, nil
+		return passChangeRes{}, nil
 	}
 }
 

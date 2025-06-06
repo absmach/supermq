@@ -49,9 +49,9 @@ func (sdk mgSDK) Journal(ctx context.Context, entityType, entityID, domainID str
 		return JournalsPage{}, errors.NewSDKError(err)
 	}
 
-	_, body, sdkerr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
-	if sdkerr != nil {
-		return JournalsPage{}, sdkerr
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
+	if sdkErr != nil {
+		return JournalsPage{}, sdkErr
 	}
 
 	var journalsPage JournalsPage
