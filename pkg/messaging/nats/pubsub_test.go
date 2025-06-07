@@ -106,7 +106,7 @@ func TestPublisher(t *testing.T) {
 
 func TestPubsub(t *testing.T) {
 	// Test Subscribe and Unsubscribe.
-	subcases := []struct {
+	cases := []struct {
 		desc         string
 		topic        string
 		clientID     string
@@ -260,7 +260,7 @@ func TestPubsub(t *testing.T) {
 		},
 	}
 
-	for _, pc := range subcases {
+	for _, pc := range cases {
 		subCfg := messaging.SubscriberConfig{
 			ID:      pc.clientID,
 			Topic:   pc.topic,
