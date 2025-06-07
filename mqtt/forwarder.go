@@ -9,6 +9,7 @@ import (
 	"log/slog"
 
 	"github.com/absmach/supermq/pkg/messaging"
+	"github.com/absmach/supermq/pkg/messaging/mqtt"
 )
 
 // Forwarder specifies MQTT forwarder interface API.
@@ -48,7 +49,7 @@ func handle(ctx context.Context, pub messaging.Publisher, logger *slog.Logger) h
 		}
 
 		topic := messaging.EncodeMessageMQTTTopic(msg)
-
+		ctx = mqtt.WithQoS(ctx, 1)
 		go func() {
 			if err := pub.Publish(ctx, topic, msg); err != nil {
 				logger.Warn(fmt.Sprintf("Failed to forward message: %s", err))

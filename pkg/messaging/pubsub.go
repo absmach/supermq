@@ -16,6 +16,19 @@ const (
 	DeliverAllPolicy
 )
 
+// AckType is used for message acknowledgement.
+// It can be used for both successful and unsuccessful handling.
+type AckType int
+
+const (
+	Ack        AckType = iota // regular acknowledgement
+	DoubleAck                 // double ack in case of guaranteed delivery
+	Nack                      // negative Ack
+	InProgress                // restart delivery timer
+	Term                      // terminate
+	NoAck                     // do nothing
+)
+
 // Publisher specifies message publishing API.
 type Publisher interface {
 	// Publishes message to the stream.
@@ -34,14 +47,20 @@ type MessageHandler interface {
 	Cancel() error
 }
 
+// SubscriberConfig defines the configuration for a subscriber that processes messages from a topic.
 type SubscriberConfig struct {
-	ID             string
-	ClientID       string
-	Topic          string
-	Handler        MessageHandler
-	DeliveryPolicy DeliveryPolicy
-	Ordered        bool
-	AckErr         bool
+	ID             string         // Unique identifier for the subscriber.
+	ClientID       string         // Identifier of the client associated with this subscriber.
+	Topic          string         // Topic to subscribe to.
+	Handler        MessageHandler // Function that handles incoming messages.
+	DeliveryPolicy DeliveryPolicy // DeliverPolicy defines from which point to start delivering messages.
+	MaxDelivery    int            // Maximum number of delivery attempts before giving up.
+	Ordered        bool           // Whether message delivery must preserve order.
+
+	// HandlerAck is the acknowledgment action to perform after the handler returns a nil error.
+	HandlerAck AckType
+	// HandlerErr is the acknowledgment action to perform after the handler returns a non-nil error.
+	HandlerErr AckType
 }
 
 // Subscriber specifies message subscription API.

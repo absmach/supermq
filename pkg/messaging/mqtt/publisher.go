@@ -19,12 +19,16 @@ var _ messaging.Publisher = (*publisher)(nil)
 type publisher struct {
 	client  mqtt.Client
 	timeout time.Duration
-	qos     uint8
 }
 
+const (
+	qosKey      = "qos"
+	publisherID = "smq-mqtt-publisher"
+)
+
 // NewPublisher returns a new MQTT message publisher.
-func NewPublisher(address, username, password string, qos uint8, timeout time.Duration) (messaging.Publisher, error) {
-	client, err := newClient(address, username, password, "mqtt-publisher", timeout)
+func NewPublisher(address, username, password string, timeout time.Duration) (messaging.Publisher, error) {
+	client, err := newClient(address, username, password, publisherID, timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +36,6 @@ func NewPublisher(address, username, password string, qos uint8, timeout time.Du
 	ret := publisher{
 		client:  client,
 		timeout: timeout,
-		qos:     qos,
 	}
 	return ret, nil
 }
@@ -43,7 +46,7 @@ func (pub publisher) Publish(ctx context.Context, topic string, msg *messaging.M
 	}
 
 	// Publish only the payload and not the whole message.
-	token := pub.client.Publish(topic, byte(pub.qos), false, msg.GetPayload())
+	token := pub.client.Publish(topic, qos(ctx), false, msg.GetPayload())
 	if token.Error() != nil {
 		return token.Error()
 	}
@@ -58,4 +61,19 @@ func (pub publisher) Publish(ctx context.Context, topic string, msg *messaging.M
 func (pub publisher) Close() error {
 	pub.client.Disconnect(uint(pub.timeout))
 	return nil
+}
+
+func WithQoS(ctx context.Context, qos byte) context.Context {
+	return context.WithValue(ctx, qosKey, qos)
+}
+
+// Return QoS defaulting to 1 for compatibility reasons.
+func qos(ctx context.Context) byte {
+	val := ctx.Value(qosKey)
+	if val != nil {
+		if ret, ok := val.(byte); ok {
+			return ret
+		}
+	}
+	return 1
 }

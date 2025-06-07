@@ -63,7 +63,7 @@ func TestMain(m *testing.M) {
 	}
 
 	if err := pool.Retry(func() error {
-		pubsub, err = mqttpubsub.NewPubSub(address, "supermq", "", 2, brokerTimeout, logger)
+		pubsub, err = mqttpubsub.NewPubSub(address, "supermq", "", brokerTimeout, logger)
 		return err
 	}); err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
