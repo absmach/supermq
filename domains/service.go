@@ -316,7 +316,7 @@ func (svc *service) RejectInvitation(ctx context.Context, session authn.Session,
 func (svc *service) DeleteInvitation(ctx context.Context, session authn.Session, inviteeUserID, domainID string) error {
 	if session.UserID == inviteeUserID {
 		if err := svc.repo.DeleteInvitation(ctx, inviteeUserID, domainID); err != nil {
-			return err
+			return errors.Wrap(svcerr.ErrRemoveEntity, err)
 		}
 		return nil
 	}
@@ -369,7 +369,7 @@ func (svc *service) RoleRemoveMembers(ctx context.Context, session authn.Session
 
 	for _, memberID := range members {
 		if err := svc.repo.DeleteInvitation(ctx, memberID, entityID); err != nil && err != repoerr.ErrNotFound {
-			return svcerr.ErrRetainOneMember
+			return err
 		}
 	}
 
