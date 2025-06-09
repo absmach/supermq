@@ -531,12 +531,12 @@ func TestTokenReqValidate(t *testing.T) {
 func TestPasswResetReqValidate(t *testing.T) {
 	cases := []struct {
 		desc string
-		req  passwResetReq
+		req  passResetReq
 		err  error
 	}{
 		{
 			desc: "valid request",
-			req: passwResetReq{
+			req: passResetReq{
 				Email: "example@example.com",
 				Host:  "example.com",
 			},
@@ -544,7 +544,7 @@ func TestPasswResetReqValidate(t *testing.T) {
 		},
 		{
 			desc: "empty email",
-			req: passwResetReq{
+			req: passResetReq{
 				Email: "",
 				Host:  "example.com",
 			},
@@ -552,7 +552,7 @@ func TestPasswResetReqValidate(t *testing.T) {
 		},
 		{
 			desc: "empty host",
-			req: passwResetReq{
+			req: passResetReq{
 				Email: "example@example.com",
 				Host:  "",
 			},
