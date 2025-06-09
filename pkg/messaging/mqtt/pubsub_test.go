@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/pkg/messaging"
-	mqttpubsub "github.com/absmach/supermq/pkg/messaging/mqtt"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/absmach/supermq/pkg/messaging/mqtt"
+	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
 )
@@ -37,7 +37,7 @@ func TestPublisher(t *testing.T) {
 	client, err := newClient(address, "clientID1", brokerTimeout)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	token := client.Subscribe(topic, qos, func(_ mqtt.Client, m mqtt.Message) {
+	token := client.Subscribe(topic, qos, func(_ paho.Client, m paho.Message) {
 		msgChan <- m.Payload()
 	})
 	if ok := token.WaitTimeout(tokenTimeout); !ok {
@@ -45,7 +45,7 @@ func TestPublisher(t *testing.T) {
 	}
 	assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
 
-	token = client.Subscribe(fmt.Sprintf("%s.%s", topic, subtopic), qos, func(_ mqtt.Client, m mqtt.Message) {
+	token = client.Subscribe(fmt.Sprintf("%s.%s", topic, subtopic), qos, func(_ paho.Client, m paho.Message) {
 		msgChan <- m.Payload()
 	})
 	if ok := token.WaitTimeout(tokenTimeout); !ok {
@@ -62,8 +62,8 @@ func TestPublisher(t *testing.T) {
 	})
 
 	// Test publish with an empty topic.
-	err = pubsub.Publish(context.TODO(), "", &messaging.Message{Payload: data})
-	assert.Equal(t, err, mqttpubsub.ErrEmptyTopic, fmt.Sprintf("Publish with empty topic: expected: %s, got: %s", mqttpubsub.ErrEmptyTopic, err))
+	err = pubsub.Publish(mqtt.WithQoS(context.TODO(), 2), "", &messaging.Message{Payload: data})
+	assert.Equal(t, err, mqtt.ErrEmptyTopic, fmt.Sprintf("Publish with empty topic: expected: %s, got: %s", mqtt.ErrEmptyTopic, err))
 
 	cases := []struct {
 		desc     string
@@ -104,7 +104,7 @@ func TestPublisher(t *testing.T) {
 			Payload:   tc.payload,
 		}
 
-		err := pubsub.Publish(context.TODO(), topic, &expectedMsg)
+		err := pubsub.Publish(mqtt.WithQoS(context.TODO(), 2), topic, &expectedMsg)
 		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
 
 		data, err := proto.Marshal(&expectedMsg)
@@ -175,14 +175,14 @@ func TestSubscribe(t *testing.T) {
 			desc:     "Subscribe to an empty topic with an ID",
 			topic:    "",
 			clientID: "clientid1",
-			err:      mqttpubsub.ErrEmptyTopic,
+			err:      mqtt.ErrEmptyTopic,
 			handler:  handler{false, "clientid1", msgChan},
 		},
 		{
 			desc:     "Subscribe to a topic with empty id",
 			topic:    topic,
 			clientID: "",
-			err:      mqttpubsub.ErrEmptyID,
+			err:      mqtt.ErrEmptyID,
 			handler:  handler{false, "", msgChan},
 		},
 	}
@@ -255,14 +255,14 @@ func TestPubSub(t *testing.T) {
 			desc:     "Subscribe to an empty topic with an ID",
 			topic:    "",
 			clientID: "clientid7",
-			err:      mqttpubsub.ErrEmptyTopic,
+			err:      mqtt.ErrEmptyTopic,
 			handler:  handler{false, "clientid7", msgChan},
 		},
 		{
 			desc:     "Subscribe to a topic with empty id",
 			topic:    topic,
 			clientID: "",
-			err:      mqttpubsub.ErrEmptyID,
+			err:      mqtt.ErrEmptyID,
 			handler:  handler{false, "", msgChan},
 		},
 	}
@@ -351,7 +351,7 @@ func TestUnsubscribe(t *testing.T) {
 			desc:      "Unsubscribe from a non-existent topic with an ID",
 			topic:     "h",
 			clientID:  "clientid4",
-			err:       mqttpubsub.ErrNotSubscribed,
+			err:       mqtt.ErrNotSubscribed,
 			subscribe: false,
 			handler:   handler{false, "clientid4", msgChan},
 		},
@@ -359,7 +359,7 @@ func TestUnsubscribe(t *testing.T) {
 			desc:      "Unsubscribe from an already unsubscribed topic with an ID",
 			topic:     fmt.Sprintf("%s.%s", msgPrefix, topic),
 			clientID:  "clientid4",
-			err:       mqttpubsub.ErrNotSubscribed,
+			err:       mqtt.ErrNotSubscribed,
 			subscribe: false,
 			handler:   handler{false, "clientid4", msgChan},
 		},
@@ -383,7 +383,7 @@ func TestUnsubscribe(t *testing.T) {
 			desc:      "Unsubscribe from an already unsubscribed topic with a subtopic with an ID",
 			topic:     fmt.Sprintf("%s.%s.%s", msgPrefix, topic, subtopic),
 			clientID:  "clientid4",
-			err:       mqttpubsub.ErrNotSubscribed,
+			err:       mqtt.ErrNotSubscribed,
 			subscribe: false,
 			handler:   handler{false, "clientid4", msgChan},
 		},
@@ -391,7 +391,7 @@ func TestUnsubscribe(t *testing.T) {
 			desc:      "Unsubscribe from an empty topic with an ID",
 			topic:     "",
 			clientID:  "clientid4",
-			err:       mqttpubsub.ErrEmptyTopic,
+			err:       mqtt.ErrEmptyTopic,
 			subscribe: false,
 			handler:   handler{false, "clientid4", msgChan},
 		},
@@ -399,7 +399,7 @@ func TestUnsubscribe(t *testing.T) {
 			desc:      "Unsubscribe from a topic with empty ID",
 			topic:     fmt.Sprintf("%s.%s", msgPrefix, topic),
 			clientID:  "",
-			err:       mqttpubsub.ErrEmptyID,
+			err:       mqtt.ErrEmptyID,
 			subscribe: false,
 			handler:   handler{false, "", msgChan},
 		},

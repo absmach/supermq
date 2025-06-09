@@ -59,8 +59,8 @@ type pubsub struct {
 }
 
 // NewPubSub returns MQTT message publisher/subscriber.
-func NewPubSub(url, username, password string, qos uint8, timeout time.Duration, logger *slog.Logger) (messaging.PubSub, error) {
-	client, err := newClient(url, username, password, "mqtt-publisher", timeout)
+func NewPubSub(url, username, password string, timeout time.Duration, logger *slog.Logger) (messaging.PubSub, error) {
+	client, err := newClient(url, username, password, publisherID, timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,6 @@ func NewPubSub(url, username, password string, qos uint8, timeout time.Duration,
 		publisher: publisher{
 			client:  client,
 			timeout: timeout,
-			qos:     qos,
 		},
 		address:       url,
 		username:      username,
@@ -112,8 +111,14 @@ func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig)
 	}
 	s.topics = append(s.topics, cfg.Topic)
 	ps.subscriptions[cfg.ID] = s
-
-	token := s.client.Subscribe(cfg.Topic, byte(ps.qos), ps.mqttHandler(cfg.Handler))
+	qos := byte(0)
+	switch cfg.HandlerAck {
+	case messaging.Ack:
+		qos = 1
+	case messaging.DoubleAck:
+		qos = 2
+	}
+	token := s.client.Subscribe(cfg.Topic, qos, ps.mqttHandler(cfg.Handler))
 	if token.Error() != nil {
 		return token.Error()
 	}

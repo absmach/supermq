@@ -12,8 +12,7 @@ The service is configured using the environment variables presented in the follo
 | SMQ_MQTT_ADAPTER_MQTT_PORT                | mProxy port                                                                         | 1883                                |
 | SMQ_MQTT_ADAPTER_MQTT_TARGET_HOST         | MQTT broker host                                                                    | localhost                           |
 | SMQ_MQTT_ADAPTER_MQTT_TARGET_PORT         | MQTT broker port                                                                    | 1883                                |
-| SMQ_MQTT_ADAPTER_MQTT_QOS                 | MQTT broker QoS                                                                     | 1                                   |
-| SMQ_MQTT_ADAPTER_FORWARDER_TIMEOUT        | MQTT forwarder for multiprotocol communication timeout                              | 30s                                 |
+| SMQ_MQTT_ADAPTER_FORWARDER_TIMEOUT        | MQTT forwarder for multi-protocol communication timeout                             | 30s                                 |
 | SMQ_MQTT_ADAPTER_MQTT_TARGET_HEALTH_CHECK | URL of broker health check                                                          | ""                                  |
 | SMQ_MQTT_ADAPTER_WS_PORT                  | mProxy MQTT over WS port                                                            | 8080                                |
 | SMQ_MQTT_ADAPTER_WS_TARGET_HOST           | MQTT broker host for MQTT over WS                                                   | localhost                           |
@@ -56,7 +55,6 @@ SMQ_MQTT_ADAPTER_LOG_LEVEL=info \
 SMQ_MQTT_ADAPTER_MQTT_PORT=1883 \
 SMQ_MQTT_ADAPTER_MQTT_TARGET_HOST=localhost \
 SMQ_MQTT_ADAPTER_MQTT_TARGET_PORT=1883 \
-SMQ_MQTT_ADAPTER_MQTT_QOS=1 \
 SMQ_MQTT_ADAPTER_FORWARDER_TIMEOUT=30s \
 SMQ_MQTT_ADAPTER_MQTT_TARGET_HEALTH_CHECK="" \
 SMQ_MQTT_ADAPTER_WS_PORT=8080 \
