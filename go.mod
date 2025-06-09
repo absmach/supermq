@@ -20,8 +20,8 @@ require (
 	github.com/gofrs/uuid/v5 v5.3.2
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
-	github.com/hashicorp/vault/api v1.16.0
-	github.com/hashicorp/vault/api/auth/approle v0.9.0
+	github.com/hashicorp/vault/api v1.20.0
+	github.com/hashicorp/vault/api/auth/approle v0.10.0
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f
 	github.com/jackc/pgtype v1.14.4
 	github.com/jackc/pgx/v5 v5.7.5
@@ -107,7 +107,7 @@ require (
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.9 // indirect
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.7 // indirect
-	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/hashicorp/hcl v1.0.1-vault-7 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
