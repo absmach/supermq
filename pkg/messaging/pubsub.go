@@ -29,11 +29,6 @@ const (
 	NoAck                     // do nothing
 )
 
-type Error interface {
-	error
-	Ack() AckType
-}
-
 // Publisher specifies message publishing API.
 type Publisher interface {
 	// Publishes message to the stream.

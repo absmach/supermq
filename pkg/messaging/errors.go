@@ -1,0 +1,36 @@
+// Copyright (c) Abstract Machines
+// SPDX-License-Identifier: Apache-2.0
+
+package messaging
+
+// MsgError is an error type for SuperMQ SDK.
+type Error interface {
+	error
+	Ack() AckType
+}
+
+type msgError struct {
+	err error
+	ack AckType
+}
+
+var _ Error = (*msgError)(nil)
+
+func (ce *msgError) Error() string {
+	return ce.err.Error()
+}
+
+func (ce *msgError) Ack() AckType {
+	return ce.ack
+}
+
+// NewMsgError returns an Message Error setting the acknowledgement type.
+func NewMsgError(err error, ack AckType) Error {
+	if err == nil {
+		return &msgError{ack: NoAck}
+	}
+	return &msgError{
+		ack: ack,
+		err: err,
+	}
+}
