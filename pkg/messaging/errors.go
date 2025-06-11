@@ -24,8 +24,8 @@ func (ce *msgError) Ack() AckType {
 	return ce.ack
 }
 
-// NewMsgError returns an Message Error setting the acknowledgement type.
-func NewMsgError(err error, ack AckType) Error {
+// NewError returns an Error setting the acknowledgement type.
+func NewError(err error, ack AckType) Error {
 	if err == nil {
 		return &msgError{ack: NoAck}
 	}

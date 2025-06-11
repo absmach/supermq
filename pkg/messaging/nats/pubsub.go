@@ -153,7 +153,6 @@ func (ps *pubsub) handleError(err error, m jetstream.Msg) {
 	switch e := err.(type) {
 	case messaging.Error:
 		ps.handleAck(e.Ack(), m)
-
 	}
 }
 
