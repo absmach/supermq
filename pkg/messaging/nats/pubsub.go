@@ -81,14 +81,13 @@ func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig)
 	}
 
 	// nolint:contextcheck
-	nh := ps.natsHandler(cfg.Handler, cfg.HandlerErr, cfg.HandlerAck)
+	nh := ps.natsHandler(cfg.Handler)
 
 	consumerConfig := jetstream.ConsumerConfig{
 		Name:          formatConsumerName(cfg.Topic, cfg.ID),
 		Durable:       formatConsumerName(cfg.Topic, cfg.ID),
 		Description:   fmt.Sprintf("SuperMQ consumer of id %s for cfg.Topic %s", cfg.ID, cfg.Topic),
 		DeliverPolicy: jetstream.DeliverNewPolicy,
-		MaxDeliver:    cfg.MaxDelivery,
 		FilterSubject: cfg.Topic,
 	}
 
@@ -132,7 +131,7 @@ func (ps *pubsub) Unsubscribe(ctx context.Context, id, topic string) error {
 	}
 }
 
-func (ps *pubsub) natsHandler(h messaging.MessageHandler, ack, ackErr messaging.AckType) func(m jetstream.Msg) {
+func (ps *pubsub) natsHandler(h messaging.MessageHandler) func(m jetstream.Msg) {
 	return func(m jetstream.Msg) {
 		var msg messaging.Message
 		if err := proto.Unmarshal(m.Data(), &msg); err != nil {
@@ -143,10 +142,18 @@ func (ps *pubsub) natsHandler(h messaging.MessageHandler, ack, ackErr messaging.
 		err := h.Handle(&msg)
 		if err != nil {
 			ps.logger.Warn(fmt.Sprintf("failed to handle SMQ message: %s", err))
-			ps.handleAck(ackErr, m)
+			ps.handleError(err, m)
 			return
 		}
-		ps.handleAck(ack, m)
+		ps.handleAck(messaging.Ack, m)
+	}
+}
+
+func (ps *pubsub) handleError(err error, m jetstream.Msg) {
+	switch e := err.(type) {
+	case messaging.Error:
+		ps.handleAck(e.Ack(), m)
+
 	}
 }
 
