@@ -67,3 +67,19 @@ func retrieveEntityEndpoint(svc channels.Service) endpoint.Endpoint {
 		return retrieveEntityRes{id: channel.ID, domain: channel.Domain, parentGroup: channel.ParentGroup, status: uint8(channel.Status)}, nil
 	}
 }
+
+func retrieveByRouteEndpoint(svc channels.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(retrieveByRouteReq)
+		if err := req.validate(); err != nil {
+			return retrieveEntityRes{}, err
+		}
+
+		channel, err := svc.RetrieveByRoute(ctx, req.route, req.domainID)
+		if err != nil {
+			return retrieveEntityRes{}, err
+		}
+
+		return retrieveEntityRes{id: channel.ID, status: uint8(channel.Status)}, nil
+	}
+}

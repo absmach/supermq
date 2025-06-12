@@ -21,11 +21,13 @@ import (
 	"github.com/absmach/supermq"
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
+	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
 	adapter "github.com/absmach/supermq/http"
 	httpapi "github.com/absmach/supermq/http/api"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/authn/authsvc"
+	domainsAuthz "github.com/absmach/supermq/pkg/domains/grpcclient"
 	"github.com/absmach/supermq/pkg/grpcclient"
 	jaegerclient "github.com/absmach/supermq/pkg/jaeger"
 	"github.com/absmach/supermq/pkg/messaging"
@@ -48,6 +50,7 @@ const (
 	envPrefixClients   = "SMQ_CLIENTS_GRPC_"
 	envPrefixChannels  = "SMQ_CHANNELS_GRPC_"
 	envPrefixAuth      = "SMQ_AUTH_GRPC_"
+	envPrefixDomains   = "SMQ_DOMAINS_GRPC_"
 	defSvcHTTPPort     = "80"
 	targetHTTPProtocol = "http"
 	targetHTTPHost     = "localhost"
@@ -96,6 +99,22 @@ func main() {
 		exitCode = 1
 		return
 	}
+
+	domsGrpcCfg := grpcclient.Config{}
+	if err := env.ParseWithOptions(&domsGrpcCfg, env.Options{Prefix: envPrefixDomains}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load domains gRPC client configuration : %s", err))
+		exitCode = 1
+		return
+	}
+	_, domainsClient, domainsHandler, err := domainsAuthz.NewAuthorization(ctx, domsGrpcCfg)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+	defer domainsHandler.Close()
+
+	logger.Info("Domains service gRPC client successfully connected to domains gRPC server " + domainsHandler.Secure())
 
 	clientsClientCfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&clientsClientCfg, env.Options{Prefix: envPrefixClients}); err != nil {
@@ -174,7 +193,7 @@ func main() {
 		return
 	}
 
-	svc := newService(pub, authn, clientsClient, channelsClient, logger, tracer)
+	svc := newService(pub, authn, clientsClient, channelsClient, domainsClient, logger, tracer)
 	targetServerCfg := server.Config{Port: targetHTTPPort}
 
 	hs := httpserver.NewServer(ctx, cancel, svcName, targetServerCfg, httpapi.MakeHandler(logger, cfg.InstanceID), logger)
@@ -201,8 +220,8 @@ func main() {
 	}
 }
 
-func newService(pub messaging.Publisher, authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, logger *slog.Logger, tracer trace.Tracer) session.Handler {
-	svc := adapter.NewHandler(pub, authn, clients, channels, logger)
+func newService(pub messaging.Publisher, authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, domains grpcDomainsV1.DomainsServiceClient, logger *slog.Logger, tracer trace.Tracer) session.Handler {
+	svc := adapter.NewHandler(pub, authn, clients, channels, domains, logger)
 	svc = handler.NewTracing(tracer, svc)
 	svc = handler.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics(svcName, "api")

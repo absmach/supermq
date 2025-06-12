@@ -4,6 +4,7 @@
 package grpc
 
 import (
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/absmach/supermq/pkg/policies"
@@ -36,4 +37,20 @@ type unsetParentGroupFromChannelsReq struct {
 
 type retrieveEntityReq struct {
 	Id string
+}
+
+type retrieveByRouteReq struct {
+	route    string
+	domainID string
+}
+
+func (req retrieveByRouteReq) validate() error {
+	if req.route == "" {
+		return apiutil.ErrMissingRoute
+	}
+	if req.domainID == "" {
+		return apiutil.ErrMissingDomainID
+	}
+
+	return nil
 }

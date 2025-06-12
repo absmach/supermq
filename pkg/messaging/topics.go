@@ -26,7 +26,7 @@ var (
 	ErrMalformedTopic    = errors.New("malformed topic")
 	ErrMalformedSubtopic = errors.New("malformed subtopic")
 	// Regex to group topic in format m.<domain_id>.c.<channel_id>.<sub_topic> `^\/?m\/([\w\-]+)\/c\/([\w\-]+)(\/[^?]*)?(\?.*)?$`.
-	topicRegExp          = regexp.MustCompile(`^\/?` + MsgTopicPrefix + `\/([\w\-]+)\/` + ChannelTopicPrefix + `\/([\w\-]+)(\/[^?]*)?(\?.*)?$`)
+	TopicRegExp          = regexp.MustCompile(`^\/?` + MsgTopicPrefix + `\/([\w\-]+)\/` + ChannelTopicPrefix + `\/([\w\-]+)(\/[^?]*)?(\?.*)?$`)
 	mqWildcards          = "+#"
 	wildcards            = "*>"
 	subtopicInvalidChars = " #+"
@@ -35,7 +35,7 @@ var (
 )
 
 func ParsePublishTopic(topic string) (domainID, chanID, subtopic string, err error) {
-	msgParts := topicRegExp.FindStringSubmatch(topic)
+	msgParts := TopicRegExp.FindStringSubmatch(topic)
 	if len(msgParts) < numGroups {
 		return "", "", "", ErrMalformedTopic
 	}
@@ -74,7 +74,7 @@ func ParsePublishSubtopic(subtopic string) (parseSubTopic string, err error) {
 }
 
 func ParseSubscribeTopic(topic string) (domainID string, chanID string, subtopic string, err error) {
-	msgParts := topicRegExp.FindStringSubmatch(topic)
+	msgParts := TopicRegExp.FindStringSubmatch(topic)
 	if len(msgParts) < numGroups {
 		return "", "", "", ErrMalformedTopic
 	}

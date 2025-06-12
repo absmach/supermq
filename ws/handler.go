@@ -15,6 +15,9 @@ import (
 	"github.com/absmach/mgate/pkg/session"
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
+	grpcCommonV1 "github.com/absmach/supermq/api/grpc/common/v1"
+	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
+	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
@@ -50,18 +53,20 @@ type handler struct {
 	pubsub   messaging.PubSub
 	clients  grpcClientsV1.ClientsServiceClient
 	channels grpcChannelsV1.ChannelsServiceClient
+	domains  grpcDomainsV1.DomainsServiceClient
 	authn    smqauthn.Authentication
 	logger   *slog.Logger
 }
 
 // NewHandler creates new Handler entity.
-func NewHandler(pubsub messaging.PubSub, logger *slog.Logger, authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) session.Handler {
+func NewHandler(pubsub messaging.PubSub, logger *slog.Logger, authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, domains grpcDomainsV1.DomainsServiceClient) session.Handler {
 	return &handler{
 		logger:   logger,
 		pubsub:   pubsub,
 		authn:    authn,
 		clients:  clients,
 		channels: channels,
+		domains:  domains,
 	}
 }
 
@@ -90,9 +95,17 @@ func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byt
 		token = string(s.Password)
 	}
 
-	domainID, chanID, _, err := messaging.ParsePublishTopic(*topic)
+	domain, channel, _, err := messaging.ParsePublishTopic(*topic)
 	if err != nil {
 		return err
+	}
+	domainID, err := h.resolveDomain(ctx, domain)
+	if err != nil {
+		return mgate.NewHTTPProxyError(http.StatusBadRequest, errors.Wrap(errFailedResolveDomain, err))
+	}
+	chanID, err := h.resolveChannel(ctx, channel, domainID)
+	if err != nil {
+		return mgate.NewHTTPProxyError(http.StatusBadRequest, errors.Wrap(errFailedResolveChannel, err))
 	}
 
 	clientID, clientType, err := h.authAccess(ctx, token, domainID, chanID, connections.Publish)
@@ -119,9 +132,17 @@ func (h *handler) AuthSubscribe(ctx context.Context, topics *[]string) error {
 	}
 
 	for _, topic := range *topics {
-		domainID, chanID, _, err := messaging.ParseSubscribeTopic(topic)
+		domain, channel, _, err := messaging.ParseSubscribeTopic(topic)
 		if err != nil {
 			return err
+		}
+		domainID, err := h.resolveDomain(ctx, domain)
+		if err != nil {
+			return mgate.NewHTTPProxyError(http.StatusBadRequest, errors.Wrap(errFailedResolveDomain, err))
+		}
+		chanID, err := h.resolveChannel(ctx, channel, domainID)
+		if err != nil {
+			return mgate.NewHTTPProxyError(http.StatusBadRequest, errors.Wrap(errFailedResolveChannel, err))
 		}
 		if _, _, err := h.authAccess(ctx, string(s.Password), domainID, chanID, connections.Subscribe); err != nil {
 			return err
@@ -148,9 +169,17 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		return nil
 	}
 
-	domainID, chanID, subtopic, err := messaging.ParsePublishTopic(*topic)
+	domain, channel, subtopic, err := messaging.ParsePublishTopic(*topic)
 	if err != nil {
 		return errors.Wrap(errFailedPublish, err)
+	}
+	domainID, err := h.resolveDomain(ctx, domain)
+	if err != nil {
+		return mgate.NewHTTPProxyError(http.StatusBadRequest, errors.Wrap(errFailedResolveDomain, err))
+	}
+	chanID, err := h.resolveChannel(ctx, channel, domainID)
+	if err != nil {
+		return mgate.NewHTTPProxyError(http.StatusBadRequest, errors.Wrap(errFailedResolveChannel, err))
 	}
 
 	msg := messaging.Message{
@@ -226,6 +255,35 @@ func (h *handler) authAccess(ctx context.Context, token, domainID, chanID string
 	}
 
 	return clientID, clientType, nil
+}
+
+func (h *handler) resolveDomain(ctx context.Context, domain string) (string, error) {
+	if api.ValidateUUID(domain) == nil {
+		return domain, nil
+	}
+	d, err := h.domains.RetrieveByRoute(ctx, &grpcCommonV1.RetrieveByRouteReq{
+		Route: domain,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return d.Entity.Id, nil
+}
+
+func (h *handler) resolveChannel(ctx context.Context, channel, domainID string) (string, error) {
+	if api.ValidateUUID(channel) == nil {
+		return channel, nil
+	}
+	c, err := h.channels.RetrieveByRoute(ctx, &grpcCommonV1.RetrieveByRouteReq{
+		Route:    channel,
+		DomainId: domainID,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return c.Entity.Id, nil
 }
 
 // extractClientSecret returns value of the client secret. If there is no client key - an empty value is returned.

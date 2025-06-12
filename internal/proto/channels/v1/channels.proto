@@ -21,6 +21,9 @@ service ChannelsService {
 
   rpc RetrieveEntity(common.v1.RetrieveEntityReq)
     returns (common.v1.RetrieveEntityRes) {}
+
+  rpc RetrieveByRoute(common.v1.RetrieveByRouteReq)
+    returns (common.v1.RetrieveEntityRes) {}
 }
 
 message RemoveClientConnectionsReq {
@@ -50,3 +53,4 @@ message AuthzReq {
 message AuthzRes {
   bool authorized = 1;
 }
+

@@ -17,9 +17,11 @@ import (
 	proxy "github.com/absmach/mgate/pkg/http"
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
+	grpcCommonV1 "github.com/absmach/supermq/api/grpc/common/v1"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	chmocks "github.com/absmach/supermq/channels/mocks"
 	climocks "github.com/absmach/supermq/clients/mocks"
+	dmocks "github.com/absmach/supermq/domains/mocks"
 	adapter "github.com/absmach/supermq/http"
 	"github.com/absmach/supermq/http/api"
 	smqlog "github.com/absmach/supermq/logger"
@@ -35,14 +37,16 @@ import (
 var (
 	channelsGRPCClient *chmocks.ChannelsServiceClient
 	clientsGRPCClient  *climocks.ClientsServiceClient
+	domainsGRPCClient  *dmocks.DomainsServiceClient
 )
 
 func setupMessages() (*httptest.Server, *pubsub.PubSub) {
 	clientsGRPCClient = new(climocks.ClientsServiceClient)
 	channelsGRPCClient = new(chmocks.ChannelsServiceClient)
+	domainsGRPCClient = new(dmocks.DomainsServiceClient)
 	pub := new(pubsub.PubSub)
 	authn := new(authnmocks.Authentication)
-	handler := adapter.NewHandler(pub, authn, clientsGRPCClient, channelsGRPCClient, smqlog.NewMock())
+	handler := adapter.NewHandler(pub, authn, clientsGRPCClient, channelsGRPCClient, domainsGRPCClient, smqlog.NewMock())
 
 	mux := api.MakeHandler(smqlog.NewMock(), "")
 	target := httptest.NewServer(mux)
@@ -179,6 +183,8 @@ func TestSendMessage(t *testing.T) {
 			authzCall := clientsGRPCClient.On("Authenticate", mock.Anything, mock.Anything).Return(tc.authRes, tc.authErr)
 			authnCall := channelsGRPCClient.On("Authorize", mock.Anything, mock.Anything).Return(&grpcChannelsV1.AuthzRes{Authorized: true}, nil)
 			svcCall := pub.On("Publish", mock.Anything, internalTopic, mock.Anything).Return(tc.svcErr)
+			domainsCall := domainsGRPCClient.On("RetrieveByRoute", mock.Anything, mock.Anything).Return(&grpcCommonV1.RetrieveEntityRes{Entity: &grpcCommonV1.EntityBasic{Id: tc.domainID}}, nil)
+			channelsCall := channelsGRPCClient.On("RetrieveByRoute", mock.Anything, mock.Anything).Return(&grpcCommonV1.RetrieveEntityRes{Entity: &grpcCommonV1.EntityBasic{Id: channelID}}, nil)
 			err := mgsdk.SendMessage(context.Background(), tc.domainID, tc.topic, tc.msg, tc.secret)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
@@ -188,6 +194,8 @@ func TestSendMessage(t *testing.T) {
 			svcCall.Unset()
 			authzCall.Unset()
 			authnCall.Unset()
+			domainsCall.Unset()
+			channelsCall.Unset()
 		})
 	}
 }

@@ -23,13 +23,19 @@ import (
 	"github.com/absmach/mgate/pkg/mqtt/websocket"
 	"github.com/absmach/mgate/pkg/session"
 	"github.com/absmach/supermq"
+	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
+	grpcCommonV1 "github.com/absmach/supermq/api/grpc/common/v1"
+	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
+	api "github.com/absmach/supermq/api/http"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/mqtt"
 	"github.com/absmach/supermq/mqtt/events"
 	mqtttracing "github.com/absmach/supermq/mqtt/tracing"
+	domainsAuthz "github.com/absmach/supermq/pkg/domains/grpcclient"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/absmach/supermq/pkg/grpcclient"
 	jaegerclient "github.com/absmach/supermq/pkg/jaeger"
+	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/absmach/supermq/pkg/messaging/brokers"
 	brokerstracing "github.com/absmach/supermq/pkg/messaging/brokers/tracing"
 	msgevents "github.com/absmach/supermq/pkg/messaging/events"
@@ -47,7 +53,13 @@ const (
 	svcName           = "mqtt"
 	envPrefixClients  = "SMQ_CLIENTS_GRPC_"
 	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
+	envPrefixDomains  = "SMQ_DOMAINS_GRPC_"
 	wsPathPrefix      = "/mqtt"
+)
+
+var (
+	errFailedResolveDomain  = errors.New("failed to resolve domain route")
+	errFailedResolveChannel = errors.New("failed to resolve channel route")
 )
 
 type config struct {
@@ -172,6 +184,20 @@ func main() {
 		return
 	}
 
+	domsGrpcCfg := grpcclient.Config{}
+	if err := env.ParseWithOptions(&domsGrpcCfg, env.Options{Prefix: envPrefixDomains}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load domains gRPC client configuration : %s", err))
+		exitCode = 1
+		return
+	}
+	_, domainsClient, domainsHandler, err := domainsAuthz.NewAuthorization(ctx, domsGrpcCfg)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+	defer domainsHandler.Close()
+
 	clientsClientCfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&clientsClientCfg, env.Options{Prefix: envPrefixClients}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load %s auth configuration : %s", svcName, err))
@@ -220,18 +246,23 @@ func main() {
 		go chc.CallHome(ctx)
 	}
 
-	interceptor := interceptor{
+	beforeHandler := beforeHandler{
+		domains:  domainsClient,
+		channels: channelsClient,
+	}
+
+	afterHandler := afterHandler{
 		username: cfg.MQTTTargetUsername,
 		password: cfg.MQTTTargetPassword,
 	}
 	logger.Info(fmt.Sprintf("Starting MQTT proxy on port %s", cfg.MQTTPort))
 	g.Go(func() error {
-		return proxyMQTT(ctx, cfg, logger, h, interceptor)
+		return proxyMQTT(ctx, cfg, logger, h, beforeHandler, afterHandler)
 	})
 
 	logger.Info(fmt.Sprintf("Starting MQTT over WS  proxy on port %s", cfg.HTTPPort))
 	g.Go(func() error {
-		return proxyWS(ctx, cfg, logger, h, interceptor)
+		return proxyWS(ctx, cfg, logger, h, afterHandler)
 	})
 
 	g.Go(func() error {
@@ -243,13 +274,13 @@ func main() {
 	}
 }
 
-func proxyMQTT(ctx context.Context, cfg config, logger *slog.Logger, sessionHandler session.Handler, interceptor session.Interceptor) error {
+func proxyMQTT(ctx context.Context, cfg config, logger *slog.Logger, sessionHandler session.Handler, beforeHandler, afterHandler session.Interceptor) error {
 	config := mgate.Config{
 		Port:       cfg.MQTTPort,
 		TargetHost: cfg.MQTTTargetHost,
 		TargetPort: cfg.MQTTTargetPort,
 	}
-	mproxy := mgatemqtt.New(config, sessionHandler, nil, interceptor, logger)
+	mproxy := mgatemqtt.New(config, sessionHandler, beforeHandler, afterHandler, logger)
 
 	errCh := make(chan error)
 	go func() {
@@ -324,21 +355,21 @@ func stopSignalHandler(ctx context.Context, cancel context.CancelFunc, logger *s
 	}
 }
 
-type interceptor struct {
+type afterHandler struct {
 	username string
 	password string
 }
 
 // This interceptor adds the correct credentials to upstream MQTT broker since the downstream clients
 // are authenticated to the MQTT adapter but not upstream MQTT broker.
-func (ic interceptor) Intercept(ctx context.Context, pkt packets.ControlPacket, dir session.Direction) (packets.ControlPacket, error) {
+func (ah afterHandler) Intercept(ctx context.Context, pkt packets.ControlPacket, dir session.Direction) (packets.ControlPacket, error) {
 	if connectPkt, ok := pkt.(*packets.ConnectPacket); ok {
-		if ic.username != "" {
-			connectPkt.Username = ic.username
+		if ah.username != "" {
+			connectPkt.Username = ah.username
 			connectPkt.UsernameFlag = true
 		}
-		if ic.password != "" {
-			connectPkt.Password = []byte(ic.password)
+		if ah.password != "" {
+			connectPkt.Password = []byte(ah.password)
 			connectPkt.PasswordFlag = true
 		}
 
@@ -346,4 +377,87 @@ func (ic interceptor) Intercept(ctx context.Context, pkt packets.ControlPacket, 
 	}
 
 	return pkt, nil
+}
+
+type beforeHandler struct {
+	domains  grpcDomainsV1.DomainsServiceClient
+	channels grpcChannelsV1.ChannelsServiceClient
+}
+
+// This interceptor is used to replace domain and channel routes with relevant domain and channel IDs in the message topic.
+func (bh beforeHandler) Intercept(ctx context.Context, pkt packets.ControlPacket, dir session.Direction) (packets.ControlPacket, error) {
+	switch pt := pkt.(type) {
+	case *packets.SubscribePacket:
+		for i, topic := range pt.Topics {
+			ft, err := bh.resolveTopic(ctx, topic)
+			if err != nil {
+				return nil, err
+			}
+			pt.Topics[i] = ft
+		}
+
+		return pt, nil
+	case *packets.UnsubscribePacket:
+		for i, topic := range pt.Topics {
+			ft, err := bh.resolveTopic(ctx, topic)
+			if err != nil {
+				return nil, err
+			}
+			pt.Topics[i] = ft
+		}
+		return pt, nil
+	case *packets.PublishPacket:
+		ft, err := bh.resolveTopic(ctx, pt.TopicName)
+		if err != nil {
+			return nil, err
+		}
+		pt.TopicName = ft
+
+		return pt, nil
+	}
+
+	return pkt, nil
+}
+
+func (bh beforeHandler) resolveTopic(ctx context.Context, topic string) (string, error) {
+	matches := messaging.TopicRegExp.FindStringSubmatch(topic)
+	if len(matches) < 4 {
+		return "", messaging.ErrMalformedTopic
+	}
+
+	domainID, err := bh.resolveDomain(ctx, matches[1])
+	if err != nil {
+		return "", errors.Wrap(errFailedResolveDomain, err)
+	}
+	channelID, err := bh.resolveChannel(ctx, matches[2], domainID)
+	if err != nil {
+		return "", errors.Wrap(errFailedResolveChannel, err)
+	}
+
+	return fmt.Sprintf("m/%s/c/%s%s", domainID, channelID, matches[3]), nil
+}
+
+func (bh beforeHandler) resolveDomain(ctx context.Context, domain string) (string, error) {
+	if api.ValidateUUID(domain) == nil {
+		return domain, nil
+	}
+	resp, err := bh.domains.RetrieveByRoute(ctx, &grpcCommonV1.RetrieveByRouteReq{Route: domain})
+	if err != nil {
+		return "", err
+	}
+	return resp.Entity.Id, nil
+}
+
+func (bh beforeHandler) resolveChannel(ctx context.Context, channel, domainID string) (string, error) {
+	if api.ValidateUUID(channel) == nil {
+		return channel, nil
+	}
+	resp, err := bh.channels.RetrieveByRoute(ctx, &grpcCommonV1.RetrieveByRouteReq{
+		Route:    channel,
+		DomainId: domainID,
+	})
+	if err != nil {
+		return "", err
+	}
+	return resp.Entity.Id, nil
 }

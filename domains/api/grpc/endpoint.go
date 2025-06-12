@@ -43,3 +43,22 @@ func retrieveEntityEndpoint(svc domains.Service) endpoint.Endpoint {
 		}, nil
 	}
 }
+
+func retrieveByRouteEndpoint(svc domains.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(retrieveByRouteReq)
+		if err := req.validate(); err != nil {
+			return retrieveEntityRes{}, err
+		}
+
+		dom, err := svc.RetrieveByRoute(ctx, req.Route)
+		if err != nil {
+			return retrieveEntityRes{}, err
+		}
+
+		return retrieveEntityRes{
+			id:     dom.ID,
+			status: uint8(dom.Status),
+		}, nil
+	}
+}

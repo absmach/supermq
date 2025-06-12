@@ -72,6 +72,7 @@ func TestCreateChannelEndpoint(t *testing.T) {
 		Metadata: map[string]interface{}{
 			"name": "test",
 		},
+		Route: valid,
 	}
 	reqWithRoute := reqChannel
 	reqWithRoute.Route = valid

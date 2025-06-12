@@ -17,6 +17,7 @@ import (
 	apiutil "github.com/absmach/supermq/api/http/util"
 	chmocks "github.com/absmach/supermq/channels/mocks"
 	clmocks "github.com/absmach/supermq/clients/mocks"
+	dmocks "github.com/absmach/supermq/domains/mocks"
 	mhttp "github.com/absmach/supermq/http"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
@@ -65,6 +66,7 @@ var (
 	channels  = new(chmocks.ChannelsServiceClient)
 	authn     = new(authnmocks.Authentication)
 	publisher = new(mocks.PubSub)
+	domains   = new(dmocks.DomainsServiceClient)
 )
 
 func newHandler() session.Handler {
@@ -72,9 +74,10 @@ func newHandler() session.Handler {
 	authn = new(authnmocks.Authentication)
 	clients = new(clmocks.ClientsServiceClient)
 	channels = new(chmocks.ChannelsServiceClient)
+	domains = new(dmocks.DomainsServiceClient)
 	publisher = new(mocks.PubSub)
 
-	return mhttp.NewHandler(publisher, authn, clients, channels, logger)
+	return mhttp.NewHandler(publisher, authn, clients, channels, domains, logger)
 }
 
 func TestAuthConnect(t *testing.T) {
