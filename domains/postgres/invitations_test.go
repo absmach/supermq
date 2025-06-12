@@ -761,7 +761,7 @@ func TestInvitationUpdateRejection(t *testing.T) {
 	}
 }
 
-func TestInvitationDelete(t *testing.T) {
+func TestUserInvitationDelete(t *testing.T) {
 	t.Cleanup(func() {
 		_, err := db.Exec("DELETE FROM invitations")
 		require.Nil(t, err, fmt.Sprintf("clean invitations unexpected error: %s", err))
@@ -772,48 +772,58 @@ func TestInvitationDelete(t *testing.T) {
 
 	dom := saveDomain(t, repo)
 
-	invitation := domains.Invitation{
-		InvitedBy:     testsutil.GenerateUUID(t),
-		InviteeUserID: testsutil.GenerateUUID(t),
-		DomainID:      dom.ID,
-		DomainName:    dom.Name,
-		RoleID:        testsutil.GenerateUUID(t),
-		RoleName:      roleName,
-		CreatedAt:     time.Now(),
+	num := 10
+	items := make([]domains.Invitation, 0, num)
+
+	for i := 0; i < num; i++ {
+		invitation := domains.Invitation{
+			InvitedBy:     testsutil.GenerateUUID(t),
+			InviteeUserID: testsutil.GenerateUUID(t),
+			DomainID:      dom.ID,
+			DomainName:    dom.Name,
+			RoleID:        testsutil.GenerateUUID(t),
+			RoleName:      roleName,
+			CreatedAt:     time.Now(),
+		}
+		err := repo.SaveInvitation(context.Background(), invitation)
+		require.Nil(t, err, fmt.Sprintf("create invitation unexpected error: %s", err))
+		items = append(items, invitation)
 	}
-	err := repo.SaveInvitation(context.Background(), invitation)
-	require.Nil(t, err, fmt.Sprintf("create invitation unexpected error: %s", err))
 
 	cases := []struct {
-		desc       string
-		invitation domains.Invitation
-		err        error
+		desc     string
+		domainID string
+		userIDs  []string
+		err      error
 	}{
 		{
-			desc: "delete invitation successfully",
-			invitation: domains.Invitation{
-				InviteeUserID: invitation.InviteeUserID,
-				DomainID:      invitation.DomainID,
-			},
-			err: nil,
+			desc:     "delete one invitation successfully",
+			domainID: dom.ID,
+			userIDs:  []string{items[0].InviteeUserID},
+			err:      nil,
 		},
 		{
-			desc: "delete invitation with invalid invitation id",
-			invitation: domains.Invitation{
-				InviteeUserID: testsutil.GenerateUUID(t),
-				DomainID:      testsutil.GenerateUUID(t),
-			},
-			err: repoerr.ErrNotFound,
+			desc:     "delete multiple invitations successfully",
+			domainID: dom.ID,
+			userIDs:  []string{items[1].InviteeUserID, items[2].InviteeUserID, items[3].InviteeUserID},
+			err:      nil,
 		},
 		{
-			desc:       "delete invitation with empty invitation id",
-			invitation: domains.Invitation{},
-			err:        repoerr.ErrNotFound,
+			desc:     "delete invitation with invalid invitation id",
+			domainID: dom.ID,
+			userIDs:  []string{testsutil.GenerateUUID(t)},
+			err:      repoerr.ErrNotFound,
+		},
+		{
+			desc:     "delete invitation with empty user id",
+			domainID: dom.ID,
+			userIDs:  []string{},
+			err:      repoerr.ErrNotFound,
 		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			err := repo.DeleteInvitation(context.Background(), tc.invitation.InviteeUserID, tc.invitation.DomainID)
+			err := repo.DeleteUserInvitation(context.Background(), tc.domainID, tc.userIDs...)
 			assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		})
 	}
