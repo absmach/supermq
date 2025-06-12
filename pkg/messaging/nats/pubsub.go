@@ -133,27 +133,51 @@ func (ps *pubsub) Unsubscribe(ctx context.Context, id, topic string) error {
 
 func (ps *pubsub) natsHandler(h messaging.MessageHandler) func(m jetstream.Msg) {
 	return func(m jetstream.Msg) {
+		args := []any{
+			slog.String("subject", m.Subject()),
+		}
+		meta, err := m.Metadata()
+		switch err {
+		case nil:
+			args = append(args,
+				slog.String("stream", meta.Stream),
+				slog.String("consumer", meta.Consumer),
+				slog.Uint64("stream_seq", meta.Sequence.Stream),
+				slog.Uint64("consumer_seq", meta.Sequence.Consumer),
+			)
+		default:
+			args = append(args,
+				slog.String("metadata_error", err.Error()),
+			)
+		}
+
 		var msg messaging.Message
 		if err := proto.Unmarshal(m.Data(), &msg); err != nil {
-			ps.logger.Warn(fmt.Sprintf("failed to unmarshal message: %s", err))
+			ackType := messaging.Term
+			args = append(args, slog.String("ack_type", ackType.String()), slog.String("error", err.Error()))
+			ps.logger.Warn("failed to unmarshal message", args...)
+			ps.handleAck(ackType, m)
 			return
 		}
 
-		err := h.Handle(&msg)
+		err = h.Handle(&msg)
+		ackType := ps.errAckType(err)
 		if err != nil {
-			ps.logger.Warn(fmt.Sprintf("failed to handle SMQ message: %s", err))
-			ps.handleError(err, m)
-			return
+			args = append(args, slog.String("ack_type", ackType.String()), slog.String("error", err.Error()))
+			ps.logger.Warn("failed to handle message", args...)
 		}
-		ps.handleAck(messaging.Ack, m)
+		ps.handleAck(ackType, m)
 	}
 }
 
-func (ps *pubsub) handleError(err error, m jetstream.Msg) {
-	switch e := err.(type) {
-	case messaging.Error:
-		ps.handleAck(e.Ack(), m)
+func (ps *pubsub) errAckType(err error) messaging.AckType {
+	if err == nil {
+		return messaging.Ack
 	}
+	if e, ok := err.(messaging.Error); ok && e != nil {
+		return e.Ack()
+	}
+	return messaging.NoAck
 }
 
 func (ps *pubsub) handleAck(at messaging.AckType, m jetstream.Msg) {
