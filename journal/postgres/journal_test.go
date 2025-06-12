@@ -45,6 +45,8 @@ var (
 	entityID           = testsutil.GenerateUUID(&testing.T{})
 	domain             = testsutil.GenerateUUID(&testing.T{})
 	clientOperation    = "client.create"
+	channelOperation   = "channel.create"
+	groupOperation     = "group.create"
 	clientAttributesV1 = map[string]interface{}{
 		"id":         entityID,
 		"status":     "enabled",
@@ -72,6 +74,18 @@ var (
 	userAttributesV2 = map[string]interface{}{
 		"user_id":  entityID,
 		"metadata": payload,
+	}
+	channelAtttributes = map[string]interface{}{
+		"id":         entityID,
+		"status":     "enabled",
+		"created_at": time.Now().Add(-time.Hour),
+		"name":       "channel",
+	}
+	groupAttributes = map[string]interface{}{
+		"id":         entityID,
+		"status":     "enabled",
+		"created_at": time.Now().Add(-time.Hour),
+		"name":       "group",
 	}
 	validTimeStamp = time.Now().UTC().Truncate(time.Millisecond)
 )
@@ -310,6 +324,14 @@ func TestJournalRetrieveAll(t *testing.T) {
 		}
 		if i%5 == 0 {
 			j.Attributes = clientAttributesV2
+		}
+		if i%13 == 0 {
+			j.Operation = fmt.Sprintf("%s-%d", channelOperation, i)
+			j.Attributes = channelAtttributes
+		}
+		if i%17 == 0 {
+			j.Operation = fmt.Sprintf("%s-%d", groupOperation, i)
+			j.Attributes = groupAttributes
 		}
 		err := repo.Save(context.Background(), j)
 		require.Nil(t, err, fmt.Sprintf("create journal unexpected error: %s", err))
@@ -644,6 +666,36 @@ func TestJournalRetrieveAll(t *testing.T) {
 				Offset:   0,
 				Limit:    10,
 				Journals: extractEntities(items, journal.ClientEntity, entityID)[:10],
+			},
+		},
+		{
+			desc: "with channel entity type",
+			page: journal.Page{
+				Offset:     0,
+				Limit:      10,
+				EntityID:   entityID,
+				EntityType: journal.ChannelEntity,
+			},
+			response: journal.JournalsPage{
+				Total:    uint64(len(extractEntities(items, journal.ChannelEntity, entityID))),
+				Offset:   0,
+				Limit:    10,
+				Journals: extractEntities(items, journal.ChannelEntity, entityID)[:10],
+			},
+		},
+		{
+			desc: "with group entity type",
+			page: journal.Page{
+				Offset:     0,
+				Limit:      10,
+				EntityID:   entityID,
+				EntityType: journal.GroupEntity,
+			},
+			response: journal.JournalsPage{
+				Total:    uint64(len(extractEntities(items, journal.GroupEntity, entityID))),
+				Offset:   0,
+				Limit:    10,
+				Journals: extractEntities(items, journal.GroupEntity, entityID)[:10],
 			},
 		},
 		{

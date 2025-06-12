@@ -67,7 +67,7 @@ func (e EntityType) Query() string {
 	case UserEntity:
 		return "((operation LIKE 'user.%' AND attributes->>'id' = :entity_id) OR (attributes->>'user_id' = :entity_id))"
 	case GroupEntity:
-		return "((operation LIKE 'group.%' AND (attributes->>'id' = :entity_id OR attributes->>'entity_id' = :entity_id))"
+		return "((operation LIKE 'group.%' AND (attributes->>'id' = :entity_id OR attributes->>'entity_id' = :entity_id)))"
 	case ChannelEntity:
 		return "((operation LIKE 'channel.%' AND (attributes->>'id' = :entity_id OR attributes->>'entity_id' = :entity_id)) OR (jsonb_exists_any(attributes->'channel_ids', array[:entity_id])))"
 	case ClientEntity:
