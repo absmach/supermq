@@ -3,7 +3,10 @@
 
 package messaging
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 type DeliveryPolicy uint8
 
@@ -28,6 +31,25 @@ const (
 	Term                      // terminate
 	NoAck                     // do nothing
 )
+
+func (a AckType) String() string {
+	switch a {
+	case Ack:
+		return "Ack"
+	case DoubleAck:
+		return "DoubleAck"
+	case Nack:
+		return "Nack"
+	case InProgress:
+		return "InProgress"
+	case Term:
+		return "Term"
+	case NoAck:
+		return "NoAck"
+	default:
+		return fmt.Sprintf("Unknown AckType(%d)", a)
+	}
+}
 
 // Publisher specifies message publishing API.
 type Publisher interface {
