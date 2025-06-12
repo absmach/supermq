@@ -135,9 +135,7 @@ func (ps *pubsub) natsHandler(h messaging.MessageHandler) func(m jetstream.Msg) 
 	return func(m jetstream.Msg) {
 		args := []any{
 			slog.String("subject", m.Subject()),
-			slog.String("payload", string(m.Data())),
 		}
-
 		meta, err := m.Metadata()
 		switch err {
 		case nil:
@@ -167,8 +165,6 @@ func (ps *pubsub) natsHandler(h messaging.MessageHandler) func(m jetstream.Msg) 
 		if err != nil {
 			args = append(args, slog.String("ack_type", ackType.String()), slog.String("error", err.Error()))
 			ps.logger.Warn("failed to handle message", args...)
-			ps.handleAck(ackType, m)
-			return
 		}
 		ps.handleAck(ackType, m)
 	}
