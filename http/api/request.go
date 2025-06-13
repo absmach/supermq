@@ -23,3 +23,10 @@ func (req publishReq) validate() error {
 
 	return nil
 }
+
+type connReq struct {
+	clientKey string
+	chanID    string
+	domainID  string
+	subtopic  string
+}

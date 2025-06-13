@@ -22,6 +22,7 @@ import (
 	climocks "github.com/absmach/supermq/clients/mocks"
 	adapter "github.com/absmach/supermq/http"
 	"github.com/absmach/supermq/http/api"
+	httpmocks "github.com/absmach/supermq/http/mocks"
 	smqlog "github.com/absmach/supermq/logger"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
@@ -43,8 +44,9 @@ func setupMessages() (*httptest.Server, *pubsub.PubSub) {
 	pub := new(pubsub.PubSub)
 	authn := new(authnmocks.Authentication)
 	handler := adapter.NewHandler(pub, authn, clientsGRPCClient, channelsGRPCClient, smqlog.NewMock())
+	svc := new(httpmocks.Service)
 
-	mux := api.MakeHandler(smqlog.NewMock(), "")
+	mux := api.MakeHandler(context.Background(), svc, smqlog.NewMock(), "")
 	target := httptest.NewServer(mux)
 
 	ptUrl, _ := url.Parse(target.URL)

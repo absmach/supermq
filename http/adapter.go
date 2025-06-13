@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package ws
+package http
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -45,8 +46,8 @@ type adapterService struct {
 	pubsub   messaging.PubSub
 }
 
-// New instantiates the WS adapter implementation.
-func New(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, pubsub messaging.PubSub) Service {
+// NewService instantiates the http adapter service implementation.
+func NewService(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, pubsub messaging.PubSub) Service {
 	return &adapterService{
 		clients:  clients,
 		channels: channels,
@@ -122,4 +123,14 @@ func (svc *adapterService) authorize(ctx context.Context, clientKey, domainID, c
 	}
 
 	return authnRes.GetId(), nil
+}
+
+
+// extractClientSecret returns value of the client secret. If there is no client key - an empty value is returned.
+func extractClientSecret(token string) string {
+	if !strings.HasPrefix(token, apiutil.ClientPrefix) {
+		return ""
+	}
+
+	return strings.TrimPrefix(token, apiutil.ClientPrefix)
 }
