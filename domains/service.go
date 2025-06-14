@@ -136,7 +136,7 @@ func (svc service) EnableDomain(ctx context.Context, session authn.Session, id s
 	if err != nil {
 		return Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
-	if err := svc.cache.Remove(ctx, id); err != nil {
+	if err := svc.cache.RemoveStatus(ctx, id); err != nil {
 		return dom, errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
@@ -150,7 +150,7 @@ func (svc service) DisableDomain(ctx context.Context, session authn.Session, id 
 	if err != nil {
 		return Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
-	if err := svc.cache.Remove(ctx, id); err != nil {
+	if err := svc.cache.RemoveStatus(ctx, id); err != nil {
 		return dom, errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
@@ -165,7 +165,7 @@ func (svc service) FreezeDomain(ctx context.Context, session authn.Session, id s
 	if err != nil {
 		return Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
-	if err := svc.cache.Remove(ctx, id); err != nil {
+	if err := svc.cache.RemoveStatus(ctx, id); err != nil {
 		return dom, errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 

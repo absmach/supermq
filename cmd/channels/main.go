@@ -11,6 +11,7 @@ import (
 	"log/slog"
 	"net/url"
 	"os"
+	"time"
 
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/supermq"
@@ -20,6 +21,7 @@ import (
 	"github.com/absmach/supermq/channels"
 	grpcapi "github.com/absmach/supermq/channels/api/grpc"
 	httpapi "github.com/absmach/supermq/channels/api/http"
+	"github.com/absmach/supermq/channels/cache"
 	"github.com/absmach/supermq/channels/events"
 	"github.com/absmach/supermq/channels/middleware"
 	"github.com/absmach/supermq/channels/postgres"
@@ -27,6 +29,7 @@ import (
 	"github.com/absmach/supermq/channels/tracing"
 	dpostgres "github.com/absmach/supermq/domains/postgres"
 	gpostgres "github.com/absmach/supermq/groups/postgres"
+	redisclient "github.com/absmach/supermq/internal/clients/redis"
 	smqlog "github.com/absmach/supermq/logger"
 	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
@@ -78,17 +81,19 @@ const (
 )
 
 type config struct {
-	LogLevel            string  `env:"SMQ_CHANNELS_LOG_LEVEL"           envDefault:"info"`
-	InstanceID          string  `env:"SMQ_CHANNELS_INSTANCE_ID"         envDefault:""`
-	JaegerURL           url.URL `env:"SMQ_JAEGER_URL"                   envDefault:"http://localhost:4318/v1/traces"`
-	SendTelemetry       bool    `env:"SMQ_SEND_TELEMETRY"               envDefault:"true"`
-	ESURL               string  `env:"SMQ_ES_URL"                       envDefault:"nats://localhost:4222"`
-	ESConsumerName      string  `env:"SMQ_CHANNELS_EVENT_CONSUMER"      envDefault:"channels"`
-	TraceRatio          float64 `env:"SMQ_JAEGER_TRACE_RATIO"           envDefault:"1.0"`
-	SpicedbHost         string  `env:"SMQ_SPICEDB_HOST"                 envDefault:"localhost"`
-	SpicedbPort         string  `env:"SMQ_SPICEDB_PORT"                 envDefault:"50051"`
-	SpicedbPreSharedKey string  `env:"SMQ_SPICEDB_PRE_SHARED_KEY"       envDefault:"12345678"`
-	SpicedbSchemaFile   string  `env:"SMQ_SPICEDB_SCHEMA_FILE"          envDefault:"schema.zed"`
+	LogLevel            string        `env:"SMQ_CHANNELS_LOG_LEVEL"           envDefault:"info"`
+	InstanceID          string        `env:"SMQ_CHANNELS_INSTANCE_ID"         envDefault:""`
+	JaegerURL           url.URL       `env:"SMQ_JAEGER_URL"                   envDefault:"http://localhost:4318/v1/traces"`
+	SendTelemetry       bool          `env:"SMQ_SEND_TELEMETRY"               envDefault:"true"`
+	CacheURL            string        `env:"SMQ_CHANNELS_CACHE_URL"           envDefault:"redis://localhost:6379/0"`
+	CacheKeyDuration    time.Duration `env:"SMQ_CHANNELS_CACHE_KEY_DURATION"  envDefault:"10m"`
+	ESURL               string        `env:"SMQ_ES_URL"                       envDefault:"nats://localhost:4222"`
+	ESConsumerName      string        `env:"SMQ_CHANNELS_EVENT_CONSUMER"      envDefault:"channels"`
+	TraceRatio          float64       `env:"SMQ_JAEGER_TRACE_RATIO"           envDefault:"1.0"`
+	SpicedbHost         string        `env:"SMQ_SPICEDB_HOST"                 envDefault:"localhost"`
+	SpicedbPort         string        `env:"SMQ_SPICEDB_PORT"                 envDefault:"50051"`
+	SpicedbPreSharedKey string        `env:"SMQ_SPICEDB_PRE_SHARED_KEY"       envDefault:"12345678"`
+	SpicedbSchemaFile   string        `env:"SMQ_SPICEDB_SCHEMA_FILE"          envDefault:"schema.zed"`
 }
 
 func main() {
@@ -242,7 +247,16 @@ func main() {
 		return
 	}
 
-	svc, psvc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService,
+	cacheclient, err := redisclient.Connect(cfg.CacheURL)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+	defer cacheclient.Close()
+	cache := cache.NewChannelsCache(cacheclient, cfg.CacheKeyDuration)
+
+	svc, psvc, err := newService(ctx, db, dbConfig, cache, authz, policyEvaluator, policyService,
 		cfg, tracer, clientsClient, groupsClient, domAuthz, logger,
 		callout)
 	if err != nil {
@@ -315,7 +329,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz smqauthz.Authorization,
+func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, cache channels.Cache, authz smqauthz.Authorization,
 	pe policies.Evaluator, ps policies.Service, cfg config, tracer trace.Tracer, clientsClient grpcClientsV1.ClientsServiceClient,
 	groupsClient grpcGroupsV1.GroupsServiceClient, da pkgDomains.Authorization, logger *slog.Logger, callout callout.Callout,
 ) (channels.Service, pChannels.Service, error) {
@@ -333,7 +347,7 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 		return nil, nil, err
 	}
 
-	svc, err := channels.New(repo, ps, idp, clientsClient, groupsClient, sidp, availableActions, buildInRoles)
+	svc, err := channels.New(repo, cache, ps, idp, clientsClient, groupsClient, sidp, availableActions, buildInRoles)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -354,7 +368,7 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 	}
 	svc = middleware.LoggingMiddleware(svc, logger)
 
-	psvc := pChannels.New(repo, pe, ps, da)
+	psvc := pChannels.New(repo, cache, pe, ps, da)
 	return svc, psvc, err
 }
 

@@ -41,12 +41,113 @@ func (_m *Cache) EXPECT() *Cache_Expecter {
 	return &Cache_Expecter{mock: &_m.Mock}
 }
 
-// Remove provides a mock function for the type Cache
-func (_mock *Cache) Remove(ctx context.Context, domainID string) error {
+// ID provides a mock function for the type Cache
+func (_mock *Cache) ID(ctx context.Context, route string) (string, error) {
+	ret := _mock.Called(ctx, route)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ID")
+	}
+
+	var r0 string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (string, error)); ok {
+		return returnFunc(ctx, route)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) string); ok {
+		r0 = returnFunc(ctx, route)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = returnFunc(ctx, route)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Cache_ID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ID'
+type Cache_ID_Call struct {
+	*mock.Call
+}
+
+// ID is a helper method to define mock.On call
+//   - ctx
+//   - route
+func (_e *Cache_Expecter) ID(ctx interface{}, route interface{}) *Cache_ID_Call {
+	return &Cache_ID_Call{Call: _e.mock.On("ID", ctx, route)}
+}
+
+func (_c *Cache_ID_Call) Run(run func(ctx context.Context, route string)) *Cache_ID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *Cache_ID_Call) Return(s string, err error) *Cache_ID_Call {
+	_c.Call.Return(s, err)
+	return _c
+}
+
+func (_c *Cache_ID_Call) RunAndReturn(run func(ctx context.Context, route string) (string, error)) *Cache_ID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RemoveID provides a mock function for the type Cache
+func (_mock *Cache) RemoveID(ctx context.Context, route string) error {
+	ret := _mock.Called(ctx, route)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveID")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = returnFunc(ctx, route)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Cache_RemoveID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveID'
+type Cache_RemoveID_Call struct {
+	*mock.Call
+}
+
+// RemoveID is a helper method to define mock.On call
+//   - ctx
+//   - route
+func (_e *Cache_Expecter) RemoveID(ctx interface{}, route interface{}) *Cache_RemoveID_Call {
+	return &Cache_RemoveID_Call{Call: _e.mock.On("RemoveID", ctx, route)}
+}
+
+func (_c *Cache_RemoveID_Call) Run(run func(ctx context.Context, route string)) *Cache_RemoveID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *Cache_RemoveID_Call) Return(err error) *Cache_RemoveID_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Cache_RemoveID_Call) RunAndReturn(run func(ctx context.Context, route string) error) *Cache_RemoveID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RemoveStatus provides a mock function for the type Cache
+func (_mock *Cache) RemoveStatus(ctx context.Context, domainID string) error {
 	ret := _mock.Called(ctx, domainID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Remove")
+		panic("no return value specified for RemoveStatus")
 	}
 
 	var r0 error
@@ -58,41 +159,88 @@ func (_mock *Cache) Remove(ctx context.Context, domainID string) error {
 	return r0
 }
 
-// Cache_Remove_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Remove'
-type Cache_Remove_Call struct {
+// Cache_RemoveStatus_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RemoveStatus'
+type Cache_RemoveStatus_Call struct {
 	*mock.Call
 }
 
-// Remove is a helper method to define mock.On call
+// RemoveStatus is a helper method to define mock.On call
 //   - ctx
 //   - domainID
-func (_e *Cache_Expecter) Remove(ctx interface{}, domainID interface{}) *Cache_Remove_Call {
-	return &Cache_Remove_Call{Call: _e.mock.On("Remove", ctx, domainID)}
+func (_e *Cache_Expecter) RemoveStatus(ctx interface{}, domainID interface{}) *Cache_RemoveStatus_Call {
+	return &Cache_RemoveStatus_Call{Call: _e.mock.On("RemoveStatus", ctx, domainID)}
 }
 
-func (_c *Cache_Remove_Call) Run(run func(ctx context.Context, domainID string)) *Cache_Remove_Call {
+func (_c *Cache_RemoveStatus_Call) Run(run func(ctx context.Context, domainID string)) *Cache_RemoveStatus_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
 
-func (_c *Cache_Remove_Call) Return(err error) *Cache_Remove_Call {
+func (_c *Cache_RemoveStatus_Call) Return(err error) *Cache_RemoveStatus_Call {
 	_c.Call.Return(err)
 	return _c
 }
 
-func (_c *Cache_Remove_Call) RunAndReturn(run func(ctx context.Context, domainID string) error) *Cache_Remove_Call {
+func (_c *Cache_RemoveStatus_Call) RunAndReturn(run func(ctx context.Context, domainID string) error) *Cache_RemoveStatus_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// Save provides a mock function for the type Cache
-func (_mock *Cache) Save(ctx context.Context, domainID string, status domains.Status) error {
+// SaveID provides a mock function for the type Cache
+func (_mock *Cache) SaveID(ctx context.Context, route string, domainID string) error {
+	ret := _mock.Called(ctx, route, domainID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SaveID")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = returnFunc(ctx, route, domainID)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Cache_SaveID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SaveID'
+type Cache_SaveID_Call struct {
+	*mock.Call
+}
+
+// SaveID is a helper method to define mock.On call
+//   - ctx
+//   - route
+//   - domainID
+func (_e *Cache_Expecter) SaveID(ctx interface{}, route interface{}, domainID interface{}) *Cache_SaveID_Call {
+	return &Cache_SaveID_Call{Call: _e.mock.On("SaveID", ctx, route, domainID)}
+}
+
+func (_c *Cache_SaveID_Call) Run(run func(ctx context.Context, route string, domainID string)) *Cache_SaveID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *Cache_SaveID_Call) Return(err error) *Cache_SaveID_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Cache_SaveID_Call) RunAndReturn(run func(ctx context.Context, route string, domainID string) error) *Cache_SaveID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SaveStatus provides a mock function for the type Cache
+func (_mock *Cache) SaveStatus(ctx context.Context, domainID string, status domains.Status) error {
 	ret := _mock.Called(ctx, domainID, status)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Save")
+		panic("no return value specified for SaveStatus")
 	}
 
 	var r0 error
@@ -104,32 +252,32 @@ func (_mock *Cache) Save(ctx context.Context, domainID string, status domains.St
 	return r0
 }
 
-// Cache_Save_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Save'
-type Cache_Save_Call struct {
+// Cache_SaveStatus_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SaveStatus'
+type Cache_SaveStatus_Call struct {
 	*mock.Call
 }
 
-// Save is a helper method to define mock.On call
+// SaveStatus is a helper method to define mock.On call
 //   - ctx
 //   - domainID
 //   - status
-func (_e *Cache_Expecter) Save(ctx interface{}, domainID interface{}, status interface{}) *Cache_Save_Call {
-	return &Cache_Save_Call{Call: _e.mock.On("Save", ctx, domainID, status)}
+func (_e *Cache_Expecter) SaveStatus(ctx interface{}, domainID interface{}, status interface{}) *Cache_SaveStatus_Call {
+	return &Cache_SaveStatus_Call{Call: _e.mock.On("SaveStatus", ctx, domainID, status)}
 }
 
-func (_c *Cache_Save_Call) Run(run func(ctx context.Context, domainID string, status domains.Status)) *Cache_Save_Call {
+func (_c *Cache_SaveStatus_Call) Run(run func(ctx context.Context, domainID string, status domains.Status)) *Cache_SaveStatus_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string), args[2].(domains.Status))
 	})
 	return _c
 }
 
-func (_c *Cache_Save_Call) Return(err error) *Cache_Save_Call {
+func (_c *Cache_SaveStatus_Call) Return(err error) *Cache_SaveStatus_Call {
 	_c.Call.Return(err)
 	return _c
 }
 
-func (_c *Cache_Save_Call) RunAndReturn(run func(ctx context.Context, domainID string, status domains.Status) error) *Cache_Save_Call {
+func (_c *Cache_SaveStatus_Call) RunAndReturn(run func(ctx context.Context, domainID string, status domains.Status) error) *Cache_SaveStatus_Call {
 	_c.Call.Return(run)
 	return _c
 }
