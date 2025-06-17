@@ -72,6 +72,7 @@ jobs:
           event-type: supermq-image-updated
           client-payload: |
             {
+              "image_repository": "docker.io/absmach/supermq",
               "image_tag": "latest",
               "source_commit_sha": "${{ github.sha }}"
             }
