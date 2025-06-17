@@ -69,4 +69,4 @@ jobs:
         with:
           token: ${{ secrets.REPO_DISPATCH_TOKEN }}
           repository: absmach/amdm
-          event-type: deploy-latest-images
+          event-type: deploy-latest-smq-images
