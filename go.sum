@@ -21,8 +21,8 @@ github.com/absmach/callhome v0.14.0 h1:zB4tIZJ1YUmZ1VGHFPfMA/Lo6/Mv19y2dvoOiXj2B
 github.com/absmach/callhome v0.14.0/go.mod h1:l12UJOfibK4Muvg/AbupHuquNV9qSz/ROdTEPg7f2Vk=
 github.com/absmach/certs v0.0.0-20250602111612-89538302ad6a h1:swYXNJaGVQS35CeuXqPp1JAzyFmTZ8sCHWJP3kjilzU=
 github.com/absmach/certs v0.0.0-20250602111612-89538302ad6a/go.mod h1:tEat7G8BzyWbFIFojqdzWSD6RZNFyEuUHBdnD0J+rZA=
-github.com/absmach/mgate v0.4.6-0.20250605150648-edf967fbb46a h1:1+772OQFHAS23JLAHrCZxO+DnGoiMllKcSwLQy74y+k=
-github.com/absmach/mgate v0.4.6-0.20250605150648-edf967fbb46a/go.mod h1:X2amjQg/2cnM+UKblMdpU2M4cZO74xtEHNIxtuUXCeA=
+github.com/absmach/mgate v0.4.6-0.20250616124539-13181c84f1d5 h1:cbJncI2bzHxj4y0znacoVlamVi9rN2ERVuHGMU3hCRc=
+github.com/absmach/mgate v0.4.6-0.20250616124539-13181c84f1d5/go.mod h1:X2amjQg/2cnM+UKblMdpU2M4cZO74xtEHNIxtuUXCeA=
 github.com/absmach/senml v1.0.7 h1:XLvpw0qxbP2QhOz7KLM2ZRar+vSCpSG/0o0kEvWx3No=
 github.com/absmach/senml v1.0.7/go.mod h1:3bRIiNc8hq7l3auMs8gQrpsM5hHy7iDuiLILrf/+MfA=
 github.com/antlr4-go/antlr/v4 v4.13.1 h1:SqQKkuVZ+zWkMMNkjy5FZe5mr5WURWnlpmOuzYWrPrQ=

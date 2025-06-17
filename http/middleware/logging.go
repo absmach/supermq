@@ -1,31 +1,31 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package api
+package middleware
 
 import (
 	"context"
 	"log/slog"
 	"time"
 
-	"github.com/absmach/supermq/ws"
+	"github.com/absmach/supermq/http"
 )
 
-var _ ws.Service = (*loggingMiddleware)(nil)
+var _ http.Service = (*loggingMiddleware)(nil)
 
 type loggingMiddleware struct {
 	logger *slog.Logger
-	svc    ws.Service
+	svc    http.Service
 }
 
-// LoggingMiddleware adds logging facilities to the websocket service.
-func LoggingMiddleware(svc ws.Service, logger *slog.Logger) ws.Service {
+// Logging adds logging facilities to the http service.
+func Logging(svc http.Service, logger *slog.Logger) http.Service {
 	return &loggingMiddleware{logger, svc}
 }
 
 // Subscribe logs the subscribe request. It logs the channel and subtopic(if present) and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) Subscribe(ctx context.Context, sessionID, clientKey, domainID, chanID, subtopic string, c *ws.Client) (err error) {
+func (lm *loggingMiddleware) Subscribe(ctx context.Context, sessionID, clientKey, domainID, chanID, subtopic string, c *http.Client) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),

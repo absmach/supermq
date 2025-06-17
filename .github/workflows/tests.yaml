@@ -354,11 +354,6 @@ jobs:
         run: |
           go test --race -v -count=1 -coverprofile=coverage/groups.out ./groups/...
 
-      - name: Run WebSocket tests
-        if: steps.changes.outputs.ws == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/ws.out ./ws/...
-
       - name: Upload coverage
         uses: codecov/codecov-action@v5
         with:

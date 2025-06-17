@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package ws_test
+package http_test
 
 import (
 	"context"
@@ -14,32 +14,26 @@ import (
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
 	chmocks "github.com/absmach/supermq/channels/mocks"
 	climocks "github.com/absmach/supermq/clients/mocks"
-	"github.com/absmach/supermq/internal/testsutil"
+	smqhttp "github.com/absmach/supermq/http"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/absmach/supermq/pkg/messaging/mocks"
 	"github.com/absmach/supermq/pkg/policies"
-	"github.com/absmach/supermq/ws"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 const (
-	chanID     = "1"
-	invalidID  = "invalidID"
 	invalidKey = "invalidKey"
 	id         = "1"
-	clientKey  = "client_key"
 	subTopic   = "subtopic"
 	protocol   = "ws"
 )
 
 var (
-	domainID = testsutil.GenerateUUID(&testing.T{})
-	clientID = testsutil.GenerateUUID(&testing.T{})
-	msg      = messaging.Message{
+	msg = messaging.Message{
 		Channel:   chanID,
 		Domain:    domainID,
 		Publisher: id,
@@ -50,18 +44,18 @@ var (
 	sessionID = "sessionID"
 )
 
-func newService() (ws.Service, *mocks.PubSub, *climocks.ClientsServiceClient, *chmocks.ChannelsServiceClient) {
+func newService() (smqhttp.Service, *mocks.PubSub, *climocks.ClientsServiceClient, *chmocks.ChannelsServiceClient) {
 	pubsub := new(mocks.PubSub)
 	clients := new(climocks.ClientsServiceClient)
 	channels := new(chmocks.ChannelsServiceClient)
 
-	return ws.New(clients, channels, pubsub), pubsub, clients, channels
+	return smqhttp.NewService(clients, channels, pubsub), pubsub, clients, channels
 }
 
 func TestSubscribe(t *testing.T) {
 	svc, pubsub, clients, channels := newService()
 
-	c := ws.NewClient(slog.Default(), nil, sessionID)
+	c := smqhttp.NewClient(slog.Default(), nil, sessionID)
 
 	cases := []struct {
 		desc      string
@@ -102,10 +96,10 @@ func TestSubscribe(t *testing.T) {
 			chanID:    chanID,
 			domainID:  domainID,
 			subtopic:  subTopic,
-			subErr:    ws.ErrFailedSubscription,
+			subErr:    smqhttp.ErrFailedSubscription,
 			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: true},
-			err:       ws.ErrFailedSubscription,
+			err:       smqhttp.ErrFailedSubscription,
 		},
 		{
 			desc:      "subscribe to channel with invalid clientKey",

@@ -4,6 +4,7 @@
 package api_test
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net"
@@ -23,6 +24,7 @@ import (
 	climocks "github.com/absmach/supermq/clients/mocks"
 	server "github.com/absmach/supermq/http"
 	"github.com/absmach/supermq/http/api"
+	"github.com/absmach/supermq/http/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
@@ -52,7 +54,8 @@ func newService(authn smqauthn.Authentication, clients grpcClientsV1.ClientsServ
 }
 
 func newTargetHTTPServer() *httptest.Server {
-	mux := api.MakeHandler(smqlog.NewMock(), instanceID)
+	svc := new(mocks.Service)
+	mux := api.MakeHandler(context.Background(), svc, smqlog.NewMock(), instanceID)
 	return httptest.NewServer(mux)
 }
 
@@ -231,7 +234,7 @@ func TestPublish(t *testing.T) {
 			msg:         msg,
 			contentType: ctSenmlJSON,
 			key:         clientKey,
-			status:      http.StatusBadRequest,
+			status:      http.StatusForbidden,
 			authnRes:    &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			authzRes:    &grpcChannelsV1.AuthzRes{Authorized: false},
 		},

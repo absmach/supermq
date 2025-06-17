@@ -47,6 +47,8 @@ paths:
           description: Message discarded due to its malformed content.
         "401":
           description: Missing or invalid access token provided.
+        "403":
+          description: Access denied to the requested resource.
         "404":
           description: Message discarded due to invalid channel id.
         "415":
