@@ -64,7 +64,7 @@ jobs:
           make latest -j $(nproc)
 
       - name: Trigger Helm Chart Deployment
-        if: success()
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.REPO_DISPATCH_TOKEN }}
