@@ -199,12 +199,12 @@ type addScopeReq struct {
 	Scopes []auth.Scope `json:"scopes,omitempty"`
 }
 
-func (aser *addScopeReq) UnmarshalJSON(data []byte) error {
+func (req *addScopeReq) UnmarshalJSON(data []byte) error {
 	type Alias addScopeReq
 	aux := &struct {
 		*Alias
 	}{
-		Alias: (*Alias)(aser),
+		Alias: (*Alias)(req),
 	}
 
 	if err := json.Unmarshal(data, aux); err != nil {

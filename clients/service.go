@@ -113,12 +113,12 @@ func (svc service) CreateClients(ctx context.Context, session authn.Session, cls
 		)
 	}
 
-	nrps, err := svc.AddNewEntitiesRoles(ctx, session.DomainID, session.UserID, newClientIDs, optionalPolicies, newBuiltInRoleMembers)
+	rp, err := svc.AddNewEntitiesRoles(ctx, session.DomainID, session.UserID, newClientIDs, optionalPolicies, newBuiltInRoleMembers)
 	if err != nil {
 		return []Client{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrAddPolicies, err)
 	}
 
-	return newClients, nrps, nil
+	return newClients, rp, nil
 }
 
 func (svc service) View(ctx context.Context, session authn.Session, id string, withRoles bool) (Client, error) {

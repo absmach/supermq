@@ -147,7 +147,7 @@ func (r ProvisionManageService) RemoveEntitiesRoles(ctx context.Context, domainI
 
 func (r ProvisionManageService) AddNewEntitiesRoles(ctx context.Context, domainID, userID string, entityIDs []string, optionalEntityPolicies []policies.Policy, newBuiltInRoleMembers map[BuiltInRoleName][]Member) (retRolesProvision []RoleProvision, retErr error) {
 	var newRolesProvision []RoleProvision
-	prs := []policies.Policy{}
+	p := []policies.Policy{}
 
 	for _, entityID := range entityIDs {
 		for defaultRole, defaultRoleMembers := range newBuiltInRoleMembers {
@@ -182,7 +182,7 @@ func (r ProvisionManageService) AddNewEntitiesRoles(ctx context.Context, domainI
 			})
 
 			for _, cap := range caps {
-				prs = append(prs, policies.Policy{
+				p = append(p, policies.Policy{
 					SubjectType:     policies.RoleType,
 					SubjectRelation: policies.MemberRelation,
 					Subject:         id,
@@ -193,7 +193,7 @@ func (r ProvisionManageService) AddNewEntitiesRoles(ctx context.Context, domainI
 			}
 
 			for _, member := range members {
-				prs = append(prs, policies.Policy{
+				p = append(p, policies.Policy{
 					SubjectType: policies.UserType,
 					Subject:     policies.EncodeDomainUserID(domainID, member),
 					Relation:    policies.MemberRelation,
@@ -203,27 +203,27 @@ func (r ProvisionManageService) AddNewEntitiesRoles(ctx context.Context, domainI
 			}
 		}
 	}
-	prs = append(prs, optionalEntityPolicies...)
+	p = append(p, optionalEntityPolicies...)
 
-	if len(prs) > 0 {
-		if err := r.policy.AddPolicies(ctx, prs); err != nil {
+	if len(p) > 0 {
+		if err := r.policy.AddPolicies(ctx, p); err != nil {
 			return []RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 		}
 		defer func() {
 			if retErr != nil {
-				if errRollBack := r.policy.DeletePolicies(ctx, prs); errRollBack != nil {
+				if errRollBack := r.policy.DeletePolicies(ctx, p); errRollBack != nil {
 					retErr = errors.Wrap(retErr, errors.Wrap(errRollbackRoles, errRollBack))
 				}
 			}
 		}()
 	}
 
-	nprs, err := r.repo.AddRoles(ctx, newRolesProvision)
+	rp, err := r.repo.AddRoles(ctx, newRolesProvision)
 	if err != nil {
 		return []RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 
-	return nprs, nil
+	return rp, nil
 }
 
 func (r ProvisionManageService) AddRole(ctx context.Context, session authn.Session, entityID string, roleName string, optionalActions []string, optionalMembers []string) (retRoleProvision RoleProvision, retErr error) {
@@ -288,16 +288,16 @@ func (r ProvisionManageService) AddRole(ctx context.Context, session authn.Sessi
 		}()
 	}
 
-	nrps, err := r.repo.AddRoles(ctx, newRoleProvisions)
+	rp, err := r.repo.AddRoles(ctx, newRoleProvisions)
 	if err != nil {
 		return RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 
-	if len(nrps) == 0 {
+	if len(rp) == 0 {
 		return RoleProvision{}, svcerr.ErrCreateEntity
 	}
 
-	return nrps[0], nil
+	return rp[0], nil
 }
 
 func (r ProvisionManageService) RemoveRole(ctx context.Context, session authn.Session, entityID, roleID string) error {

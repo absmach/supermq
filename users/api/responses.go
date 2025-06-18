@@ -21,8 +21,8 @@ var (
 	_ supermq.Response = (*changeUserStatusRes)(nil)
 	_ supermq.Response = (*usersPageRes)(nil)
 	_ supermq.Response = (*viewMembersRes)(nil)
-	_ supermq.Response = (*passwResetReqRes)(nil)
-	_ supermq.Response = (*passwChangeRes)(nil)
+	_ supermq.Response = (*passResetReqRes)(nil)
+	_ supermq.Response = (*passChangeRes)(nil)
 	_ supermq.Response = (*updateUserRes)(nil)
 	_ supermq.Response = (*tokenRes)(nil)
 	_ supermq.Response = (*deleteUserRes)(nil)
@@ -160,33 +160,33 @@ func (res changeUserStatusRes) Empty() bool {
 	return false
 }
 
-type passwResetReqRes struct {
+type passResetReqRes struct {
 	Msg string `json:"msg"`
 }
 
-func (res passwResetReqRes) Code() int {
+func (res passResetReqRes) Code() int {
 	return http.StatusCreated
 }
 
-func (res passwResetReqRes) Headers() map[string]string {
+func (res passResetReqRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res passwResetReqRes) Empty() bool {
+func (res passResetReqRes) Empty() bool {
 	return false
 }
 
-type passwChangeRes struct{}
+type passChangeRes struct{}
 
-func (res passwChangeRes) Code() int {
+func (res passChangeRes) Code() int {
 	return http.StatusCreated
 }
 
-func (res passwChangeRes) Headers() map[string]string {
+func (res passChangeRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res passwChangeRes) Empty() bool {
+func (res passChangeRes) Empty() bool {
 	return false
 }
 
