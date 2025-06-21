@@ -65,6 +65,39 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
+  /{domainID}/journal/client/{clientID}/telemetry:
+    get:
+      tags:
+        - journal-log
+      summary: View client telemetry
+      description: |
+        Retrieves telemetry data for a specific client within a domain.
+        This includes connection status, messages sent/received, and other metrics.
+      parameters:
+        - $ref: "#/components/parameters/domain_id"
+        - $ref: '#/components/parameters/client_id'
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Client telemetry data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Telemetry"
+        "400":
+          description: Failed due to malformed request parameters.
+        "401":
+          description: Missing or invalid access token provided.
+        "403":
+          description: Failed to perform authorization over the entity.
+        "404":
+          description: Client not found.
+        "422":
+          description: Database can't process request.
+        "500":
+          $ref: "#/components/responses/ServiceError"
+
   /{domainID}/journal/{entityType}/{id}:
     get:
       tags:
@@ -119,6 +152,45 @@ paths:
 
 components:
   schemas:
+    Telemetry:
+      type: object
+      properties:
+        client_id:
+          type: string
+          format: uuid
+          description: Unique identifier of the client
+          example: "bb7edb32-2eac-4aad-aebe-ed96fe073879"
+        domain_id:
+          type: string
+          format: uuid
+          description: Unique identifier of the domain
+          example: "29d425c8-542b-4614-8a4d-a5951945d720"
+        subscriptions:
+          type: integer
+          format: int64
+          description: Number of active subscriptions for the client
+          example: 5
+        inbound_messages:
+          type: integer
+          format: int64
+          description: Number of messages received by the client
+          example: 1234567
+        outbound_messages:
+          type: integer
+          format: int64
+          description: Number of messages sent by the client
+          example: 987654
+        first_seen:
+          type: string
+          format: date-time
+          description: Timestamp when the client was first seen
+          example: "2024-01-11T10:00:00.000Z"
+        last_seen:
+          type: string
+          format: date-time
+          description: Timestamp when the client was last seen
+          example: "2024-01-11T12:05:07.449053Z"
+
     Journal:
       type: object
       properties:
@@ -188,6 +260,16 @@ components:
     domain_id:
       name: domainID
       description: Unique identifier for a domain.
+      in: path
+      schema:
+        type: string
+        format: uuid
+      required: true
+      example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+
+    client_id:
+      name: clientID
+      description: Unique identifier for a client
       in: path
       schema:
         type: string
