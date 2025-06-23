@@ -117,11 +117,13 @@ func listClientsEndpoint(svc clients.Service) endpoint.Endpoint {
 
 		res := clientsPageRes{
 			clientsPageMetaRes: clientsPageMetaRes{
-				Total:  page.Total,
-				Offset: page.Offset,
-				Limit:  page.Limit,
+				Total: page.Total,
 			},
 			Clients: []viewClientRes{},
+		}
+		if !req.Page.OnlyTotal {
+			res.Offset = page.Offset
+			res.Limit = page.Limit
 		}
 		for _, c := range page.Clients {
 			res.Clients = append(res.Clients, viewClientRes{Client: c})

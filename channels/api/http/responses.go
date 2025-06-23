@@ -26,7 +26,7 @@ var (
 
 type pageRes struct {
 	Limit  uint64 `json:"limit,omitempty"`
-	Offset uint64 `json:"offset"`
+	Offset uint64 `json:"offset,omitempty"`
 	Total  uint64 `json:"total"`
 }
 
@@ -75,7 +75,7 @@ func (res viewChannelRes) Empty() bool {
 
 type channelsPageRes struct {
 	pageRes
-	Channels []viewChannelRes `json:"channels"`
+	Channels []viewChannelRes `json:"channels,omitempty"`
 }
 
 func (res channelsPageRes) Code() int {

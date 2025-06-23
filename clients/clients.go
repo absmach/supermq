@@ -198,6 +198,7 @@ type Page struct {
 	Total          uint64   `json:"total"`
 	Offset         uint64   `json:"offset"`
 	Limit          uint64   `json:"limit"`
+	OnlyTotal      bool     `json:"only_total"`
 	Order          string   `json:"order,omitempty"`
 	Dir            string   `json:"dir,omitempty"`
 	ID             string   `json:"id,omitempty"`

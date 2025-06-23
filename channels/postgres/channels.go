@@ -424,6 +424,12 @@ func (cr *channelRepository) RetrieveAll(ctx context.Context, pm channels.Page) 
 					%s
 					`, connJoinQuery, pageQuery)
 
+	cq := fmt.Sprintf(`SELECT COUNT(*) AS total_count
+				FROM (
+					%s
+				) AS sub_query;
+				`, comQuery)
+
 	q := applyOrdering(comQuery, pm)
 
 	q = applyLimitOffset(q)
@@ -432,6 +438,21 @@ func (cr *channelRepository) RetrieveAll(ctx context.Context, pm channels.Page) 
 	if err != nil {
 		return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
+
+	if pm.OnlyTotal {
+		total, err := postgres.Total(ctx, cr.db, cq, dbPage)
+		if err != nil {
+			return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+
+		return channels.ChannelsPage{
+			Channels: nil,
+			Page: channels.Page{
+				Total: total,
+			},
+		}, nil
+	}
+
 	rows, err := cr.db.NamedQueryContext(ctx, q, dbPage)
 	if err != nil {
 		return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
@@ -452,11 +473,6 @@ func (cr *channelRepository) RetrieveAll(ctx context.Context, pm channels.Page) 
 
 		items = append(items, ch)
 	}
-	cq := fmt.Sprintf(`SELECT COUNT(*) AS total_count
-			FROM (
-				%s
-			) AS sub_query;
-			`, comQuery)
 
 	total, err := postgres.Total(ctx, cr.db, cq, dbPage)
 	if err != nil {
@@ -537,36 +553,6 @@ func (repo *channelRepository) retrieveChannels(ctx context.Context, domainID, u
 				%s
 	`, bq, connJoinQuery, pageQuery)
 
-	q = applyOrdering(q, pm)
-
-	q = applyLimitOffset(q)
-
-	dbPage, err := toDBChannelsPage(pm)
-	if err != nil {
-		return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
-	}
-
-	rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
-	if err != nil {
-		return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
-	}
-	defer rows.Close()
-
-	var items []channels.Channel
-	for rows.Next() {
-		dbc := dbChannel{}
-		if err := rows.StructScan(&dbc); err != nil {
-			return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
-		}
-
-		c, err := toChannel(dbc)
-		if err != nil {
-			return channels.ChannelsPage{}, err
-		}
-
-		items = append(items, c)
-	}
-
 	cq := fmt.Sprintf(`%s
 						SELECT COUNT(*) AS total_count
 						FROM (
@@ -596,6 +582,52 @@ func (repo *channelRepository) retrieveChannels(ctx context.Context, domainID, u
 							%s
 						) AS subquery;
 			`, bq, connJoinQuery, pageQuery)
+
+	q = applyOrdering(q, pm)
+
+	q = applyLimitOffset(q)
+
+	dbPage, err := toDBChannelsPage(pm)
+	if err != nil {
+		return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+
+	if pm.OnlyTotal {
+		total, err := postgres.Total(ctx, repo.db, cq, dbPage)
+		if err != nil {
+			return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+
+		return channels.ChannelsPage{
+			Channels: nil,
+			Page: channels.Page{
+				Total: total,
+			},
+		}, nil
+	}
+
+	rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
+	if err != nil {
+		return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+	defer rows.Close()
+
+	var items []channels.Channel
+	for rows.Next() {
+		dbc := dbChannel{}
+		if err := rows.StructScan(&dbc); err != nil {
+			return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+
+		c, err := toChannel(dbc)
+		if err != nil {
+			return channels.ChannelsPage{}, err
+		}
+
+		items = append(items, c)
+	}
+
+	
 
 	total, err := postgres.Total(ctx, repo.db, cq, dbPage)
 	if err != nil {

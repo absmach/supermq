@@ -448,6 +448,12 @@ func (repo *clientRepo) RetrieveAll(ctx context.Context, pm clients.Page) (clien
 			%s
 		`, connJoinQuery, pageQuery)
 
+	cq := fmt.Sprintf(`SELECT COUNT(*) AS total_count
+			FROM (
+				%s
+			) AS sub_query;
+			`, comQuery)
+
 	q := applyOrdering(comQuery, pm)
 
 	q = applyLimitOffset(q)
@@ -456,6 +462,21 @@ func (repo *clientRepo) RetrieveAll(ctx context.Context, pm clients.Page) (clien
 	if err != nil {
 		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
+
+	if pm.OnlyTotal {
+		total, err := postgres.Total(ctx, repo.DB, cq, dbPage)
+		if err != nil {
+			return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+
+		return clients.ClientsPage{
+			Clients: nil,
+			Page: clients.Page{
+				Total: total,
+			},
+		}, nil
+	}
+
 	rows, err := repo.DB.NamedQueryContext(ctx, q, dbPage)
 	if err != nil {
 		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
@@ -476,11 +497,6 @@ func (repo *clientRepo) RetrieveAll(ctx context.Context, pm clients.Page) (clien
 
 		items = append(items, c)
 	}
-	cq := fmt.Sprintf(`SELECT COUNT(*) AS total_count
-			FROM (
-				%s
-			) AS sub_query;
-			`, comQuery)
 
 	total, err := postgres.Total(ctx, repo.DB, cq, dbPage)
 	if err != nil {
@@ -562,36 +578,6 @@ func (repo *clientRepo) retrieveClients(ctx context.Context, domainID, userID st
 				%s
 	`, bq, connJoinQuery, pageQuery)
 
-	q = applyOrdering(q, pm)
-
-	q = applyLimitOffset(q)
-
-	dbPage, err := ToDBClientsPage(pm)
-	if err != nil {
-		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
-	}
-
-	rows, err := repo.DB.NamedQueryContext(ctx, q, dbPage)
-	if err != nil {
-		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
-	}
-	defer rows.Close()
-
-	var items []clients.Client
-	for rows.Next() {
-		dbc := DBClient{}
-		if err := rows.StructScan(&dbc); err != nil {
-			return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
-		}
-
-		c, err := ToClient(dbc)
-		if err != nil {
-			return clients.ClientsPage{}, err
-		}
-
-		items = append(items, c)
-	}
-
 	cq := fmt.Sprintf(`%s
 						SELECT COUNT(*) AS total_count
 						FROM (
@@ -621,6 +607,50 @@ func (repo *clientRepo) retrieveClients(ctx context.Context, domainID, userID st
 							%s
 						) AS subquery;
 			`, bq, connJoinQuery, pageQuery)
+
+	q = applyOrdering(q, pm)
+
+	q = applyLimitOffset(q)
+
+	dbPage, err := ToDBClientsPage(pm)
+	if err != nil {
+		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+
+	if pm.OnlyTotal {
+		total, err := postgres.Total(ctx, repo.DB, cq, dbPage)
+		if err != nil {
+			return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+
+		return clients.ClientsPage{
+			Clients: nil,
+			Page: clients.Page{
+				Total: total,
+			},
+		}, nil
+	}
+
+	rows, err := repo.DB.NamedQueryContext(ctx, q, dbPage)
+	if err != nil {
+		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+	defer rows.Close()
+
+	var items []clients.Client
+	for rows.Next() {
+		dbc := DBClient{}
+		if err := rows.StructScan(&dbc); err != nil {
+			return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+
+		c, err := ToClient(dbc)
+		if err != nil {
+			return clients.ClientsPage{}, err
+		}
+
+		items = append(items, c)
+	}
 
 	total, err := postgres.Total(ctx, repo.DB, cq, dbPage)
 	if err != nil {

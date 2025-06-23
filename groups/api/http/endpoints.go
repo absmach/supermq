@@ -180,14 +180,18 @@ func ListGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 			groups = append(groups, toViewGroupRes(g))
 		}
 
-		return groupPageRes{
+		res := groupPageRes{
 			pageRes: pageRes{
-				Limit:  page.Limit,
-				Offset: page.Offset,
-				Total:  page.Total,
+				Total: page.Total,
 			},
 			Groups: groups,
-		}, nil
+		}
+		if !req.PageMeta.OnlyTotal {
+			res.Offset = page.Offset
+			res.Limit = page.Limit
+		}
+
+		return res, nil
 	}
 }
 

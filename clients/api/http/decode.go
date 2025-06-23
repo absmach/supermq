@@ -131,6 +131,10 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 	if err != nil {
 		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
+	ot, err := apiutil.ReadBoolQuery(r, api.OnlyTotal, false)
+	if err != nil {
+		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
 
 	req := listClientsReq{
 		Page: clients.Page{
@@ -150,6 +154,7 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 			Channel:        channelID,
 			ConnectionType: connType,
 			ID:             id,
+			OnlyTotal:      ot,
 		},
 		userID: userID,
 	}
