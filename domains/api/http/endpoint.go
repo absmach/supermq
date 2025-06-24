@@ -112,6 +112,7 @@ func listDomainsEndpoint(svc domains.Service) endpoint.Endpoint {
 		if err != nil {
 			return nil, err
 		}
+
 		return listDomainsRes{dp}, nil
 	}
 }

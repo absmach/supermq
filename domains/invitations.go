@@ -50,6 +50,7 @@ func (page InvitationPage) MarshalJSON() ([]byte, error) {
 type InvitationPageMeta struct {
 	Offset            uint64 `json:"offset" db:"offset"`
 	Limit             uint64 `json:"limit" db:"limit"`
+	OnlyTotal         bool   `json:"only_total"`
 	InvitedBy         string `json:"invited_by,omitempty" db:"invited_by,omitempty"`
 	InviteeUserID     string `json:"invitee_user_id,omitempty" db:"invitee_user_id,omitempty"`
 	DomainID          string `json:"domain_id,omitempty" db:"domain_id,omitempty"`
