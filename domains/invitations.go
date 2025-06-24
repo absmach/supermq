@@ -27,9 +27,9 @@ type Invitation struct {
 // InvitationPage is a page of invitations.
 type InvitationPage struct {
 	Total       uint64       `json:"total"`
-	Offset      uint64       `json:"offset,omitempty"`
-	Limit       uint64       `json:"limit,omitempty"`
-	Invitations []Invitation `json:"invitations,omitempty"`
+	Offset      uint64       `json:"offset"`
+	Limit       uint64       `json:"limit"`
+	Invitations []Invitation `json:"invitations"`
 }
 
 func (page InvitationPage) MarshalJSON() ([]byte, error) {
