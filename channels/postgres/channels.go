@@ -627,8 +627,6 @@ func (repo *channelRepository) retrieveChannels(ctx context.Context, domainID, u
 		items = append(items, c)
 	}
 
-	
-
 	total, err := postgres.Total(ctx, repo.db, cq, dbPage)
 	if err != nil {
 		return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
