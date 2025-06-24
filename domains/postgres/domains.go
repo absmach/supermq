@@ -344,6 +344,10 @@ func (repo domainRepo) ListDomains(ctx context.Context, pm domains.Page) (domain
 	cq := `SELECT COUNT(*)
 		FROM domains as d %s`
 
+	if query != "" {
+		cq = fmt.Sprintf(cq, query)
+	}
+
 	dbPage, err := toDBDomainsPage(pm)
 	if err != nil {
 		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
@@ -374,10 +378,6 @@ func (repo domainRepo) ListDomains(ctx context.Context, pm domains.Page) (domain
 
 	if pm.UserID != "" {
 		cq = repo.userDomainsBaseQuery() + cq
-	}
-
-	if query != "" {
-		cq = fmt.Sprintf(cq, query)
 	}
 
 	total, err := postgres.Total(ctx, repo.db, cq, dbPage)
