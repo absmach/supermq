@@ -112,7 +112,7 @@ func convertGroup(g sdk.Group) groups.Group {
 		Domain:                    g.DomainID,
 		Parent:                    g.ParentID,
 		Name:                      g.Name,
-		Description:               &g.Description,
+		Description:               g.Description,
 		Tags:                      g.Tags,
 		Metadata:                  groups.Metadata(g.Metadata),
 		Level:                     g.Level,

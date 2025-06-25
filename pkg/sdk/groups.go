@@ -31,7 +31,7 @@ type Group struct {
 	DomainID                  string                    `json:"domain_id,omitempty"`
 	ParentID                  string                    `json:"parent_id,omitempty"`
 	Name                      string                    `json:"name,omitempty"`
-	Description               string                    `json:"description,omitempty"`
+	Description               *string                    `json:"description,omitempty"`
 	Tags                      []string                  `json:"tags,omitempty"`
 	Metadata                  Metadata                  `json:"metadata,omitempty"`
 	Level                     int                       `json:"level,omitempty"`
