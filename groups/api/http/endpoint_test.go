@@ -34,7 +34,7 @@ var (
 	validGroupResp = groups.Group{
 		ID:          testsutil.GenerateUUID(&testing.T{}),
 		Name:        valid,
-		Description: valid,
+		Description: &valid,
 		Domain:      testsutil.GenerateUUID(&testing.T{}),
 		Parent:      testsutil.GenerateUUID(&testing.T{}),
 		Metadata: groups.Metadata{
@@ -69,7 +69,7 @@ func TestCreateGroupEndpoint(t *testing.T) {
 
 	reqGroup := groups.Group{
 		Name:        valid,
-		Description: valid,
+		Description: &valid,
 		Metadata: map[string]interface{}{
 			"name": "test",
 		},
@@ -141,7 +141,7 @@ func TestCreateGroupEndpoint(t *testing.T) {
 			domainID: validID,
 			req: createGroupReq{
 				Group: groups.Group{
-					Description: valid,
+					Description: &valid,
 					Metadata: map[string]interface{}{
 						"name": "test",
 					},
@@ -158,7 +158,7 @@ func TestCreateGroupEndpoint(t *testing.T) {
 			req: createGroupReq{
 				Group: groups.Group{
 					Name:        strings.Repeat("a", 1025),
-					Description: valid,
+					Description: &valid,
 					Metadata: map[string]interface{}{
 						"name": "test",
 					},
@@ -336,7 +336,7 @@ func TestUpdateGroupEndpoint(t *testing.T) {
 	updateGroupReq := groups.Group{
 		ID:          validID,
 		Name:        valid,
-		Description: valid,
+		Description: &valid,
 		Metadata: map[string]interface{}{
 			"name": "test",
 		},
@@ -408,7 +408,7 @@ func TestUpdateGroupEndpoint(t *testing.T) {
 			updateReq: groups.Group{
 				ID:          validID,
 				Name:        strings.Repeat("a", 1025),
-				Description: valid,
+				Description: &valid,
 				Metadata: map[string]interface{}{
 					"name": "test",
 				},

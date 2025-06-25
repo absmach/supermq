@@ -84,7 +84,7 @@ func (repo groupRepository) Update(ctx context.Context, g groups.Group) (groups.
 	if g.Name != "" {
 		query = append(query, "name = :name,")
 	}
-	if g.Description != "" {
+	if g.Description != nil {
 		query = append(query, "description = :description,")
 	}
 	if g.Metadata != nil {
@@ -1137,7 +1137,7 @@ type dbGroup struct {
 	ParentID                  *string          `db:"parent_id,omitempty"`
 	DomainID                  string           `db:"domain_id,omitempty"`
 	Name                      string           `db:"name"`
-	Description               string           `db:"description,omitempty"`
+	Description               *string           `db:"description,omitempty"`
 	Tags                      pgtype.TextArray `db:"tags,omitempty"`
 	Level                     int              `db:"level"`
 	Path                      string           `db:"path,omitempty"`

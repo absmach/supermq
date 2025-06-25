@@ -24,7 +24,7 @@ func (req createGroupReq) validate() error {
 type updateGroupReq struct {
 	id          string
 	Name        string                 `json:"name,omitempty"`
-	Description string                 `json:"description,omitempty"`
+	Description *string                `json:"description,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 

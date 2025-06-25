@@ -18,6 +18,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var description = "random"
+
 func TestDecodeListGroupsRequest(t *testing.T) {
 	cases := []struct {
 		desc   string
@@ -312,7 +314,7 @@ func TestDecodeGroupCreate(t *testing.T) {
 			resp: createGroupReq{
 				Group: groups.Group{
 					Name:        "random",
-					Description: "random",
+					Description: &description,
 				},
 			},
 			err: nil,
@@ -366,7 +368,7 @@ func TestDecodeGroupUpdate(t *testing.T) {
 			},
 			resp: updateGroupReq{
 				Name:        "random",
-				Description: "random",
+				Description: &description,
 			},
 			err: nil,
 		},

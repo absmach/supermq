@@ -95,7 +95,7 @@ func TestCreateGroup(t *testing.T) {
 			groupReq: createGroupReq,
 			svcReq: groups.Group{
 				Name:        gName,
-				Description: description,
+				Description: &description,
 				Metadata:    groups.Metadata{"role": "client"},
 			},
 			svcRes:   group,
@@ -110,7 +110,7 @@ func TestCreateGroup(t *testing.T) {
 			groupReq: createGroupReq,
 			svcReq: groups.Group{
 				Name:        gName,
-				Description: description,
+				Description: &description,
 				Metadata:    groups.Metadata{"role": "client"},
 			},
 			svcRes:   group,
@@ -130,7 +130,7 @@ func TestCreateGroup(t *testing.T) {
 			},
 			svcReq: groups.Group{
 				Name:        gName,
-				Description: description,
+				Description: &description,
 				Metadata:    groups.Metadata{"role": "client"},
 				Parent:      pGroup.Parent,
 			},
@@ -151,7 +151,7 @@ func TestCreateGroup(t *testing.T) {
 			},
 			svcReq: groups.Group{
 				Name:        gName,
-				Description: description,
+				Description: &description,
 				Metadata:    groups.Metadata{"role": "client"},
 				Parent:      wrongID,
 			},
@@ -171,7 +171,7 @@ func TestCreateGroup(t *testing.T) {
 			},
 			svcReq: groups.Group{
 				Name:        gName,
-				Description: description,
+				Description: &description,
 				Metadata:    groups.Metadata{"role": "client"},
 			},
 			svcRes:          groups.Group{},
@@ -251,7 +251,7 @@ func TestCreateGroup(t *testing.T) {
 			},
 			svcReq: groups.Group{
 				Name:        gName,
-				Description: description,
+				Description: &description,
 				Metadata:    groups.Metadata{"role": "client"},
 			},
 			svcRes:   uGroup,
@@ -703,7 +703,7 @@ func TestUpdateGroup(t *testing.T) {
 			svcReq: groups.Group{
 				ID:          group.ID,
 				Name:        updatedName,
-				Description: updatedDescription,
+				Description: &updatedDescription,
 				Metadata:    groups.Metadata{"key": "value"},
 			},
 			svcRes:   convertGroup(upGroup),
@@ -724,7 +724,7 @@ func TestUpdateGroup(t *testing.T) {
 			svcReq: groups.Group{
 				ID:          wrongID,
 				Name:        updatedName,
-				Description: updatedDescription,
+				Description: &updatedDescription,
 				Metadata:    groups.Metadata{"key": "value"},
 			},
 			svcRes:   groups.Group{},
@@ -745,7 +745,7 @@ func TestUpdateGroup(t *testing.T) {
 			svcReq: groups.Group{
 				ID:          group.ID,
 				Name:        updatedName,
-				Description: updatedDescription,
+				Description: &updatedDescription,
 				Metadata:    groups.Metadata{"key": "value"},
 			},
 			svcRes:          groups.Group{},
@@ -814,7 +814,7 @@ func TestUpdateGroup(t *testing.T) {
 			svcReq: groups.Group{
 				ID:          group.ID,
 				Name:        updatedName,
-				Description: updatedDescription,
+				Description: &updatedDescription,
 				Metadata:    groups.Metadata{"key": "value"},
 			},
 			svcRes: groups.Group{

@@ -81,7 +81,7 @@ func ToGroups(data map[string]interface{}) (groups.Group, error) {
 
 	desc, ok := data["description"].(string)
 	if ok {
-		g.Description = desc
+		g.Description = &desc
 	}
 
 	parent, ok := data["parent"].(string)

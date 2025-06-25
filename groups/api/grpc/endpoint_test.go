@@ -32,7 +32,7 @@ var (
 	validGroupResp = groups.Group{
 		ID:          testsutil.GenerateUUID(&testing.T{}),
 		Name:        valid,
-		Description: valid,
+		Description: &valid,
 		Domain:      testsutil.GenerateUUID(&testing.T{}),
 		Parent:      testsutil.GenerateUUID(&testing.T{}),
 		Metadata: groups.Metadata{
