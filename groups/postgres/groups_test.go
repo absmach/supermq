@@ -13,6 +13,7 @@ import (
 	"github.com/0x6flab/namegenerator"
 	"github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/groups/postgres"
+	"github.com/absmach/supermq/internal/nullable"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
@@ -26,12 +27,13 @@ var (
 	invalidID      = strings.Repeat("a", 37)
 	validTimestamp = time.Now().UTC().Truncate(time.Millisecond)
 	description    = strings.Repeat("a", 64)
+	desc, _        = nullable.ParseString(description)
 	validGroup     = groups.Group{
 		ID:          testsutil.GenerateUUID(&testing.T{}),
 		Domain:      testsutil.GenerateUUID(&testing.T{}),
 		Name:        namegen.Generate(),
 		Tags:        []string{"tag1", "tag2"},
-		Description: &description,
+		Description: desc,
 		Metadata:    map[string]interface{}{"key": "value"},
 		CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
 		Status:      groups.EnabledStatus,
@@ -87,6 +89,8 @@ func TestSave(t *testing.T) {
 	duplicateGroupID := testsutil.GenerateUUID(t)
 
 	invalidDescription := strings.Repeat("a", 1025)
+	invalidDesc, err := nullable.ParseString(invalidDescription)
+	assert.Nil(t, err)
 
 	cases := []struct {
 		desc  string
@@ -117,7 +121,7 @@ func TestSave(t *testing.T) {
 				ID:          invalidID,
 				Domain:      testsutil.GenerateUUID(t),
 				Name:        namegen.Generate(),
-				Description: &description,
+				Description: desc,
 				Metadata:    map[string]interface{}{"key": "value"},
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
@@ -130,7 +134,7 @@ func TestSave(t *testing.T) {
 				ID:          testsutil.GenerateUUID(t),
 				Domain:      invalidID,
 				Name:        namegen.Generate(),
-				Description: &description,
+				Description: desc,
 				Metadata:    map[string]interface{}{"key": "value"},
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
@@ -143,7 +147,7 @@ func TestSave(t *testing.T) {
 				ID:          testsutil.GenerateUUID(t),
 				Parent:      testsutil.GenerateUUID(t),
 				Name:        namegen.Generate(),
-				Description: &description,
+				Description: desc,
 				Metadata:    map[string]interface{}{"key": "value"},
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
@@ -156,7 +160,7 @@ func TestSave(t *testing.T) {
 				ID:          testsutil.GenerateUUID(t),
 				Domain:      testsutil.GenerateUUID(t),
 				Name:        strings.Repeat("a", 1025),
-				Description: &description,
+				Description: desc,
 				Metadata:    map[string]interface{}{"key": "value"},
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
@@ -169,7 +173,7 @@ func TestSave(t *testing.T) {
 				ID:          testsutil.GenerateUUID(t),
 				Domain:      testsutil.GenerateUUID(t),
 				Name:        namegen.Generate(),
-				Description: &invalidDescription,
+				Description: invalidDesc,
 				Metadata:    map[string]interface{}{"key": "value"},
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
@@ -182,7 +186,7 @@ func TestSave(t *testing.T) {
 				ID:          testsutil.GenerateUUID(t),
 				Domain:      testsutil.GenerateUUID(t),
 				Name:        namegen.Generate(),
-				Description: &description,
+				Description: desc,
 				Metadata: map[string]interface{}{
 					"key": make(chan int),
 				},
@@ -197,7 +201,7 @@ func TestSave(t *testing.T) {
 				ID:          testsutil.GenerateUUID(t),
 				Name:        namegen.Generate(),
 				Domain:      invalidID,
-				Description: &description,
+				Description: desc,
 				Metadata:    map[string]interface{}{"key": "value"},
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
@@ -210,7 +214,7 @@ func TestSave(t *testing.T) {
 				ID:          duplicateGroupID,
 				Domain:      validGroup.Domain,
 				Name:        validGroup.Name,
-				Description: &description,
+				Description: desc,
 				Metadata:    map[string]interface{}{"key": "different_value"},
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
@@ -221,7 +225,7 @@ func TestSave(t *testing.T) {
 				ID:          duplicateGroupID,
 				Domain:      validGroup.Domain,
 				Name:        validGroup.Name,
-				Description: &description,
+				Description: desc,
 				Metadata:    map[string]interface{}{"key": "different_value"},
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
@@ -264,7 +268,7 @@ func TestUpdate(t *testing.T) {
 			group: groups.Group{
 				ID:          group.ID,
 				Name:        namegen.Generate(),
-				Description: &description,
+				Description: desc,
 				Metadata:    map[string]interface{}{"key": "value"},
 				UpdatedAt:   validTimestamp,
 				UpdatedBy:   testsutil.GenerateUUID(t),
@@ -287,7 +291,7 @@ func TestUpdate(t *testing.T) {
 			update: "description",
 			group: groups.Group{
 				ID:          group.ID,
-				Description: &description,
+				Description: desc,
 				UpdatedAt:   validTimestamp,
 				UpdatedBy:   testsutil.GenerateUUID(t),
 			},
@@ -310,7 +314,7 @@ func TestUpdate(t *testing.T) {
 			group: groups.Group{
 				ID:          testsutil.GenerateUUID(t),
 				Name:        namegen.Generate(),
-				Description: &description,
+				Description: desc,
 				Metadata:    map[string]interface{}{"key": "value"},
 				UpdatedAt:   validTimestamp,
 				UpdatedBy:   testsutil.GenerateUUID(t),
@@ -322,7 +326,7 @@ func TestUpdate(t *testing.T) {
 			update: "all",
 			group: groups.Group{
 				Name:        namegen.Generate(),
-				Description: &description,
+				Description: desc,
 				Metadata:    map[string]interface{}{"key": "value"},
 				UpdatedAt:   validTimestamp,
 				UpdatedBy:   testsutil.GenerateUUID(t),
@@ -550,7 +554,7 @@ func TestRetrieveByIDAndUser(t *testing.T) {
 			ID:          testsutil.GenerateUUID(t),
 			Domain:      domainID,
 			Name:        name,
-			Description: &description,
+			Description: desc,
 			Metadata:    map[string]interface{}{"name": name},
 			CreatedAt:   validTimestamp,
 			Status:      groups.EnabledStatus,
@@ -679,7 +683,7 @@ func TestRetrieveAll(t *testing.T) {
 			Domain:      testsutil.GenerateUUID(t),
 			Parent:      parentID,
 			Name:        name,
-			Description: &description,
+			Description: desc,
 			Metadata:    map[string]interface{}{"name": name},
 			CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
 			Status:      groups.EnabledStatus,
@@ -991,7 +995,7 @@ func TestRetrieveByIDs(t *testing.T) {
 			Domain:      testsutil.GenerateUUID(t),
 			Parent:      parentID,
 			Name:        name,
-			Description: &description,
+			Description: desc,
 			Metadata:    map[string]interface{}{"name": name},
 			CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
 			Status:      groups.EnabledStatus,
@@ -1302,7 +1306,7 @@ func TestAssignParentGroup(t *testing.T) {
 			ID:          testsutil.GenerateUUID(t),
 			Domain:      testsutil.GenerateUUID(t),
 			Name:        name,
-			Description: &description,
+			Description: desc,
 			Metadata:    map[string]interface{}{"name": name},
 			CreatedAt:   validTimestamp,
 			Status:      groups.EnabledStatus,
@@ -1377,7 +1381,7 @@ func TestUnassignParentGroup(t *testing.T) {
 			Domain:      testsutil.GenerateUUID(t),
 			Parent:      parentID,
 			Name:        name,
-			Description: &description,
+			Description: desc,
 			Metadata:    map[string]interface{}{"name": name},
 			CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
 			Status:      groups.EnabledStatus,
@@ -1455,7 +1459,7 @@ func TestUnassignAllChildrenGroups(t *testing.T) {
 			Domain:      testsutil.GenerateUUID(t),
 			Parent:      parentID,
 			Name:        name,
-			Description: &description,
+			Description: desc,
 			Metadata:    map[string]interface{}{"name": name},
 			CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
 			Status:      groups.EnabledStatus,
@@ -1517,7 +1521,7 @@ func TestRetrieveHierarchy(t *testing.T) {
 			Domain:      testsutil.GenerateUUID(t),
 			Parent:      parentID,
 			Name:        name,
-			Description: &description,
+			Description: desc,
 			Metadata:    map[string]interface{}{"name": name},
 			CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
 			Status:      groups.EnabledStatus,
@@ -1619,7 +1623,7 @@ func TestRetrieveAllParentGroups(t *testing.T) {
 			Domain:      domainID,
 			Name:        name,
 			Parent:      parentID,
-			Description: &description,
+			Description: desc,
 			Metadata:    map[string]interface{}{"name": name},
 			CreatedAt:   validTimestamp,
 			Status:      groups.EnabledStatus,
@@ -1796,7 +1800,7 @@ func TestRetrieveChildrenGroups(t *testing.T) {
 			Domain:      domainID,
 			Name:        name,
 			Parent:      parentID,
-			Description: &description,
+			Description: desc,
 			Metadata:    map[string]interface{}{"name": name},
 			CreatedAt:   validTimestamp,
 			Status:      groups.EnabledStatus,

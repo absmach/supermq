@@ -15,6 +15,7 @@ import (
 	"github.com/absmach/supermq/clients"
 	"github.com/absmach/supermq/domains"
 	groups "github.com/absmach/supermq/groups"
+	"github.com/absmach/supermq/internal/nullable"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/journal"
 	"github.com/absmach/supermq/pkg/roles"
@@ -107,12 +108,17 @@ func convertGroup(g sdk.Group) groups.Group {
 		return groups.Group{}
 	}
 
+	desc, err := nullable.ParseString(g.Description)
+	if err != nil {
+		return groups.Group{}
+	}
+
 	return groups.Group{
 		ID:                        g.ID,
 		Domain:                    g.DomainID,
 		Parent:                    g.ParentID,
 		Name:                      g.Name,
-		Description:               g.Description,
+		Description:               desc,
 		Tags:                      g.Tags,
 		Metadata:                  groups.Metadata(g.Metadata),
 		Level:                     g.Level,

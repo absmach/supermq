@@ -12,6 +12,7 @@ import (
 	"time"
 
 	groups "github.com/absmach/supermq/groups"
+	"github.com/absmach/supermq/internal/nullable"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	"github.com/absmach/supermq/pkg/policies"
@@ -84,7 +85,7 @@ func (repo groupRepository) Update(ctx context.Context, g groups.Group) (groups.
 	if g.Name != "" {
 		query = append(query, "name = :name,")
 	}
-	if g.Description != nil {
+	if g.Description.Set {
 		query = append(query, "description = :description,")
 	}
 	if g.Metadata != nil {
@@ -1137,7 +1138,7 @@ type dbGroup struct {
 	ParentID                  *string          `db:"parent_id,omitempty"`
 	DomainID                  string           `db:"domain_id,omitempty"`
 	Name                      string           `db:"name"`
-	Description               *string          `db:"description,omitempty"`
+	Description               sql.NullString   `db:"description,omitempty"`
 	Tags                      pgtype.TextArray `db:"tags,omitempty"`
 	Level                     int              `db:"level"`
 	Path                      string           `db:"path,omitempty"`
@@ -1183,12 +1184,16 @@ func toDBGroup(g groups.Group) (dbGroup, error) {
 	if g.UpdatedBy != "" {
 		updatedBy = &g.UpdatedBy
 	}
+	var desc sql.NullString
+	if g.Description.Set {
+		desc = sql.NullString{String: g.Description.Value, Valid: true}
+	}
 	return dbGroup{
 		ID:          g.ID,
 		Name:        g.Name,
 		ParentID:    parentID,
 		DomainID:    g.Domain,
-		Description: g.Description,
+		Description: desc,
 		Tags:        tags,
 		Metadata:    data,
 		Path:        g.Path,
@@ -1230,12 +1235,20 @@ func toGroup(g dbGroup) (groups.Group, error) {
 		}
 	}
 
+	var desc nullable.Value[string]
+	var err error
+	if g.Description.Valid {
+		if desc, err = nullable.ParseString(g.Description.String); err != nil {
+			return groups.Group{}, errors.Wrap(errors.ErrMalformedEntity, err)
+		}
+	}
+
 	return groups.Group{
 		ID:                        g.ID,
 		Name:                      g.Name,
 		Parent:                    parentID,
 		Domain:                    g.DomainID,
-		Description:               g.Description,
+		Description:               desc,
 		Tags:                      tags,
 		Metadata:                  metadata,
 		Level:                     g.Level,

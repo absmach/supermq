@@ -14,6 +14,7 @@ import (
 	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/groups"
+	"github.com/absmach/supermq/internal/nullable"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
@@ -297,6 +298,9 @@ func TestDecodePageMeta(t *testing.T) {
 }
 
 func TestDecodeGroupCreate(t *testing.T) {
+	desc, err := nullable.ParseString(description)
+	assert.Nil(t, err)
+
 	cases := []struct {
 		desc   string
 		body   string
@@ -314,7 +318,7 @@ func TestDecodeGroupCreate(t *testing.T) {
 			resp: createGroupReq{
 				Group: groups.Group{
 					Name:        "random",
-					Description: &description,
+					Description: desc,
 				},
 			},
 			err: nil,
@@ -352,6 +356,9 @@ func TestDecodeGroupCreate(t *testing.T) {
 }
 
 func TestDecodeGroupUpdate(t *testing.T) {
+	desc, err := nullable.ParseString(description)
+	assert.Nil(t, err)
+
 	cases := []struct {
 		desc   string
 		body   string
@@ -368,7 +375,7 @@ func TestDecodeGroupUpdate(t *testing.T) {
 			},
 			resp: updateGroupReq{
 				Name:        "random",
-				Description: &description,
+				Description: desc,
 			},
 			err: nil,
 		},

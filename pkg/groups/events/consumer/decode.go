@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/groups"
+	"github.com/absmach/supermq/internal/nullable"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/absmach/supermq/pkg/roles"
 	rconsumer "github.com/absmach/supermq/pkg/roles/rolemanager/events/consumer"
@@ -81,7 +82,11 @@ func ToGroups(data map[string]interface{}) (groups.Group, error) {
 
 	desc, ok := data["description"].(string)
 	if ok {
-		g.Description = &desc
+		res, err := nullable.ParseString(desc)
+		if err != nil {
+			return groups.Group{}, err
+		}
+		g.Description = res
 	}
 
 	parent, ok := data["parent"].(string)
