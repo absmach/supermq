@@ -1125,7 +1125,7 @@ func TestDeleteInvitation(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			repoCall := drepo.On("RetrieveInvitation", context.Background(), mock.Anything, mock.Anything).Return(tc.resp, tc.retrieveInvitationErr)
-			repoCall1 := drepo.On("DeleteInvitation", context.Background(), mock.Anything, mock.Anything).Return(tc.deleteInvitationErr)
+			repoCall1 := drepo.On("DeleteUsersInvitation", context.Background(), mock.Anything, mock.Anything).Return(tc.deleteInvitationErr)
 			err := svc.DeleteInvitation(context.Background(), tc.session, tc.userID, tc.domainID)
 			assert.True(t, errors.Contains(err, tc.err))
 			repoCall.Unset()
