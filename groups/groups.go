@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/absmach/supermq/internal/nullable"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/roles"
 )
@@ -29,7 +30,7 @@ type Group struct {
 	Domain                    string                    `json:"domain_id,omitempty"`
 	Parent                    string                    `json:"parent_id,omitempty"`
 	Name                      string                    `json:"name"`
-	Description               string                    `json:"description,omitempty"`
+	Description               nullable.Value[string]    `json:"description,omitempty"`
 	Tags                      []string                  `json:"tags,omitempty"`
 	Metadata                  Metadata                  `json:"metadata,omitempty"`
 	Level                     int                       `json:"level,omitempty"`

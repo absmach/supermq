@@ -60,6 +60,8 @@ func (svc service) CreateGroup(ctx context.Context, session smqauthn.Session, g 
 	g.CreatedAt = time.Now().UTC()
 	g.Domain = session.DomainID
 
+	fmt.Printf("am here and g is %+v\n", g)
+
 	saved, err := svc.repo.Save(ctx, g)
 	if err != nil {
 		return Group{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
