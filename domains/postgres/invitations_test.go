@@ -157,7 +157,7 @@ func TestSaveInvitation(t *testing.T) {
 	}
 }
 
-func TestInvitationRetrieve(t *testing.T) {
+func TestRetrieveInvitation(t *testing.T) {
 	t.Cleanup(func() {
 		_, err := db.Exec("DELETE FROM invitations")
 		require.Nil(t, err, fmt.Sprintf("clean invitations unexpected error: %s", err))
@@ -245,7 +245,7 @@ func TestInvitationRetrieve(t *testing.T) {
 	}
 }
 
-func TestInvitationRetrieveAll(t *testing.T) {
+func TestRetrieveAllInvitations(t *testing.T) {
 	t.Cleanup(func() {
 		_, err := db.Exec("DELETE FROM invitations")
 		require.Nil(t, err, fmt.Sprintf("clean invitations unexpected error: %s", err))
@@ -633,7 +633,7 @@ func TestInvitationRetrieveAll(t *testing.T) {
 	}
 }
 
-func TestInvitationUpdateConfirmation(t *testing.T) {
+func TestUpdateConfirmation(t *testing.T) {
 	t.Cleanup(func() {
 		_, err := db.Exec("DELETE FROM invitations")
 		require.Nil(t, err, fmt.Sprintf("clean invitations unexpected error: %s", err))
@@ -697,7 +697,7 @@ func TestInvitationUpdateConfirmation(t *testing.T) {
 	}
 }
 
-func TestInvitationUpdateRejection(t *testing.T) {
+func TestUpdateRejection(t *testing.T) {
 	t.Cleanup(func() {
 		_, err := db.Exec("DELETE FROM invitations")
 		require.Nil(t, err, fmt.Sprintf("clean invitations unexpected error: %s", err))
@@ -761,7 +761,7 @@ func TestInvitationUpdateRejection(t *testing.T) {
 	}
 }
 
-func TestInvitationDelete(t *testing.T) {
+func TestDeleteInvitation(t *testing.T) {
 	t.Cleanup(func() {
 		_, err := db.Exec("DELETE FROM invitations")
 		require.Nil(t, err, fmt.Sprintf("clean invitations unexpected error: %s", err))

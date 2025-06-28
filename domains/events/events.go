@@ -13,21 +13,22 @@ import (
 )
 
 const (
-	domainPrefix       = "domain."
-	domainCreate       = domainPrefix + "create"
-	domainRetrieve     = domainPrefix + "retrieve"
-	domainUpdate       = domainPrefix + "update"
-	domainEnable       = domainPrefix + "enable"
-	domainDisable      = domainPrefix + "disable"
-	domainFreeze       = domainPrefix + "freeze"
-	domainList         = domainPrefix + "list"
-	invitationPrefix   = "invitation."
-	invitationSend     = invitationPrefix + "send"
-	invitationAccept   = invitationPrefix + "accept"
-	invitationReject   = invitationPrefix + "reject"
-	invitationList     = invitationPrefix + "list"
-	invitationRetrieve = invitationPrefix + "retrieve"
-	invitationDelete   = invitationPrefix + "delete"
+	domainPrefix          = "domain."
+	domainCreate          = domainPrefix + "create"
+	domainRetrieve        = domainPrefix + "retrieve"
+	domainUpdate          = domainPrefix + "update"
+	domainEnable          = domainPrefix + "enable"
+	domainDisable         = domainPrefix + "disable"
+	domainFreeze          = domainPrefix + "freeze"
+	domainList            = domainPrefix + "list"
+	invitationPrefix      = "invitation."
+	invitationSend        = invitationPrefix + "send"
+	invitationAccept      = invitationPrefix + "accept"
+	invitationReject      = invitationPrefix + "reject"
+	invitationList        = invitationPrefix + "list"
+	invitationListInvitee = invitationPrefix + "list_invitee"
+	invitationRetrieve    = invitationPrefix + "retrieve"
+	invitationDelete      = invitationPrefix + "delete"
 )
 
 var (
@@ -42,6 +43,7 @@ var (
 	_ events.Event = (*sendInvitationEvent)(nil)
 	_ events.Event = (*viewInvitationEvent)(nil)
 	_ events.Event = (*listInvitationsEvent)(nil)
+	_ events.Event = (*listInviteeInvitationsEvent)(nil)
 	_ events.Event = (*acceptInvitationEvent)(nil)
 	_ events.Event = (*rejectInvitationEvent)(nil)
 	_ events.Event = (*deleteInvitationEvent)(nil)
@@ -364,6 +366,37 @@ func (lie listInvitationsEvent) Encode() (map[string]interface{}, error) {
 	}
 	if lie.InviteeUserID != "" {
 		val["invitee_user_id"] = lie.InviteeUserID
+	}
+	if lie.DomainID != "" {
+		val["domain_id"] = lie.DomainID
+	}
+	if lie.RoleID != "" {
+		val["role_id"] = lie.RoleID
+	}
+	if lie.State.String() != "" {
+		val["state"] = lie.State.String()
+	}
+
+	return val, nil
+}
+
+type listInviteeInvitationsEvent struct {
+	domains.InvitationPageMeta
+	session authn.Session
+}
+
+func (lie listInviteeInvitationsEvent) Encode() (map[string]interface{}, error) {
+	val := map[string]interface{}{
+		"operation":       invitationListInvitee,
+		"offset":          lie.Offset,
+		"limit":           lie.Limit,
+		"invitee_user_id": lie.InviteeUserID,
+		"token_type":      lie.session.Type.String(),
+		"super_admin":     lie.session.SuperAdmin,
+	}
+
+	if lie.InvitedBy != "" {
+		val["invited_by"] = lie.InvitedBy
 	}
 	if lie.DomainID != "" {
 		val["domain_id"] = lie.DomainID

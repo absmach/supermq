@@ -20,6 +20,7 @@ const (
 	OpListDomains
 	OpViewInvitation
 	OpListInvitations
+	OpListInviteeInvitations
 	OpRejectInvitation
 	OpDeleteInvitation
 )
@@ -43,6 +44,7 @@ var OperationNames = []string{
 	"OpListDomains",
 	"OpViewInvitation",
 	"OpListInvitations",
+	"OpListInviteeInvitations",
 	"OpRejectInvitation",
 	"OpDeleteInvitation",
 }
