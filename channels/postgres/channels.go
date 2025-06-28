@@ -704,8 +704,8 @@ direct_groups_with_subgroup AS (
 		gr.entity_id, grm.member_id, gr.id, gr."name", g."path", g.id
 ),
 indirect_child_groups AS (
-	SELECT
-		DISTINCT indirect_child_groups.id as child_id,
+	SELECT DISTINCT ON (indirect_child_groups.id)
+		indirect_child_groups.id AS child_id,
 		indirect_child_groups.*,
 		dgws.id as access_provider_id,
 		dgws.role_id as access_provider_role_id,
