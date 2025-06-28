@@ -25,10 +25,11 @@ func NewAuthorization(psvc private.Service) pkgDomains.Authorization {
 	}
 }
 
-func (a authorization) RetrieveEntity(ctx context.Context, id string) (domains.Domain, error) {
-	dom, err := a.psvc.RetrieveEntity(ctx, id)
+func (a authorization) RetrieveStatus(ctx context.Context, id string) (domains.Status, error) {
+	status, err := a.psvc.RetrieveStatus(ctx, id)
 	if err != nil {
-		return domains.Domain{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		return domains.AllStatus, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
-	return dom, nil
+
+	return status, nil
 }

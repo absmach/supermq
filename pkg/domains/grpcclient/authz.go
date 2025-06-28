@@ -28,17 +28,14 @@ func NewAuthorization(ctx context.Context, cfg grpcclient.Config) (pkgDomains.Au
 	return authorization{domainsSvcClient: domainsClient}, domainsClient, domainsHandler, nil
 }
 
-func (a authorization) RetrieveEntity(ctx context.Context, id string) (domains.Domain, error) {
+func (a authorization) RetrieveStatus(ctx context.Context, id string) (domains.Status, error) {
 	req := grpcCommonV1.RetrieveEntityReq{
 		Id: id,
 	}
-	res, err := a.domainsSvcClient.RetrieveEntity(ctx, &req)
+	res, err := a.domainsSvcClient.RetrieveStatus(ctx, &req)
 	if err != nil {
-		return domains.Domain{}, err
+		return domains.AllStatus, err
 	}
 
-	return domains.Domain{
-		ID:     res.Entity.GetId(),
-		Status: domains.Status(res.Entity.GetStatus()),
-	}, nil
+	return domains.Status(res.Entity.GetStatus()), nil
 }

@@ -19,11 +19,11 @@ func (req deleteUserPoliciesReq) validate() error {
 	return nil
 }
 
-type retrieveEntityReq struct {
+type retrieveStatusReq struct {
 	ID string
 }
 
-func (req retrieveEntityReq) validate() error {
+func (req retrieveStatusReq) validate() error {
 	if req.ID == "" {
 		return apiutil.ErrMissingID
 	}

@@ -125,7 +125,7 @@ const file_domains_v1_domains_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id2\x83\x02\n" +
 	"\x0eDomainsService\x12O\n" +
 	"\x15DeleteUserFromDomains\x12\x19.domains.v1.DeleteUserReq\x1a\x19.domains.v1.DeleteUserRes\"\x00\x12N\n" +
-	"\x0eRetrieveEntity\x12\x1c.common.v1.RetrieveEntityReq\x1a\x1c.common.v1.RetrieveEntityRes\"\x00\x12P\n" +
+	"\x0eRetrieveStatus\x12\x1c.common.v1.RetrieveEntityReq\x1a\x1c.common.v1.RetrieveEntityRes\"\x00\x12P\n" +
 	"\x0fRetrieveByRoute\x12\x1d.common.v1.RetrieveByRouteReq\x1a\x1c.common.v1.RetrieveEntityRes\"\x00B5Z3github.com/absmach/supermq/internal/grpc/domains/v1b\x06proto3"
 
 var (
@@ -150,10 +150,10 @@ var file_domains_v1_domains_proto_goTypes = []any{
 }
 var file_domains_v1_domains_proto_depIdxs = []int32{
 	1, // 0: domains.v1.DomainsService.DeleteUserFromDomains:input_type -> domains.v1.DeleteUserReq
-	2, // 1: domains.v1.DomainsService.RetrieveEntity:input_type -> common.v1.RetrieveEntityReq
+	2, // 1: domains.v1.DomainsService.RetrieveStatus:input_type -> common.v1.RetrieveEntityReq
 	3, // 2: domains.v1.DomainsService.RetrieveByRoute:input_type -> common.v1.RetrieveByRouteReq
 	0, // 3: domains.v1.DomainsService.DeleteUserFromDomains:output_type -> domains.v1.DeleteUserRes
-	4, // 4: domains.v1.DomainsService.RetrieveEntity:output_type -> common.v1.RetrieveEntityRes
+	4, // 4: domains.v1.DomainsService.RetrieveStatus:output_type -> common.v1.RetrieveEntityRes
 	4, // 5: domains.v1.DomainsService.RetrieveByRoute:output_type -> common.v1.RetrieveEntityRes
 	3, // [3:6] is the sub-list for method output_type
 	0, // [0:3] is the sub-list for method input_type

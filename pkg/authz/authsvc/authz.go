@@ -82,12 +82,12 @@ func (a authorization) Authorize(ctx context.Context, pr authz.PolicyReq) error 
 }
 
 func (a authorization) checkDomain(ctx context.Context, subjectType, subject, domainID string) error {
-	dom, err := a.domains.RetrieveEntity(ctx, domainID)
+	status, err := a.domains.RetrieveStatus(ctx, domainID)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	switch dom.Status {
+	switch status {
 	case domains.FreezeStatus:
 		_, err := a.authSvcClient.Authorize(ctx, &grpcAuthV1.AuthZReq{
 			Subject:     subject,
