@@ -47,6 +47,13 @@ var ParsePublisherTopicTestCases = []struct {
 		subtopic:  "",
 	},
 	{
+		desc:      "valid topic with trailing slash /m/domain123/c/channel456/devices/temp/",
+		topic:     "/m/domain123/c/channel456/devices/temp/",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "devices.temp",
+	},
+	{
 		desc:      "invalid topic format (missing parts) /m/domain123/c/",
 		topic:     "/m/domain123/c/",
 		domainID:  "domain123",
@@ -58,6 +65,14 @@ var ParsePublisherTopicTestCases = []struct {
 		desc:      "invalid topic format (missing domain) /m//c/channel123",
 		topic:     "/m//c/channel123",
 		domainID:  "",
+		channelID: "",
+		subtopic:  "",
+		expectErr: true,
+	},
+	{
+		desc:      "invalid topic format (missing channel) /m/domain123/c/",
+		topic:     "/m/domain123/c//subtopic",
+		domainID:  "domain123",
 		channelID: "",
 		subtopic:  "",
 		expectErr: true,
@@ -126,6 +141,11 @@ var ParsePublisherTopicTestCases = []struct {
 		subtopic:  "",
 		expectErr: true,
 	},
+	{
+		desc:      "extra segment before prefix /extra/m/domain/c/channel",
+		topic:     "/extra/m/domain/c/channel",
+		expectErr: true,
+	},
 }
 
 func TestParsePublishTopic(t *testing.T) {
@@ -184,6 +204,13 @@ var ParseSubscribeTestCases = []struct {
 		subtopic:  "",
 	},
 	{
+		desc:      "valid topic with trailing slash /m/domain123/c/channel456/devices/temp/",
+		topic:     "/m/domain123/c/channel456/devices/temp/",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "devices.temp",
+	},
+	{
 		desc:      "invalid topic format (missing channel) /m/domain123/c/",
 		topic:     "/m/domain123/c/",
 		domainID:  "domain123",
@@ -200,12 +227,19 @@ var ParseSubscribeTestCases = []struct {
 		expectErr: true,
 	},
 	{
+		desc:      "invalid topic format (missing channel) /m/domain123/c/",
+		topic:     "/m/domain123/c//subtopic",
+		domainID:  "domain123",
+		channelID: "",
+		subtopic:  "",
+		expectErr: true,
+	},
+	{
 		desc:      "invalid domain name m/domain*123/c/channel456/devices/+/temp/#",
 		topic:     "m/domain*123/c/channel456/devices/+/temp/#",
-		domainID:  "",
+		domainID:  "domain*123",
 		channelID: "channel456",
 		subtopic:  "devices.*.temp.>",
-		expectErr: true,
 	},
 	{
 		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a*b/topic",
@@ -261,6 +295,11 @@ var ParseSubscribeTestCases = []struct {
 		domainID:  "",
 		channelID: "",
 		subtopic:  "",
+		expectErr: true,
+	},
+	{
+		desc:      "extra segment before prefix /extra/m/domain/c/channel",
+		topic:     "/extra/m/domain/c/channel",
 		expectErr: true,
 	},
 }

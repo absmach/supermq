@@ -51,7 +51,8 @@ var (
 
 func newService(authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, domains grpcDomainsV1.DomainsServiceClient) (session.Handler, *pubsub.PubSub) {
 	pub := new(pubsub.PubSub)
-	return server.NewHandler(pub, authn, clients, channels, domains, smqlog.NewMock()), pub
+	resolver := messaging.NewTopicResolver(channels, domains)
+	return server.NewHandler(pub, authn, clients, channels, resolver, smqlog.NewMock()), pub
 }
 
 func newTargetHTTPServer() *httptest.Server {

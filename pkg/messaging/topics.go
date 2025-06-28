@@ -6,7 +6,6 @@ package messaging
 import (
 	"fmt"
 	"net/url"
-	"regexp"
 	"strings"
 
 	"github.com/absmach/supermq/pkg/errors"
@@ -15,18 +14,11 @@ import (
 const (
 	MsgTopicPrefix     = "m"
 	ChannelTopicPrefix = "c"
-
-	numGroups     = 4 // entire expression + domain group + channel group + subtopic group
-	domainGroup   = 1 // domain group is first in msg topic regexp
-	channelGroup  = 2 // channel group is second in msg topic regexp
-	subtopicGroup = 3 // subtopic group is third in msg topic regexp
 )
 
 var (
 	ErrMalformedTopic    = errors.New("malformed topic")
 	ErrMalformedSubtopic = errors.New("malformed subtopic")
-	// Regex to group topic in format m.<domain_id>.c.<channel_id>.<sub_topic> `^\/?m\/([\w\-]+)\/c\/([\w\-]+)(\/[^?]*)?(\?.*)?$`.
-	TopicRegExp          = regexp.MustCompile(`^\/?` + MsgTopicPrefix + `\/([\w\-]+)\/` + ChannelTopicPrefix + `\/([\w\-]+)(\/[^?]*)?(\?.*)?$`)
 	mqWildcards          = "+#"
 	wildcards            = "*>"
 	subtopicInvalidChars = " #+"
@@ -35,15 +27,10 @@ var (
 )
 
 func ParsePublishTopic(topic string) (domainID, chanID, subtopic string, err error) {
-	msgParts := TopicRegExp.FindStringSubmatch(topic)
-	if len(msgParts) < numGroups {
-		return "", "", "", ErrMalformedTopic
+	domainID, chanID, subtopic, err = ParseTopic(topic)
+	if err != nil {
+		return "", "", "", err
 	}
-
-	domainID = msgParts[domainGroup]
-	chanID = msgParts[channelGroup]
-	subtopic = msgParts[subtopicGroup]
-
 	subtopic, err = ParsePublishSubtopic(subtopic)
 	if err != nil {
 		return "", "", "", errors.Wrap(ErrMalformedTopic, err)
@@ -74,14 +61,10 @@ func ParsePublishSubtopic(subtopic string) (parseSubTopic string, err error) {
 }
 
 func ParseSubscribeTopic(topic string) (domainID string, chanID string, subtopic string, err error) {
-	msgParts := TopicRegExp.FindStringSubmatch(topic)
-	if len(msgParts) < numGroups {
-		return "", "", "", ErrMalformedTopic
+	domainID, chanID, subtopic, err = ParseTopic(topic)
+	if err != nil {
+		return "", "", "", err
 	}
-
-	domainID = msgParts[domainGroup]
-	chanID = msgParts[channelGroup]
-	subtopic = msgParts[subtopicGroup]
 	subtopic, err = ParseSubscribeSubtopic(subtopic)
 	if err != nil {
 		return "", "", "", errors.Wrap(ErrMalformedTopic, err)
@@ -153,4 +136,71 @@ func EncodeMessageMQTTTopic(m *Message) string {
 		topic = topic + "/" + strings.ReplaceAll(m.GetSubtopic(), ".", "/")
 	}
 	return topic
+}
+
+// ParseTopic parses a messaging topic string and returns the domain ID, channel ID, and subtopic.
+// This is an optimized version with no regex and minimal allocations.
+func ParseTopic(topic string) (domainID, chanID, subtopic string, err error) {
+	// location of string "m"
+	start := 0
+	// Handle both formats: "/m/domain/c/channel/subtopic" and "m/domain/c/channel/subtopic".
+	// If topic start with m/ then start is 0 , If topic start with /m/ then start is 1.
+	n := len(topic)
+	if n > 0 && topic[0] == '/' {
+		start = 1
+	}
+
+	// length check - minimum: "m/<domain_id>/c/" = 5 characters if ignore <domain_id> and in this case start will be 0
+	// length check - minimum: "/m/<domain_id>/c/" = 6 characters if ignore <domain_id> and in this case start will be 1
+	if n < start+5 {
+		return "", "", "", ErrMalformedTopic
+	}
+	if topic[start] != 'm' || topic[start+1] != '/' {
+		return "", "", "", ErrMalformedTopic
+	}
+	pos := start + 2
+
+	// Find "/c/" to locate domain ID
+	cPos := -1
+	for i := pos; i <= n-3; i++ {
+		if topic[i] == '/' && topic[i+1] == 'c' && topic[i+2] == '/' {
+			cPos = i - pos
+			break
+		}
+	}
+	if cPos == -1 || cPos == 0 {
+		return "", "", "", ErrMalformedTopic
+	}
+	domainID = topic[pos : pos+cPos]
+	// skip "/c/"
+	pos = pos + cPos + 3
+
+	// Ensure channel exists
+	if pos >= n {
+		return "", "", "", ErrMalformedTopic
+	}
+
+	// Find '/' after channelID
+	nextSlash := -1
+	for i := pos; i < n; i++ {
+		if topic[i] == '/' {
+			nextSlash = i - pos
+			break
+		}
+	}
+
+	if nextSlash == -1 {
+		// No subtopic
+		chanID = topic[pos:]
+	} else {
+		chanID = topic[pos : pos+nextSlash]
+		subtopic = topic[pos+nextSlash+1:]
+	}
+
+	// Validate channelID
+	if len(chanID) == 0 {
+		return "", "", "", ErrMalformedTopic
+	}
+
+	return domainID, chanID, subtopic, nil
 }
