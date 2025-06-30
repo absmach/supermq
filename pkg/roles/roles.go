@@ -9,7 +9,6 @@ import (
 
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/policies"
-	"github.com/absmach/supermq/pkg/svcutil"
 )
 
 type Action string
@@ -183,64 +182,4 @@ type Repository interface {
 	ListEntityMembers(ctx context.Context, entityID string, pageQuery MembersRolePageQuery) (MembersRolePage, error)
 	RemoveEntityMembers(ctx context.Context, entityID string, members []string) error
 	RemoveMemberFromAllRoles(ctx context.Context, memberID string) (err error)
-}
-
-const (
-	OpAddRole svcutil.Operation = iota
-	OpRemoveRole
-	OpUpdateRoleName
-	OpRetrieveRole
-	OpRetrieveAllRoles
-	OpRoleAddActions
-	OpRoleListActions
-	OpRoleCheckActionsExists
-	OpRoleRemoveActions
-	OpRoleRemoveAllActions
-	OpRoleAddMembers
-	OpRoleListMembers
-	OpRoleCheckMembersExists
-	OpRoleRemoveMembers
-	OpRoleRemoveAllMembers
-	OpListAvailableActions
-)
-
-var expectedOperations = []svcutil.Operation{
-	OpAddRole,
-	OpRemoveRole,
-	OpUpdateRoleName,
-	OpRetrieveRole,
-	OpRetrieveAllRoles,
-	OpRoleAddActions,
-	OpRoleListActions,
-	OpRoleCheckActionsExists,
-	OpRoleRemoveActions,
-	OpRoleRemoveAllActions,
-	OpRoleAddMembers,
-	OpRoleListMembers,
-	OpRoleCheckMembersExists,
-	OpRoleRemoveMembers,
-	OpRoleRemoveAllMembers,
-}
-
-var OperationNames = []string{
-	"OpAddRole",
-	"OpRemoveRole",
-	"OpUpdateRoleName",
-	"OpRetrieveRole",
-	"OpRetrieveAllRoles",
-	"OpRoleAddActions",
-	"OpRoleListActions",
-	"OpRoleCheckActionsExists",
-	"OpRoleRemoveActions",
-	"OpRoleRemoveAllActions",
-	"OpRoleAddMembers",
-	"OpRoleListMembers",
-	"OpRoleCheckMembersExists",
-	"OpRoleRemoveMembers",
-	"OpRoleRemoveAllMembers",
-	"OpListAvailableActions",
-}
-
-func NewOperationPerm() svcutil.OperationPerm {
-	return svcutil.NewOperationPerm(expectedOperations, OperationNames)
 }
