@@ -249,7 +249,7 @@ var cmdDomainRoles = []cobra.Command{
 				logJSONCmd(*cmd, rs)
 				return
 			}
-			r, err := sdk.DomainRole(cmd.Context(), args[0], args[1], args[2])
+			r, err := sdk.DomainRole(cmd.Context(), args[1], args[0], args[2])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return

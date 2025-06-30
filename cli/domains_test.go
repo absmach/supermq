@@ -631,7 +631,7 @@ func TestGetDomainRoleCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("DomainRole", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.role, tc.sdkErr)
+			sdkCall := sdkMock.On("DomainRole", mock.Anything, tc.args[1], tc.args[0], tc.args[2]).Return(tc.role, tc.sdkErr)
 			out := executeCommand(t, rootCmd, append([]string{"roles", "get"}, tc.args...)...)
 
 			switch tc.logType {
