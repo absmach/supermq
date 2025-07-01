@@ -45,7 +45,7 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.62.0
 	go.opentelemetry.io/otel v1.37.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.37.0
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.36.0
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.37.0
 	go.opentelemetry.io/otel/sdk v1.37.0
 	go.opentelemetry.io/otel/trace v1.37.0
 	golang.org/x/crypto v0.39.0
@@ -99,7 +99,7 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.0 // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
