@@ -1,0 +1,13 @@
+clients:
+  operations:
+    - view: read_permission
+    - delete: delete_permission
+  roles_operations:
+    - add: admin_permission
+    - add: admin_permission1
+    - view: admin_permission
+    - delete: admin_permission
+  external_opertions:
+    - create_client_in_domain:
+    - add_children_in_parent_group: add_children_permission
+
