@@ -22,11 +22,11 @@ const (
 
 // String representation of the possible state values.
 const (
-	all      = "all"
-	pending  = "pending"
-	accepted = "accepted"
-	rejected = "rejected"
-	unknown  = "unknown"
+	all          = "all"
+	pending      = "pending"
+	accepted     = "accepted"
+	rejected     = "rejected"
+	UnknownState = "unknown"
 )
 
 // String converts invitation state to string literal.
@@ -41,7 +41,7 @@ func (s State) String() string {
 	case Rejected:
 		return rejected
 	default:
-		return unknown
+		return UnknownState
 	}
 }
 

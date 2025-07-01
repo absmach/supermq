@@ -244,9 +244,19 @@ func (svc *service) ViewInvitation(ctx context.Context, session authn.Session, i
 }
 
 func (svc *service) ListInvitations(ctx context.Context, session authn.Session, page InvitationPageMeta) (invitations InvitationPage, err error) {
+	page.InviteeUserID = session.UserID
 	ip, err := svc.repo.RetrieveAllInvitations(ctx, page)
 	if err != nil {
-		return InvitationPage{}, err
+		return InvitationPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
+	}
+	return ip, nil
+}
+
+func (svc *service) ListDomainInvitations(ctx context.Context, session authn.Session, page InvitationPageMeta) (invitations InvitationPage, err error) {
+	page.DomainID = session.DomainID
+	ip, err := svc.repo.RetrieveAllInvitations(ctx, page)
+	if err != nil {
+		return InvitationPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	return ip, nil
 }

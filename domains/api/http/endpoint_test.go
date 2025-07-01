@@ -1164,7 +1164,169 @@ func TestSendInvitation(t *testing.T) {
 	}
 }
 
-func TestListInvitation(t *testing.T) {
+func TestListDomainInvitations(t *testing.T) {
+	is, svc, auth := newDomainsServer()
+
+	cases := []struct {
+		desc        string
+		token       string
+		session     authn.Session
+		domainID    string
+		query       string
+		contentType string
+		status      int
+		svcErr      error
+		authnErr    error
+	}{
+		{
+			desc:        "list invitations with valid request",
+			token:       validToken,
+			domainID:    domainID,
+			status:      http.StatusOK,
+			contentType: contentType,
+			svcErr:      nil,
+		},
+		{
+			desc:        "list invitations with invalid token",
+			token:       "",
+			domainID:    domainID,
+			status:      http.StatusUnauthorized,
+			contentType: contentType,
+			svcErr:      nil,
+		},
+		{
+			desc:        "list invitations with offset",
+			token:       validToken,
+			domainID:    domainID,
+			query:       "offset=1",
+			status:      http.StatusOK,
+			contentType: contentType,
+			svcErr:      nil,
+		},
+		{
+			desc:        "list invitations with invalid offset",
+			token:       validToken,
+			domainID:    domainID,
+			query:       "offset=invalid",
+			status:      http.StatusBadRequest,
+			contentType: contentType,
+			svcErr:      nil,
+		},
+		{
+			desc:        "list invitations with limit",
+			token:       validToken,
+			query:       "limit=1",
+			domainID:    domainID,
+			status:      http.StatusOK,
+			contentType: contentType,
+			svcErr:      nil,
+		},
+		{
+			desc:        "list invitations with invalid limit",
+			token:       validToken,
+			domainID:    domainID,
+			query:       "limit=invalid",
+			status:      http.StatusBadRequest,
+			contentType: contentType,
+			svcErr:      nil,
+		},
+		{
+			desc:        "list invitations with invitee_user_id",
+			token:       validToken,
+			domainID:    domainID,
+			query:       fmt.Sprintf("invitee_user_id=%s", validID),
+			status:      http.StatusOK,
+			contentType: contentType,
+			svcErr:      nil,
+		},
+		{
+			desc:        "list invitations with duplicate invitee_user_id",
+			token:       validToken,
+			domainID:    domainID,
+			query:       "invitee_user_id=1&invitee_user_id=2",
+			status:      http.StatusBadRequest,
+			contentType: contentType,
+			svcErr:      nil,
+		},
+		{
+			desc:        "list invitations with invited_by",
+			token:       validToken,
+			domainID:    domainID,
+			query:       fmt.Sprintf("invited_by=%s", validID),
+			status:      http.StatusOK,
+			contentType: contentType,
+			svcErr:      nil,
+		},
+		{
+			desc:        "list invitations with duplicate invited_by",
+			token:       validToken,
+			domainID:    domainID,
+			query:       "invited_by=1&invited_by=2",
+			status:      http.StatusBadRequest,
+			contentType: contentType,
+			svcErr:      nil,
+		},
+		{
+			desc:        "list invitations with state",
+			token:       validToken,
+			domainID:    domainID,
+			query:       "state=pending",
+			status:      http.StatusOK,
+			contentType: contentType,
+			svcErr:      nil,
+		},
+		{
+			desc:        "list invitations with invalid state",
+			token:       validToken,
+			domainID:    domainID,
+			query:       "state=invalid",
+			status:      http.StatusBadRequest,
+			contentType: contentType,
+			svcErr:      nil,
+		},
+		{
+			desc:        "list invitations with duplicate state",
+			token:       validToken,
+			domainID:    domainID,
+			query:       "state=all&state=all",
+			status:      http.StatusBadRequest,
+			contentType: contentType,
+			svcErr:      nil,
+		},
+		{
+			desc:        "list invitations with service error",
+			token:       validToken,
+			domainID:    invalid,
+			status:      http.StatusForbidden,
+			contentType: contentType,
+			svcErr:      svcerr.ErrAuthorization,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.token == validToken {
+				tc.session = authn.Session{UserID: userID, DomainID: tc.domainID}
+			}
+			authnCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
+			repoCall := svc.On("ListDomainInvitations", mock.Anything, tc.session, mock.Anything).Return(domains.InvitationPage{}, tc.svcErr)
+			req := testRequest{
+				client:      is.Client(),
+				method:      http.MethodGet,
+				url:         fmt.Sprintf("%s/domains/%s/invitations?", is.URL, tc.domainID) + tc.query,
+				token:       tc.token,
+				contentType: tc.contentType,
+			}
+			res, err := req.make()
+			assert.Nil(t, err, tc.desc)
+			assert.Equal(t, tc.status, res.StatusCode, tc.desc)
+			repoCall.Unset()
+			authnCall.Unset()
+		})
+	}
+}
+
+func TestListUserInvitations(t *testing.T) {
 	is, svc, auth := newDomainsServer()
 
 	cases := []struct {
@@ -1219,22 +1381,6 @@ func TestListInvitation(t *testing.T) {
 			desc:        "list invitations with invalid limit",
 			token:       validToken,
 			query:       "limit=invalid",
-			status:      http.StatusBadRequest,
-			contentType: contentType,
-			svcErr:      nil,
-		},
-		{
-			desc:        "list invitations with invitee_user_id",
-			token:       validToken,
-			query:       fmt.Sprintf("invitee_user_id=%s", validID),
-			status:      http.StatusOK,
-			contentType: contentType,
-			svcErr:      nil,
-		},
-		{
-			desc:        "list invitations with duplicate invitee_user_id",
-			token:       validToken,
-			query:       "invitee_user_id=1&invitee_user_id=2",
 			status:      http.StatusBadRequest,
 			contentType: contentType,
 			svcErr:      nil,

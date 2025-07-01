@@ -229,6 +229,26 @@ func (lm *loggingMiddleware) ListInvitations(ctx context.Context, session authn.
 	return lm.svc.ListInvitations(ctx, session, pm)
 }
 
+func (lm *loggingMiddleware) ListDomainInvitations(ctx context.Context, session authn.Session, pm domains.InvitationPageMeta) (invs domains.InvitationPage, err error) {
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.Group("page",
+				slog.Uint64("offset", pm.Offset),
+				slog.Uint64("limit", pm.Limit),
+				slog.Uint64("total", invs.Total),
+			),
+		}
+		if err != nil {
+			args = append(args, slog.Any("error", err))
+			lm.logger.Warn("List domain invitations failed", args...)
+			return
+		}
+		lm.logger.Info("List domain invitations completed successfully", args...)
+	}(time.Now())
+	return lm.svc.ListDomainInvitations(ctx, session, pm)
+}
+
 func (lm *loggingMiddleware) AcceptInvitation(ctx context.Context, session authn.Session, domainID string) (inv domains.Invitation, err error) {
 	defer func(begin time.Time) {
 		args := []any{

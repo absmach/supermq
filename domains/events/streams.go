@@ -16,20 +16,21 @@ import (
 )
 
 const (
-	supermqPrefix            = "supermq."
-	createStream             = supermqPrefix + domainCreate
-	retrieveStream           = supermqPrefix + domainRetrieve
-	updateStream             = supermqPrefix + domainUpdate
-	enableStream             = supermqPrefix + domainEnable
-	disableStream            = supermqPrefix + domainDisable
-	freezeStream             = supermqPrefix + domainFreeze
-	listStream               = supermqPrefix + domainList
-	sendInvitationStream     = supermqPrefix + invitationSend
-	acceptInvitationStream   = supermqPrefix + invitationAccept
-	rejectInvitationStream   = supermqPrefix + invitationReject
-	listInvitationsStream    = supermqPrefix + invitationList
-	retrieveInvitationStream = supermqPrefix + invitationRetrieve
-	deleteInvitationStream   = supermqPrefix + invitationDelete
+	supermqPrefix               = "supermq."
+	createStream                = supermqPrefix + domainCreate
+	retrieveStream              = supermqPrefix + domainRetrieve
+	updateStream                = supermqPrefix + domainUpdate
+	enableStream                = supermqPrefix + domainEnable
+	disableStream               = supermqPrefix + domainDisable
+	freezeStream                = supermqPrefix + domainFreeze
+	listStream                  = supermqPrefix + domainList
+	sendInvitationStream        = supermqPrefix + invitationSend
+	acceptInvitationStream      = supermqPrefix + invitationAccept
+	rejectInvitationStream      = supermqPrefix + invitationReject
+	listInvitationsStream       = supermqPrefix + invitationList
+	listDomainInvitationsStream = supermqPrefix + invitationListDomain
+	retrieveInvitationStream    = supermqPrefix + invitationRetrieve
+	deleteInvitationStream      = supermqPrefix + invitationDelete
 )
 
 var _ domains.Service = (*eventStore)(nil)
@@ -246,6 +247,24 @@ func (es *eventStore) ListInvitations(ctx context.Context, session authn.Session
 	}
 
 	if err := es.Publish(ctx, listInvitationsStream, event); err != nil {
+		return ip, err
+	}
+
+	return ip, nil
+}
+
+func (es *eventStore) ListDomainInvitations(ctx context.Context, session authn.Session, pm domains.InvitationPageMeta) (domains.InvitationPage, error) {
+	ip, err := es.svc.ListDomainInvitations(ctx, session, pm)
+	if err != nil {
+		return ip, err
+	}
+
+	event := listDomainInvitationsEvent{
+		InvitationPageMeta: pm,
+		session:            session,
+	}
+
+	if err := es.Publish(ctx, listDomainInvitationsStream, event); err != nil {
 		return ip, err
 	}
 

@@ -201,11 +201,14 @@ type Service interface {
 	ViewInvitation(ctx context.Context, session authn.Session, inviteeUserID, domainID string) (invitation Invitation, err error)
 
 	// ListInvitations returns a list of invitations.
+	// By default, it will list invitations the current user has received.
+	ListInvitations(ctx context.Context, session authn.Session, page InvitationPageMeta) (invitations InvitationPage, err error)
+
+	// ListDomainInvitations returns a list of invitations for the domain.
 	// People who can list invitations are:
 	// - platform administrators can list all invitations
 	// - domain administrators can list invitations for their domain
-	// By default, it will list invitations the current user has sent or received.
-	ListInvitations(ctx context.Context, session authn.Session, page InvitationPageMeta) (invitations InvitationPage, err error)
+	ListDomainInvitations(ctx context.Context, session authn.Session, page InvitationPageMeta) (invitations InvitationPage, err error)
 
 	// AcceptInvitation accepts an invitation by adding the user to the domain.
 	AcceptInvitation(ctx context.Context, session authn.Session, domainID string) (invitation Invitation, err error)

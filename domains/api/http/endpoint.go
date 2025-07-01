@@ -234,9 +234,8 @@ func listDomainInvitationsEndpoint(svc domains.Service) endpoint.Endpoint {
 		if !ok {
 			return nil, svcerr.ErrAuthorization
 		}
-		req.InvitationPageMeta.DomainID = session.DomainID
 
-		page, err := svc.ListInvitations(ctx, session, req.InvitationPageMeta)
+		page, err := svc.ListDomainInvitations(ctx, session, req.InvitationPageMeta)
 		if err != nil {
 			return nil, err
 		}
@@ -258,7 +257,6 @@ func listUserInvitationsEndpoint(svc domains.Service) endpoint.Endpoint {
 		if !ok {
 			return nil, svcerr.ErrAuthorization
 		}
-		session.DomainID = req.DomainID
 
 		page, err := svc.ListInvitations(ctx, session, req.InvitationPageMeta)
 		if err != nil {

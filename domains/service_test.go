@@ -829,7 +829,7 @@ func TestListInvitations(t *testing.T) {
 			desc:    "list invitations unsuccessful",
 			session: validSession,
 			page:    validPageMeta,
-			err:     repoerr.ErrViewEntity,
+			err:     svcerr.ErrViewEntity,
 			resp:    domains.InvitationPage{},
 			repoErr: repoerr.ErrViewEntity,
 		},
@@ -839,7 +839,70 @@ func TestListInvitations(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			repoCall := drepo.On("RetrieveAllInvitations", context.Background(), mock.Anything).Return(tc.resp, tc.repoErr)
 			resp, err := svc.ListInvitations(context.Background(), tc.session, tc.page)
-			assert.Equal(t, tc.err, err, tc.desc)
+			assert.True(t, errors.Contains(err, tc.err), tc.desc)
+			assert.Equal(t, tc.resp, resp, tc.desc)
+			repoCall.Unset()
+		})
+	}
+}
+
+func TestListDomainInvitations(t *testing.T) {
+	svc := newService()
+
+	validPageMeta := domains.InvitationPageMeta{
+		Offset: 0,
+		Limit:  10,
+	}
+	validResp := domains.InvitationPage{
+		Total:  1,
+		Offset: 0,
+		Limit:  10,
+		Invitations: []domains.Invitation{
+			{
+				InvitedBy:     testsutil.GenerateUUID(t),
+				InviteeUserID: testsutil.GenerateUUID(t),
+				DomainID:      testsutil.GenerateUUID(t),
+				RoleID:        testsutil.GenerateUUID(t),
+				RoleName:      "admin",
+				CreatedAt:     time.Now().Add(-time.Hour),
+				UpdatedAt:     time.Now().Add(-time.Hour),
+				ConfirmedAt:   time.Now().Add(-time.Hour),
+			},
+		},
+	}
+
+	cases := []struct {
+		desc    string
+		session authn.Session
+		page    domains.InvitationPageMeta
+		resp    domains.InvitationPage
+		repoErr error
+		err     error
+	}{
+		{
+			desc:    "list domain invitations successful",
+			session: validSession,
+			page:    validPageMeta,
+			resp:    validResp,
+			repoErr: nil,
+			err:     nil,
+		},
+
+		{
+			desc:    "list domain invitations unsuccessful",
+			session: validSession,
+			page:    validPageMeta,
+			resp:    domains.InvitationPage{},
+			repoErr: repoerr.ErrViewEntity,
+			err:     svcerr.ErrViewEntity,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			repoCall := drepo.On("RetrieveAllInvitations", context.Background(), mock.Anything).Return(tc.resp, tc.repoErr)
+			resp, err := svc.ListDomainInvitations(context.Background(), tc.session, tc.page)
+			assert.True(t, errors.Contains(err, tc.err), tc.desc)
 			assert.Equal(t, tc.resp, resp, tc.desc)
 			repoCall.Unset()
 		})
