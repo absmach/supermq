@@ -23,10 +23,6 @@ import (
 	"github.com/absmach/mgate/pkg/mqtt/websocket"
 	"github.com/absmach/mgate/pkg/session"
 	"github.com/absmach/supermq"
-	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
-	grpcCommonV1 "github.com/absmach/supermq/api/grpc/common/v1"
-	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
-	api "github.com/absmach/supermq/api/http"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/mqtt"
 	"github.com/absmach/supermq/mqtt/events"
@@ -55,11 +51,6 @@ const (
 	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
 	envPrefixDomains  = "SMQ_DOMAINS_GRPC_"
 	wsPathPrefix      = "/mqtt"
-)
-
-var (
-	errFailedResolveDomain  = errors.New("failed to resolve domain route")
-	errFailedResolveChannel = errors.New("failed to resolve channel route")
 )
 
 type config struct {
@@ -247,8 +238,7 @@ func main() {
 	}
 
 	beforeHandler := beforeHandler{
-		domains:  domainsClient,
-		channels: channelsClient,
+		resolver: messaging.NewTopicResolver(channelsClient, domainsClient),
 	}
 
 	afterHandler := afterHandler{
@@ -380,8 +370,7 @@ func (ah afterHandler) Intercept(ctx context.Context, pkt packets.ControlPacket,
 }
 
 type beforeHandler struct {
-	domains  grpcDomainsV1.DomainsServiceClient
-	channels grpcChannelsV1.ChannelsServiceClient
+	resolver messaging.TopicResolver
 }
 
 // This interceptor is used to replace domain and channel routes with relevant domain and channel IDs in the message topic.
@@ -389,7 +378,7 @@ func (bh beforeHandler) Intercept(ctx context.Context, pkt packets.ControlPacket
 	switch pt := pkt.(type) {
 	case *packets.SubscribePacket:
 		for i, topic := range pt.Topics {
-			ft, err := bh.resolveTopic(ctx, topic)
+			ft, err := bh.resolver.ResolveTopic(ctx, topic)
 			if err != nil {
 				return nil, err
 			}
@@ -399,7 +388,7 @@ func (bh beforeHandler) Intercept(ctx context.Context, pkt packets.ControlPacket
 		return pt, nil
 	case *packets.UnsubscribePacket:
 		for i, topic := range pt.Topics {
-			ft, err := bh.resolveTopic(ctx, topic)
+			ft, err := bh.resolver.ResolveTopic(ctx, topic)
 			if err != nil {
 				return nil, err
 			}
@@ -407,7 +396,7 @@ func (bh beforeHandler) Intercept(ctx context.Context, pkt packets.ControlPacket
 		}
 		return pt, nil
 	case *packets.PublishPacket:
-		ft, err := bh.resolveTopic(ctx, pt.TopicName)
+		ft, err := bh.resolver.ResolveTopic(ctx, pt.TopicName)
 		if err != nil {
 			return nil, err
 		}
@@ -417,47 +406,4 @@ func (bh beforeHandler) Intercept(ctx context.Context, pkt packets.ControlPacket
 	}
 
 	return pkt, nil
-}
-
-func (bh beforeHandler) resolveTopic(ctx context.Context, topic string) (string, error) {
-	matches := messaging.TopicRegExp.FindStringSubmatch(topic)
-	if len(matches) < 4 {
-		return "", messaging.ErrMalformedTopic
-	}
-
-	domainID, err := bh.resolveDomain(ctx, matches[1])
-	if err != nil {
-		return "", errors.Wrap(errFailedResolveDomain, err)
-	}
-	channelID, err := bh.resolveChannel(ctx, matches[2], domainID)
-	if err != nil {
-		return "", errors.Wrap(errFailedResolveChannel, err)
-	}
-
-	return fmt.Sprintf("m/%s/c/%s%s", domainID, channelID, matches[3]), nil
-}
-
-func (bh beforeHandler) resolveDomain(ctx context.Context, domain string) (string, error) {
-	if api.ValidateUUID(domain) == nil {
-		return domain, nil
-	}
-	resp, err := bh.domains.RetrieveByRoute(ctx, &grpcCommonV1.RetrieveByRouteReq{Route: domain})
-	if err != nil {
-		return "", err
-	}
-	return resp.Entity.Id, nil
-}
-
-func (bh beforeHandler) resolveChannel(ctx context.Context, channel, domainID string) (string, error) {
-	if api.ValidateUUID(channel) == nil {
-		return channel, nil
-	}
-	resp, err := bh.channels.RetrieveByRoute(ctx, &grpcCommonV1.RetrieveByRouteReq{
-		Route:    channel,
-		DomainId: domainID,
-	})
-	if err != nil {
-		return "", err
-	}
-	return resp.Entity.Id, nil
 }

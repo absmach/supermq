@@ -18,7 +18,6 @@ import (
 	"github.com/absmach/mgate/pkg/session"
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
-	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
 	chmocks "github.com/absmach/supermq/channels/mocks"
 	climocks "github.com/absmach/supermq/clients/mocks"
 	dmocks "github.com/absmach/supermq/domains/mocks"
@@ -26,6 +25,7 @@ import (
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnMocks "github.com/absmach/supermq/pkg/authn/mocks"
+	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/absmach/supermq/pkg/messaging/mocks"
 	"github.com/absmach/supermq/ws"
 	"github.com/absmach/supermq/ws/api"
@@ -47,13 +47,13 @@ var (
 	id       = testsutil.GenerateUUID(&testing.T{})
 )
 
-func newService(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, domains grpcDomainsV1.DomainsServiceClient) (ws.Service, *mocks.PubSub) {
+func newService(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) (ws.Service, *mocks.PubSub) {
 	pubsub := new(mocks.PubSub)
-	return ws.New(clients, channels, domains, pubsub), pubsub
+	return ws.New(clients, channels, pubsub), pubsub
 }
 
-func newHTTPServer(svc ws.Service) *httptest.Server {
-	mux := api.MakeHandler(context.Background(), svc, smqlog.NewMock(), instanceID)
+func newHTTPServer(svc ws.Service, resolver messaging.TopicResolver) *httptest.Server {
+	mux := api.MakeHandler(context.Background(), svc, resolver, smqlog.NewMock(), instanceID)
 	return httptest.NewServer(mux)
 }
 
@@ -116,10 +116,11 @@ func TestHandshake(t *testing.T) {
 	channels := new(chmocks.ChannelsServiceClient)
 	authn := new(authnMocks.Authentication)
 	domains := new(dmocks.DomainsServiceClient)
-	svc, pubsub := newService(clients, channels, domains)
-	target := newHTTPServer(svc)
+	resolver := messaging.NewTopicResolver(channels, domains)
+	svc, pubsub := newService(clients, channels)
+	target := newHTTPServer(svc, resolver)
 	defer target.Close()
-	handler := ws.NewHandler(pubsub, smqlog.NewMock(), authn, clients, channels, domains)
+	handler := ws.NewHandler(pubsub, smqlog.NewMock(), authn, clients, channels, resolver)
 	ts, err := newProxyHTPPServer(handler, target)
 	require.Nil(t, err)
 	defer ts.Close()

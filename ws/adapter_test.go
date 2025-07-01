@@ -12,10 +12,8 @@ import (
 
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
-	grpcCommonV1 "github.com/absmach/supermq/api/grpc/common/v1"
 	chmocks "github.com/absmach/supermq/channels/mocks"
 	climocks "github.com/absmach/supermq/clients/mocks"
-	dmocks "github.com/absmach/supermq/domains/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
@@ -52,17 +50,16 @@ var (
 	sessionID = "sessionID"
 )
 
-func newService() (ws.Service, *mocks.PubSub, *climocks.ClientsServiceClient, *chmocks.ChannelsServiceClient, *dmocks.DomainsServiceClient) {
+func newService() (ws.Service, *mocks.PubSub, *climocks.ClientsServiceClient, *chmocks.ChannelsServiceClient) {
 	pubsub := new(mocks.PubSub)
 	clients := new(climocks.ClientsServiceClient)
 	channels := new(chmocks.ChannelsServiceClient)
-	domains := new(dmocks.DomainsServiceClient)
 
-	return ws.New(clients, channels, domains, pubsub), pubsub, clients, channels, domains
+	return ws.New(clients, channels, pubsub), pubsub, clients, channels
 }
 
 func TestSubscribe(t *testing.T) {
-	svc, pubsub, clients, channels, domains := newService()
+	svc, pubsub, clients, channels := newService()
 
 	c := ws.NewClient(slog.Default(), nil, sessionID)
 
@@ -197,7 +194,6 @@ func TestSubscribe(t *testing.T) {
 		if strings.HasPrefix(tc.clientKey, "Client") {
 			authReq.ClientSecret = strings.TrimPrefix(tc.clientKey, "Client ")
 		}
-		domainsCall := domains.On("RetrieveByRoute", mock.Anything, mock.Anything).Return(&grpcCommonV1.RetrieveEntityRes{Entity: &grpcCommonV1.EntityBasic{Id: tc.domainID}}, nil)
 		clientsCall := clients.On("Authenticate", mock.Anything, authReq).Return(tc.authNRes, tc.authNErr)
 		channelsCall := channels.On("Authorize", mock.Anything, &grpcChannelsV1.AuthzReq{
 			ClientType: policies.ClientType,
@@ -206,14 +202,11 @@ func TestSubscribe(t *testing.T) {
 			ChannelId:  tc.chanID,
 			DomainId:   tc.domainID,
 		}).Return(tc.authZRes, tc.authZErr)
-		channelsCall1 := channels.On("RetrieveByRoute", mock.Anything, mock.Anything).Return(&grpcCommonV1.RetrieveEntityRes{Entity: &grpcCommonV1.EntityBasic{Id: tc.chanID}}, nil)
 		repocall := pubsub.On("Subscribe", mock.Anything, subConfig).Return(tc.subErr)
 		err := svc.Subscribe(context.Background(), sessionID, tc.clientKey, tc.domainID, tc.chanID, tc.subtopic, c)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		repocall.Unset()
 		clientsCall.Unset()
 		channelsCall.Unset()
-		domainsCall.Unset()
-		channelsCall1.Unset()
 	}
 }

@@ -19,7 +19,6 @@ import (
 	"github.com/absmach/supermq"
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
-	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/authn/authsvc"
 	domainsAuthz "github.com/absmach/supermq/pkg/domains/grpcclient"
@@ -194,10 +193,11 @@ func main() {
 		exitCode = 1
 		return
 	}
+	resolver := messaging.NewTopicResolver(channelsClient, domainsClient)
 
-	svc := newService(clientsClient, channelsClient, domainsClient, nps, logger, tracer)
+	svc := newService(clientsClient, channelsClient, nps, logger, tracer)
 
-	hs := httpserver.NewServer(ctx, cancel, svcName, targetServerConfig, httpapi.MakeHandler(ctx, svc, logger, cfg.InstanceID), logger)
+	hs := httpserver.NewServer(ctx, cancel, svcName, targetServerConfig, httpapi.MakeHandler(ctx, svc, resolver, logger, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, supermq.Version, logger, cancel)
@@ -209,7 +209,7 @@ func main() {
 	})
 
 	g.Go(func() error {
-		handler := ws.NewHandler(nps, logger, authn, clientsClient, channelsClient, domainsClient)
+		handler := ws.NewHandler(nps, logger, authn, clientsClient, channelsClient, resolver)
 		return proxyWS(ctx, httpServerConfig, targetServerConfig, logger, handler)
 	})
 
@@ -222,8 +222,8 @@ func main() {
 	}
 }
 
-func newService(clientsClient grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, domains grpcDomainsV1.DomainsServiceClient, nps messaging.PubSub, logger *slog.Logger, tracer trace.Tracer) ws.Service {
-	svc := ws.New(clientsClient, channels, domains, nps)
+func newService(clientsClient grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, nps messaging.PubSub, logger *slog.Logger, tracer trace.Tracer) ws.Service {
+	svc := ws.New(clientsClient, channels, nps)
 	svc = tracing.New(tracer, svc)
 	svc = httpapi.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics("ws_adapter", "api")

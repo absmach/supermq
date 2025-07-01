@@ -16,7 +16,7 @@ import (
 )
 
 // SubjectAllMessages represents subject to subscribe for all the messages.
-const SubjectAllMessages = messaging.MsgTopicPrefix + ".#"
+const SubjectAllMessages = string(messaging.MsgTopicPrefix) + ".#"
 
 func init() {
 	log.Println("The binary was build using RabbitMQ as the message broker")

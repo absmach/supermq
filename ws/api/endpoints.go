@@ -27,9 +27,9 @@ func generateSessionID() (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func handshake(ctx context.Context, svc ws.Service, logger *slog.Logger) http.HandlerFunc {
+func handshake(ctx context.Context, svc ws.Service, resolver messaging.TopicResolver, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req, err := decodeRequest(r, logger)
+		req, err := decodeRequest(r, resolver, logger)
 		if err != nil {
 			encodeError(w, err)
 			return
@@ -51,21 +51,21 @@ func handshake(ctx context.Context, svc ws.Service, logger *slog.Logger) http.Ha
 		client := ws.NewClient(logger, conn, sessionID)
 
 		client.SetCloseHandler(func(code int, text string) error {
-			return svc.Unsubscribe(ctx, sessionID, req.domain, req.channel, req.subtopic)
+			return svc.Unsubscribe(ctx, sessionID, req.domainID, req.channelID, req.subtopic)
 		})
 
 		go client.Start(ctx)
 
-		if err := svc.Subscribe(ctx, sessionID, req.clientKey, req.domain, req.channel, req.subtopic, client); err != nil {
+		if err := svc.Subscribe(ctx, sessionID, req.clientKey, req.domainID, req.channelID, req.subtopic, client); err != nil {
 			conn.Close()
 			return
 		}
 
-		logger.Debug(fmt.Sprintf("Successfully upgraded communication to WS on channel %s", req.channel))
+		logger.Debug(fmt.Sprintf("Successfully upgraded communication to WS on channel %s", req.channelID))
 	}
 }
 
-func decodeRequest(r *http.Request, logger *slog.Logger) (connReq, error) {
+func decodeRequest(r *http.Request, resolver messaging.TopicResolver, logger *slog.Logger) (connReq, error) {
 	authKey := r.Header.Get("Authorization")
 	if authKey == "" {
 		authKeys := r.URL.Query()["authorization"]
@@ -79,10 +79,15 @@ func decodeRequest(r *http.Request, logger *slog.Logger) (connReq, error) {
 	domain := chi.URLParam(r, "domain")
 	channel := chi.URLParam(r, "channel")
 
+	domainID, channelID, err := resolver.Resolve(r.Context(), domain, channel)
+	if err != nil {
+		return connReq{}, err
+	}
+
 	req := connReq{
 		clientKey: authKey,
-		channel:   channel,
-		domain:    domain,
+		channelID: channelID,
+		domainID:  domainID,
 	}
 
 	subTopic := chi.URLParam(r, "*")

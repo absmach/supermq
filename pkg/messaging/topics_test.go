@@ -6,6 +6,7 @@ package messaging_test
 import (
 	"testing"
 
+	"github.com/absmach/supermq/pkg/errors"
 	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,7 +17,7 @@ var ParsePublisherTopicTestCases = []struct {
 	domainID  string
 	channelID string
 	subtopic  string
-	expectErr bool
+	err       error
 }{
 	{
 		desc:      "valid topic with subtopic /m/domain123/c/channel456/devices/temp",
@@ -24,6 +25,7 @@ var ParsePublisherTopicTestCases = []struct {
 		domainID:  "domain123",
 		channelID: "channel456",
 		subtopic:  "devices.temp",
+		err:       nil,
 	},
 	{
 		desc:      "valid topic with URL encoded subtopic /m/domain123/c/channel456/devices%2Ftemp%2Fdata",
@@ -47,12 +49,19 @@ var ParsePublisherTopicTestCases = []struct {
 		subtopic:  "",
 	},
 	{
+		desc:      "valid topic with trailing slash /m/domain123/c/channel456/devices/temp/",
+		topic:     "/m/domain123/c/channel456/devices/temp/",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "devices.temp",
+	},
+	{
 		desc:      "invalid topic format (missing parts) /m/domain123/c/",
 		topic:     "/m/domain123/c/",
 		domainID:  "domain123",
 		channelID: "",
 		subtopic:  "",
-		expectErr: true,
+		err:       messaging.ErrMalformedTopic,
 	},
 	{
 		desc:      "invalid topic format (missing domain) /m//c/channel123",
@@ -60,7 +69,15 @@ var ParsePublisherTopicTestCases = []struct {
 		domainID:  "",
 		channelID: "",
 		subtopic:  "",
-		expectErr: true,
+		err:       messaging.ErrMalformedTopic,
+	},
+	{
+		desc:      "invalid topic format (missing channel) /m/domain123/c/",
+		topic:     "/m/domain123/c//subtopic",
+		domainID:  "domain123",
+		channelID: "",
+		subtopic:  "",
+		err:       messaging.ErrMalformedTopic,
 	},
 	{
 		desc:      "topic with wildcards + and # /m/domain123/c/channel456/devices/+/temp/#",
@@ -68,7 +85,7 @@ var ParsePublisherTopicTestCases = []struct {
 		domainID:  "domain123",
 		channelID: "channel456",
 		subtopic:  "",
-		expectErr: true,
+		err:       messaging.ErrMalformedTopic,
 	},
 	{
 		desc:      "invalid domain name m/domain*123/c/channel456/devices/+/temp/#",
@@ -76,7 +93,7 @@ var ParsePublisherTopicTestCases = []struct {
 		domainID:  "",
 		channelID: "channel456",
 		subtopic:  "devices.*.temp.>",
-		expectErr: true,
+		err:       messaging.ErrMalformedTopic,
 	},
 	{
 		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a*b/topic",
@@ -84,7 +101,7 @@ var ParsePublisherTopicTestCases = []struct {
 		domainID:  "domain123",
 		channelID: "channel456",
 		subtopic:  "",
-		expectErr: true,
+		err:       messaging.ErrMalformedTopic,
 	},
 	{
 		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a>b/topic",
@@ -92,7 +109,7 @@ var ParsePublisherTopicTestCases = []struct {
 		domainID:  "domain123",
 		channelID: "channel456",
 		subtopic:  "",
-		expectErr: true,
+		err:       messaging.ErrMalformedTopic,
 	},
 	{
 		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a#b/topic",
@@ -100,7 +117,7 @@ var ParsePublisherTopicTestCases = []struct {
 		domainID:  "domain123",
 		channelID: "channel456",
 		subtopic:  "",
-		expectErr: true,
+		err:       messaging.ErrMalformedTopic,
 	},
 	{
 		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a+b/topic",
@@ -108,7 +125,7 @@ var ParsePublisherTopicTestCases = []struct {
 		domainID:  "domain123",
 		channelID: "channel456",
 		subtopic:  "",
-		expectErr: true,
+		err:       messaging.ErrMalformedTopic,
 	},
 	{
 		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a//b/topic",
@@ -116,7 +133,7 @@ var ParsePublisherTopicTestCases = []struct {
 		domainID:  "domain123",
 		channelID: "channel456",
 		subtopic:  "",
-		expectErr: true,
+		err:       messaging.ErrMalformedTopic,
 	},
 	{
 		desc:      "invalid topic regex \"not-a-topic\"",
@@ -124,7 +141,12 @@ var ParsePublisherTopicTestCases = []struct {
 		domainID:  "",
 		channelID: "",
 		subtopic:  "",
-		expectErr: true,
+		err:       messaging.ErrMalformedTopic,
+	},
+	{
+		desc:  "extra segment before prefix /extra/m/domain/c/channel",
+		topic: "/extra/m/domain/c/channel",
+		err:   messaging.ErrMalformedTopic,
 	},
 }
 
@@ -132,10 +154,8 @@ func TestParsePublishTopic(t *testing.T) {
 	for _, tc := range ParsePublisherTopicTestCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			domainID, channelID, subtopic, err := messaging.ParsePublishTopic(tc.topic)
-			if tc.expectErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
+			assert.True(t, errors.Contains(err, tc.err), "expected error %v, got %v", tc.err, err)
+			if err == nil {
 				assert.Equal(t, tc.domainID, domainID)
 				assert.Equal(t, tc.channelID, channelID)
 				assert.Equal(t, tc.subtopic, subtopic)
@@ -147,7 +167,7 @@ func TestParsePublishTopic(t *testing.T) {
 func BenchmarkParsePublisherTopic(b *testing.B) {
 	for _, tc := range ParsePublisherTopicTestCases {
 		b.Run(tc.desc, func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				_, _, _, _ = messaging.ParsePublishTopic(tc.topic)
 			}
 		})
@@ -160,7 +180,7 @@ var ParseSubscribeTestCases = []struct {
 	domainID  string
 	channelID string
 	subtopic  string
-	expectErr bool
+	err       error
 }{
 	{
 		desc:      "valid topic with subtopic /m/domain123/c/channel456/devices/temp",
@@ -184,12 +204,19 @@ var ParseSubscribeTestCases = []struct {
 		subtopic:  "",
 	},
 	{
+		desc:      "valid topic with trailing slash /m/domain123/c/channel456/devices/temp/",
+		topic:     "/m/domain123/c/channel456/devices/temp/",
+		domainID:  "domain123",
+		channelID: "channel456",
+		subtopic:  "devices.temp",
+	},
+	{
 		desc:      "invalid topic format (missing channel) /m/domain123/c/",
 		topic:     "/m/domain123/c/",
 		domainID:  "domain123",
 		channelID: "",
 		subtopic:  "",
-		expectErr: true,
+		err:       messaging.ErrMalformedTopic,
 	},
 	{
 		desc:      "invalid topic format (missing domain) /m//c/channel123",
@@ -197,15 +224,22 @@ var ParseSubscribeTestCases = []struct {
 		domainID:  "",
 		channelID: "",
 		subtopic:  "",
-		expectErr: true,
+		err:       messaging.ErrMalformedTopic,
+	},
+	{
+		desc:      "invalid topic format (missing channel) /m/domain123/c/",
+		topic:     "/m/domain123/c//subtopic",
+		domainID:  "domain123",
+		channelID: "",
+		subtopic:  "",
+		err:       messaging.ErrMalformedTopic,
 	},
 	{
 		desc:      "invalid domain name m/domain*123/c/channel456/devices/+/temp/#",
 		topic:     "m/domain*123/c/channel456/devices/+/temp/#",
-		domainID:  "",
+		domainID:  "domain*123",
 		channelID: "channel456",
 		subtopic:  "devices.*.temp.>",
-		expectErr: true,
 	},
 	{
 		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a*b/topic",
@@ -213,7 +247,7 @@ var ParseSubscribeTestCases = []struct {
 		domainID:  "domain123",
 		channelID: "channel456",
 		subtopic:  "",
-		expectErr: true,
+		err:       messaging.ErrMalformedTopic,
 	},
 	{
 		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a>b/topic",
@@ -221,7 +255,7 @@ var ParseSubscribeTestCases = []struct {
 		domainID:  "domain123",
 		channelID: "channel456",
 		subtopic:  "",
-		expectErr: true,
+		err:       messaging.ErrMalformedTopic,
 	},
 	{
 		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a#b/topic",
@@ -229,7 +263,7 @@ var ParseSubscribeTestCases = []struct {
 		domainID:  "domain123",
 		channelID: "channel456",
 		subtopic:  "",
-		expectErr: true,
+		err:       messaging.ErrMalformedTopic,
 	},
 	{
 		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a+b/topic",
@@ -237,7 +271,7 @@ var ParseSubscribeTestCases = []struct {
 		domainID:  "domain123",
 		channelID: "channel456",
 		subtopic:  "",
-		expectErr: true,
+		err:       messaging.ErrMalformedTopic,
 	},
 	{
 		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a//b/topic",
@@ -245,7 +279,7 @@ var ParseSubscribeTestCases = []struct {
 		domainID:  "domain123",
 		channelID: "channel456",
 		subtopic:  "",
-		expectErr: true,
+		err:       messaging.ErrMalformedTopic,
 	},
 	{
 		desc:      "invalid subtopic /m/domain123/c/channel456/sub/a/ /b/topic",
@@ -253,7 +287,7 @@ var ParseSubscribeTestCases = []struct {
 		domainID:  "domain123",
 		channelID: "channel456",
 		subtopic:  "",
-		expectErr: true,
+		err:       messaging.ErrMalformedTopic,
 	},
 	{
 		desc:      "completely invalid topic \"invalid-topic\"",
@@ -261,7 +295,12 @@ var ParseSubscribeTestCases = []struct {
 		domainID:  "",
 		channelID: "",
 		subtopic:  "",
-		expectErr: true,
+		err:       messaging.ErrMalformedTopic,
+	},
+	{
+		desc:  "extra segment before prefix /extra/m/domain/c/channel",
+		topic: "/extra/m/domain/c/channel",
+		err:   messaging.ErrMalformedTopic,
 	},
 }
 
@@ -269,10 +308,8 @@ func TestParseSubscribeTopic(t *testing.T) {
 	for _, tc := range ParseSubscribeTestCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			domainID, channelID, subtopic, err := messaging.ParseSubscribeTopic(tc.topic)
-			if tc.expectErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
+			assert.True(t, errors.Contains(err, tc.err), "expected error %v, got %v", tc.err, err)
+			if err == nil {
 				assert.Equal(t, tc.domainID, domainID)
 				assert.Equal(t, tc.channelID, channelID)
 				assert.Equal(t, tc.subtopic, subtopic)
@@ -284,7 +321,7 @@ func TestParseSubscribeTopic(t *testing.T) {
 func BenchmarkParseSubscribeTopic(b *testing.B) {
 	for _, tc := range ParseSubscribeTestCases {
 		b.Run(tc.desc, func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				_, _, _, _ = messaging.ParseSubscribeTopic(tc.topic)
 			}
 		})

@@ -15,9 +15,6 @@ import (
 	"github.com/absmach/mgate/pkg/session"
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
-	grpcCommonV1 "github.com/absmach/supermq/api/grpc/common/v1"
-	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
-	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
@@ -52,8 +49,6 @@ var (
 	errFailedPublishToMsgBroker = errors.New("failed to publish to supermq message broker")
 	errMalformedTopic           = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("malformed topic"))
 	errMissingTopicPub          = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("failed to publish due to missing topic"))
-	errFailedResolveDomain      = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("failed to resolve domain route"))
-	errFailedResolveChannel     = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("failed to resolve channel route"))
 )
 
 // Event implements events.Event interface.
@@ -61,19 +56,19 @@ type handler struct {
 	publisher messaging.Publisher
 	clients   grpcClientsV1.ClientsServiceClient
 	channels  grpcChannelsV1.ChannelsServiceClient
-	domains   grpcDomainsV1.DomainsServiceClient
+	resolver  messaging.TopicResolver
 	authn     smqauthn.Authentication
 	logger    *slog.Logger
 }
 
 // NewHandler creates new Handler entity.
-func NewHandler(publisher messaging.Publisher, authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, domains grpcDomainsV1.DomainsServiceClient, logger *slog.Logger) session.Handler {
+func NewHandler(publisher messaging.Publisher, authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, resolver messaging.TopicResolver, logger *slog.Logger) session.Handler {
 	return &handler{
 		publisher: publisher,
 		authn:     authn,
 		clients:   clients,
 		channels:  channels,
-		domains:   domains,
+		resolver:  resolver,
 		logger:    logger,
 	}
 }
@@ -130,13 +125,9 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 	if err != nil {
 		return errors.Wrap(errMalformedTopic, err)
 	}
-	domainID, err := h.resolveDomain(ctx, domain)
+	domainID, channelID, err := h.resolver.Resolve(ctx, domain, channel)
 	if err != nil {
-		return errors.Wrap(errFailedResolveDomain, err)
-	}
-	channelID, err := h.resolveChannel(ctx, channel, domainID)
-	if err != nil {
-		return errors.Wrap(errFailedResolveChannel, err)
+		return errors.Wrap(errFailedPublish, err)
 	}
 
 	var clientID, clientType string
@@ -217,33 +208,4 @@ func (h *handler) Unsubscribe(ctx context.Context, topics *[]string) error {
 // Disconnect - not used for HTTP.
 func (h *handler) Disconnect(ctx context.Context) error {
 	return nil
-}
-
-func (h *handler) resolveDomain(ctx context.Context, domain string) (string, error) {
-	if api.ValidateUUID(domain) == nil {
-		return domain, nil
-	}
-	d, err := h.domains.RetrieveByRoute(ctx, &grpcCommonV1.RetrieveByRouteReq{
-		Route: domain,
-	})
-	if err != nil {
-		return "", err
-	}
-
-	return d.Entity.Id, nil
-}
-
-func (h *handler) resolveChannel(ctx context.Context, channel, domainID string) (string, error) {
-	if api.ValidateUUID(channel) == nil {
-		return channel, nil
-	}
-	c, err := h.channels.RetrieveByRoute(ctx, &grpcCommonV1.RetrieveByRouteReq{
-		Route:    channel,
-		DomainId: domainID,
-	})
-	if err != nil {
-		return "", err
-	}
-
-	return c.Entity.Id, nil
 }
