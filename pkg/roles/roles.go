@@ -186,7 +186,7 @@ type Repository interface {
 }
 
 const (
-	OpAddRole svcutil.Operation = iota
+	OpAddRole svcutil.RoleOperation = iota
 	OpRemoveRole
 	OpUpdateRoleName
 	OpRetrieveRole
@@ -204,43 +204,72 @@ const (
 	OpListAvailableActions
 )
 
-var expectedOperations = []svcutil.Operation{
-	OpAddRole,
-	OpRemoveRole,
-	OpUpdateRoleName,
-	OpRetrieveRole,
-	OpRetrieveAllRoles,
-	OpRoleAddActions,
-	OpRoleListActions,
-	OpRoleCheckActionsExists,
-	OpRoleRemoveActions,
-	OpRoleRemoveAllActions,
-	OpRoleAddMembers,
-	OpRoleListMembers,
-	OpRoleCheckMembersExists,
-	OpRoleRemoveMembers,
-	OpRoleRemoveAllMembers,
-}
-
-var OperationNames = []string{
-	"OpAddRole",
-	"OpRemoveRole",
-	"OpUpdateRoleName",
-	"OpRetrieveRole",
-	"OpRetrieveAllRoles",
-	"OpRoleAddActions",
-	"OpRoleListActions",
-	"OpRoleCheckActionsExists",
-	"OpRoleRemoveActions",
-	"OpRoleRemoveAllActions",
-	"OpRoleAddMembers",
-	"OpRoleListMembers",
-	"OpRoleCheckMembersExists",
-	"OpRoleRemoveMembers",
-	"OpRoleRemoveAllMembers",
-	"OpListAvailableActions",
-}
-
-func NewOperationPerm() svcutil.OperationPerm {
-	return svcutil.NewOperationPerm(expectedOperations, OperationNames)
+func Operations() map[svcutil.RoleOperation]svcutil.OperationDetails {
+	ops := map[svcutil.RoleOperation]svcutil.OperationDetails{
+		OpAddRole: {
+			Name:               "add",
+			PermissionRequired: true,
+		},
+		OpRemoveRole: {
+			Name:               "remove",
+			PermissionRequired: true,
+		},
+		OpUpdateRoleName: {
+			Name:               "update",
+			PermissionRequired: true,
+		},
+		OpRetrieveRole: {
+			Name:               "retrieve",
+			PermissionRequired: true,
+		},
+		OpRetrieveAllRoles: {
+			Name:               "retrieve_all",
+			PermissionRequired: true,
+		},
+		OpRoleAddActions: {
+			Name:               "add_actions",
+			PermissionRequired: true,
+		},
+		OpRoleListActions: {
+			Name:               "list_actions",
+			PermissionRequired: true,
+		},
+		OpRoleCheckActionsExists: {
+			Name:               "check_actions_exists",
+			PermissionRequired: true,
+		},
+		OpRoleRemoveActions: {
+			Name:               "remove_actions",
+			PermissionRequired: true,
+		},
+		OpRoleRemoveAllActions: {
+			Name:               "remove_all_actions",
+			PermissionRequired: true,
+		},
+		OpRoleAddMembers: {
+			Name:               "add_members",
+			PermissionRequired: true,
+		},
+		OpRoleListMembers: {
+			Name:               "list_members",
+			PermissionRequired: true,
+		},
+		OpRoleCheckMembersExists: {
+			Name:               "check_members_exists",
+			PermissionRequired: true,
+		},
+		OpRoleRemoveMembers: {
+			Name:               "remove_members",
+			PermissionRequired: true,
+		},
+		OpRoleRemoveAllMembers: {
+			Name:               "remove_all_members",
+			PermissionRequired: true,
+		},
+		OpListAvailableActions: {
+			Name:               "list_available_actions",
+			PermissionRequired: false,
+		},
+	}
+	return ops
 }

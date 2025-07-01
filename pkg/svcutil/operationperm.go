@@ -35,6 +35,7 @@ type operations[K OperationKey] struct {
 
 type Operations[K OperationKey] interface {
 	GetPermission(op K) (Permission, error)
+	GetPermissionAndRequired(op K) (Permission, bool, error)
 	OperationName(op K) string
 	Validate() error
 }
@@ -95,4 +96,16 @@ func (ops *operations[K]) GetPermission(op K) (Permission, error) {
 		return perm, nil
 	}
 	return "", fmt.Errorf("operation %s doesn't have any permissions", ops.OperationName(op))
+}
+
+func (ops *operations[K]) GetPermissionAndRequired(op K) (Permission, bool, error) {
+	opd, ok := ops.opd[op]
+	if !ok {
+		return "", false, fmt.Errorf("%s", ops.OperationName(op))
+	}
+	perm, ok := ops.opp[op]
+	if opd.PermissionRequired && !ok {
+		return "", false, fmt.Errorf("operation %s doesn't have any permissions", ops.OperationName(op))
+	}
+	return perm, opd.PermissionRequired, nil
 }
