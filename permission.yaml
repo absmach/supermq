@@ -7,7 +7,7 @@ clients:
     - add: admin_permission1
     - view: admin_permission
     - delete: admin_permission
-  external_opertions:
-    - create_client_in_domain:
+  external_operations:
+    - create_client_in_domain: add_client
     - add_children_in_parent_group: add_children_permission
 
