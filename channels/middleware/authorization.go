@@ -48,8 +48,8 @@ type authorizationMiddleware struct {
 	svc     channels.Service
 	repo    channels.Repository
 	authz   smqauthz.Authorization
-	opp     svcutil.OperationPerm
-	extOpp  svcutil.ExternalOperationPerm
+	opp     channels.OperationPerm
+	extOpp  channels.ExternalOperationPerm
 	callout callout.Callout
 	rmMW.RoleManagerAuthorizationMiddleware
 }
@@ -59,8 +59,9 @@ func AuthorizationMiddleware(
 	svc channels.Service,
 	repo channels.Repository,
 	authz smqauthz.Authorization,
-	channelsOpPerm, rolesOpPerm map[svcutil.Operation]svcutil.Permission,
-	extOpPerm map[svcutil.ExternalOperation]svcutil.Permission,
+	channelsOpPerm map[channels.Operation]channels.Permission,
+	rolesOpPerm map[svcutil.Operation]svcutil.Permission,
+	extOpPerm map[channels.ExternalOperation]channels.Permission,
 	callout callout.Callout,
 ) (channels.Service, error) {
 	opp := channels.NewOperationPerm()
@@ -78,7 +79,13 @@ func AuthorizationMiddleware(
 	if err := extOpp.Validate(); err != nil {
 		return nil, err
 	}
-	ram, err := rmMW.NewRoleManagerAuthorizationMiddleware(policies.ChannelType, svc, authz, rolesOpPerm, callout)
+
+	res := make(map[svcutil.Operation]svcutil.Permission, len(rolesOpPerm))
+	for op, perm := range rolesOpPerm {
+		res[svcutil.Operation(op)] = svcutil.Permission(perm)
+	}
+
+	ram, err := rmMW.NewRoleManagerAuthorizationMiddleware(policies.ChannelType, svc, authz, res, callout)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +141,7 @@ func (am *authorizationMiddleware) CreateChannels(ctx context.Context, session a
 		"entities": chs,
 		"count":    len(chs),
 	}
-	if err := am.callOut(ctx, session, channels.OpCreateChannel.String(channels.OperationNames), params); err != nil {
+	if err := am.callOut(ctx, session, channels.OpCreateChannel.String(), params); err != nil {
 		return []channels.Channel{}, []roles.RoleProvision{}, err
 	}
 
@@ -167,7 +174,7 @@ func (am *authorizationMiddleware) ViewChannel(ctx context.Context, session auth
 	params := map[string]any{
 		"entity_id": id,
 	}
-	if err := am.callOut(ctx, session, channels.OpViewChannel.String(channels.OperationNames), params); err != nil {
+	if err := am.callOut(ctx, session, channels.OpViewChannel.String(), params); err != nil {
 		return channels.Channel{}, err
 	}
 	return am.svc.ViewChannel(ctx, session, id, withRoles)
@@ -193,7 +200,7 @@ func (am *authorizationMiddleware) ListChannels(ctx context.Context, session aut
 	params := map[string]any{
 		"pagemeta": pm,
 	}
-	if err := am.callOut(ctx, session, channels.OpListChannels.String(channels.OperationNames), params); err != nil {
+	if err := am.callOut(ctx, session, channels.OpListChannels.String(), params); err != nil {
 		return channels.ChannelsPage{}, err
 	}
 	return am.svc.ListChannels(ctx, session, pm)
@@ -219,7 +226,7 @@ func (am *authorizationMiddleware) ListUserChannels(ctx context.Context, session
 		"user_id":  userID,
 		"pagemeta": pm,
 	}
-	if err := am.callOut(ctx, session, channels.OpListUserChannels.String(channels.OperationNames), params); err != nil {
+	if err := am.callOut(ctx, session, channels.OpListUserChannels.String(), params); err != nil {
 		return channels.ChannelsPage{}, err
 	}
 	return am.svc.ListUserChannels(ctx, session, userID, pm)
@@ -251,7 +258,7 @@ func (am *authorizationMiddleware) UpdateChannel(ctx context.Context, session au
 	params := map[string]any{
 		"entity_id": channel.ID,
 	}
-	if err := am.callOut(ctx, session, channels.OpUpdateChannel.String(channels.OperationNames), params); err != nil {
+	if err := am.callOut(ctx, session, channels.OpUpdateChannel.String(), params); err != nil {
 		return channels.Channel{}, err
 	}
 	return am.svc.UpdateChannel(ctx, session, channel)
@@ -283,7 +290,7 @@ func (am *authorizationMiddleware) UpdateChannelTags(ctx context.Context, sessio
 	params := map[string]any{
 		"entity_id": channel.ID,
 	}
-	if err := am.callOut(ctx, session, channels.OpUpdateChannelTags.String(channels.OperationNames), params); err != nil {
+	if err := am.callOut(ctx, session, channels.OpUpdateChannelTags.String(), params); err != nil {
 		return channels.Channel{}, err
 	}
 	return am.svc.UpdateChannelTags(ctx, session, channel)
@@ -315,7 +322,7 @@ func (am *authorizationMiddleware) EnableChannel(ctx context.Context, session au
 	params := map[string]any{
 		"entity_id": id,
 	}
-	if err := am.callOut(ctx, session, channels.OpEnableChannel.String(channels.OperationNames), params); err != nil {
+	if err := am.callOut(ctx, session, channels.OpEnableChannel.String(), params); err != nil {
 		return channels.Channel{}, err
 	}
 	return am.svc.EnableChannel(ctx, session, id)
@@ -347,7 +354,7 @@ func (am *authorizationMiddleware) DisableChannel(ctx context.Context, session a
 	params := map[string]any{
 		"entity_id": id,
 	}
-	if err := am.callOut(ctx, session, channels.OpDisableChannel.String(channels.OperationNames), params); err != nil {
+	if err := am.callOut(ctx, session, channels.OpDisableChannel.String(), params); err != nil {
 		return channels.Channel{}, err
 	}
 	return am.svc.DisableChannel(ctx, session, id)
@@ -378,7 +385,7 @@ func (am *authorizationMiddleware) RemoveChannel(ctx context.Context, session au
 	params := map[string]any{
 		"entity_id": id,
 	}
-	if err := am.callOut(ctx, session, channels.OpDeleteChannel.String(channels.OperationNames), params); err != nil {
+	if err := am.callOut(ctx, session, channels.OpDeleteChannel.String(), params); err != nil {
 		return err
 	}
 
@@ -440,7 +447,7 @@ func (am *authorizationMiddleware) Connect(ctx context.Context, session authn.Se
 		"client_ids":       thIDs,
 		"connection_types": connTypes,
 	}
-	if err := am.callOut(ctx, session, channels.OpConnectClient.String(channels.OperationNames), params); err != nil {
+	if err := am.callOut(ctx, session, channels.OpConnectClient.String(), params); err != nil {
 		return err
 	}
 	return am.svc.Connect(ctx, session, chIDs, thIDs, connTypes)
@@ -502,7 +509,7 @@ func (am *authorizationMiddleware) Disconnect(ctx context.Context, session authn
 		"client_ids":       thIDs,
 		"connection_types": connTypes,
 	}
-	if err := am.callOut(ctx, session, channels.OpDisconnectClient.String(channels.OperationNames), params); err != nil {
+	if err := am.callOut(ctx, session, channels.OpDisconnectClient.String(), params); err != nil {
 		return err
 	}
 	return am.svc.Disconnect(ctx, session, chIDs, thIDs, connTypes)
@@ -545,7 +552,7 @@ func (am *authorizationMiddleware) SetParentGroup(ctx context.Context, session a
 		"entity_id":       id,
 		"parent_group_id": parentGroupID,
 	}
-	if err := am.callOut(ctx, session, channels.OpSetParentGroup.String(channels.OperationNames), params); err != nil {
+	if err := am.callOut(ctx, session, channels.OpSetParentGroup.String(), params); err != nil {
 		return err
 	}
 	return am.svc.SetParentGroup(ctx, session, parentGroupID, id)
@@ -593,7 +600,7 @@ func (am *authorizationMiddleware) RemoveParentGroup(ctx context.Context, sessio
 			"entity_id":       id,
 			"parent_group_id": ch.ParentGroup,
 		}
-		if err := am.callOut(ctx, session, channels.OpRemoveParentGroup.String(channels.OperationNames), params); err != nil {
+		if err := am.callOut(ctx, session, channels.OpRemoveParentGroup.String(), params); err != nil {
 			return err
 		}
 		return am.svc.RemoveParentGroup(ctx, session, id)
@@ -601,7 +608,7 @@ func (am *authorizationMiddleware) RemoveParentGroup(ctx context.Context, sessio
 	return nil
 }
 
-func (am *authorizationMiddleware) authorize(ctx context.Context, op svcutil.Operation, req smqauthz.PolicyReq) error {
+func (am *authorizationMiddleware) authorize(ctx context.Context, op channels.Operation, req smqauthz.PolicyReq) error {
 	perm, err := am.opp.GetPermission(op)
 	if err != nil {
 		return err
@@ -616,7 +623,7 @@ func (am *authorizationMiddleware) authorize(ctx context.Context, op svcutil.Ope
 	return nil
 }
 
-func (am *authorizationMiddleware) extAuthorize(ctx context.Context, extOp svcutil.ExternalOperation, req smqauthz.PolicyReq) error {
+func (am *authorizationMiddleware) extAuthorize(ctx context.Context, extOp channels.ExternalOperation, req smqauthz.PolicyReq) error {
 	perm, err := am.extOpp.GetPermission(extOp)
 	if err != nil {
 		return err
