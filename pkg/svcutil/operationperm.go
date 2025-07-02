@@ -40,10 +40,10 @@ type Operations[K OperationKey] interface {
 	Validate() error
 }
 
-func NewOperations[K OperationKey](opd map[K]OperationDetails, opp map[string]Permission) (Operations[K], error) {
-	ops := newEmptyOperations(opd)
+func NewOperations[K OperationKey](opdetails map[K]OperationDetails, opnamePerm map[string]Permission) (Operations[K], error) {
+	ops := newEmptyOperations(opdetails)
 
-	if err := ops.addOperationPermission(opp); err != nil {
+	if err := ops.addOperationPermission(opnamePerm); err != nil {
 		return nil, err
 	}
 	if err := ops.Validate(); err != nil {
@@ -52,10 +52,10 @@ func NewOperations[K OperationKey](opd map[K]OperationDetails, opp map[string]Pe
 	return &ops, nil
 }
 
-func newEmptyOperations[K OperationKey](opd map[K]OperationDetails) operations[K] {
+func newEmptyOperations[K OperationKey](opdetails map[K]OperationDetails) operations[K] {
 	return operations[K]{
 		opp: make(map[K]Permission),
-		opd: opd,
+		opd: opdetails,
 	}
 }
 
