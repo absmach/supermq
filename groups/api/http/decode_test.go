@@ -304,7 +304,7 @@ func TestDecodeGroupCreate(t *testing.T) {
 	}{
 		{
 			desc: "valid request",
-			body: `{"name": "random", "description": "random"}`,
+			body: `{"name": "random", "description": "valid"}`,
 			header: map[string][]string{
 				"Authorization": {"Bearer 123"},
 				"Content-Type":  {api.ContentType},
@@ -312,7 +312,7 @@ func TestDecodeGroupCreate(t *testing.T) {
 			resp: createGroupReq{
 				Group: groups.Group{
 					Name:        "random",
-					Description: "random",
+					Description: desc,
 				},
 			},
 			err: nil,
@@ -359,20 +359,20 @@ func TestDecodeGroupUpdate(t *testing.T) {
 	}{
 		{
 			desc: "valid request",
-			body: `{"name": "random", "description": "random"}`,
+			body: `{"name": "random", "description": "valid"}`,
 			header: map[string][]string{
 				"Authorization": {"Bearer 123"},
 				"Content-Type":  {api.ContentType},
 			},
 			resp: updateGroupReq{
 				Name:        "random",
-				Description: "random",
+				Description: desc,
 			},
 			err: nil,
 		},
 		{
 			desc: "invalid content type",
-			body: `{"name": "random", "description": "random"}`,
+			body: `{"name": "random", "description": "valid"}`,
 			header: map[string][]string{
 				"Authorization": {"Bearer 123"},
 				"Content-Type":  {"text/plain"},

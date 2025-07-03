@@ -7,6 +7,7 @@ import (
 	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/groups"
+	"github.com/absmach/supermq/internal/nullable"
 )
 
 type createGroupReq struct {
@@ -24,7 +25,7 @@ func (req createGroupReq) validate() error {
 type updateGroupReq struct {
 	id          string
 	Name        string                 `json:"name,omitempty"`
-	Description string                 `json:"description,omitempty"`
+	Description nullable.Value[string] `json:"description,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 

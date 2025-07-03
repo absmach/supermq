@@ -17,6 +17,7 @@ import (
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/groups/mocks"
+	"github.com/absmach/supermq/internal/nullable"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
@@ -31,10 +32,11 @@ import (
 )
 
 var (
+	desc           = nullable.Value[string]{Set: true, Value: valid}
 	validGroupResp = groups.Group{
 		ID:          testsutil.GenerateUUID(&testing.T{}),
 		Name:        valid,
-		Description: valid,
+		Description: desc,
 		Domain:      testsutil.GenerateUUID(&testing.T{}),
 		Parent:      testsutil.GenerateUUID(&testing.T{}),
 		Metadata: groups.Metadata{
@@ -69,7 +71,7 @@ func TestCreateGroupEndpoint(t *testing.T) {
 
 	reqGroup := groups.Group{
 		Name:        valid,
-		Description: valid,
+		Description: desc,
 		Metadata: map[string]interface{}{
 			"name": "test",
 		},
@@ -141,7 +143,7 @@ func TestCreateGroupEndpoint(t *testing.T) {
 			domainID: validID,
 			req: createGroupReq{
 				Group: groups.Group{
-					Description: valid,
+					Description: desc,
 					Metadata: map[string]interface{}{
 						"name": "test",
 					},
@@ -158,7 +160,7 @@ func TestCreateGroupEndpoint(t *testing.T) {
 			req: createGroupReq{
 				Group: groups.Group{
 					Name:        strings.Repeat("a", 1025),
-					Description: valid,
+					Description: desc,
 					Metadata: map[string]interface{}{
 						"name": "test",
 					},
@@ -336,7 +338,7 @@ func TestUpdateGroupEndpoint(t *testing.T) {
 	updateGroupReq := groups.Group{
 		ID:          validID,
 		Name:        valid,
-		Description: valid,
+		Description: desc,
 		Metadata: map[string]interface{}{
 			"name": "test",
 		},
@@ -408,7 +410,7 @@ func TestUpdateGroupEndpoint(t *testing.T) {
 			updateReq: groups.Group{
 				ID:          validID,
 				Name:        strings.Repeat("a", 1025),
-				Description: valid,
+				Description: desc,
 				Metadata: map[string]interface{}{
 					"name": "test",
 				},

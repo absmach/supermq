@@ -16,6 +16,7 @@ import (
 	"github.com/absmach/supermq/groups"
 	httpapi "github.com/absmach/supermq/groups/api/http"
 	"github.com/absmach/supermq/groups/mocks"
+	"github.com/absmach/supermq/internal/nullable"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
@@ -75,6 +76,9 @@ func TestCreateGroup(t *testing.T) {
 	uGroup.Metadata = groups.Metadata{
 		"key": make(chan int),
 	}
+
+	desc := nullable.Value[string]{Set: true, Value: description}
+
 	cases := []struct {
 		desc            string
 		domainID        string
@@ -95,7 +99,7 @@ func TestCreateGroup(t *testing.T) {
 			groupReq: createGroupReq,
 			svcReq: groups.Group{
 				Name:        gName,
-				Description: description,
+				Description: desc,
 				Metadata:    groups.Metadata{"role": "client"},
 			},
 			svcRes:   group,
@@ -110,7 +114,7 @@ func TestCreateGroup(t *testing.T) {
 			groupReq: createGroupReq,
 			svcReq: groups.Group{
 				Name:        gName,
-				Description: description,
+				Description: desc,
 				Metadata:    groups.Metadata{"role": "client"},
 			},
 			svcRes:   group,
@@ -130,7 +134,7 @@ func TestCreateGroup(t *testing.T) {
 			},
 			svcReq: groups.Group{
 				Name:        gName,
-				Description: description,
+				Description: desc,
 				Metadata:    groups.Metadata{"role": "client"},
 				Parent:      pGroup.Parent,
 			},
@@ -151,7 +155,7 @@ func TestCreateGroup(t *testing.T) {
 			},
 			svcReq: groups.Group{
 				Name:        gName,
-				Description: description,
+				Description: desc,
 				Metadata:    groups.Metadata{"role": "client"},
 				Parent:      wrongID,
 			},
@@ -171,7 +175,7 @@ func TestCreateGroup(t *testing.T) {
 			},
 			svcReq: groups.Group{
 				Name:        gName,
-				Description: description,
+				Description: desc,
 				Metadata:    groups.Metadata{"role": "client"},
 			},
 			svcRes:          groups.Group{},
@@ -251,7 +255,7 @@ func TestCreateGroup(t *testing.T) {
 			},
 			svcReq: groups.Group{
 				Name:        gName,
-				Description: description,
+				Description: desc,
 				Metadata:    groups.Metadata{"role": "client"},
 			},
 			svcRes:   uGroup,
@@ -677,6 +681,8 @@ func TestUpdateGroup(t *testing.T) {
 
 	group.ID = generateUUID(t)
 
+	updatedDesc := nullable.Value[string]{Set: true, Value: updatedDescription}
+
 	cases := []struct {
 		desc            string
 		domainID        string
@@ -703,7 +709,7 @@ func TestUpdateGroup(t *testing.T) {
 			svcReq: groups.Group{
 				ID:          group.ID,
 				Name:        updatedName,
-				Description: updatedDescription,
+				Description: updatedDesc,
 				Metadata:    groups.Metadata{"key": "value"},
 			},
 			svcRes:   convertGroup(upGroup),
@@ -724,7 +730,7 @@ func TestUpdateGroup(t *testing.T) {
 			svcReq: groups.Group{
 				ID:          wrongID,
 				Name:        updatedName,
-				Description: updatedDescription,
+				Description: updatedDesc,
 				Metadata:    groups.Metadata{"key": "value"},
 			},
 			svcRes:   groups.Group{},
@@ -745,7 +751,7 @@ func TestUpdateGroup(t *testing.T) {
 			svcReq: groups.Group{
 				ID:          group.ID,
 				Name:        updatedName,
-				Description: updatedDescription,
+				Description: updatedDesc,
 				Metadata:    groups.Metadata{"key": "value"},
 			},
 			svcRes:          groups.Group{},
@@ -814,7 +820,7 @@ func TestUpdateGroup(t *testing.T) {
 			svcReq: groups.Group{
 				ID:          group.ID,
 				Name:        updatedName,
-				Description: updatedDescription,
+				Description: updatedDesc,
 				Metadata:    groups.Metadata{"key": "value"},
 			},
 			svcRes: groups.Group{

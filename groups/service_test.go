@@ -17,6 +17,7 @@ import (
 	climocks "github.com/absmach/supermq/clients/mocks"
 	"github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/groups/mocks"
+	"github.com/absmach/supermq/internal/nullable"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/pkg/authn"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
@@ -32,12 +33,14 @@ import (
 )
 
 var (
-	idProvider = uuid.New()
-	namegen    = namegenerator.NewGenerator()
-	validGroup = groups.Group{
+	idProvider  = uuid.New()
+	namegen     = namegenerator.NewGenerator()
+	description = namegen.Generate()
+	desc        = nullable.Value[string]{Set: true, Value: description}
+	validGroup  = groups.Group{
 		ID:          testsutil.GenerateUUID(&testing.T{}),
 		Name:        namegen.Generate(),
-		Description: namegen.Generate(),
+		Description: desc,
 		Metadata: map[string]interface{}{
 			"key": "value",
 		},
@@ -46,7 +49,7 @@ var (
 	validGroupWithRoles = groups.Group{
 		ID:          testsutil.GenerateUUID(&testing.T{}),
 		Name:        namegen.Generate(),
-		Description: namegen.Generate(),
+		Description: desc,
 		Metadata: map[string]interface{}{
 			"key": "value",
 		},
@@ -64,7 +67,7 @@ var (
 	childGroup    = groups.Group{
 		ID:          childGroupID,
 		Name:        namegen.Generate(),
-		Description: namegen.Generate(),
+		Description: desc,
 		Metadata: map[string]interface{}{
 			"key": "value",
 		},
@@ -75,7 +78,7 @@ var (
 	parentGroup = groups.Group{
 		ID:          parentGroupID,
 		Name:        namegen.Generate(),
-		Description: namegen.Generate(),
+		Description: desc,
 		Metadata: map[string]interface{}{
 			"key": "value",
 		},
@@ -136,7 +139,7 @@ func TestCreateGroup(t *testing.T) {
 			desc: "create group with invalid status",
 			group: groups.Group{
 				Name:        namegen.Generate(),
-				Description: namegen.Generate(),
+				Description: desc,
 				Status:      groups.Status(100),
 			},
 			err: svcerr.ErrInvalidStatus,
@@ -145,7 +148,7 @@ func TestCreateGroup(t *testing.T) {
 			desc: "create group successfully with parent",
 			group: groups.Group{
 				Name:        namegen.Generate(),
-				Description: namegen.Generate(),
+				Description: desc,
 				Status:      groups.EnabledStatus,
 				Parent:      testsutil.GenerateUUID(t),
 			},

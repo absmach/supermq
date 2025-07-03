@@ -15,6 +15,7 @@ import (
 	"github.com/absmach/supermq/groups"
 	grpcapi "github.com/absmach/supermq/groups/api/grpc"
 	prmocks "github.com/absmach/supermq/groups/private/mocks"
+	"github.com/absmach/supermq/internal/nullable"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -29,10 +30,11 @@ const port = 7004
 var (
 	validID        = testsutil.GenerateUUID(&testing.T{})
 	valid          = "valid"
+	desc           = nullable.Value[string]{Set: true, Value: valid}
 	validGroupResp = groups.Group{
 		ID:          testsutil.GenerateUUID(&testing.T{}),
 		Name:        valid,
-		Description: valid,
+		Description: desc,
 		Domain:      testsutil.GenerateUUID(&testing.T{}),
 		Parent:      testsutil.GenerateUUID(&testing.T{}),
 		Metadata: groups.Metadata{

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	groups "github.com/absmach/supermq/groups"
+	"github.com/absmach/supermq/internal/nullable"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	"github.com/absmach/supermq/pkg/policies"
@@ -84,7 +85,7 @@ func (repo groupRepository) Update(ctx context.Context, g groups.Group) (groups.
 	if g.Name != "" {
 		query = append(query, "name = :name,")
 	}
-	if g.Description != "" {
+	if g.Description.Set {
 		query = append(query, "description = :description,")
 	}
 	if g.Metadata != nil {
@@ -1137,7 +1138,7 @@ type dbGroup struct {
 	ParentID                  *string          `db:"parent_id,omitempty"`
 	DomainID                  string           `db:"domain_id,omitempty"`
 	Name                      string           `db:"name"`
-	Description               string           `db:"description,omitempty"`
+	Description               sql.NullString   `db:"description,omitempty"`
 	Tags                      pgtype.TextArray `db:"tags,omitempty"`
 	Level                     int              `db:"level"`
 	Path                      string           `db:"path,omitempty"`
@@ -1188,7 +1189,7 @@ func toDBGroup(g groups.Group) (dbGroup, error) {
 		Name:        g.Name,
 		ParentID:    parentID,
 		DomainID:    g.Domain,
-		Description: g.Description,
+		Description: sql.NullString{String: g.Description.Value, Valid: g.Description.Set},
 		Tags:        tags,
 		Metadata:    data,
 		Path:        g.Path,
@@ -1235,7 +1236,7 @@ func toGroup(g dbGroup) (groups.Group, error) {
 		Name:                      g.Name,
 		Parent:                    parentID,
 		Domain:                    g.DomainID,
-		Description:               g.Description,
+		Description:               nullable.Value[string]{Value: g.Description.String, Set: g.Description.Valid},
 		Tags:                      tags,
 		Metadata:                  metadata,
 		Level:                     g.Level,
