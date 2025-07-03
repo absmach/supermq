@@ -24,7 +24,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	DomainsService_DeleteUserFromDomains_FullMethodName = "/domains.v1.DomainsService/DeleteUserFromDomains"
-	DomainsService_RetrieveEntity_FullMethodName        = "/domains.v1.DomainsService/RetrieveEntity"
+	DomainsService_RetrieveStatus_FullMethodName        = "/domains.v1.DomainsService/RetrieveStatus"
 	DomainsService_RetrieveByRoute_FullMethodName       = "/domains.v1.DomainsService/RetrieveByRoute"
 )
 
@@ -36,7 +36,7 @@ const (
 // domains functionalities for SuperMQ services.
 type DomainsServiceClient interface {
 	DeleteUserFromDomains(ctx context.Context, in *DeleteUserReq, opts ...grpc.CallOption) (*DeleteUserRes, error)
-	RetrieveEntity(ctx context.Context, in *v1.RetrieveEntityReq, opts ...grpc.CallOption) (*v1.RetrieveEntityRes, error)
+	RetrieveStatus(ctx context.Context, in *v1.RetrieveEntityReq, opts ...grpc.CallOption) (*v1.RetrieveEntityRes, error)
 	RetrieveByRoute(ctx context.Context, in *v1.RetrieveByRouteReq, opts ...grpc.CallOption) (*v1.RetrieveEntityRes, error)
 }
 
@@ -58,10 +58,10 @@ func (c *domainsServiceClient) DeleteUserFromDomains(ctx context.Context, in *De
 	return out, nil
 }
 
-func (c *domainsServiceClient) RetrieveEntity(ctx context.Context, in *v1.RetrieveEntityReq, opts ...grpc.CallOption) (*v1.RetrieveEntityRes, error) {
+func (c *domainsServiceClient) RetrieveStatus(ctx context.Context, in *v1.RetrieveEntityReq, opts ...grpc.CallOption) (*v1.RetrieveEntityRes, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(v1.RetrieveEntityRes)
-	err := c.cc.Invoke(ctx, DomainsService_RetrieveEntity_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, DomainsService_RetrieveStatus_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (c *domainsServiceClient) RetrieveByRoute(ctx context.Context, in *v1.Retri
 // domains functionalities for SuperMQ services.
 type DomainsServiceServer interface {
 	DeleteUserFromDomains(context.Context, *DeleteUserReq) (*DeleteUserRes, error)
-	RetrieveEntity(context.Context, *v1.RetrieveEntityReq) (*v1.RetrieveEntityRes, error)
+	RetrieveStatus(context.Context, *v1.RetrieveEntityReq) (*v1.RetrieveEntityRes, error)
 	RetrieveByRoute(context.Context, *v1.RetrieveByRouteReq) (*v1.RetrieveEntityRes, error)
 	mustEmbedUnimplementedDomainsServiceServer()
 }
@@ -101,8 +101,8 @@ type UnimplementedDomainsServiceServer struct{}
 func (UnimplementedDomainsServiceServer) DeleteUserFromDomains(context.Context, *DeleteUserReq) (*DeleteUserRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteUserFromDomains not implemented")
 }
-func (UnimplementedDomainsServiceServer) RetrieveEntity(context.Context, *v1.RetrieveEntityReq) (*v1.RetrieveEntityRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RetrieveEntity not implemented")
+func (UnimplementedDomainsServiceServer) RetrieveStatus(context.Context, *v1.RetrieveEntityReq) (*v1.RetrieveEntityRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RetrieveStatus not implemented")
 }
 func (UnimplementedDomainsServiceServer) RetrieveByRoute(context.Context, *v1.RetrieveByRouteReq) (*v1.RetrieveEntityRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RetrieveByRoute not implemented")
@@ -146,20 +146,20 @@ func _DomainsService_DeleteUserFromDomains_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DomainsService_RetrieveEntity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _DomainsService_RetrieveStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(v1.RetrieveEntityReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DomainsServiceServer).RetrieveEntity(ctx, in)
+		return srv.(DomainsServiceServer).RetrieveStatus(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: DomainsService_RetrieveEntity_FullMethodName,
+		FullMethod: DomainsService_RetrieveStatus_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DomainsServiceServer).RetrieveEntity(ctx, req.(*v1.RetrieveEntityReq))
+		return srv.(DomainsServiceServer).RetrieveStatus(ctx, req.(*v1.RetrieveEntityReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -194,8 +194,8 @@ var DomainsService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _DomainsService_DeleteUserFromDomains_Handler,
 		},
 		{
-			MethodName: "RetrieveEntity",
-			Handler:    _DomainsService_RetrieveEntity_Handler,
+			MethodName: "RetrieveStatus",
+			Handler:    _DomainsService_RetrieveStatus_Handler,
 		},
 		{
 			MethodName: "RetrieveByRoute",

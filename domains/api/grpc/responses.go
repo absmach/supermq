@@ -11,3 +11,7 @@ type retrieveEntityRes struct {
 	id     string
 	status uint8
 }
+
+type retrieveStatusRes struct {
+	status uint8
+}

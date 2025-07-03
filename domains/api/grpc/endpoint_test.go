@@ -105,62 +105,57 @@ func TestDeleteUserFromDomains(t *testing.T) {
 	}
 }
 
-func TestRetrieveEntity(t *testing.T) {
+func TestRetrieveStatus(t *testing.T) {
 	conn, err := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.Nil(t, err, fmt.Sprintf("Unexpected error creating client connection %s", err))
 	grpcClient := grpcapi.NewDomainsClient(conn, time.Second)
 
-	dom := domains.Domain{
-		ID:     id,
-		Status: domains.EnabledStatus,
-	}
 	cases := []struct {
 		desc        string
 		token       string
 		retrieveReq *grpcCommonV1.RetrieveEntityReq
-		svcRes      domains.Domain
+		svcRes      domains.Status
 		svcErr      error
 		retrieveRes *grpcCommonV1.RetrieveEntityRes
 		err         error
 	}{
 		{
-			desc:  "retrieve entity with valid req",
+			desc:  "retrieve status with valid req",
 			token: validToken,
 			retrieveReq: &grpcCommonV1.RetrieveEntityReq{
 				Id: id,
 			},
-			svcRes: dom,
+			svcRes: domains.EnabledStatus,
 			retrieveRes: &grpcCommonV1.RetrieveEntityRes{
 				Entity: &grpcCommonV1.EntityBasic{
-					Id:     id,
 					Status: uint32(domains.EnabledStatus),
 				},
 			},
 			err: nil,
 		},
 		{
-			desc: "retrieve entity with empty id",
+			desc: "retrieve status with empty id",
 			retrieveReq: &grpcCommonV1.RetrieveEntityReq{
 				Id: "",
 			},
-			svcRes:      domains.Domain{},
+			svcRes:      domains.AllStatus,
 			retrieveRes: &grpcCommonV1.RetrieveEntityRes{},
 			err:         apiutil.ErrMissingID,
 		},
 		{
-			desc: "retrieve entity with invalid id",
+			desc: "retrieve status with invalid id",
 			retrieveReq: &grpcCommonV1.RetrieveEntityReq{
 				Id: "invalid",
 			},
-			svcRes:      domains.Domain{},
+			svcRes:      domains.AllStatus,
 			svcErr:      svcerr.ErrNotFound,
 			retrieveRes: &grpcCommonV1.RetrieveEntityRes{},
 			err:         svcerr.ErrNotFound,
 		},
 	}
 	for _, tc := range cases {
-		svcCall := svc.On("RetrieveEntity", mock.Anything, tc.retrieveReq.Id).Return(tc.svcRes, tc.svcErr)
-		dpr, err := grpcClient.RetrieveEntity(context.Background(), tc.retrieveReq)
+		svcCall := svc.On("RetrieveStatus", mock.Anything, tc.retrieveReq.Id).Return(tc.svcRes, tc.svcErr)
+		dpr, err := grpcClient.RetrieveStatus(context.Background(), tc.retrieveReq)
 		assert.Equal(t, tc.retrieveRes.Entity, dpr.Entity, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.retrieveRes.Entity, dpr.Entity))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		svcCall.Unset()
