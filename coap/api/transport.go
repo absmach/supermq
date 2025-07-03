@@ -54,23 +54,17 @@ type CoAPHandler struct {
 }
 
 // MakeCoAPHandler creates handler for CoAP messages.
-func MakeCoAPHandler(svc coap.Service, channelsClient grpcChannelsV1.ChannelsServiceClient, resolver messaging.TopicResolver, l *slog.Logger) mux.HandlerFunc {
-	h := &CoAPHandler{
+func MakeCoAPHandler(svc coap.Service, channelsClient grpcChannelsV1.ChannelsServiceClient, resolver messaging.TopicResolver, l *slog.Logger) mux.Handler {
+	return &CoAPHandler{
 		logger:   l,
 		service:  svc,
 		channels: channelsClient,
 		resolver: resolver,
 	}
-	return h.handler
 }
 
-func (h *CoAPHandler) sendResp(w mux.ResponseWriter, resp *pool.Message) {
-	if err := w.Conn().WriteMessage(resp); err != nil {
-		h.logger.Warn(fmt.Sprintf("Can't set response: %s", err))
-	}
-}
-
-func (h *CoAPHandler) handler(w mux.ResponseWriter, m *mux.Message) {
+// ServeCOAP implements the mux.Handler interface for handling CoAP messages.
+func (h *CoAPHandler) ServeCOAP(w mux.ResponseWriter, m *mux.Message) {
 	resp := pool.NewMessage(w.Conn().Context())
 	resp.SetToken(m.Token())
 	for _, opt := range m.Options() {
@@ -177,6 +171,12 @@ func (h *CoAPHandler) decodeMessage(msg *mux.Message) (*messaging.Message, error
 		ret.Payload = buff
 	}
 	return ret, nil
+}
+
+func (h *CoAPHandler) sendResp(w mux.ResponseWriter, resp *pool.Message) {
+	if err := w.Conn().WriteMessage(resp); err != nil {
+		h.logger.Warn(fmt.Sprintf("Can't set response: %s", err))
+	}
 }
 
 func parseKey(msg *mux.Message) (string, error) {
