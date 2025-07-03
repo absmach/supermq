@@ -16,7 +16,7 @@ type Value[T any] struct {
 	Value T
 }
 
-func New[T Nullable](v T, set bool) Value[T] {
+func New[T nullable](v T, set bool) Value[T] {
 	return Value[T]{
 		Set:   set,
 		Value: v,
