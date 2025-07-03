@@ -16,6 +16,13 @@ type Value[T any] struct {
 	Value T
 }
 
+func New[T any](v T) Value[T] {
+	return Value[T]{
+		Set:   true,
+		Value: v,
+	}
+}
+
 // Parser[T any] represents a parser function. It is used to avoid
 // a single parser for all nullables for improved readability and performance.
 // Parser should always return Nullable with Set=true, error otherwise.
@@ -45,18 +52,4 @@ func (n *Value[T]) UnmarshalJSON(data []byte) error {
 	n.Value = val
 	n.Set = true
 	return nil
-}
-
-func New[T any](v T) Value[T] {
-	return Value[T]{
-		Set:   true,
-		Value: v,
-	}
-}
-
-func NewString(s string) Value[string] {
-	return Value[string]{
-		Set:   true,
-		Value: s,
-	}
 }
