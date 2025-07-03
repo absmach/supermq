@@ -16,9 +16,9 @@ type Value[T any] struct {
 	Value T
 }
 
-func New[T any](v T) Value[T] {
+func New[T any](v T, set bool) Value[T] {
 	return Value[T]{
-		Set:   true,
+		Set:   set,
 		Value: v,
 	}
 }
