@@ -19,3 +19,7 @@ type channelBasic struct {
 }
 
 type retrieveEntityRes channelBasic
+
+type retrieveIDByRouteRes struct {
+	id string
+}

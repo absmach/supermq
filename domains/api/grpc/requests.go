@@ -31,11 +31,11 @@ func (req retrieveEntityReq) validate() error {
 	return nil
 }
 
-type retrieveByRouteReq struct {
+type retrieveIDByRouteReq struct {
 	Route string
 }
 
-func (req retrieveByRouteReq) validate() error {
+func (req retrieveIDByRouteReq) validate() error {
 	if req.Route == "" {
 		return apiutil.ErrMissingRoute
 	}

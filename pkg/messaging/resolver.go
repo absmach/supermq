@@ -75,7 +75,7 @@ func (r *resolver) resolveDomain(ctx context.Context, domain string) (string, er
 	if validateUUID(domain) == nil {
 		return domain, nil
 	}
-	d, err := r.domains.RetrieveByRoute(ctx, &grpcCommonV1.RetrieveByRouteReq{
+	d, err := r.domains.RetrieveIDByRoute(ctx, &grpcCommonV1.RetrieveIDByRouteReq{
 		Route: domain,
 	})
 	if err != nil {
@@ -89,7 +89,7 @@ func (r *resolver) resolveChannel(ctx context.Context, channel, domainID string)
 	if validateUUID(channel) == nil {
 		return channel, nil
 	}
-	c, err := r.channels.RetrieveByRoute(ctx, &grpcCommonV1.RetrieveByRouteReq{
+	c, err := r.channels.RetrieveIDByRoute(ctx, &grpcCommonV1.RetrieveIDByRouteReq{
 		Route:    channel,
 		DomainId: domainID,
 	})
