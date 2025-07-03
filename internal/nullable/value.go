@@ -16,10 +16,10 @@ type Value[T any] struct {
 	Value T
 }
 
-// FromString[T any] represents a parser function. It is used to avoid
+// Parser[T any] represents a parser function. It is used to avoid
 // a single parser for all nullables for improved readability and performance.
-// FromString should always return Nullable with Set=true, error otherwise.
-type FromString[T any] func(string) (Value[T], error)
+// Parser should always return Nullable with Set=true, error otherwise.
+type Parser[T any] func(string) (Value[T], error)
 
 // MarshalJSON encodes the value if set, otherwise returns `null`.
 func (n Value[T]) MarshalJSON() ([]byte, error) {
@@ -45,4 +45,18 @@ func (n *Value[T]) UnmarshalJSON(data []byte) error {
 	n.Value = val
 	n.Set = true
 	return nil
+}
+
+func New[T any](v T) Value[T] {
+	return Value[T]{
+		Set:   true,
+		Value: v,
+	}
+}
+
+func NewString(s string) Value[string] {
+	return Value[string]{
+		Set:   true,
+		Value: s,
+	}
 }

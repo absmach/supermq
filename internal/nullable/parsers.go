@@ -11,7 +11,7 @@ import (
 
 var ErrInvalidQueryParams = errors.New("invalid query parameters")
 
-func Parse[T any](q url.Values, key string, parser FromString[T]) (Value[T], error) {
+func Parse[T any](q url.Values, key string, parser Parser[T]) (Value[T], error) {
 	vals, ok := q[key]
 	if !ok {
 		return Value[T]{}, nil

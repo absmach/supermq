@@ -82,7 +82,7 @@ func ToGroups(data map[string]interface{}) (groups.Group, error) {
 
 	desc, ok := data["description"].(string)
 	if ok {
-		g.Description = nullable.Value[string]{Set: true, Value: desc}
+		g.Description = nullable.New(desc)
 	}
 
 	parent, ok := data["parent"].(string)
