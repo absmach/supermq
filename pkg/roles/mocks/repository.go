@@ -75,15 +75,26 @@ type Repository_AddRoles_Call struct {
 }
 
 // AddRoles is a helper method to define mock.On call
-//   - ctx
-//   - rps
+//   - ctx context.Context
+//   - rps []roles.RoleProvision
 func (_e *Repository_Expecter) AddRoles(ctx interface{}, rps interface{}) *Repository_AddRoles_Call {
 	return &Repository_AddRoles_Call{Call: _e.mock.On("AddRoles", ctx, rps)}
 }
 
 func (_c *Repository_AddRoles_Call) Run(run func(ctx context.Context, rps []roles.RoleProvision)) *Repository_AddRoles_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].([]roles.RoleProvision))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []roles.RoleProvision
+		if args[1] != nil {
+			arg1 = args[1].([]roles.RoleProvision)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -130,16 +141,32 @@ type Repository_ListEntityMembers_Call struct {
 }
 
 // ListEntityMembers is a helper method to define mock.On call
-//   - ctx
-//   - entityID
-//   - pageQuery
+//   - ctx context.Context
+//   - entityID string
+//   - pageQuery roles.MembersRolePageQuery
 func (_e *Repository_Expecter) ListEntityMembers(ctx interface{}, entityID interface{}, pageQuery interface{}) *Repository_ListEntityMembers_Call {
 	return &Repository_ListEntityMembers_Call{Call: _e.mock.On("ListEntityMembers", ctx, entityID, pageQuery)}
 }
 
 func (_c *Repository_ListEntityMembers_Call) Run(run func(ctx context.Context, entityID string, pageQuery roles.MembersRolePageQuery)) *Repository_ListEntityMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(roles.MembersRolePageQuery))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 roles.MembersRolePageQuery
+		if args[2] != nil {
+			arg2 = args[2].(roles.MembersRolePageQuery)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -177,16 +204,32 @@ type Repository_RemoveEntityMembers_Call struct {
 }
 
 // RemoveEntityMembers is a helper method to define mock.On call
-//   - ctx
-//   - entityID
-//   - members
+//   - ctx context.Context
+//   - entityID string
+//   - members []string
 func (_e *Repository_Expecter) RemoveEntityMembers(ctx interface{}, entityID interface{}, members interface{}) *Repository_RemoveEntityMembers_Call {
 	return &Repository_RemoveEntityMembers_Call{Call: _e.mock.On("RemoveEntityMembers", ctx, entityID, members)}
 }
 
 func (_c *Repository_RemoveEntityMembers_Call) Run(run func(ctx context.Context, entityID string, members []string)) *Repository_RemoveEntityMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 []string
+		if args[2] != nil {
+			arg2 = args[2].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -224,15 +267,26 @@ type Repository_RemoveMemberFromAllRoles_Call struct {
 }
 
 // RemoveMemberFromAllRoles is a helper method to define mock.On call
-//   - ctx
-//   - memberID
+//   - ctx context.Context
+//   - memberID string
 func (_e *Repository_Expecter) RemoveMemberFromAllRoles(ctx interface{}, memberID interface{}) *Repository_RemoveMemberFromAllRoles_Call {
 	return &Repository_RemoveMemberFromAllRoles_Call{Call: _e.mock.On("RemoveMemberFromAllRoles", ctx, memberID)}
 }
 
 func (_c *Repository_RemoveMemberFromAllRoles_Call) Run(run func(ctx context.Context, memberID string)) *Repository_RemoveMemberFromAllRoles_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -270,15 +324,26 @@ type Repository_RemoveRoles_Call struct {
 }
 
 // RemoveRoles is a helper method to define mock.On call
-//   - ctx
-//   - roleIDs
+//   - ctx context.Context
+//   - roleIDs []string
 func (_e *Repository_Expecter) RemoveRoles(ctx interface{}, roleIDs interface{}) *Repository_RemoveRoles_Call {
 	return &Repository_RemoveRoles_Call{Call: _e.mock.On("RemoveRoles", ctx, roleIDs)}
 }
 
 func (_c *Repository_RemoveRoles_Call) Run(run func(ctx context.Context, roleIDs []string)) *Repository_RemoveRoles_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []string
+		if args[1] != nil {
+			arg1 = args[1].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -325,17 +390,38 @@ type Repository_RetrieveAllRoles_Call struct {
 }
 
 // RetrieveAllRoles is a helper method to define mock.On call
-//   - ctx
-//   - entityID
-//   - limit
-//   - offset
+//   - ctx context.Context
+//   - entityID string
+//   - limit uint64
+//   - offset uint64
 func (_e *Repository_Expecter) RetrieveAllRoles(ctx interface{}, entityID interface{}, limit interface{}, offset interface{}) *Repository_RetrieveAllRoles_Call {
 	return &Repository_RetrieveAllRoles_Call{Call: _e.mock.On("RetrieveAllRoles", ctx, entityID, limit, offset)}
 }
 
 func (_c *Repository_RetrieveAllRoles_Call) Run(run func(ctx context.Context, entityID string, limit uint64, offset uint64)) *Repository_RetrieveAllRoles_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(uint64), args[3].(uint64))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 uint64
+		if args[2] != nil {
+			arg2 = args[2].(uint64)
+		}
+		var arg3 uint64
+		if args[3] != nil {
+			arg3 = args[3].(uint64)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -392,15 +478,26 @@ type Repository_RetrieveEntitiesRolesActionsMembers_Call struct {
 }
 
 // RetrieveEntitiesRolesActionsMembers is a helper method to define mock.On call
-//   - ctx
-//   - entityIDs
+//   - ctx context.Context
+//   - entityIDs []string
 func (_e *Repository_Expecter) RetrieveEntitiesRolesActionsMembers(ctx interface{}, entityIDs interface{}) *Repository_RetrieveEntitiesRolesActionsMembers_Call {
 	return &Repository_RetrieveEntitiesRolesActionsMembers_Call{Call: _e.mock.On("RetrieveEntitiesRolesActionsMembers", ctx, entityIDs)}
 }
 
 func (_c *Repository_RetrieveEntitiesRolesActionsMembers_Call) Run(run func(ctx context.Context, entityIDs []string)) *Repository_RetrieveEntitiesRolesActionsMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []string
+		if args[1] != nil {
+			arg1 = args[1].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -447,16 +544,32 @@ type Repository_RetrieveEntityRole_Call struct {
 }
 
 // RetrieveEntityRole is a helper method to define mock.On call
-//   - ctx
-//   - entityID
-//   - roleID
+//   - ctx context.Context
+//   - entityID string
+//   - roleID string
 func (_e *Repository_Expecter) RetrieveEntityRole(ctx interface{}, entityID interface{}, roleID interface{}) *Repository_RetrieveEntityRole_Call {
 	return &Repository_RetrieveEntityRole_Call{Call: _e.mock.On("RetrieveEntityRole", ctx, entityID, roleID)}
 }
 
 func (_c *Repository_RetrieveEntityRole_Call) Run(run func(ctx context.Context, entityID string, roleID string)) *Repository_RetrieveEntityRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -503,15 +616,26 @@ type Repository_RetrieveRole_Call struct {
 }
 
 // RetrieveRole is a helper method to define mock.On call
-//   - ctx
-//   - roleID
+//   - ctx context.Context
+//   - roleID string
 func (_e *Repository_Expecter) RetrieveRole(ctx interface{}, roleID interface{}) *Repository_RetrieveRole_Call {
 	return &Repository_RetrieveRole_Call{Call: _e.mock.On("RetrieveRole", ctx, roleID)}
 }
 
 func (_c *Repository_RetrieveRole_Call) Run(run func(ctx context.Context, roleID string)) *Repository_RetrieveRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -560,16 +684,32 @@ type Repository_RoleAddActions_Call struct {
 }
 
 // RoleAddActions is a helper method to define mock.On call
-//   - ctx
-//   - role
-//   - actions
+//   - ctx context.Context
+//   - role roles.Role
+//   - actions []string
 func (_e *Repository_Expecter) RoleAddActions(ctx interface{}, role interface{}, actions interface{}) *Repository_RoleAddActions_Call {
 	return &Repository_RoleAddActions_Call{Call: _e.mock.On("RoleAddActions", ctx, role, actions)}
 }
 
 func (_c *Repository_RoleAddActions_Call) Run(run func(ctx context.Context, role roles.Role, actions []string)) *Repository_RoleAddActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(roles.Role), args[2].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 roles.Role
+		if args[1] != nil {
+			arg1 = args[1].(roles.Role)
+		}
+		var arg2 []string
+		if args[2] != nil {
+			arg2 = args[2].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -618,16 +758,32 @@ type Repository_RoleAddMembers_Call struct {
 }
 
 // RoleAddMembers is a helper method to define mock.On call
-//   - ctx
-//   - role
-//   - members
+//   - ctx context.Context
+//   - role roles.Role
+//   - members []string
 func (_e *Repository_Expecter) RoleAddMembers(ctx interface{}, role interface{}, members interface{}) *Repository_RoleAddMembers_Call {
 	return &Repository_RoleAddMembers_Call{Call: _e.mock.On("RoleAddMembers", ctx, role, members)}
 }
 
 func (_c *Repository_RoleAddMembers_Call) Run(run func(ctx context.Context, role roles.Role, members []string)) *Repository_RoleAddMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(roles.Role), args[2].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 roles.Role
+		if args[1] != nil {
+			arg1 = args[1].(roles.Role)
+		}
+		var arg2 []string
+		if args[2] != nil {
+			arg2 = args[2].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -674,16 +830,32 @@ type Repository_RoleCheckActionsExists_Call struct {
 }
 
 // RoleCheckActionsExists is a helper method to define mock.On call
-//   - ctx
-//   - roleID
-//   - actions
+//   - ctx context.Context
+//   - roleID string
+//   - actions []string
 func (_e *Repository_Expecter) RoleCheckActionsExists(ctx interface{}, roleID interface{}, actions interface{}) *Repository_RoleCheckActionsExists_Call {
 	return &Repository_RoleCheckActionsExists_Call{Call: _e.mock.On("RoleCheckActionsExists", ctx, roleID, actions)}
 }
 
 func (_c *Repository_RoleCheckActionsExists_Call) Run(run func(ctx context.Context, roleID string, actions []string)) *Repository_RoleCheckActionsExists_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 []string
+		if args[2] != nil {
+			arg2 = args[2].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -730,16 +902,32 @@ type Repository_RoleCheckMembersExists_Call struct {
 }
 
 // RoleCheckMembersExists is a helper method to define mock.On call
-//   - ctx
-//   - roleID
-//   - members
+//   - ctx context.Context
+//   - roleID string
+//   - members []string
 func (_e *Repository_Expecter) RoleCheckMembersExists(ctx interface{}, roleID interface{}, members interface{}) *Repository_RoleCheckMembersExists_Call {
 	return &Repository_RoleCheckMembersExists_Call{Call: _e.mock.On("RoleCheckMembersExists", ctx, roleID, members)}
 }
 
 func (_c *Repository_RoleCheckMembersExists_Call) Run(run func(ctx context.Context, roleID string, members []string)) *Repository_RoleCheckMembersExists_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 []string
+		if args[2] != nil {
+			arg2 = args[2].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -788,15 +976,26 @@ type Repository_RoleListActions_Call struct {
 }
 
 // RoleListActions is a helper method to define mock.On call
-//   - ctx
-//   - roleID
+//   - ctx context.Context
+//   - roleID string
 func (_e *Repository_Expecter) RoleListActions(ctx interface{}, roleID interface{}) *Repository_RoleListActions_Call {
 	return &Repository_RoleListActions_Call{Call: _e.mock.On("RoleListActions", ctx, roleID)}
 }
 
 func (_c *Repository_RoleListActions_Call) Run(run func(ctx context.Context, roleID string)) *Repository_RoleListActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -843,17 +1042,38 @@ type Repository_RoleListMembers_Call struct {
 }
 
 // RoleListMembers is a helper method to define mock.On call
-//   - ctx
-//   - roleID
-//   - limit
-//   - offset
+//   - ctx context.Context
+//   - roleID string
+//   - limit uint64
+//   - offset uint64
 func (_e *Repository_Expecter) RoleListMembers(ctx interface{}, roleID interface{}, limit interface{}, offset interface{}) *Repository_RoleListMembers_Call {
 	return &Repository_RoleListMembers_Call{Call: _e.mock.On("RoleListMembers", ctx, roleID, limit, offset)}
 }
 
 func (_c *Repository_RoleListMembers_Call) Run(run func(ctx context.Context, roleID string, limit uint64, offset uint64)) *Repository_RoleListMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(uint64), args[3].(uint64))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 uint64
+		if args[2] != nil {
+			arg2 = args[2].(uint64)
+		}
+		var arg3 uint64
+		if args[3] != nil {
+			arg3 = args[3].(uint64)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -891,16 +1111,32 @@ type Repository_RoleRemoveActions_Call struct {
 }
 
 // RoleRemoveActions is a helper method to define mock.On call
-//   - ctx
-//   - role
-//   - actions
+//   - ctx context.Context
+//   - role roles.Role
+//   - actions []string
 func (_e *Repository_Expecter) RoleRemoveActions(ctx interface{}, role interface{}, actions interface{}) *Repository_RoleRemoveActions_Call {
 	return &Repository_RoleRemoveActions_Call{Call: _e.mock.On("RoleRemoveActions", ctx, role, actions)}
 }
 
 func (_c *Repository_RoleRemoveActions_Call) Run(run func(ctx context.Context, role roles.Role, actions []string)) *Repository_RoleRemoveActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(roles.Role), args[2].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 roles.Role
+		if args[1] != nil {
+			arg1 = args[1].(roles.Role)
+		}
+		var arg2 []string
+		if args[2] != nil {
+			arg2 = args[2].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -938,15 +1174,26 @@ type Repository_RoleRemoveAllActions_Call struct {
 }
 
 // RoleRemoveAllActions is a helper method to define mock.On call
-//   - ctx
-//   - role
+//   - ctx context.Context
+//   - role roles.Role
 func (_e *Repository_Expecter) RoleRemoveAllActions(ctx interface{}, role interface{}) *Repository_RoleRemoveAllActions_Call {
 	return &Repository_RoleRemoveAllActions_Call{Call: _e.mock.On("RoleRemoveAllActions", ctx, role)}
 }
 
 func (_c *Repository_RoleRemoveAllActions_Call) Run(run func(ctx context.Context, role roles.Role)) *Repository_RoleRemoveAllActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(roles.Role))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 roles.Role
+		if args[1] != nil {
+			arg1 = args[1].(roles.Role)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -984,15 +1231,26 @@ type Repository_RoleRemoveAllMembers_Call struct {
 }
 
 // RoleRemoveAllMembers is a helper method to define mock.On call
-//   - ctx
-//   - role
+//   - ctx context.Context
+//   - role roles.Role
 func (_e *Repository_Expecter) RoleRemoveAllMembers(ctx interface{}, role interface{}) *Repository_RoleRemoveAllMembers_Call {
 	return &Repository_RoleRemoveAllMembers_Call{Call: _e.mock.On("RoleRemoveAllMembers", ctx, role)}
 }
 
 func (_c *Repository_RoleRemoveAllMembers_Call) Run(run func(ctx context.Context, role roles.Role)) *Repository_RoleRemoveAllMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(roles.Role))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 roles.Role
+		if args[1] != nil {
+			arg1 = args[1].(roles.Role)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -1030,16 +1288,32 @@ type Repository_RoleRemoveMembers_Call struct {
 }
 
 // RoleRemoveMembers is a helper method to define mock.On call
-//   - ctx
-//   - role
-//   - members
+//   - ctx context.Context
+//   - role roles.Role
+//   - members []string
 func (_e *Repository_Expecter) RoleRemoveMembers(ctx interface{}, role interface{}, members interface{}) *Repository_RoleRemoveMembers_Call {
 	return &Repository_RoleRemoveMembers_Call{Call: _e.mock.On("RoleRemoveMembers", ctx, role, members)}
 }
 
 func (_c *Repository_RoleRemoveMembers_Call) Run(run func(ctx context.Context, role roles.Role, members []string)) *Repository_RoleRemoveMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(roles.Role), args[2].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 roles.Role
+		if args[1] != nil {
+			arg1 = args[1].(roles.Role)
+		}
+		var arg2 []string
+		if args[2] != nil {
+			arg2 = args[2].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -1086,15 +1360,26 @@ type Repository_UpdateRole_Call struct {
 }
 
 // UpdateRole is a helper method to define mock.On call
-//   - ctx
-//   - ro
+//   - ctx context.Context
+//   - ro roles.Role
 func (_e *Repository_Expecter) UpdateRole(ctx interface{}, ro interface{}) *Repository_UpdateRole_Call {
 	return &Repository_UpdateRole_Call{Call: _e.mock.On("UpdateRole", ctx, ro)}
 }
 
 func (_c *Repository_UpdateRole_Call) Run(run func(ctx context.Context, ro roles.Role)) *Repository_UpdateRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(roles.Role))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 roles.Role
+		if args[1] != nil {
+			arg1 = args[1].(roles.Role)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

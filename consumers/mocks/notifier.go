@@ -62,16 +62,32 @@ type Notifier_Notify_Call struct {
 }
 
 // Notify is a helper method to define mock.On call
-//   - from
-//   - to
-//   - msg
+//   - from string
+//   - to []string
+//   - msg *messaging.Message
 func (_e *Notifier_Expecter) Notify(from interface{}, to interface{}, msg interface{}) *Notifier_Notify_Call {
 	return &Notifier_Notify_Call{Call: _e.mock.On("Notify", from, to, msg)}
 }
 
 func (_c *Notifier_Notify_Call) Run(run func(from string, to []string, msg *messaging.Message)) *Notifier_Notify_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].([]string), args[2].(*messaging.Message))
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 []string
+		if args[1] != nil {
+			arg1 = args[1].([]string)
+		}
+		var arg2 *messaging.Message
+		if args[2] != nil {
+			arg2 = args[2].(*messaging.Message)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }

@@ -73,15 +73,26 @@ type Cache_ID_Call struct {
 }
 
 // ID is a helper method to define mock.On call
-//   - ctx
-//   - route
+//   - ctx context.Context
+//   - route string
 func (_e *Cache_Expecter) ID(ctx interface{}, route interface{}) *Cache_ID_Call {
 	return &Cache_ID_Call{Call: _e.mock.On("ID", ctx, route)}
 }
 
 func (_c *Cache_ID_Call) Run(run func(ctx context.Context, route string)) *Cache_ID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -119,15 +130,26 @@ type Cache_RemoveID_Call struct {
 }
 
 // RemoveID is a helper method to define mock.On call
-//   - ctx
-//   - route
+//   - ctx context.Context
+//   - route string
 func (_e *Cache_Expecter) RemoveID(ctx interface{}, route interface{}) *Cache_RemoveID_Call {
 	return &Cache_RemoveID_Call{Call: _e.mock.On("RemoveID", ctx, route)}
 }
 
 func (_c *Cache_RemoveID_Call) Run(run func(ctx context.Context, route string)) *Cache_RemoveID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -165,15 +187,26 @@ type Cache_RemoveStatus_Call struct {
 }
 
 // RemoveStatus is a helper method to define mock.On call
-//   - ctx
-//   - domainID
+//   - ctx context.Context
+//   - domainID string
 func (_e *Cache_Expecter) RemoveStatus(ctx interface{}, domainID interface{}) *Cache_RemoveStatus_Call {
 	return &Cache_RemoveStatus_Call{Call: _e.mock.On("RemoveStatus", ctx, domainID)}
 }
 
 func (_c *Cache_RemoveStatus_Call) Run(run func(ctx context.Context, domainID string)) *Cache_RemoveStatus_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -211,16 +244,32 @@ type Cache_SaveID_Call struct {
 }
 
 // SaveID is a helper method to define mock.On call
-//   - ctx
-//   - route
-//   - domainID
+//   - ctx context.Context
+//   - route string
+//   - domainID string
 func (_e *Cache_Expecter) SaveID(ctx interface{}, route interface{}, domainID interface{}) *Cache_SaveID_Call {
 	return &Cache_SaveID_Call{Call: _e.mock.On("SaveID", ctx, route, domainID)}
 }
 
 func (_c *Cache_SaveID_Call) Run(run func(ctx context.Context, route string, domainID string)) *Cache_SaveID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -258,16 +307,32 @@ type Cache_SaveStatus_Call struct {
 }
 
 // SaveStatus is a helper method to define mock.On call
-//   - ctx
-//   - domainID
-//   - status
+//   - ctx context.Context
+//   - domainID string
+//   - status domains.Status
 func (_e *Cache_Expecter) SaveStatus(ctx interface{}, domainID interface{}, status interface{}) *Cache_SaveStatus_Call {
 	return &Cache_SaveStatus_Call{Call: _e.mock.On("SaveStatus", ctx, domainID, status)}
 }
 
 func (_c *Cache_SaveStatus_Call) Run(run func(ctx context.Context, domainID string, status domains.Status)) *Cache_SaveStatus_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(domains.Status))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 domains.Status
+		if args[2] != nil {
+			arg2 = args[2].(domains.Status)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -314,15 +379,26 @@ type Cache_Status_Call struct {
 }
 
 // Status is a helper method to define mock.On call
-//   - ctx
-//   - domainID
+//   - ctx context.Context
+//   - domainID string
 func (_e *Cache_Expecter) Status(ctx interface{}, domainID interface{}) *Cache_Status_Call {
 	return &Cache_Status_Call{Call: _e.mock.On("Status", ctx, domainID)}
 }
 
 func (_c *Cache_Status_Call) Run(run func(ctx context.Context, domainID string)) *Cache_Status_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

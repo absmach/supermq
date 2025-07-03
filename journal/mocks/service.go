@@ -74,16 +74,32 @@ type Service_RetrieveAll_Call struct {
 }
 
 // RetrieveAll is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - page
+//   - ctx context.Context
+//   - session authn.Session
+//   - page journal.Page
 func (_e *Service_Expecter) RetrieveAll(ctx interface{}, session interface{}, page interface{}) *Service_RetrieveAll_Call {
 	return &Service_RetrieveAll_Call{Call: _e.mock.On("RetrieveAll", ctx, session, page)}
 }
 
 func (_c *Service_RetrieveAll_Call) Run(run func(ctx context.Context, session authn.Session, page journal.Page)) *Service_RetrieveAll_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(journal.Page))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 journal.Page
+		if args[2] != nil {
+			arg2 = args[2].(journal.Page)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -130,16 +146,32 @@ type Service_RetrieveClientTelemetry_Call struct {
 }
 
 // RetrieveClientTelemetry is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - clientID
+//   - ctx context.Context
+//   - session authn.Session
+//   - clientID string
 func (_e *Service_Expecter) RetrieveClientTelemetry(ctx interface{}, session interface{}, clientID interface{}) *Service_RetrieveClientTelemetry_Call {
 	return &Service_RetrieveClientTelemetry_Call{Call: _e.mock.On("RetrieveClientTelemetry", ctx, session, clientID)}
 }
 
 func (_c *Service_RetrieveClientTelemetry_Call) Run(run func(ctx context.Context, session authn.Session, clientID string)) *Service_RetrieveClientTelemetry_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -177,15 +209,26 @@ type Service_Save_Call struct {
 }
 
 // Save is a helper method to define mock.On call
-//   - ctx
-//   - journal1
+//   - ctx context.Context
+//   - journal1 journal.Journal
 func (_e *Service_Expecter) Save(ctx interface{}, journal1 interface{}) *Service_Save_Call {
 	return &Service_Save_Call{Call: _e.mock.On("Save", ctx, journal1)}
 }
 
 func (_c *Service_Save_Call) Run(run func(ctx context.Context, journal1 journal.Journal)) *Service_Save_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(journal.Journal))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 journal.Journal
+		if args[1] != nil {
+			arg1 = args[1].(journal.Journal)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

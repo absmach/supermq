@@ -66,17 +66,38 @@ type Service_AddScope_Call struct {
 }
 
 // AddScope is a helper method to define mock.On call
-//   - ctx
-//   - token
-//   - patID
-//   - scopes
+//   - ctx context.Context
+//   - token string
+//   - patID string
+//   - scopes []auth.Scope
 func (_e *Service_Expecter) AddScope(ctx interface{}, token interface{}, patID interface{}, scopes interface{}) *Service_AddScope_Call {
 	return &Service_AddScope_Call{Call: _e.mock.On("AddScope", ctx, token, patID, scopes)}
 }
 
 func (_c *Service_AddScope_Call) Run(run func(ctx context.Context, token string, patID string, scopes []auth.Scope)) *Service_AddScope_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].([]auth.Scope))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 []auth.Scope
+		if args[3] != nil {
+			arg3 = args[3].([]auth.Scope)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -114,15 +135,26 @@ type Service_Authorize_Call struct {
 }
 
 // Authorize is a helper method to define mock.On call
-//   - ctx
-//   - pr
+//   - ctx context.Context
+//   - pr policies.Policy
 func (_e *Service_Expecter) Authorize(ctx interface{}, pr interface{}) *Service_Authorize_Call {
 	return &Service_Authorize_Call{Call: _e.mock.On("Authorize", ctx, pr)}
 }
 
 func (_c *Service_Authorize_Call) Run(run func(ctx context.Context, pr policies.Policy)) *Service_Authorize_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(policies.Policy))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 policies.Policy
+		if args[1] != nil {
+			arg1 = args[1].(policies.Policy)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -160,20 +192,56 @@ type Service_AuthorizePAT_Call struct {
 }
 
 // AuthorizePAT is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - patID
-//   - entityType
-//   - optionalDomainID
-//   - operation
-//   - entityID
+//   - ctx context.Context
+//   - userID string
+//   - patID string
+//   - entityType auth.EntityType
+//   - optionalDomainID string
+//   - operation auth.Operation
+//   - entityID string
 func (_e *Service_Expecter) AuthorizePAT(ctx interface{}, userID interface{}, patID interface{}, entityType interface{}, optionalDomainID interface{}, operation interface{}, entityID interface{}) *Service_AuthorizePAT_Call {
 	return &Service_AuthorizePAT_Call{Call: _e.mock.On("AuthorizePAT", ctx, userID, patID, entityType, optionalDomainID, operation, entityID)}
 }
 
 func (_c *Service_AuthorizePAT_Call) Run(run func(ctx context.Context, userID string, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityID string)) *Service_AuthorizePAT_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(auth.EntityType), args[4].(string), args[5].(auth.Operation), args[6].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 auth.EntityType
+		if args[3] != nil {
+			arg3 = args[3].(auth.EntityType)
+		}
+		var arg4 string
+		if args[4] != nil {
+			arg4 = args[4].(string)
+		}
+		var arg5 auth.Operation
+		if args[5] != nil {
+			arg5 = args[5].(auth.Operation)
+		}
+		var arg6 string
+		if args[6] != nil {
+			arg6 = args[6].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+			arg5,
+			arg6,
+		)
 	})
 	return _c
 }
@@ -220,18 +288,44 @@ type Service_CreatePAT_Call struct {
 }
 
 // CreatePAT is a helper method to define mock.On call
-//   - ctx
-//   - token
-//   - name
-//   - description
-//   - duration
+//   - ctx context.Context
+//   - token string
+//   - name string
+//   - description string
+//   - duration time.Duration
 func (_e *Service_Expecter) CreatePAT(ctx interface{}, token interface{}, name interface{}, description interface{}, duration interface{}) *Service_CreatePAT_Call {
 	return &Service_CreatePAT_Call{Call: _e.mock.On("CreatePAT", ctx, token, name, description, duration)}
 }
 
 func (_c *Service_CreatePAT_Call) Run(run func(ctx context.Context, token string, name string, description string, duration time.Duration)) *Service_CreatePAT_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(time.Duration))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		var arg4 time.Duration
+		if args[4] != nil {
+			arg4 = args[4].(time.Duration)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+		)
 	})
 	return _c
 }
@@ -269,16 +363,32 @@ type Service_DeletePAT_Call struct {
 }
 
 // DeletePAT is a helper method to define mock.On call
-//   - ctx
-//   - token
-//   - patID
+//   - ctx context.Context
+//   - token string
+//   - patID string
 func (_e *Service_Expecter) DeletePAT(ctx interface{}, token interface{}, patID interface{}) *Service_DeletePAT_Call {
 	return &Service_DeletePAT_Call{Call: _e.mock.On("DeletePAT", ctx, token, patID)}
 }
 
 func (_c *Service_DeletePAT_Call) Run(run func(ctx context.Context, token string, patID string)) *Service_DeletePAT_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -325,15 +435,26 @@ type Service_Identify_Call struct {
 }
 
 // Identify is a helper method to define mock.On call
-//   - ctx
-//   - token
+//   - ctx context.Context
+//   - token string
 func (_e *Service_Expecter) Identify(ctx interface{}, token interface{}) *Service_Identify_Call {
 	return &Service_Identify_Call{Call: _e.mock.On("Identify", ctx, token)}
 }
 
 func (_c *Service_Identify_Call) Run(run func(ctx context.Context, token string)) *Service_Identify_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -380,15 +501,26 @@ type Service_IdentifyPAT_Call struct {
 }
 
 // IdentifyPAT is a helper method to define mock.On call
-//   - ctx
-//   - paToken
+//   - ctx context.Context
+//   - paToken string
 func (_e *Service_Expecter) IdentifyPAT(ctx interface{}, paToken interface{}) *Service_IdentifyPAT_Call {
 	return &Service_IdentifyPAT_Call{Call: _e.mock.On("IdentifyPAT", ctx, paToken)}
 }
 
 func (_c *Service_IdentifyPAT_Call) Run(run func(ctx context.Context, paToken string)) *Service_IdentifyPAT_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -435,16 +567,32 @@ type Service_Issue_Call struct {
 }
 
 // Issue is a helper method to define mock.On call
-//   - ctx
-//   - token
-//   - key
+//   - ctx context.Context
+//   - token string
+//   - key auth.Key
 func (_e *Service_Expecter) Issue(ctx interface{}, token interface{}, key interface{}) *Service_Issue_Call {
 	return &Service_Issue_Call{Call: _e.mock.On("Issue", ctx, token, key)}
 }
 
 func (_c *Service_Issue_Call) Run(run func(ctx context.Context, token string, key auth.Key)) *Service_Issue_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(auth.Key))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 auth.Key
+		if args[2] != nil {
+			arg2 = args[2].(auth.Key)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -491,16 +639,32 @@ type Service_ListPATS_Call struct {
 }
 
 // ListPATS is a helper method to define mock.On call
-//   - ctx
-//   - token
-//   - pm
+//   - ctx context.Context
+//   - token string
+//   - pm auth.PATSPageMeta
 func (_e *Service_Expecter) ListPATS(ctx interface{}, token interface{}, pm interface{}) *Service_ListPATS_Call {
 	return &Service_ListPATS_Call{Call: _e.mock.On("ListPATS", ctx, token, pm)}
 }
 
 func (_c *Service_ListPATS_Call) Run(run func(ctx context.Context, token string, pm auth.PATSPageMeta)) *Service_ListPATS_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(auth.PATSPageMeta))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 auth.PATSPageMeta
+		if args[2] != nil {
+			arg2 = args[2].(auth.PATSPageMeta)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -547,16 +711,32 @@ type Service_ListScopes_Call struct {
 }
 
 // ListScopes is a helper method to define mock.On call
-//   - ctx
-//   - token
-//   - pm
+//   - ctx context.Context
+//   - token string
+//   - pm auth.ScopesPageMeta
 func (_e *Service_Expecter) ListScopes(ctx interface{}, token interface{}, pm interface{}) *Service_ListScopes_Call {
 	return &Service_ListScopes_Call{Call: _e.mock.On("ListScopes", ctx, token, pm)}
 }
 
 func (_c *Service_ListScopes_Call) Run(run func(ctx context.Context, token string, pm auth.ScopesPageMeta)) *Service_ListScopes_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(auth.ScopesPageMeta))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 auth.ScopesPageMeta
+		if args[2] != nil {
+			arg2 = args[2].(auth.ScopesPageMeta)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -594,15 +774,26 @@ type Service_RemoveAllPAT_Call struct {
 }
 
 // RemoveAllPAT is a helper method to define mock.On call
-//   - ctx
-//   - token
+//   - ctx context.Context
+//   - token string
 func (_e *Service_Expecter) RemoveAllPAT(ctx interface{}, token interface{}) *Service_RemoveAllPAT_Call {
 	return &Service_RemoveAllPAT_Call{Call: _e.mock.On("RemoveAllPAT", ctx, token)}
 }
 
 func (_c *Service_RemoveAllPAT_Call) Run(run func(ctx context.Context, token string)) *Service_RemoveAllPAT_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -640,16 +831,32 @@ type Service_RemovePATAllScope_Call struct {
 }
 
 // RemovePATAllScope is a helper method to define mock.On call
-//   - ctx
-//   - token
-//   - patID
+//   - ctx context.Context
+//   - token string
+//   - patID string
 func (_e *Service_Expecter) RemovePATAllScope(ctx interface{}, token interface{}, patID interface{}) *Service_RemovePATAllScope_Call {
 	return &Service_RemovePATAllScope_Call{Call: _e.mock.On("RemovePATAllScope", ctx, token, patID)}
 }
 
 func (_c *Service_RemovePATAllScope_Call) Run(run func(ctx context.Context, token string, patID string)) *Service_RemovePATAllScope_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -693,10 +900,10 @@ type Service_RemoveScope_Call struct {
 }
 
 // RemoveScope is a helper method to define mock.On call
-//   - ctx
-//   - token
-//   - patID
-//   - scopeIDs
+//   - ctx context.Context
+//   - token string
+//   - patID string
+//   - scopeIDs ...string
 func (_e *Service_Expecter) RemoveScope(ctx interface{}, token interface{}, patID interface{}, scopeIDs ...interface{}) *Service_RemoveScope_Call {
 	return &Service_RemoveScope_Call{Call: _e.mock.On("RemoveScope",
 		append([]interface{}{ctx, token, patID}, scopeIDs...)...)}
@@ -704,13 +911,30 @@ func (_e *Service_Expecter) RemoveScope(ctx interface{}, token interface{}, patI
 
 func (_c *Service_RemoveScope_Call) Run(run func(ctx context.Context, token string, patID string, scopeIDs ...string)) *Service_RemoveScope_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]string, len(args)-3)
-		for i, a := range args[3:] {
-			if a != nil {
-				variadicArgs[i] = a.(string)
-			}
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
 		}
-		run(args[0].(context.Context), args[1].(string), args[2].(string), variadicArgs...)
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 []string
+		var variadicArgs []string
+		if len(args) > 3 {
+			variadicArgs = args[3].([]string)
+		}
+		arg3 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3...,
+		)
 	})
 	return _c
 }
@@ -757,17 +981,38 @@ type Service_ResetPATSecret_Call struct {
 }
 
 // ResetPATSecret is a helper method to define mock.On call
-//   - ctx
-//   - token
-//   - patID
-//   - duration
+//   - ctx context.Context
+//   - token string
+//   - patID string
+//   - duration time.Duration
 func (_e *Service_Expecter) ResetPATSecret(ctx interface{}, token interface{}, patID interface{}, duration interface{}) *Service_ResetPATSecret_Call {
 	return &Service_ResetPATSecret_Call{Call: _e.mock.On("ResetPATSecret", ctx, token, patID, duration)}
 }
 
 func (_c *Service_ResetPATSecret_Call) Run(run func(ctx context.Context, token string, patID string, duration time.Duration)) *Service_ResetPATSecret_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(time.Duration))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 time.Duration
+		if args[3] != nil {
+			arg3 = args[3].(time.Duration)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -814,16 +1059,32 @@ type Service_RetrieveKey_Call struct {
 }
 
 // RetrieveKey is a helper method to define mock.On call
-//   - ctx
-//   - token
-//   - id
+//   - ctx context.Context
+//   - token string
+//   - id string
 func (_e *Service_Expecter) RetrieveKey(ctx interface{}, token interface{}, id interface{}) *Service_RetrieveKey_Call {
 	return &Service_RetrieveKey_Call{Call: _e.mock.On("RetrieveKey", ctx, token, id)}
 }
 
 func (_c *Service_RetrieveKey_Call) Run(run func(ctx context.Context, token string, id string)) *Service_RetrieveKey_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -870,16 +1131,32 @@ type Service_RetrievePAT_Call struct {
 }
 
 // RetrievePAT is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - patID
+//   - ctx context.Context
+//   - userID string
+//   - patID string
 func (_e *Service_Expecter) RetrievePAT(ctx interface{}, userID interface{}, patID interface{}) *Service_RetrievePAT_Call {
 	return &Service_RetrievePAT_Call{Call: _e.mock.On("RetrievePAT", ctx, userID, patID)}
 }
 
 func (_c *Service_RetrievePAT_Call) Run(run func(ctx context.Context, userID string, patID string)) *Service_RetrievePAT_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -917,16 +1194,32 @@ type Service_Revoke_Call struct {
 }
 
 // Revoke is a helper method to define mock.On call
-//   - ctx
-//   - token
-//   - id
+//   - ctx context.Context
+//   - token string
+//   - id string
 func (_e *Service_Expecter) Revoke(ctx interface{}, token interface{}, id interface{}) *Service_Revoke_Call {
 	return &Service_Revoke_Call{Call: _e.mock.On("Revoke", ctx, token, id)}
 }
 
 func (_c *Service_Revoke_Call) Run(run func(ctx context.Context, token string, id string)) *Service_Revoke_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -964,16 +1257,32 @@ type Service_RevokePATSecret_Call struct {
 }
 
 // RevokePATSecret is a helper method to define mock.On call
-//   - ctx
-//   - token
-//   - patID
+//   - ctx context.Context
+//   - token string
+//   - patID string
 func (_e *Service_Expecter) RevokePATSecret(ctx interface{}, token interface{}, patID interface{}) *Service_RevokePATSecret_Call {
 	return &Service_RevokePATSecret_Call{Call: _e.mock.On("RevokePATSecret", ctx, token, patID)}
 }
 
 func (_c *Service_RevokePATSecret_Call) Run(run func(ctx context.Context, token string, patID string)) *Service_RevokePATSecret_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -1020,17 +1329,38 @@ type Service_UpdatePATDescription_Call struct {
 }
 
 // UpdatePATDescription is a helper method to define mock.On call
-//   - ctx
-//   - token
-//   - patID
-//   - description
+//   - ctx context.Context
+//   - token string
+//   - patID string
+//   - description string
 func (_e *Service_Expecter) UpdatePATDescription(ctx interface{}, token interface{}, patID interface{}, description interface{}) *Service_UpdatePATDescription_Call {
 	return &Service_UpdatePATDescription_Call{Call: _e.mock.On("UpdatePATDescription", ctx, token, patID, description)}
 }
 
 func (_c *Service_UpdatePATDescription_Call) Run(run func(ctx context.Context, token string, patID string, description string)) *Service_UpdatePATDescription_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -1077,17 +1407,38 @@ type Service_UpdatePATName_Call struct {
 }
 
 // UpdatePATName is a helper method to define mock.On call
-//   - ctx
-//   - token
-//   - patID
-//   - name
+//   - ctx context.Context
+//   - token string
+//   - patID string
+//   - name string
 func (_e *Service_Expecter) UpdatePATName(ctx interface{}, token interface{}, patID interface{}, name interface{}) *Service_UpdatePATName_Call {
 	return &Service_UpdatePATName_Call{Call: _e.mock.On("UpdatePATName", ctx, token, patID, name)}
 }
 
 func (_c *Service_UpdatePATName_Call) Run(run func(ctx context.Context, token string, patID string, name string)) *Service_UpdatePATName_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }

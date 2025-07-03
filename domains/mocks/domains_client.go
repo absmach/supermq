@@ -11,7 +11,7 @@ import (
 	"context"
 
 	v10 "github.com/absmach/supermq/api/grpc/common/v1"
-	v1 "github.com/absmach/supermq/api/grpc/domains/v1"
+	"github.com/absmach/supermq/api/grpc/domains/v1"
 	mock "github.com/stretchr/testify/mock"
 	"google.golang.org/grpc"
 )
@@ -59,8 +59,8 @@ func (_mock *DomainsServiceClient) DeleteUserFromDomains(ctx context.Context, in
 
 	var r0 *v1.DeleteUserRes
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.DeleteUserReq, []grpc.CallOption) (*v1.DeleteUserRes, error)); ok {
-		return returnFunc(ctx, in, opts)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.DeleteUserReq, ...grpc.CallOption) (*v1.DeleteUserRes, error)); ok {
+		return returnFunc(ctx, in, opts...)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.DeleteUserReq, ...grpc.CallOption) *v1.DeleteUserRes); ok {
 		r0 = returnFunc(ctx, in, opts...)
@@ -83,9 +83,9 @@ type DomainsServiceClient_DeleteUserFromDomains_Call struct {
 }
 
 // DeleteUserFromDomains is a helper method to define mock.On call
-//   - ctx
-//   - in
-//   - opts
+//   - ctx context.Context
+//   - in *v1.DeleteUserReq
+//   - opts ...grpc.CallOption
 func (_e *DomainsServiceClient_Expecter) DeleteUserFromDomains(ctx interface{}, in interface{}, opts ...interface{}) *DomainsServiceClient_DeleteUserFromDomains_Call {
 	return &DomainsServiceClient_DeleteUserFromDomains_Call{Call: _e.mock.On("DeleteUserFromDomains",
 		append([]interface{}{ctx, in}, opts...)...)}
@@ -93,13 +93,25 @@ func (_e *DomainsServiceClient_Expecter) DeleteUserFromDomains(ctx interface{}, 
 
 func (_c *DomainsServiceClient_DeleteUserFromDomains_Call) Run(run func(ctx context.Context, in *v1.DeleteUserReq, opts ...grpc.CallOption)) *DomainsServiceClient_DeleteUserFromDomains_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]grpc.CallOption, len(args)-2)
-		for i, a := range args[2:] {
-			if a != nil {
-				variadicArgs[i] = a.(grpc.CallOption)
-			}
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
 		}
-		run(args[0].(context.Context), args[1].(*v1.DeleteUserReq), variadicArgs...)
+		var arg1 *v1.DeleteUserReq
+		if args[1] != nil {
+			arg1 = args[1].(*v1.DeleteUserReq)
+		}
+		var arg2 []grpc.CallOption
+		var variadicArgs []grpc.CallOption
+		if len(args) > 2 {
+			variadicArgs = args[2].([]grpc.CallOption)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
 	})
 	return _c
 }
@@ -130,8 +142,8 @@ func (_mock *DomainsServiceClient) RetrieveByRoute(ctx context.Context, in *v10.
 
 	var r0 *v10.RetrieveEntityRes
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *v10.RetrieveByRouteReq, []grpc.CallOption) (*v10.RetrieveEntityRes, error)); ok {
-		return returnFunc(ctx, in, opts)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *v10.RetrieveByRouteReq, ...grpc.CallOption) (*v10.RetrieveEntityRes, error)); ok {
+		return returnFunc(ctx, in, opts...)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, *v10.RetrieveByRouteReq, ...grpc.CallOption) *v10.RetrieveEntityRes); ok {
 		r0 = returnFunc(ctx, in, opts...)
@@ -154,9 +166,9 @@ type DomainsServiceClient_RetrieveByRoute_Call struct {
 }
 
 // RetrieveByRoute is a helper method to define mock.On call
-//   - ctx
-//   - in
-//   - opts
+//   - ctx context.Context
+//   - in *v10.RetrieveByRouteReq
+//   - opts ...grpc.CallOption
 func (_e *DomainsServiceClient_Expecter) RetrieveByRoute(ctx interface{}, in interface{}, opts ...interface{}) *DomainsServiceClient_RetrieveByRoute_Call {
 	return &DomainsServiceClient_RetrieveByRoute_Call{Call: _e.mock.On("RetrieveByRoute",
 		append([]interface{}{ctx, in}, opts...)...)}
@@ -164,13 +176,25 @@ func (_e *DomainsServiceClient_Expecter) RetrieveByRoute(ctx interface{}, in int
 
 func (_c *DomainsServiceClient_RetrieveByRoute_Call) Run(run func(ctx context.Context, in *v10.RetrieveByRouteReq, opts ...grpc.CallOption)) *DomainsServiceClient_RetrieveByRoute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]grpc.CallOption, len(args)-2)
-		for i, a := range args[2:] {
-			if a != nil {
-				variadicArgs[i] = a.(grpc.CallOption)
-			}
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
 		}
-		run(args[0].(context.Context), args[1].(*v10.RetrieveByRouteReq), variadicArgs...)
+		var arg1 *v10.RetrieveByRouteReq
+		if args[1] != nil {
+			arg1 = args[1].(*v10.RetrieveByRouteReq)
+		}
+		var arg2 []grpc.CallOption
+		var variadicArgs []grpc.CallOption
+		if len(args) > 2 {
+			variadicArgs = args[2].([]grpc.CallOption)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
 	})
 	return _c
 }
@@ -201,8 +225,8 @@ func (_mock *DomainsServiceClient) RetrieveEntity(ctx context.Context, in *v10.R
 
 	var r0 *v10.RetrieveEntityRes
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *v10.RetrieveEntityReq, []grpc.CallOption) (*v10.RetrieveEntityRes, error)); ok {
-		return returnFunc(ctx, in, opts)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *v10.RetrieveEntityReq, ...grpc.CallOption) (*v10.RetrieveEntityRes, error)); ok {
+		return returnFunc(ctx, in, opts...)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, *v10.RetrieveEntityReq, ...grpc.CallOption) *v10.RetrieveEntityRes); ok {
 		r0 = returnFunc(ctx, in, opts...)
@@ -225,9 +249,9 @@ type DomainsServiceClient_RetrieveEntity_Call struct {
 }
 
 // RetrieveEntity is a helper method to define mock.On call
-//   - ctx
-//   - in
-//   - opts
+//   - ctx context.Context
+//   - in *v10.RetrieveEntityReq
+//   - opts ...grpc.CallOption
 func (_e *DomainsServiceClient_Expecter) RetrieveEntity(ctx interface{}, in interface{}, opts ...interface{}) *DomainsServiceClient_RetrieveEntity_Call {
 	return &DomainsServiceClient_RetrieveEntity_Call{Call: _e.mock.On("RetrieveEntity",
 		append([]interface{}{ctx, in}, opts...)...)}
@@ -235,13 +259,25 @@ func (_e *DomainsServiceClient_Expecter) RetrieveEntity(ctx interface{}, in inte
 
 func (_c *DomainsServiceClient_RetrieveEntity_Call) Run(run func(ctx context.Context, in *v10.RetrieveEntityReq, opts ...grpc.CallOption)) *DomainsServiceClient_RetrieveEntity_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]grpc.CallOption, len(args)-2)
-		for i, a := range args[2:] {
-			if a != nil {
-				variadicArgs[i] = a.(grpc.CallOption)
-			}
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
 		}
-		run(args[0].(context.Context), args[1].(*v10.RetrieveEntityReq), variadicArgs...)
+		var arg1 *v10.RetrieveEntityReq
+		if args[1] != nil {
+			arg1 = args[1].(*v10.RetrieveEntityReq)
+		}
+		var arg2 []grpc.CallOption
+		var variadicArgs []grpc.CallOption
+		if len(args) > 2 {
+			variadicArgs = args[2].([]grpc.CallOption)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
 	})
 	return _c
 }

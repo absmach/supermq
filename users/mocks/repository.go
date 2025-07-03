@@ -73,15 +73,26 @@ type Repository_ChangeStatus_Call struct {
 }
 
 // ChangeStatus is a helper method to define mock.On call
-//   - ctx
-//   - user
+//   - ctx context.Context
+//   - user users.User
 func (_e *Repository_Expecter) ChangeStatus(ctx interface{}, user interface{}) *Repository_ChangeStatus_Call {
 	return &Repository_ChangeStatus_Call{Call: _e.mock.On("ChangeStatus", ctx, user)}
 }
 
 func (_c *Repository_ChangeStatus_Call) Run(run func(ctx context.Context, user users.User)) *Repository_ChangeStatus_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(users.User))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 users.User
+		if args[1] != nil {
+			arg1 = args[1].(users.User)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -119,15 +130,26 @@ type Repository_CheckSuperAdmin_Call struct {
 }
 
 // CheckSuperAdmin is a helper method to define mock.On call
-//   - ctx
-//   - adminID
+//   - ctx context.Context
+//   - adminID string
 func (_e *Repository_Expecter) CheckSuperAdmin(ctx interface{}, adminID interface{}) *Repository_CheckSuperAdmin_Call {
 	return &Repository_CheckSuperAdmin_Call{Call: _e.mock.On("CheckSuperAdmin", ctx, adminID)}
 }
 
 func (_c *Repository_CheckSuperAdmin_Call) Run(run func(ctx context.Context, adminID string)) *Repository_CheckSuperAdmin_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -165,15 +187,26 @@ type Repository_Delete_Call struct {
 }
 
 // Delete is a helper method to define mock.On call
-//   - ctx
-//   - id
+//   - ctx context.Context
+//   - id string
 func (_e *Repository_Expecter) Delete(ctx interface{}, id interface{}) *Repository_Delete_Call {
 	return &Repository_Delete_Call{Call: _e.mock.On("Delete", ctx, id)}
 }
 
 func (_c *Repository_Delete_Call) Run(run func(ctx context.Context, id string)) *Repository_Delete_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -220,15 +253,26 @@ type Repository_RetrieveAll_Call struct {
 }
 
 // RetrieveAll is a helper method to define mock.On call
-//   - ctx
-//   - pm
+//   - ctx context.Context
+//   - pm users.Page
 func (_e *Repository_Expecter) RetrieveAll(ctx interface{}, pm interface{}) *Repository_RetrieveAll_Call {
 	return &Repository_RetrieveAll_Call{Call: _e.mock.On("RetrieveAll", ctx, pm)}
 }
 
 func (_c *Repository_RetrieveAll_Call) Run(run func(ctx context.Context, pm users.Page)) *Repository_RetrieveAll_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(users.Page))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 users.Page
+		if args[1] != nil {
+			arg1 = args[1].(users.Page)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -275,15 +319,26 @@ type Repository_RetrieveAllByIDs_Call struct {
 }
 
 // RetrieveAllByIDs is a helper method to define mock.On call
-//   - ctx
-//   - pm
+//   - ctx context.Context
+//   - pm users.Page
 func (_e *Repository_Expecter) RetrieveAllByIDs(ctx interface{}, pm interface{}) *Repository_RetrieveAllByIDs_Call {
 	return &Repository_RetrieveAllByIDs_Call{Call: _e.mock.On("RetrieveAllByIDs", ctx, pm)}
 }
 
 func (_c *Repository_RetrieveAllByIDs_Call) Run(run func(ctx context.Context, pm users.Page)) *Repository_RetrieveAllByIDs_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(users.Page))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 users.Page
+		if args[1] != nil {
+			arg1 = args[1].(users.Page)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -330,15 +385,26 @@ type Repository_RetrieveByEmail_Call struct {
 }
 
 // RetrieveByEmail is a helper method to define mock.On call
-//   - ctx
-//   - email
+//   - ctx context.Context
+//   - email string
 func (_e *Repository_Expecter) RetrieveByEmail(ctx interface{}, email interface{}) *Repository_RetrieveByEmail_Call {
 	return &Repository_RetrieveByEmail_Call{Call: _e.mock.On("RetrieveByEmail", ctx, email)}
 }
 
 func (_c *Repository_RetrieveByEmail_Call) Run(run func(ctx context.Context, email string)) *Repository_RetrieveByEmail_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -385,15 +451,26 @@ type Repository_RetrieveByID_Call struct {
 }
 
 // RetrieveByID is a helper method to define mock.On call
-//   - ctx
-//   - id
+//   - ctx context.Context
+//   - id string
 func (_e *Repository_Expecter) RetrieveByID(ctx interface{}, id interface{}) *Repository_RetrieveByID_Call {
 	return &Repository_RetrieveByID_Call{Call: _e.mock.On("RetrieveByID", ctx, id)}
 }
 
 func (_c *Repository_RetrieveByID_Call) Run(run func(ctx context.Context, id string)) *Repository_RetrieveByID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -440,15 +517,26 @@ type Repository_RetrieveByUsername_Call struct {
 }
 
 // RetrieveByUsername is a helper method to define mock.On call
-//   - ctx
-//   - username
+//   - ctx context.Context
+//   - username string
 func (_e *Repository_Expecter) RetrieveByUsername(ctx interface{}, username interface{}) *Repository_RetrieveByUsername_Call {
 	return &Repository_RetrieveByUsername_Call{Call: _e.mock.On("RetrieveByUsername", ctx, username)}
 }
 
 func (_c *Repository_RetrieveByUsername_Call) Run(run func(ctx context.Context, username string)) *Repository_RetrieveByUsername_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -495,15 +583,26 @@ type Repository_Save_Call struct {
 }
 
 // Save is a helper method to define mock.On call
-//   - ctx
-//   - user
+//   - ctx context.Context
+//   - user users.User
 func (_e *Repository_Expecter) Save(ctx interface{}, user interface{}) *Repository_Save_Call {
 	return &Repository_Save_Call{Call: _e.mock.On("Save", ctx, user)}
 }
 
 func (_c *Repository_Save_Call) Run(run func(ctx context.Context, user users.User)) *Repository_Save_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(users.User))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 users.User
+		if args[1] != nil {
+			arg1 = args[1].(users.User)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -550,15 +649,26 @@ type Repository_SearchUsers_Call struct {
 }
 
 // SearchUsers is a helper method to define mock.On call
-//   - ctx
-//   - pm
+//   - ctx context.Context
+//   - pm users.Page
 func (_e *Repository_Expecter) SearchUsers(ctx interface{}, pm interface{}) *Repository_SearchUsers_Call {
 	return &Repository_SearchUsers_Call{Call: _e.mock.On("SearchUsers", ctx, pm)}
 }
 
 func (_c *Repository_SearchUsers_Call) Run(run func(ctx context.Context, pm users.Page)) *Repository_SearchUsers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(users.Page))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 users.Page
+		if args[1] != nil {
+			arg1 = args[1].(users.Page)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -605,16 +715,32 @@ type Repository_Update_Call struct {
 }
 
 // Update is a helper method to define mock.On call
-//   - ctx
-//   - id
-//   - user
+//   - ctx context.Context
+//   - id string
+//   - user users.UserReq
 func (_e *Repository_Expecter) Update(ctx interface{}, id interface{}, user interface{}) *Repository_Update_Call {
 	return &Repository_Update_Call{Call: _e.mock.On("Update", ctx, id, user)}
 }
 
 func (_c *Repository_Update_Call) Run(run func(ctx context.Context, id string, user users.UserReq)) *Repository_Update_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(users.UserReq))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 users.UserReq
+		if args[2] != nil {
+			arg2 = args[2].(users.UserReq)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -661,15 +787,26 @@ type Repository_UpdateSecret_Call struct {
 }
 
 // UpdateSecret is a helper method to define mock.On call
-//   - ctx
-//   - user
+//   - ctx context.Context
+//   - user users.User
 func (_e *Repository_Expecter) UpdateSecret(ctx interface{}, user interface{}) *Repository_UpdateSecret_Call {
 	return &Repository_UpdateSecret_Call{Call: _e.mock.On("UpdateSecret", ctx, user)}
 }
 
 func (_c *Repository_UpdateSecret_Call) Run(run func(ctx context.Context, user users.User)) *Repository_UpdateSecret_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(users.User))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 users.User
+		if args[1] != nil {
+			arg1 = args[1].(users.User)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -716,15 +853,26 @@ type Repository_UpdateUsername_Call struct {
 }
 
 // UpdateUsername is a helper method to define mock.On call
-//   - ctx
-//   - user
+//   - ctx context.Context
+//   - user users.User
 func (_e *Repository_Expecter) UpdateUsername(ctx interface{}, user interface{}) *Repository_UpdateUsername_Call {
 	return &Repository_UpdateUsername_Call{Call: _e.mock.On("UpdateUsername", ctx, user)}
 }
 
 func (_c *Repository_UpdateUsername_Call) Run(run func(ctx context.Context, user users.User)) *Repository_UpdateUsername_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(users.User))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 users.User
+		if args[1] != nil {
+			arg1 = args[1].(users.User)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

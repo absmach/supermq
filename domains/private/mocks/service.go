@@ -64,15 +64,26 @@ type Service_DeleteUserFromDomains_Call struct {
 }
 
 // DeleteUserFromDomains is a helper method to define mock.On call
-//   - ctx
-//   - id
+//   - ctx context.Context
+//   - id string
 func (_e *Service_Expecter) DeleteUserFromDomains(ctx interface{}, id interface{}) *Service_DeleteUserFromDomains_Call {
 	return &Service_DeleteUserFromDomains_Call{Call: _e.mock.On("DeleteUserFromDomains", ctx, id)}
 }
 
 func (_c *Service_DeleteUserFromDomains_Call) Run(run func(ctx context.Context, id string)) *Service_DeleteUserFromDomains_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -119,15 +130,26 @@ type Service_RetrieveByRoute_Call struct {
 }
 
 // RetrieveByRoute is a helper method to define mock.On call
-//   - ctx
-//   - route
+//   - ctx context.Context
+//   - route string
 func (_e *Service_Expecter) RetrieveByRoute(ctx interface{}, route interface{}) *Service_RetrieveByRoute_Call {
 	return &Service_RetrieveByRoute_Call{Call: _e.mock.On("RetrieveByRoute", ctx, route)}
 }
 
 func (_c *Service_RetrieveByRoute_Call) Run(run func(ctx context.Context, route string)) *Service_RetrieveByRoute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -174,15 +196,26 @@ type Service_RetrieveEntity_Call struct {
 }
 
 // RetrieveEntity is a helper method to define mock.On call
-//   - ctx
-//   - id
+//   - ctx context.Context
+//   - id string
 func (_e *Service_Expecter) RetrieveEntity(ctx interface{}, id interface{}) *Service_RetrieveEntity_Call {
 	return &Service_RetrieveEntity_Call{Call: _e.mock.On("RetrieveEntity", ctx, id)}
 }
 
 func (_c *Service_RetrieveEntity_Call) Run(run func(ctx context.Context, id string)) *Service_RetrieveEntity_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

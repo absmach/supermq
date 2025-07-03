@@ -10,7 +10,7 @@ package mocks
 import (
 	"context"
 
-	v1 "github.com/absmach/supermq/api/grpc/channels/v1"
+	"github.com/absmach/supermq/api/grpc/channels/v1"
 	v10 "github.com/absmach/supermq/api/grpc/common/v1"
 	mock "github.com/stretchr/testify/mock"
 	"google.golang.org/grpc"
@@ -59,8 +59,8 @@ func (_mock *ChannelsServiceClient) Authorize(ctx context.Context, in *v1.AuthzR
 
 	var r0 *v1.AuthzRes
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.AuthzReq, []grpc.CallOption) (*v1.AuthzRes, error)); ok {
-		return returnFunc(ctx, in, opts)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.AuthzReq, ...grpc.CallOption) (*v1.AuthzRes, error)); ok {
+		return returnFunc(ctx, in, opts...)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.AuthzReq, ...grpc.CallOption) *v1.AuthzRes); ok {
 		r0 = returnFunc(ctx, in, opts...)
@@ -83,9 +83,9 @@ type ChannelsServiceClient_Authorize_Call struct {
 }
 
 // Authorize is a helper method to define mock.On call
-//   - ctx
-//   - in
-//   - opts
+//   - ctx context.Context
+//   - in *v1.AuthzReq
+//   - opts ...grpc.CallOption
 func (_e *ChannelsServiceClient_Expecter) Authorize(ctx interface{}, in interface{}, opts ...interface{}) *ChannelsServiceClient_Authorize_Call {
 	return &ChannelsServiceClient_Authorize_Call{Call: _e.mock.On("Authorize",
 		append([]interface{}{ctx, in}, opts...)...)}
@@ -93,13 +93,25 @@ func (_e *ChannelsServiceClient_Expecter) Authorize(ctx interface{}, in interfac
 
 func (_c *ChannelsServiceClient_Authorize_Call) Run(run func(ctx context.Context, in *v1.AuthzReq, opts ...grpc.CallOption)) *ChannelsServiceClient_Authorize_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]grpc.CallOption, len(args)-2)
-		for i, a := range args[2:] {
-			if a != nil {
-				variadicArgs[i] = a.(grpc.CallOption)
-			}
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
 		}
-		run(args[0].(context.Context), args[1].(*v1.AuthzReq), variadicArgs...)
+		var arg1 *v1.AuthzReq
+		if args[1] != nil {
+			arg1 = args[1].(*v1.AuthzReq)
+		}
+		var arg2 []grpc.CallOption
+		var variadicArgs []grpc.CallOption
+		if len(args) > 2 {
+			variadicArgs = args[2].([]grpc.CallOption)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
 	})
 	return _c
 }
@@ -130,8 +142,8 @@ func (_mock *ChannelsServiceClient) RemoveClientConnections(ctx context.Context,
 
 	var r0 *v1.RemoveClientConnectionsRes
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.RemoveClientConnectionsReq, []grpc.CallOption) (*v1.RemoveClientConnectionsRes, error)); ok {
-		return returnFunc(ctx, in, opts)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.RemoveClientConnectionsReq, ...grpc.CallOption) (*v1.RemoveClientConnectionsRes, error)); ok {
+		return returnFunc(ctx, in, opts...)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.RemoveClientConnectionsReq, ...grpc.CallOption) *v1.RemoveClientConnectionsRes); ok {
 		r0 = returnFunc(ctx, in, opts...)
@@ -154,9 +166,9 @@ type ChannelsServiceClient_RemoveClientConnections_Call struct {
 }
 
 // RemoveClientConnections is a helper method to define mock.On call
-//   - ctx
-//   - in
-//   - opts
+//   - ctx context.Context
+//   - in *v1.RemoveClientConnectionsReq
+//   - opts ...grpc.CallOption
 func (_e *ChannelsServiceClient_Expecter) RemoveClientConnections(ctx interface{}, in interface{}, opts ...interface{}) *ChannelsServiceClient_RemoveClientConnections_Call {
 	return &ChannelsServiceClient_RemoveClientConnections_Call{Call: _e.mock.On("RemoveClientConnections",
 		append([]interface{}{ctx, in}, opts...)...)}
@@ -164,13 +176,25 @@ func (_e *ChannelsServiceClient_Expecter) RemoveClientConnections(ctx interface{
 
 func (_c *ChannelsServiceClient_RemoveClientConnections_Call) Run(run func(ctx context.Context, in *v1.RemoveClientConnectionsReq, opts ...grpc.CallOption)) *ChannelsServiceClient_RemoveClientConnections_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]grpc.CallOption, len(args)-2)
-		for i, a := range args[2:] {
-			if a != nil {
-				variadicArgs[i] = a.(grpc.CallOption)
-			}
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
 		}
-		run(args[0].(context.Context), args[1].(*v1.RemoveClientConnectionsReq), variadicArgs...)
+		var arg1 *v1.RemoveClientConnectionsReq
+		if args[1] != nil {
+			arg1 = args[1].(*v1.RemoveClientConnectionsReq)
+		}
+		var arg2 []grpc.CallOption
+		var variadicArgs []grpc.CallOption
+		if len(args) > 2 {
+			variadicArgs = args[2].([]grpc.CallOption)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
 	})
 	return _c
 }
@@ -201,8 +225,8 @@ func (_mock *ChannelsServiceClient) RetrieveByRoute(ctx context.Context, in *v10
 
 	var r0 *v10.RetrieveEntityRes
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *v10.RetrieveByRouteReq, []grpc.CallOption) (*v10.RetrieveEntityRes, error)); ok {
-		return returnFunc(ctx, in, opts)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *v10.RetrieveByRouteReq, ...grpc.CallOption) (*v10.RetrieveEntityRes, error)); ok {
+		return returnFunc(ctx, in, opts...)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, *v10.RetrieveByRouteReq, ...grpc.CallOption) *v10.RetrieveEntityRes); ok {
 		r0 = returnFunc(ctx, in, opts...)
@@ -225,9 +249,9 @@ type ChannelsServiceClient_RetrieveByRoute_Call struct {
 }
 
 // RetrieveByRoute is a helper method to define mock.On call
-//   - ctx
-//   - in
-//   - opts
+//   - ctx context.Context
+//   - in *v10.RetrieveByRouteReq
+//   - opts ...grpc.CallOption
 func (_e *ChannelsServiceClient_Expecter) RetrieveByRoute(ctx interface{}, in interface{}, opts ...interface{}) *ChannelsServiceClient_RetrieveByRoute_Call {
 	return &ChannelsServiceClient_RetrieveByRoute_Call{Call: _e.mock.On("RetrieveByRoute",
 		append([]interface{}{ctx, in}, opts...)...)}
@@ -235,13 +259,25 @@ func (_e *ChannelsServiceClient_Expecter) RetrieveByRoute(ctx interface{}, in in
 
 func (_c *ChannelsServiceClient_RetrieveByRoute_Call) Run(run func(ctx context.Context, in *v10.RetrieveByRouteReq, opts ...grpc.CallOption)) *ChannelsServiceClient_RetrieveByRoute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]grpc.CallOption, len(args)-2)
-		for i, a := range args[2:] {
-			if a != nil {
-				variadicArgs[i] = a.(grpc.CallOption)
-			}
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
 		}
-		run(args[0].(context.Context), args[1].(*v10.RetrieveByRouteReq), variadicArgs...)
+		var arg1 *v10.RetrieveByRouteReq
+		if args[1] != nil {
+			arg1 = args[1].(*v10.RetrieveByRouteReq)
+		}
+		var arg2 []grpc.CallOption
+		var variadicArgs []grpc.CallOption
+		if len(args) > 2 {
+			variadicArgs = args[2].([]grpc.CallOption)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
 	})
 	return _c
 }
@@ -272,8 +308,8 @@ func (_mock *ChannelsServiceClient) RetrieveEntity(ctx context.Context, in *v10.
 
 	var r0 *v10.RetrieveEntityRes
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *v10.RetrieveEntityReq, []grpc.CallOption) (*v10.RetrieveEntityRes, error)); ok {
-		return returnFunc(ctx, in, opts)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *v10.RetrieveEntityReq, ...grpc.CallOption) (*v10.RetrieveEntityRes, error)); ok {
+		return returnFunc(ctx, in, opts...)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, *v10.RetrieveEntityReq, ...grpc.CallOption) *v10.RetrieveEntityRes); ok {
 		r0 = returnFunc(ctx, in, opts...)
@@ -296,9 +332,9 @@ type ChannelsServiceClient_RetrieveEntity_Call struct {
 }
 
 // RetrieveEntity is a helper method to define mock.On call
-//   - ctx
-//   - in
-//   - opts
+//   - ctx context.Context
+//   - in *v10.RetrieveEntityReq
+//   - opts ...grpc.CallOption
 func (_e *ChannelsServiceClient_Expecter) RetrieveEntity(ctx interface{}, in interface{}, opts ...interface{}) *ChannelsServiceClient_RetrieveEntity_Call {
 	return &ChannelsServiceClient_RetrieveEntity_Call{Call: _e.mock.On("RetrieveEntity",
 		append([]interface{}{ctx, in}, opts...)...)}
@@ -306,13 +342,25 @@ func (_e *ChannelsServiceClient_Expecter) RetrieveEntity(ctx interface{}, in int
 
 func (_c *ChannelsServiceClient_RetrieveEntity_Call) Run(run func(ctx context.Context, in *v10.RetrieveEntityReq, opts ...grpc.CallOption)) *ChannelsServiceClient_RetrieveEntity_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]grpc.CallOption, len(args)-2)
-		for i, a := range args[2:] {
-			if a != nil {
-				variadicArgs[i] = a.(grpc.CallOption)
-			}
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
 		}
-		run(args[0].(context.Context), args[1].(*v10.RetrieveEntityReq), variadicArgs...)
+		var arg1 *v10.RetrieveEntityReq
+		if args[1] != nil {
+			arg1 = args[1].(*v10.RetrieveEntityReq)
+		}
+		var arg2 []grpc.CallOption
+		var variadicArgs []grpc.CallOption
+		if len(args) > 2 {
+			variadicArgs = args[2].([]grpc.CallOption)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
 	})
 	return _c
 }
@@ -343,8 +391,8 @@ func (_mock *ChannelsServiceClient) UnsetParentGroupFromChannels(ctx context.Con
 
 	var r0 *v1.UnsetParentGroupFromChannelsRes
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.UnsetParentGroupFromChannelsReq, []grpc.CallOption) (*v1.UnsetParentGroupFromChannelsRes, error)); ok {
-		return returnFunc(ctx, in, opts)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.UnsetParentGroupFromChannelsReq, ...grpc.CallOption) (*v1.UnsetParentGroupFromChannelsRes, error)); ok {
+		return returnFunc(ctx, in, opts...)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.UnsetParentGroupFromChannelsReq, ...grpc.CallOption) *v1.UnsetParentGroupFromChannelsRes); ok {
 		r0 = returnFunc(ctx, in, opts...)
@@ -367,9 +415,9 @@ type ChannelsServiceClient_UnsetParentGroupFromChannels_Call struct {
 }
 
 // UnsetParentGroupFromChannels is a helper method to define mock.On call
-//   - ctx
-//   - in
-//   - opts
+//   - ctx context.Context
+//   - in *v1.UnsetParentGroupFromChannelsReq
+//   - opts ...grpc.CallOption
 func (_e *ChannelsServiceClient_Expecter) UnsetParentGroupFromChannels(ctx interface{}, in interface{}, opts ...interface{}) *ChannelsServiceClient_UnsetParentGroupFromChannels_Call {
 	return &ChannelsServiceClient_UnsetParentGroupFromChannels_Call{Call: _e.mock.On("UnsetParentGroupFromChannels",
 		append([]interface{}{ctx, in}, opts...)...)}
@@ -377,13 +425,25 @@ func (_e *ChannelsServiceClient_Expecter) UnsetParentGroupFromChannels(ctx inter
 
 func (_c *ChannelsServiceClient_UnsetParentGroupFromChannels_Call) Run(run func(ctx context.Context, in *v1.UnsetParentGroupFromChannelsReq, opts ...grpc.CallOption)) *ChannelsServiceClient_UnsetParentGroupFromChannels_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]grpc.CallOption, len(args)-2)
-		for i, a := range args[2:] {
-			if a != nil {
-				variadicArgs[i] = a.(grpc.CallOption)
-			}
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
 		}
-		run(args[0].(context.Context), args[1].(*v1.UnsetParentGroupFromChannelsReq), variadicArgs...)
+		var arg1 *v1.UnsetParentGroupFromChannelsReq
+		if args[1] != nil {
+			arg1 = args[1].(*v1.UnsetParentGroupFromChannelsReq)
+		}
+		var arg2 []grpc.CallOption
+		var variadicArgs []grpc.CallOption
+		if len(args) > 2 {
+			variadicArgs = args[2].([]grpc.CallOption)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
 	})
 	return _c
 }

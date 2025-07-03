@@ -2,12 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 pkgname: mocks
-mockname: "{{.InterfaceName}}"
+structname: "{{.InterfaceName}}"
 filename: "{{snakecase .InterfaceName}}.go"
 dir: "{{.InterfaceDirRelative}}/mocks"
 template-data:
   boilerplate-file: ./tools/config/boilerplate.txt
-  with-expecter: true
 force-file-write: true
 
 packages:
@@ -16,42 +15,42 @@ packages:
       ClientsServiceClient:
         config:
           dir: "./clients/mocks"
-          mockname: "ClientsServiceClient"
+          structname: "ClientsServiceClient"
           filename: "clients_client.go"
   github.com/absmach/supermq/api/grpc/domains/v1:
     interfaces:
       DomainsServiceClient:
         config:
           dir: "./domains/mocks"
-          mockname: "DomainsServiceClient"
+          structname: "DomainsServiceClient"
           filename: "domains_client.go"
   github.com/absmach/supermq/api/grpc/token/v1:
     interfaces:
       TokenServiceClient:
         config:
           dir: "./auth/mocks"
-          mockname: "TokenServiceClient"
+          structname: "TokenServiceClient"
           filename: "token_client.go"
   github.com/absmach/supermq/api/grpc/channels/v1:
     interfaces:
       ChannelsServiceClient:
         config:
           dir: "./channels/mocks"
-          mockname: "ChannelsServiceClient"
+          structname: "ChannelsServiceClient"
           filename: "channels_client.go"
   github.com/absmach/supermq/api/grpc/groups/v1:
     interfaces:
       GroupsServiceClient:
         config:
           dir: "./groups/mocks"
-          mockname: "GroupsServiceClient"
+          structname: "GroupsServiceClient"
           filename: "groups_client.go"
   github.com/absmach/supermq/pkg/sdk:
     interfaces:
       SDK:
         config:
           dir: "./pkg/sdk/mocks"
-          mockname: "SDK"
+          structname: "SDK"
           filename: "sdk.go"
 
   github.com/absmach/supermq/certs/pki/amcerts:
@@ -59,7 +58,7 @@ packages:
       Agent:
         config:
           dir: "./certs/mocks"
-          mockname: "Agent"
+          structname: "Agent"
           filename: "pki.go"
   github.com/absmach/supermq/auth:
     interfaces:

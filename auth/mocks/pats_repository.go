@@ -65,16 +65,32 @@ type PATSRepository_AddScope_Call struct {
 }
 
 // AddScope is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - scopes
+//   - ctx context.Context
+//   - userID string
+//   - scopes []auth.Scope
 func (_e *PATSRepository_Expecter) AddScope(ctx interface{}, userID interface{}, scopes interface{}) *PATSRepository_AddScope_Call {
 	return &PATSRepository_AddScope_Call{Call: _e.mock.On("AddScope", ctx, userID, scopes)}
 }
 
 func (_c *PATSRepository_AddScope_Call) Run(run func(ctx context.Context, userID string, scopes []auth.Scope)) *PATSRepository_AddScope_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].([]auth.Scope))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 []auth.Scope
+		if args[2] != nil {
+			arg2 = args[2].([]auth.Scope)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -112,20 +128,56 @@ type PATSRepository_CheckScope_Call struct {
 }
 
 // CheckScope is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - patID
-//   - entityType
-//   - optionalDomainID
-//   - operation
-//   - entityID
+//   - ctx context.Context
+//   - userID string
+//   - patID string
+//   - entityType auth.EntityType
+//   - optionalDomainID string
+//   - operation auth.Operation
+//   - entityID string
 func (_e *PATSRepository_Expecter) CheckScope(ctx interface{}, userID interface{}, patID interface{}, entityType interface{}, optionalDomainID interface{}, operation interface{}, entityID interface{}) *PATSRepository_CheckScope_Call {
 	return &PATSRepository_CheckScope_Call{Call: _e.mock.On("CheckScope", ctx, userID, patID, entityType, optionalDomainID, operation, entityID)}
 }
 
 func (_c *PATSRepository_CheckScope_Call) Run(run func(ctx context.Context, userID string, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityID string)) *PATSRepository_CheckScope_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(auth.EntityType), args[4].(string), args[5].(auth.Operation), args[6].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 auth.EntityType
+		if args[3] != nil {
+			arg3 = args[3].(auth.EntityType)
+		}
+		var arg4 string
+		if args[4] != nil {
+			arg4 = args[4].(string)
+		}
+		var arg5 auth.Operation
+		if args[5] != nil {
+			arg5 = args[5].(auth.Operation)
+		}
+		var arg6 string
+		if args[6] != nil {
+			arg6 = args[6].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+			arg5,
+			arg6,
+		)
 	})
 	return _c
 }
@@ -163,16 +215,32 @@ type PATSRepository_Reactivate_Call struct {
 }
 
 // Reactivate is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - patID
+//   - ctx context.Context
+//   - userID string
+//   - patID string
 func (_e *PATSRepository_Expecter) Reactivate(ctx interface{}, userID interface{}, patID interface{}) *PATSRepository_Reactivate_Call {
 	return &PATSRepository_Reactivate_Call{Call: _e.mock.On("Reactivate", ctx, userID, patID)}
 }
 
 func (_c *PATSRepository_Reactivate_Call) Run(run func(ctx context.Context, userID string, patID string)) *PATSRepository_Reactivate_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -210,16 +278,32 @@ type PATSRepository_Remove_Call struct {
 }
 
 // Remove is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - patID
+//   - ctx context.Context
+//   - userID string
+//   - patID string
 func (_e *PATSRepository_Expecter) Remove(ctx interface{}, userID interface{}, patID interface{}) *PATSRepository_Remove_Call {
 	return &PATSRepository_Remove_Call{Call: _e.mock.On("Remove", ctx, userID, patID)}
 }
 
 func (_c *PATSRepository_Remove_Call) Run(run func(ctx context.Context, userID string, patID string)) *PATSRepository_Remove_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -257,15 +341,26 @@ type PATSRepository_RemoveAllPAT_Call struct {
 }
 
 // RemoveAllPAT is a helper method to define mock.On call
-//   - ctx
-//   - userID
+//   - ctx context.Context
+//   - userID string
 func (_e *PATSRepository_Expecter) RemoveAllPAT(ctx interface{}, userID interface{}) *PATSRepository_RemoveAllPAT_Call {
 	return &PATSRepository_RemoveAllPAT_Call{Call: _e.mock.On("RemoveAllPAT", ctx, userID)}
 }
 
 func (_c *PATSRepository_RemoveAllPAT_Call) Run(run func(ctx context.Context, userID string)) *PATSRepository_RemoveAllPAT_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -303,15 +398,26 @@ type PATSRepository_RemoveAllScope_Call struct {
 }
 
 // RemoveAllScope is a helper method to define mock.On call
-//   - ctx
-//   - patID
+//   - ctx context.Context
+//   - patID string
 func (_e *PATSRepository_Expecter) RemoveAllScope(ctx interface{}, patID interface{}) *PATSRepository_RemoveAllScope_Call {
 	return &PATSRepository_RemoveAllScope_Call{Call: _e.mock.On("RemoveAllScope", ctx, patID)}
 }
 
 func (_c *PATSRepository_RemoveAllScope_Call) Run(run func(ctx context.Context, patID string)) *PATSRepository_RemoveAllScope_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -355,9 +461,9 @@ type PATSRepository_RemoveScope_Call struct {
 }
 
 // RemoveScope is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - scopesIDs
+//   - ctx context.Context
+//   - userID string
+//   - scopesIDs ...string
 func (_e *PATSRepository_Expecter) RemoveScope(ctx interface{}, userID interface{}, scopesIDs ...interface{}) *PATSRepository_RemoveScope_Call {
 	return &PATSRepository_RemoveScope_Call{Call: _e.mock.On("RemoveScope",
 		append([]interface{}{ctx, userID}, scopesIDs...)...)}
@@ -365,13 +471,25 @@ func (_e *PATSRepository_Expecter) RemoveScope(ctx interface{}, userID interface
 
 func (_c *PATSRepository_RemoveScope_Call) Run(run func(ctx context.Context, userID string, scopesIDs ...string)) *PATSRepository_RemoveScope_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]string, len(args)-2)
-		for i, a := range args[2:] {
-			if a != nil {
-				variadicArgs[i] = a.(string)
-			}
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
 		}
-		run(args[0].(context.Context), args[1].(string), variadicArgs...)
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 []string
+		var variadicArgs []string
+		if len(args) > 2 {
+			variadicArgs = args[2].([]string)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
 	})
 	return _c
 }
@@ -418,16 +536,32 @@ type PATSRepository_Retrieve_Call struct {
 }
 
 // Retrieve is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - patID
+//   - ctx context.Context
+//   - userID string
+//   - patID string
 func (_e *PATSRepository_Expecter) Retrieve(ctx interface{}, userID interface{}, patID interface{}) *PATSRepository_Retrieve_Call {
 	return &PATSRepository_Retrieve_Call{Call: _e.mock.On("Retrieve", ctx, userID, patID)}
 }
 
 func (_c *PATSRepository_Retrieve_Call) Run(run func(ctx context.Context, userID string, patID string)) *PATSRepository_Retrieve_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -474,16 +608,32 @@ type PATSRepository_RetrieveAll_Call struct {
 }
 
 // RetrieveAll is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - pm
+//   - ctx context.Context
+//   - userID string
+//   - pm auth.PATSPageMeta
 func (_e *PATSRepository_Expecter) RetrieveAll(ctx interface{}, userID interface{}, pm interface{}) *PATSRepository_RetrieveAll_Call {
 	return &PATSRepository_RetrieveAll_Call{Call: _e.mock.On("RetrieveAll", ctx, userID, pm)}
 }
 
 func (_c *PATSRepository_RetrieveAll_Call) Run(run func(ctx context.Context, userID string, pm auth.PATSPageMeta)) *PATSRepository_RetrieveAll_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(auth.PATSPageMeta))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 auth.PATSPageMeta
+		if args[2] != nil {
+			arg2 = args[2].(auth.PATSPageMeta)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -530,15 +680,26 @@ type PATSRepository_RetrieveScope_Call struct {
 }
 
 // RetrieveScope is a helper method to define mock.On call
-//   - ctx
-//   - pm
+//   - ctx context.Context
+//   - pm auth.ScopesPageMeta
 func (_e *PATSRepository_Expecter) RetrieveScope(ctx interface{}, pm interface{}) *PATSRepository_RetrieveScope_Call {
 	return &PATSRepository_RetrieveScope_Call{Call: _e.mock.On("RetrieveScope", ctx, pm)}
 }
 
 func (_c *PATSRepository_RetrieveScope_Call) Run(run func(ctx context.Context, pm auth.ScopesPageMeta)) *PATSRepository_RetrieveScope_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(auth.ScopesPageMeta))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 auth.ScopesPageMeta
+		if args[1] != nil {
+			arg1 = args[1].(auth.ScopesPageMeta)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -597,16 +758,32 @@ type PATSRepository_RetrieveSecretAndRevokeStatus_Call struct {
 }
 
 // RetrieveSecretAndRevokeStatus is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - patID
+//   - ctx context.Context
+//   - userID string
+//   - patID string
 func (_e *PATSRepository_Expecter) RetrieveSecretAndRevokeStatus(ctx interface{}, userID interface{}, patID interface{}) *PATSRepository_RetrieveSecretAndRevokeStatus_Call {
 	return &PATSRepository_RetrieveSecretAndRevokeStatus_Call{Call: _e.mock.On("RetrieveSecretAndRevokeStatus", ctx, userID, patID)}
 }
 
 func (_c *PATSRepository_RetrieveSecretAndRevokeStatus_Call) Run(run func(ctx context.Context, userID string, patID string)) *PATSRepository_RetrieveSecretAndRevokeStatus_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -644,16 +821,32 @@ type PATSRepository_Revoke_Call struct {
 }
 
 // Revoke is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - patID
+//   - ctx context.Context
+//   - userID string
+//   - patID string
 func (_e *PATSRepository_Expecter) Revoke(ctx interface{}, userID interface{}, patID interface{}) *PATSRepository_Revoke_Call {
 	return &PATSRepository_Revoke_Call{Call: _e.mock.On("Revoke", ctx, userID, patID)}
 }
 
 func (_c *PATSRepository_Revoke_Call) Run(run func(ctx context.Context, userID string, patID string)) *PATSRepository_Revoke_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -691,15 +884,26 @@ type PATSRepository_Save_Call struct {
 }
 
 // Save is a helper method to define mock.On call
-//   - ctx
-//   - pat
+//   - ctx context.Context
+//   - pat auth.PAT
 func (_e *PATSRepository_Expecter) Save(ctx interface{}, pat interface{}) *PATSRepository_Save_Call {
 	return &PATSRepository_Save_Call{Call: _e.mock.On("Save", ctx, pat)}
 }
 
 func (_c *PATSRepository_Save_Call) Run(run func(ctx context.Context, pat auth.PAT)) *PATSRepository_Save_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(auth.PAT))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 auth.PAT
+		if args[1] != nil {
+			arg1 = args[1].(auth.PAT)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -746,17 +950,38 @@ type PATSRepository_UpdateDescription_Call struct {
 }
 
 // UpdateDescription is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - patID
-//   - description
+//   - ctx context.Context
+//   - userID string
+//   - patID string
+//   - description string
 func (_e *PATSRepository_Expecter) UpdateDescription(ctx interface{}, userID interface{}, patID interface{}, description interface{}) *PATSRepository_UpdateDescription_Call {
 	return &PATSRepository_UpdateDescription_Call{Call: _e.mock.On("UpdateDescription", ctx, userID, patID, description)}
 }
 
 func (_c *PATSRepository_UpdateDescription_Call) Run(run func(ctx context.Context, userID string, patID string, description string)) *PATSRepository_UpdateDescription_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -803,17 +1028,38 @@ type PATSRepository_UpdateName_Call struct {
 }
 
 // UpdateName is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - patID
-//   - name
+//   - ctx context.Context
+//   - userID string
+//   - patID string
+//   - name string
 func (_e *PATSRepository_Expecter) UpdateName(ctx interface{}, userID interface{}, patID interface{}, name interface{}) *PATSRepository_UpdateName_Call {
 	return &PATSRepository_UpdateName_Call{Call: _e.mock.On("UpdateName", ctx, userID, patID, name)}
 }
 
 func (_c *PATSRepository_UpdateName_Call) Run(run func(ctx context.Context, userID string, patID string, name string)) *PATSRepository_UpdateName_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -860,18 +1106,44 @@ type PATSRepository_UpdateTokenHash_Call struct {
 }
 
 // UpdateTokenHash is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - patID
-//   - tokenHash
-//   - expiryAt
+//   - ctx context.Context
+//   - userID string
+//   - patID string
+//   - tokenHash string
+//   - expiryAt time.Time
 func (_e *PATSRepository_Expecter) UpdateTokenHash(ctx interface{}, userID interface{}, patID interface{}, tokenHash interface{}, expiryAt interface{}) *PATSRepository_UpdateTokenHash_Call {
 	return &PATSRepository_UpdateTokenHash_Call{Call: _e.mock.On("UpdateTokenHash", ctx, userID, patID, tokenHash, expiryAt)}
 }
 
 func (_c *PATSRepository_UpdateTokenHash_Call) Run(run func(ctx context.Context, userID string, patID string, tokenHash string, expiryAt time.Time)) *PATSRepository_UpdateTokenHash_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(time.Time))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		var arg4 time.Time
+		if args[4] != nil {
+			arg4 = args[4].(time.Time)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+		)
 	})
 	return _c
 }

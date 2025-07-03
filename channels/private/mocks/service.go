@@ -64,15 +64,26 @@ type Service_Authorize_Call struct {
 }
 
 // Authorize is a helper method to define mock.On call
-//   - ctx
-//   - req
+//   - ctx context.Context
+//   - req channels.AuthzReq
 func (_e *Service_Expecter) Authorize(ctx interface{}, req interface{}) *Service_Authorize_Call {
 	return &Service_Authorize_Call{Call: _e.mock.On("Authorize", ctx, req)}
 }
 
 func (_c *Service_Authorize_Call) Run(run func(ctx context.Context, req channels.AuthzReq)) *Service_Authorize_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(channels.AuthzReq))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 channels.AuthzReq
+		if args[1] != nil {
+			arg1 = args[1].(channels.AuthzReq)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -110,15 +121,26 @@ type Service_RemoveClientConnections_Call struct {
 }
 
 // RemoveClientConnections is a helper method to define mock.On call
-//   - ctx
-//   - clientID
+//   - ctx context.Context
+//   - clientID string
 func (_e *Service_Expecter) RemoveClientConnections(ctx interface{}, clientID interface{}) *Service_RemoveClientConnections_Call {
 	return &Service_RemoveClientConnections_Call{Call: _e.mock.On("RemoveClientConnections", ctx, clientID)}
 }
 
 func (_c *Service_RemoveClientConnections_Call) Run(run func(ctx context.Context, clientID string)) *Service_RemoveClientConnections_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -165,15 +187,26 @@ type Service_RetrieveByID_Call struct {
 }
 
 // RetrieveByID is a helper method to define mock.On call
-//   - ctx
-//   - id
+//   - ctx context.Context
+//   - id string
 func (_e *Service_Expecter) RetrieveByID(ctx interface{}, id interface{}) *Service_RetrieveByID_Call {
 	return &Service_RetrieveByID_Call{Call: _e.mock.On("RetrieveByID", ctx, id)}
 }
 
 func (_c *Service_RetrieveByID_Call) Run(run func(ctx context.Context, id string)) *Service_RetrieveByID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -220,16 +253,32 @@ type Service_RetrieveByRoute_Call struct {
 }
 
 // RetrieveByRoute is a helper method to define mock.On call
-//   - ctx
-//   - route
-//   - domainID
+//   - ctx context.Context
+//   - route string
+//   - domainID string
 func (_e *Service_Expecter) RetrieveByRoute(ctx interface{}, route interface{}, domainID interface{}) *Service_RetrieveByRoute_Call {
 	return &Service_RetrieveByRoute_Call{Call: _e.mock.On("RetrieveByRoute", ctx, route, domainID)}
 }
 
 func (_c *Service_RetrieveByRoute_Call) Run(run func(ctx context.Context, route string, domainID string)) *Service_RetrieveByRoute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -267,15 +316,26 @@ type Service_UnsetParentGroupFromChannels_Call struct {
 }
 
 // UnsetParentGroupFromChannels is a helper method to define mock.On call
-//   - ctx
-//   - parentGroupID
+//   - ctx context.Context
+//   - parentGroupID string
 func (_e *Service_Expecter) UnsetParentGroupFromChannels(ctx interface{}, parentGroupID interface{}) *Service_UnsetParentGroupFromChannels_Call {
 	return &Service_UnsetParentGroupFromChannels_Call{Call: _e.mock.On("UnsetParentGroupFromChannels", ctx, parentGroupID)}
 }
 
 func (_c *Service_UnsetParentGroupFromChannels_Call) Run(run func(ctx context.Context, parentGroupID string)) *Service_UnsetParentGroupFromChannels_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

@@ -73,18 +73,44 @@ type Service_IssueCert_Call struct {
 }
 
 // IssueCert is a helper method to define mock.On call
-//   - ctx
-//   - domainID
-//   - token
-//   - clientID
-//   - ttl
+//   - ctx context.Context
+//   - domainID string
+//   - token string
+//   - clientID string
+//   - ttl string
 func (_e *Service_Expecter) IssueCert(ctx interface{}, domainID interface{}, token interface{}, clientID interface{}, ttl interface{}) *Service_IssueCert_Call {
 	return &Service_IssueCert_Call{Call: _e.mock.On("IssueCert", ctx, domainID, token, clientID, ttl)}
 }
 
 func (_c *Service_IssueCert_Call) Run(run func(ctx context.Context, domainID string, token string, clientID string, ttl string)) *Service_IssueCert_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		var arg4 string
+		if args[4] != nil {
+			arg4 = args[4].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+		)
 	})
 	return _c
 }
@@ -131,16 +157,32 @@ type Service_ListCerts_Call struct {
 }
 
 // ListCerts is a helper method to define mock.On call
-//   - ctx
-//   - clientID
-//   - pm
+//   - ctx context.Context
+//   - clientID string
+//   - pm certs.PageMetadata
 func (_e *Service_Expecter) ListCerts(ctx interface{}, clientID interface{}, pm interface{}) *Service_ListCerts_Call {
 	return &Service_ListCerts_Call{Call: _e.mock.On("ListCerts", ctx, clientID, pm)}
 }
 
 func (_c *Service_ListCerts_Call) Run(run func(ctx context.Context, clientID string, pm certs.PageMetadata)) *Service_ListCerts_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(certs.PageMetadata))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 certs.PageMetadata
+		if args[2] != nil {
+			arg2 = args[2].(certs.PageMetadata)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -187,16 +229,32 @@ type Service_ListSerials_Call struct {
 }
 
 // ListSerials is a helper method to define mock.On call
-//   - ctx
-//   - clientID
-//   - pm
+//   - ctx context.Context
+//   - clientID string
+//   - pm certs.PageMetadata
 func (_e *Service_Expecter) ListSerials(ctx interface{}, clientID interface{}, pm interface{}) *Service_ListSerials_Call {
 	return &Service_ListSerials_Call{Call: _e.mock.On("ListSerials", ctx, clientID, pm)}
 }
 
 func (_c *Service_ListSerials_Call) Run(run func(ctx context.Context, clientID string, pm certs.PageMetadata)) *Service_ListSerials_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(certs.PageMetadata))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 certs.PageMetadata
+		if args[2] != nil {
+			arg2 = args[2].(certs.PageMetadata)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -243,17 +301,38 @@ type Service_RevokeCert_Call struct {
 }
 
 // RevokeCert is a helper method to define mock.On call
-//   - ctx
-//   - domainID
-//   - token
-//   - clientID
+//   - ctx context.Context
+//   - domainID string
+//   - token string
+//   - clientID string
 func (_e *Service_Expecter) RevokeCert(ctx interface{}, domainID interface{}, token interface{}, clientID interface{}) *Service_RevokeCert_Call {
 	return &Service_RevokeCert_Call{Call: _e.mock.On("RevokeCert", ctx, domainID, token, clientID)}
 }
 
 func (_c *Service_RevokeCert_Call) Run(run func(ctx context.Context, domainID string, token string, clientID string)) *Service_RevokeCert_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -300,15 +379,26 @@ type Service_ViewCert_Call struct {
 }
 
 // ViewCert is a helper method to define mock.On call
-//   - ctx
-//   - serialID
+//   - ctx context.Context
+//   - serialID string
 func (_e *Service_Expecter) ViewCert(ctx interface{}, serialID interface{}) *Service_ViewCert_Call {
 	return &Service_ViewCert_Call{Call: _e.mock.On("ViewCert", ctx, serialID)}
 }
 
 func (_c *Service_ViewCert_Call) Run(run func(ctx context.Context, serialID string)) *Service_ViewCert_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

@@ -72,16 +72,32 @@ type Agent_Issue_Call struct {
 }
 
 // Issue is a helper method to define mock.On call
-//   - entityId
-//   - ttl
-//   - ipAddrs
+//   - entityId string
+//   - ttl string
+//   - ipAddrs []string
 func (_e *Agent_Expecter) Issue(entityId interface{}, ttl interface{}, ipAddrs interface{}) *Agent_Issue_Call {
 	return &Agent_Issue_Call{Call: _e.mock.On("Issue", entityId, ttl, ipAddrs)}
 }
 
 func (_c *Agent_Issue_Call) Run(run func(entityId string, ttl string, ipAddrs []string)) *Agent_Issue_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].([]string))
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 []string
+		if args[2] != nil {
+			arg2 = args[2].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -128,14 +144,20 @@ type Agent_ListCerts_Call struct {
 }
 
 // ListCerts is a helper method to define mock.On call
-//   - pm
+//   - pm sdk.PageMetadata
 func (_e *Agent_Expecter) ListCerts(pm interface{}) *Agent_ListCerts_Call {
 	return &Agent_ListCerts_Call{Call: _e.mock.On("ListCerts", pm)}
 }
 
 func (_c *Agent_ListCerts_Call) Run(run func(pm sdk.PageMetadata)) *Agent_ListCerts_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sdk.PageMetadata))
+		var arg0 sdk.PageMetadata
+		if args[0] != nil {
+			arg0 = args[0].(sdk.PageMetadata)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -173,14 +195,20 @@ type Agent_Revoke_Call struct {
 }
 
 // Revoke is a helper method to define mock.On call
-//   - serialNumber
+//   - serialNumber string
 func (_e *Agent_Expecter) Revoke(serialNumber interface{}) *Agent_Revoke_Call {
 	return &Agent_Revoke_Call{Call: _e.mock.On("Revoke", serialNumber)}
 }
 
 func (_c *Agent_Revoke_Call) Run(run func(serialNumber string)) *Agent_Revoke_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -227,14 +255,20 @@ type Agent_View_Call struct {
 }
 
 // View is a helper method to define mock.On call
-//   - serialNumber
+//   - serialNumber string
 func (_e *Agent_Expecter) View(serialNumber interface{}) *Agent_View_Call {
 	return &Agent_View_Call{Call: _e.mock.On("View", serialNumber)}
 }
 
 func (_c *Agent_View_Call) Run(run func(serialNumber string)) *Agent_View_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }

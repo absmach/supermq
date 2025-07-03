@@ -108,15 +108,26 @@ type Subscriber_Subscribe_Call struct {
 }
 
 // Subscribe is a helper method to define mock.On call
-//   - ctx
-//   - cfg
+//   - ctx context.Context
+//   - cfg events.SubscriberConfig
 func (_e *Subscriber_Expecter) Subscribe(ctx interface{}, cfg interface{}) *Subscriber_Subscribe_Call {
 	return &Subscriber_Subscribe_Call{Call: _e.mock.On("Subscribe", ctx, cfg)}
 }
 
 func (_c *Subscriber_Subscribe_Call) Run(run func(ctx context.Context, cfg events.SubscriberConfig)) *Subscriber_Subscribe_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(events.SubscriberConfig))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 events.SubscriberConfig
+		if args[1] != nil {
+			arg1 = args[1].(events.SubscriberConfig)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

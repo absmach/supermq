@@ -61,17 +61,38 @@ type Emailer_SendPasswordReset_Call struct {
 }
 
 // SendPasswordReset is a helper method to define mock.On call
-//   - To
-//   - host
-//   - user
-//   - token
+//   - To []string
+//   - host string
+//   - user string
+//   - token string
 func (_e *Emailer_Expecter) SendPasswordReset(To interface{}, host interface{}, user interface{}, token interface{}) *Emailer_SendPasswordReset_Call {
 	return &Emailer_SendPasswordReset_Call{Call: _e.mock.On("SendPasswordReset", To, host, user, token)}
 }
 
 func (_c *Emailer_SendPasswordReset_Call) Run(run func(To []string, host string, user string, token string)) *Emailer_SendPasswordReset_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].([]string), args[1].(string), args[2].(string), args[3].(string))
+		var arg0 []string
+		if args[0] != nil {
+			arg0 = args[0].([]string)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }

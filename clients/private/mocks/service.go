@@ -64,15 +64,26 @@ type Service_AddConnections_Call struct {
 }
 
 // AddConnections is a helper method to define mock.On call
-//   - ctx
-//   - conns
+//   - ctx context.Context
+//   - conns []clients.Connection
 func (_e *Service_Expecter) AddConnections(ctx interface{}, conns interface{}) *Service_AddConnections_Call {
 	return &Service_AddConnections_Call{Call: _e.mock.On("AddConnections", ctx, conns)}
 }
 
 func (_c *Service_AddConnections_Call) Run(run func(ctx context.Context, conns []clients.Connection)) *Service_AddConnections_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].([]clients.Connection))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []clients.Connection
+		if args[1] != nil {
+			arg1 = args[1].([]clients.Connection)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -119,15 +130,26 @@ type Service_Authenticate_Call struct {
 }
 
 // Authenticate is a helper method to define mock.On call
-//   - ctx
-//   - key
+//   - ctx context.Context
+//   - key string
 func (_e *Service_Expecter) Authenticate(ctx interface{}, key interface{}) *Service_Authenticate_Call {
 	return &Service_Authenticate_Call{Call: _e.mock.On("Authenticate", ctx, key)}
 }
 
 func (_c *Service_Authenticate_Call) Run(run func(ctx context.Context, key string)) *Service_Authenticate_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -165,15 +187,26 @@ type Service_RemoveChannelConnections_Call struct {
 }
 
 // RemoveChannelConnections is a helper method to define mock.On call
-//   - ctx
-//   - channelID
+//   - ctx context.Context
+//   - channelID string
 func (_e *Service_Expecter) RemoveChannelConnections(ctx interface{}, channelID interface{}) *Service_RemoveChannelConnections_Call {
 	return &Service_RemoveChannelConnections_Call{Call: _e.mock.On("RemoveChannelConnections", ctx, channelID)}
 }
 
 func (_c *Service_RemoveChannelConnections_Call) Run(run func(ctx context.Context, channelID string)) *Service_RemoveChannelConnections_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -211,15 +244,26 @@ type Service_RemoveConnections_Call struct {
 }
 
 // RemoveConnections is a helper method to define mock.On call
-//   - ctx
-//   - conns
+//   - ctx context.Context
+//   - conns []clients.Connection
 func (_e *Service_Expecter) RemoveConnections(ctx interface{}, conns interface{}) *Service_RemoveConnections_Call {
 	return &Service_RemoveConnections_Call{Call: _e.mock.On("RemoveConnections", ctx, conns)}
 }
 
 func (_c *Service_RemoveConnections_Call) Run(run func(ctx context.Context, conns []clients.Connection)) *Service_RemoveConnections_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].([]clients.Connection))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []clients.Connection
+		if args[1] != nil {
+			arg1 = args[1].([]clients.Connection)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -266,15 +310,26 @@ type Service_RetrieveById_Call struct {
 }
 
 // RetrieveById is a helper method to define mock.On call
-//   - ctx
-//   - id
+//   - ctx context.Context
+//   - id string
 func (_e *Service_Expecter) RetrieveById(ctx interface{}, id interface{}) *Service_RetrieveById_Call {
 	return &Service_RetrieveById_Call{Call: _e.mock.On("RetrieveById", ctx, id)}
 }
 
 func (_c *Service_RetrieveById_Call) Run(run func(ctx context.Context, id string)) *Service_RetrieveById_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -321,15 +376,26 @@ type Service_RetrieveByIds_Call struct {
 }
 
 // RetrieveByIds is a helper method to define mock.On call
-//   - ctx
-//   - ids
+//   - ctx context.Context
+//   - ids []string
 func (_e *Service_Expecter) RetrieveByIds(ctx interface{}, ids interface{}) *Service_RetrieveByIds_Call {
 	return &Service_RetrieveByIds_Call{Call: _e.mock.On("RetrieveByIds", ctx, ids)}
 }
 
 func (_c *Service_RetrieveByIds_Call) Run(run func(ctx context.Context, ids []string)) *Service_RetrieveByIds_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []string
+		if args[1] != nil {
+			arg1 = args[1].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -367,15 +433,26 @@ type Service_UnsetParentGroupFromClient_Call struct {
 }
 
 // UnsetParentGroupFromClient is a helper method to define mock.On call
-//   - ctx
-//   - parentGroupID
+//   - ctx context.Context
+//   - parentGroupID string
 func (_e *Service_Expecter) UnsetParentGroupFromClient(ctx interface{}, parentGroupID interface{}) *Service_UnsetParentGroupFromClient_Call {
 	return &Service_UnsetParentGroupFromClient_Call{Call: _e.mock.On("UnsetParentGroupFromClient", ctx, parentGroupID)}
 }
 
 func (_c *Service_UnsetParentGroupFromClient_Call) Run(run func(ctx context.Context, parentGroupID string)) *Service_UnsetParentGroupFromClient_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

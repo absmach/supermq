@@ -71,15 +71,26 @@ type MessageRepository_ReadAll_Call struct {
 }
 
 // ReadAll is a helper method to define mock.On call
-//   - chanID
-//   - pm
+//   - chanID string
+//   - pm readers.PageMetadata
 func (_e *MessageRepository_Expecter) ReadAll(chanID interface{}, pm interface{}) *MessageRepository_ReadAll_Call {
 	return &MessageRepository_ReadAll_Call{Call: _e.mock.On("ReadAll", chanID, pm)}
 }
 
 func (_c *MessageRepository_ReadAll_Call) Run(run func(chanID string, pm readers.PageMetadata)) *MessageRepository_ReadAll_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(readers.PageMetadata))
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 readers.PageMetadata
+		if args[1] != nil {
+			arg1 = args[1].(readers.PageMetadata)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

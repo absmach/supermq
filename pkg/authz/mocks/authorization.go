@@ -64,15 +64,26 @@ type Authorization_Authorize_Call struct {
 }
 
 // Authorize is a helper method to define mock.On call
-//   - ctx
-//   - pr
+//   - ctx context.Context
+//   - pr authz.PolicyReq
 func (_e *Authorization_Expecter) Authorize(ctx interface{}, pr interface{}) *Authorization_Authorize_Call {
 	return &Authorization_Authorize_Call{Call: _e.mock.On("Authorize", ctx, pr)}
 }
 
 func (_c *Authorization_Authorize_Call) Run(run func(ctx context.Context, pr authz.PolicyReq)) *Authorization_Authorize_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authz.PolicyReq))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authz.PolicyReq
+		if args[1] != nil {
+			arg1 = args[1].(authz.PolicyReq)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -110,15 +121,26 @@ type Authorization_AuthorizePAT_Call struct {
 }
 
 // AuthorizePAT is a helper method to define mock.On call
-//   - ctx
-//   - pr
+//   - ctx context.Context
+//   - pr authz.PatReq
 func (_e *Authorization_Expecter) AuthorizePAT(ctx interface{}, pr interface{}) *Authorization_AuthorizePAT_Call {
 	return &Authorization_AuthorizePAT_Call{Call: _e.mock.On("AuthorizePAT", ctx, pr)}
 }
 
 func (_c *Authorization_AuthorizePAT_Call) Run(run func(ctx context.Context, pr authz.PatReq)) *Authorization_AuthorizePAT_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authz.PatReq))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authz.PatReq
+		if args[1] != nil {
+			arg1 = args[1].(authz.PatReq)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

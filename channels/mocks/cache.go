@@ -72,16 +72,32 @@ type Cache_ID_Call struct {
 }
 
 // ID is a helper method to define mock.On call
-//   - ctx
-//   - channelRoute
-//   - domainID
+//   - ctx context.Context
+//   - channelRoute string
+//   - domainID string
 func (_e *Cache_Expecter) ID(ctx interface{}, channelRoute interface{}, domainID interface{}) *Cache_ID_Call {
 	return &Cache_ID_Call{Call: _e.mock.On("ID", ctx, channelRoute, domainID)}
 }
 
 func (_c *Cache_ID_Call) Run(run func(ctx context.Context, channelRoute string, domainID string)) *Cache_ID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -119,16 +135,32 @@ type Cache_Remove_Call struct {
 }
 
 // Remove is a helper method to define mock.On call
-//   - ctx
-//   - channelRoute
-//   - domainID
+//   - ctx context.Context
+//   - channelRoute string
+//   - domainID string
 func (_e *Cache_Expecter) Remove(ctx interface{}, channelRoute interface{}, domainID interface{}) *Cache_Remove_Call {
 	return &Cache_Remove_Call{Call: _e.mock.On("Remove", ctx, channelRoute, domainID)}
 }
 
 func (_c *Cache_Remove_Call) Run(run func(ctx context.Context, channelRoute string, domainID string)) *Cache_Remove_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -166,17 +198,38 @@ type Cache_Save_Call struct {
 }
 
 // Save is a helper method to define mock.On call
-//   - ctx
-//   - channelRoute
-//   - domainID
-//   - channelID
+//   - ctx context.Context
+//   - channelRoute string
+//   - domainID string
+//   - channelID string
 func (_e *Cache_Expecter) Save(ctx interface{}, channelRoute interface{}, domainID interface{}, channelID interface{}) *Cache_Save_Call {
 	return &Cache_Save_Call{Call: _e.mock.On("Save", ctx, channelRoute, domainID, channelID)}
 }
 
 func (_c *Cache_Save_Call) Run(run func(ctx context.Context, channelRoute string, domainID string, channelID string)) *Cache_Save_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }

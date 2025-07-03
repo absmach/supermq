@@ -64,15 +64,26 @@ type Repository_AddSubscription_Call struct {
 }
 
 // AddSubscription is a helper method to define mock.On call
-//   - ctx
-//   - sub
+//   - ctx context.Context
+//   - sub journal.ClientSubscription
 func (_e *Repository_Expecter) AddSubscription(ctx interface{}, sub interface{}) *Repository_AddSubscription_Call {
 	return &Repository_AddSubscription_Call{Call: _e.mock.On("AddSubscription", ctx, sub)}
 }
 
 func (_c *Repository_AddSubscription_Call) Run(run func(ctx context.Context, sub journal.ClientSubscription)) *Repository_AddSubscription_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(journal.ClientSubscription))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 journal.ClientSubscription
+		if args[1] != nil {
+			arg1 = args[1].(journal.ClientSubscription)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -119,15 +130,26 @@ type Repository_CountSubscriptions_Call struct {
 }
 
 // CountSubscriptions is a helper method to define mock.On call
-//   - ctx
-//   - clientID
+//   - ctx context.Context
+//   - clientID string
 func (_e *Repository_Expecter) CountSubscriptions(ctx interface{}, clientID interface{}) *Repository_CountSubscriptions_Call {
 	return &Repository_CountSubscriptions_Call{Call: _e.mock.On("CountSubscriptions", ctx, clientID)}
 }
 
 func (_c *Repository_CountSubscriptions_Call) Run(run func(ctx context.Context, clientID string)) *Repository_CountSubscriptions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -165,16 +187,32 @@ type Repository_DeleteClientTelemetry_Call struct {
 }
 
 // DeleteClientTelemetry is a helper method to define mock.On call
-//   - ctx
-//   - clientID
-//   - domainID
+//   - ctx context.Context
+//   - clientID string
+//   - domainID string
 func (_e *Repository_Expecter) DeleteClientTelemetry(ctx interface{}, clientID interface{}, domainID interface{}) *Repository_DeleteClientTelemetry_Call {
 	return &Repository_DeleteClientTelemetry_Call{Call: _e.mock.On("DeleteClientTelemetry", ctx, clientID, domainID)}
 }
 
 func (_c *Repository_DeleteClientTelemetry_Call) Run(run func(ctx context.Context, clientID string, domainID string)) *Repository_DeleteClientTelemetry_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -212,15 +250,26 @@ type Repository_IncrementInboundMessages_Call struct {
 }
 
 // IncrementInboundMessages is a helper method to define mock.On call
-//   - ctx
-//   - ct
+//   - ctx context.Context
+//   - ct journal.ClientTelemetry
 func (_e *Repository_Expecter) IncrementInboundMessages(ctx interface{}, ct interface{}) *Repository_IncrementInboundMessages_Call {
 	return &Repository_IncrementInboundMessages_Call{Call: _e.mock.On("IncrementInboundMessages", ctx, ct)}
 }
 
 func (_c *Repository_IncrementInboundMessages_Call) Run(run func(ctx context.Context, ct journal.ClientTelemetry)) *Repository_IncrementInboundMessages_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(journal.ClientTelemetry))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 journal.ClientTelemetry
+		if args[1] != nil {
+			arg1 = args[1].(journal.ClientTelemetry)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -258,16 +307,32 @@ type Repository_IncrementOutboundMessages_Call struct {
 }
 
 // IncrementOutboundMessages is a helper method to define mock.On call
-//   - ctx
-//   - channelID
-//   - subtopic
+//   - ctx context.Context
+//   - channelID string
+//   - subtopic string
 func (_e *Repository_Expecter) IncrementOutboundMessages(ctx interface{}, channelID interface{}, subtopic interface{}) *Repository_IncrementOutboundMessages_Call {
 	return &Repository_IncrementOutboundMessages_Call{Call: _e.mock.On("IncrementOutboundMessages", ctx, channelID, subtopic)}
 }
 
 func (_c *Repository_IncrementOutboundMessages_Call) Run(run func(ctx context.Context, channelID string, subtopic string)) *Repository_IncrementOutboundMessages_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -305,15 +370,26 @@ type Repository_RemoveSubscription_Call struct {
 }
 
 // RemoveSubscription is a helper method to define mock.On call
-//   - ctx
-//   - subscriberID
+//   - ctx context.Context
+//   - subscriberID string
 func (_e *Repository_Expecter) RemoveSubscription(ctx interface{}, subscriberID interface{}) *Repository_RemoveSubscription_Call {
 	return &Repository_RemoveSubscription_Call{Call: _e.mock.On("RemoveSubscription", ctx, subscriberID)}
 }
 
 func (_c *Repository_RemoveSubscription_Call) Run(run func(ctx context.Context, subscriberID string)) *Repository_RemoveSubscription_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -360,15 +436,26 @@ type Repository_RetrieveAll_Call struct {
 }
 
 // RetrieveAll is a helper method to define mock.On call
-//   - ctx
-//   - page
+//   - ctx context.Context
+//   - page journal.Page
 func (_e *Repository_Expecter) RetrieveAll(ctx interface{}, page interface{}) *Repository_RetrieveAll_Call {
 	return &Repository_RetrieveAll_Call{Call: _e.mock.On("RetrieveAll", ctx, page)}
 }
 
 func (_c *Repository_RetrieveAll_Call) Run(run func(ctx context.Context, page journal.Page)) *Repository_RetrieveAll_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(journal.Page))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 journal.Page
+		if args[1] != nil {
+			arg1 = args[1].(journal.Page)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -415,16 +502,32 @@ type Repository_RetrieveClientTelemetry_Call struct {
 }
 
 // RetrieveClientTelemetry is a helper method to define mock.On call
-//   - ctx
-//   - clientID
-//   - domainID
+//   - ctx context.Context
+//   - clientID string
+//   - domainID string
 func (_e *Repository_Expecter) RetrieveClientTelemetry(ctx interface{}, clientID interface{}, domainID interface{}) *Repository_RetrieveClientTelemetry_Call {
 	return &Repository_RetrieveClientTelemetry_Call{Call: _e.mock.On("RetrieveClientTelemetry", ctx, clientID, domainID)}
 }
 
 func (_c *Repository_RetrieveClientTelemetry_Call) Run(run func(ctx context.Context, clientID string, domainID string)) *Repository_RetrieveClientTelemetry_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -462,15 +565,26 @@ type Repository_Save_Call struct {
 }
 
 // Save is a helper method to define mock.On call
-//   - ctx
-//   - journal1
+//   - ctx context.Context
+//   - journal1 journal.Journal
 func (_e *Repository_Expecter) Save(ctx interface{}, journal1 interface{}) *Repository_Save_Call {
 	return &Repository_Save_Call{Call: _e.mock.On("Save", ctx, journal1)}
 }
 
 func (_c *Repository_Save_Call) Run(run func(ctx context.Context, journal1 journal.Journal)) *Repository_Save_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(journal.Journal))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 journal.Journal
+		if args[1] != nil {
+			arg1 = args[1].(journal.Journal)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -508,15 +622,26 @@ type Repository_SaveClientTelemetry_Call struct {
 }
 
 // SaveClientTelemetry is a helper method to define mock.On call
-//   - ctx
-//   - ct
+//   - ctx context.Context
+//   - ct journal.ClientTelemetry
 func (_e *Repository_Expecter) SaveClientTelemetry(ctx interface{}, ct interface{}) *Repository_SaveClientTelemetry_Call {
 	return &Repository_SaveClientTelemetry_Call{Call: _e.mock.On("SaveClientTelemetry", ctx, ct)}
 }
 
 func (_c *Repository_SaveClientTelemetry_Call) Run(run func(ctx context.Context, ct journal.ClientTelemetry)) *Repository_SaveClientTelemetry_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(journal.ClientTelemetry))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 journal.ClientTelemetry
+		if args[1] != nil {
+			arg1 = args[1].(journal.ClientTelemetry)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

@@ -64,20 +64,56 @@ type Cache_CheckScope_Call struct {
 }
 
 // CheckScope is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - patID
-//   - optionalDomainID
-//   - entityType
-//   - operation
-//   - entityID
+//   - ctx context.Context
+//   - userID string
+//   - patID string
+//   - optionalDomainID string
+//   - entityType auth.EntityType
+//   - operation auth.Operation
+//   - entityID string
 func (_e *Cache_Expecter) CheckScope(ctx interface{}, userID interface{}, patID interface{}, optionalDomainID interface{}, entityType interface{}, operation interface{}, entityID interface{}) *Cache_CheckScope_Call {
 	return &Cache_CheckScope_Call{Call: _e.mock.On("CheckScope", ctx, userID, patID, optionalDomainID, entityType, operation, entityID)}
 }
 
 func (_c *Cache_CheckScope_Call) Run(run func(ctx context.Context, userID string, patID string, optionalDomainID string, entityType auth.EntityType, operation auth.Operation, entityID string)) *Cache_CheckScope_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(auth.EntityType), args[5].(auth.Operation), args[6].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		var arg4 auth.EntityType
+		if args[4] != nil {
+			arg4 = args[4].(auth.EntityType)
+		}
+		var arg5 auth.Operation
+		if args[5] != nil {
+			arg5 = args[5].(auth.Operation)
+		}
+		var arg6 string
+		if args[6] != nil {
+			arg6 = args[6].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+			arg5,
+			arg6,
+		)
 	})
 	return _c
 }
@@ -115,16 +151,32 @@ type Cache_Remove_Call struct {
 }
 
 // Remove is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - scopesID
+//   - ctx context.Context
+//   - userID string
+//   - scopesID []string
 func (_e *Cache_Expecter) Remove(ctx interface{}, userID interface{}, scopesID interface{}) *Cache_Remove_Call {
 	return &Cache_Remove_Call{Call: _e.mock.On("Remove", ctx, userID, scopesID)}
 }
 
 func (_c *Cache_Remove_Call) Run(run func(ctx context.Context, userID string, scopesID []string)) *Cache_Remove_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 []string
+		if args[2] != nil {
+			arg2 = args[2].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -162,16 +214,32 @@ type Cache_RemoveAllScope_Call struct {
 }
 
 // RemoveAllScope is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - patID
+//   - ctx context.Context
+//   - userID string
+//   - patID string
 func (_e *Cache_Expecter) RemoveAllScope(ctx interface{}, userID interface{}, patID interface{}) *Cache_RemoveAllScope_Call {
 	return &Cache_RemoveAllScope_Call{Call: _e.mock.On("RemoveAllScope", ctx, userID, patID)}
 }
 
 func (_c *Cache_RemoveAllScope_Call) Run(run func(ctx context.Context, userID string, patID string)) *Cache_RemoveAllScope_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -209,15 +277,26 @@ type Cache_RemoveUserAllScope_Call struct {
 }
 
 // RemoveUserAllScope is a helper method to define mock.On call
-//   - ctx
-//   - userID
+//   - ctx context.Context
+//   - userID string
 func (_e *Cache_Expecter) RemoveUserAllScope(ctx interface{}, userID interface{}) *Cache_RemoveUserAllScope_Call {
 	return &Cache_RemoveUserAllScope_Call{Call: _e.mock.On("RemoveUserAllScope", ctx, userID)}
 }
 
 func (_c *Cache_RemoveUserAllScope_Call) Run(run func(ctx context.Context, userID string)) *Cache_RemoveUserAllScope_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -255,16 +334,32 @@ type Cache_Save_Call struct {
 }
 
 // Save is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - scopes
+//   - ctx context.Context
+//   - userID string
+//   - scopes []auth.Scope
 func (_e *Cache_Expecter) Save(ctx interface{}, userID interface{}, scopes interface{}) *Cache_Save_Call {
 	return &Cache_Save_Call{Call: _e.mock.On("Save", ctx, userID, scopes)}
 }
 
 func (_c *Cache_Save_Call) Run(run func(ctx context.Context, userID string, scopes []auth.Scope)) *Cache_Save_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].([]auth.Scope))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 []auth.Scope
+		if args[2] != nil {
+			arg2 = args[2].([]auth.Scope)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }

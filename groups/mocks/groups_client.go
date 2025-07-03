@@ -10,7 +10,7 @@ package mocks
 import (
 	"context"
 
-	v1 "github.com/absmach/supermq/api/grpc/common/v1"
+	"github.com/absmach/supermq/api/grpc/common/v1"
 	mock "github.com/stretchr/testify/mock"
 	"google.golang.org/grpc"
 )
@@ -58,8 +58,8 @@ func (_mock *GroupsServiceClient) RetrieveEntity(ctx context.Context, in *v1.Ret
 
 	var r0 *v1.RetrieveEntityRes
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.RetrieveEntityReq, []grpc.CallOption) (*v1.RetrieveEntityRes, error)); ok {
-		return returnFunc(ctx, in, opts)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.RetrieveEntityReq, ...grpc.CallOption) (*v1.RetrieveEntityRes, error)); ok {
+		return returnFunc(ctx, in, opts...)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.RetrieveEntityReq, ...grpc.CallOption) *v1.RetrieveEntityRes); ok {
 		r0 = returnFunc(ctx, in, opts...)
@@ -82,9 +82,9 @@ type GroupsServiceClient_RetrieveEntity_Call struct {
 }
 
 // RetrieveEntity is a helper method to define mock.On call
-//   - ctx
-//   - in
-//   - opts
+//   - ctx context.Context
+//   - in *v1.RetrieveEntityReq
+//   - opts ...grpc.CallOption
 func (_e *GroupsServiceClient_Expecter) RetrieveEntity(ctx interface{}, in interface{}, opts ...interface{}) *GroupsServiceClient_RetrieveEntity_Call {
 	return &GroupsServiceClient_RetrieveEntity_Call{Call: _e.mock.On("RetrieveEntity",
 		append([]interface{}{ctx, in}, opts...)...)}
@@ -92,13 +92,25 @@ func (_e *GroupsServiceClient_Expecter) RetrieveEntity(ctx interface{}, in inter
 
 func (_c *GroupsServiceClient_RetrieveEntity_Call) Run(run func(ctx context.Context, in *v1.RetrieveEntityReq, opts ...grpc.CallOption)) *GroupsServiceClient_RetrieveEntity_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]grpc.CallOption, len(args)-2)
-		for i, a := range args[2:] {
-			if a != nil {
-				variadicArgs[i] = a.(grpc.CallOption)
-			}
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
 		}
-		run(args[0].(context.Context), args[1].(*v1.RetrieveEntityReq), variadicArgs...)
+		var arg1 *v1.RetrieveEntityReq
+		if args[1] != nil {
+			arg1 = args[1].(*v1.RetrieveEntityReq)
+		}
+		var arg2 []grpc.CallOption
+		var variadicArgs []grpc.CallOption
+		if len(args) > 2 {
+			variadicArgs = args[2].([]grpc.CallOption)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
 	})
 	return _c
 }

@@ -64,15 +64,26 @@ type Authz_Authorize_Call struct {
 }
 
 // Authorize is a helper method to define mock.On call
-//   - ctx
-//   - pr
+//   - ctx context.Context
+//   - pr policies.Policy
 func (_e *Authz_Expecter) Authorize(ctx interface{}, pr interface{}) *Authz_Authorize_Call {
 	return &Authz_Authorize_Call{Call: _e.mock.On("Authorize", ctx, pr)}
 }
 
 func (_c *Authz_Authorize_Call) Run(run func(ctx context.Context, pr policies.Policy)) *Authz_Authorize_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(policies.Policy))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 policies.Policy
+		if args[1] != nil {
+			arg1 = args[1].(policies.Policy)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

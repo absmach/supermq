@@ -118,15 +118,26 @@ type Provider_Exchange_Call struct {
 }
 
 // Exchange is a helper method to define mock.On call
-//   - ctx
-//   - code
+//   - ctx context.Context
+//   - code string
 func (_e *Provider_Expecter) Exchange(ctx interface{}, code interface{}) *Provider_Exchange_Call {
 	return &Provider_Exchange_Call{Call: _e.mock.On("Exchange", ctx, code)}
 }
 
 func (_c *Provider_Exchange_Call) Run(run func(ctx context.Context, code string)) *Provider_Exchange_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -349,14 +360,20 @@ type Provider_UserInfo_Call struct {
 }
 
 // UserInfo is a helper method to define mock.On call
-//   - accessToken
+//   - accessToken string
 func (_e *Provider_Expecter) UserInfo(accessToken interface{}) *Provider_UserInfo_Call {
 	return &Provider_UserInfo_Call{Call: _e.mock.On("UserInfo", accessToken)}
 }
 
 func (_c *Provider_UserInfo_Call) Run(run func(accessToken string)) *Provider_UserInfo_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }

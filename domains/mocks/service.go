@@ -75,16 +75,32 @@ type Service_AcceptInvitation_Call struct {
 }
 
 // AcceptInvitation is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - domainID
+//   - ctx context.Context
+//   - session authn.Session
+//   - domainID string
 func (_e *Service_Expecter) AcceptInvitation(ctx interface{}, session interface{}, domainID interface{}) *Service_AcceptInvitation_Call {
 	return &Service_AcceptInvitation_Call{Call: _e.mock.On("AcceptInvitation", ctx, session, domainID)}
 }
 
 func (_c *Service_AcceptInvitation_Call) Run(run func(ctx context.Context, session authn.Session, domainID string)) *Service_AcceptInvitation_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -131,19 +147,50 @@ type Service_AddRole_Call struct {
 }
 
 // AddRole is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - entityID
-//   - roleName
-//   - optionalActions
-//   - optionalMembers
+//   - ctx context.Context
+//   - session authn.Session
+//   - entityID string
+//   - roleName string
+//   - optionalActions []string
+//   - optionalMembers []string
 func (_e *Service_Expecter) AddRole(ctx interface{}, session interface{}, entityID interface{}, roleName interface{}, optionalActions interface{}, optionalMembers interface{}) *Service_AddRole_Call {
 	return &Service_AddRole_Call{Call: _e.mock.On("AddRole", ctx, session, entityID, roleName, optionalActions, optionalMembers)}
 }
 
 func (_c *Service_AddRole_Call) Run(run func(ctx context.Context, session authn.Session, entityID string, roleName string, optionalActions []string, optionalMembers []string)) *Service_AddRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(string), args[4].([]string), args[5].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		var arg4 []string
+		if args[4] != nil {
+			arg4 = args[4].([]string)
+		}
+		var arg5 []string
+		if args[5] != nil {
+			arg5 = args[5].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+			arg5,
+		)
 	})
 	return _c
 }
@@ -198,16 +245,32 @@ type Service_CreateDomain_Call struct {
 }
 
 // CreateDomain is a helper method to define mock.On call
-//   - ctx
-//   - sesssion
-//   - d
+//   - ctx context.Context
+//   - sesssion authn.Session
+//   - d domains.Domain
 func (_e *Service_Expecter) CreateDomain(ctx interface{}, sesssion interface{}, d interface{}) *Service_CreateDomain_Call {
 	return &Service_CreateDomain_Call{Call: _e.mock.On("CreateDomain", ctx, sesssion, d)}
 }
 
 func (_c *Service_CreateDomain_Call) Run(run func(ctx context.Context, sesssion authn.Session, d domains.Domain)) *Service_CreateDomain_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(domains.Domain))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 domains.Domain
+		if args[2] != nil {
+			arg2 = args[2].(domains.Domain)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -245,17 +308,38 @@ type Service_DeleteInvitation_Call struct {
 }
 
 // DeleteInvitation is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - inviteeUserID
-//   - domainID
+//   - ctx context.Context
+//   - session authn.Session
+//   - inviteeUserID string
+//   - domainID string
 func (_e *Service_Expecter) DeleteInvitation(ctx interface{}, session interface{}, inviteeUserID interface{}, domainID interface{}) *Service_DeleteInvitation_Call {
 	return &Service_DeleteInvitation_Call{Call: _e.mock.On("DeleteInvitation", ctx, session, inviteeUserID, domainID)}
 }
 
 func (_c *Service_DeleteInvitation_Call) Run(run func(ctx context.Context, session authn.Session, inviteeUserID string, domainID string)) *Service_DeleteInvitation_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -302,16 +386,32 @@ type Service_DisableDomain_Call struct {
 }
 
 // DisableDomain is a helper method to define mock.On call
-//   - ctx
-//   - sesssion
-//   - id
+//   - ctx context.Context
+//   - sesssion authn.Session
+//   - id string
 func (_e *Service_Expecter) DisableDomain(ctx interface{}, sesssion interface{}, id interface{}) *Service_DisableDomain_Call {
 	return &Service_DisableDomain_Call{Call: _e.mock.On("DisableDomain", ctx, sesssion, id)}
 }
 
 func (_c *Service_DisableDomain_Call) Run(run func(ctx context.Context, sesssion authn.Session, id string)) *Service_DisableDomain_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -358,16 +458,32 @@ type Service_EnableDomain_Call struct {
 }
 
 // EnableDomain is a helper method to define mock.On call
-//   - ctx
-//   - sesssion
-//   - id
+//   - ctx context.Context
+//   - sesssion authn.Session
+//   - id string
 func (_e *Service_Expecter) EnableDomain(ctx interface{}, sesssion interface{}, id interface{}) *Service_EnableDomain_Call {
 	return &Service_EnableDomain_Call{Call: _e.mock.On("EnableDomain", ctx, sesssion, id)}
 }
 
 func (_c *Service_EnableDomain_Call) Run(run func(ctx context.Context, sesssion authn.Session, id string)) *Service_EnableDomain_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -414,16 +530,32 @@ type Service_FreezeDomain_Call struct {
 }
 
 // FreezeDomain is a helper method to define mock.On call
-//   - ctx
-//   - sesssion
-//   - id
+//   - ctx context.Context
+//   - sesssion authn.Session
+//   - id string
 func (_e *Service_Expecter) FreezeDomain(ctx interface{}, sesssion interface{}, id interface{}) *Service_FreezeDomain_Call {
 	return &Service_FreezeDomain_Call{Call: _e.mock.On("FreezeDomain", ctx, sesssion, id)}
 }
 
 func (_c *Service_FreezeDomain_Call) Run(run func(ctx context.Context, sesssion authn.Session, id string)) *Service_FreezeDomain_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -472,15 +604,26 @@ type Service_ListAvailableActions_Call struct {
 }
 
 // ListAvailableActions is a helper method to define mock.On call
-//   - ctx
-//   - session
+//   - ctx context.Context
+//   - session authn.Session
 func (_e *Service_Expecter) ListAvailableActions(ctx interface{}, session interface{}) *Service_ListAvailableActions_Call {
 	return &Service_ListAvailableActions_Call{Call: _e.mock.On("ListAvailableActions", ctx, session)}
 }
 
 func (_c *Service_ListAvailableActions_Call) Run(run func(ctx context.Context, session authn.Session)) *Service_ListAvailableActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -583,16 +726,32 @@ type Service_ListDomains_Call struct {
 }
 
 // ListDomains is a helper method to define mock.On call
-//   - ctx
-//   - sesssion
-//   - page
+//   - ctx context.Context
+//   - sesssion authn.Session
+//   - page domains.Page
 func (_e *Service_Expecter) ListDomains(ctx interface{}, sesssion interface{}, page interface{}) *Service_ListDomains_Call {
 	return &Service_ListDomains_Call{Call: _e.mock.On("ListDomains", ctx, sesssion, page)}
 }
 
 func (_c *Service_ListDomains_Call) Run(run func(ctx context.Context, sesssion authn.Session, page domains.Page)) *Service_ListDomains_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(domains.Page))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 domains.Page
+		if args[2] != nil {
+			arg2 = args[2].(domains.Page)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -639,17 +798,38 @@ type Service_ListEntityMembers_Call struct {
 }
 
 // ListEntityMembers is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - entityID
-//   - pq
+//   - ctx context.Context
+//   - session authn.Session
+//   - entityID string
+//   - pq roles.MembersRolePageQuery
 func (_e *Service_Expecter) ListEntityMembers(ctx interface{}, session interface{}, entityID interface{}, pq interface{}) *Service_ListEntityMembers_Call {
 	return &Service_ListEntityMembers_Call{Call: _e.mock.On("ListEntityMembers", ctx, session, entityID, pq)}
 }
 
 func (_c *Service_ListEntityMembers_Call) Run(run func(ctx context.Context, session authn.Session, entityID string, pq roles.MembersRolePageQuery)) *Service_ListEntityMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(roles.MembersRolePageQuery))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 roles.MembersRolePageQuery
+		if args[3] != nil {
+			arg3 = args[3].(roles.MembersRolePageQuery)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -696,16 +876,32 @@ type Service_ListInvitations_Call struct {
 }
 
 // ListInvitations is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - page
+//   - ctx context.Context
+//   - session authn.Session
+//   - page domains.InvitationPageMeta
 func (_e *Service_Expecter) ListInvitations(ctx interface{}, session interface{}, page interface{}) *Service_ListInvitations_Call {
 	return &Service_ListInvitations_Call{Call: _e.mock.On("ListInvitations", ctx, session, page)}
 }
 
 func (_c *Service_ListInvitations_Call) Run(run func(ctx context.Context, session authn.Session, page domains.InvitationPageMeta)) *Service_ListInvitations_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(domains.InvitationPageMeta))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 domains.InvitationPageMeta
+		if args[2] != nil {
+			arg2 = args[2].(domains.InvitationPageMeta)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -743,16 +939,32 @@ type Service_RejectInvitation_Call struct {
 }
 
 // RejectInvitation is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - domainID
+//   - ctx context.Context
+//   - session authn.Session
+//   - domainID string
 func (_e *Service_Expecter) RejectInvitation(ctx interface{}, session interface{}, domainID interface{}) *Service_RejectInvitation_Call {
 	return &Service_RejectInvitation_Call{Call: _e.mock.On("RejectInvitation", ctx, session, domainID)}
 }
 
 func (_c *Service_RejectInvitation_Call) Run(run func(ctx context.Context, session authn.Session, domainID string)) *Service_RejectInvitation_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -790,17 +1002,38 @@ type Service_RemoveEntityMembers_Call struct {
 }
 
 // RemoveEntityMembers is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - entityID
-//   - members
+//   - ctx context.Context
+//   - session authn.Session
+//   - entityID string
+//   - members []string
 func (_e *Service_Expecter) RemoveEntityMembers(ctx interface{}, session interface{}, entityID interface{}, members interface{}) *Service_RemoveEntityMembers_Call {
 	return &Service_RemoveEntityMembers_Call{Call: _e.mock.On("RemoveEntityMembers", ctx, session, entityID, members)}
 }
 
 func (_c *Service_RemoveEntityMembers_Call) Run(run func(ctx context.Context, session authn.Session, entityID string, members []string)) *Service_RemoveEntityMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 []string
+		if args[3] != nil {
+			arg3 = args[3].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -838,16 +1071,32 @@ type Service_RemoveMemberFromAllRoles_Call struct {
 }
 
 // RemoveMemberFromAllRoles is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - memberID
+//   - ctx context.Context
+//   - session authn.Session
+//   - memberID string
 func (_e *Service_Expecter) RemoveMemberFromAllRoles(ctx interface{}, session interface{}, memberID interface{}) *Service_RemoveMemberFromAllRoles_Call {
 	return &Service_RemoveMemberFromAllRoles_Call{Call: _e.mock.On("RemoveMemberFromAllRoles", ctx, session, memberID)}
 }
 
 func (_c *Service_RemoveMemberFromAllRoles_Call) Run(run func(ctx context.Context, session authn.Session, memberID string)) *Service_RemoveMemberFromAllRoles_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -885,17 +1134,38 @@ type Service_RemoveRole_Call struct {
 }
 
 // RemoveRole is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - entityID
-//   - roleID
+//   - ctx context.Context
+//   - session authn.Session
+//   - entityID string
+//   - roleID string
 func (_e *Service_Expecter) RemoveRole(ctx interface{}, session interface{}, entityID interface{}, roleID interface{}) *Service_RemoveRole_Call {
 	return &Service_RemoveRole_Call{Call: _e.mock.On("RemoveRole", ctx, session, entityID, roleID)}
 }
 
 func (_c *Service_RemoveRole_Call) Run(run func(ctx context.Context, session authn.Session, entityID string, roleID string)) *Service_RemoveRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -942,18 +1212,44 @@ type Service_RetrieveAllRoles_Call struct {
 }
 
 // RetrieveAllRoles is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - entityID
-//   - limit
-//   - offset
+//   - ctx context.Context
+//   - session authn.Session
+//   - entityID string
+//   - limit uint64
+//   - offset uint64
 func (_e *Service_Expecter) RetrieveAllRoles(ctx interface{}, session interface{}, entityID interface{}, limit interface{}, offset interface{}) *Service_RetrieveAllRoles_Call {
 	return &Service_RetrieveAllRoles_Call{Call: _e.mock.On("RetrieveAllRoles", ctx, session, entityID, limit, offset)}
 }
 
 func (_c *Service_RetrieveAllRoles_Call) Run(run func(ctx context.Context, session authn.Session, entityID string, limit uint64, offset uint64)) *Service_RetrieveAllRoles_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(uint64), args[4].(uint64))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 uint64
+		if args[3] != nil {
+			arg3 = args[3].(uint64)
+		}
+		var arg4 uint64
+		if args[4] != nil {
+			arg4 = args[4].(uint64)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+		)
 	})
 	return _c
 }
@@ -1000,17 +1296,38 @@ type Service_RetrieveDomain_Call struct {
 }
 
 // RetrieveDomain is a helper method to define mock.On call
-//   - ctx
-//   - sesssion
-//   - id
-//   - withRoles
+//   - ctx context.Context
+//   - sesssion authn.Session
+//   - id string
+//   - withRoles bool
 func (_e *Service_Expecter) RetrieveDomain(ctx interface{}, sesssion interface{}, id interface{}, withRoles interface{}) *Service_RetrieveDomain_Call {
 	return &Service_RetrieveDomain_Call{Call: _e.mock.On("RetrieveDomain", ctx, sesssion, id, withRoles)}
 }
 
 func (_c *Service_RetrieveDomain_Call) Run(run func(ctx context.Context, sesssion authn.Session, id string, withRoles bool)) *Service_RetrieveDomain_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(bool))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 bool
+		if args[3] != nil {
+			arg3 = args[3].(bool)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -1057,17 +1374,38 @@ type Service_RetrieveRole_Call struct {
 }
 
 // RetrieveRole is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - entityID
-//   - roleID
+//   - ctx context.Context
+//   - session authn.Session
+//   - entityID string
+//   - roleID string
 func (_e *Service_Expecter) RetrieveRole(ctx interface{}, session interface{}, entityID interface{}, roleID interface{}) *Service_RetrieveRole_Call {
 	return &Service_RetrieveRole_Call{Call: _e.mock.On("RetrieveRole", ctx, session, entityID, roleID)}
 }
 
 func (_c *Service_RetrieveRole_Call) Run(run func(ctx context.Context, session authn.Session, entityID string, roleID string)) *Service_RetrieveRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -1116,18 +1454,44 @@ type Service_RoleAddActions_Call struct {
 }
 
 // RoleAddActions is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - entityID
-//   - roleID
-//   - actions
+//   - ctx context.Context
+//   - session authn.Session
+//   - entityID string
+//   - roleID string
+//   - actions []string
 func (_e *Service_Expecter) RoleAddActions(ctx interface{}, session interface{}, entityID interface{}, roleID interface{}, actions interface{}) *Service_RoleAddActions_Call {
 	return &Service_RoleAddActions_Call{Call: _e.mock.On("RoleAddActions", ctx, session, entityID, roleID, actions)}
 }
 
 func (_c *Service_RoleAddActions_Call) Run(run func(ctx context.Context, session authn.Session, entityID string, roleID string, actions []string)) *Service_RoleAddActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(string), args[4].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		var arg4 []string
+		if args[4] != nil {
+			arg4 = args[4].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+		)
 	})
 	return _c
 }
@@ -1176,18 +1540,44 @@ type Service_RoleAddMembers_Call struct {
 }
 
 // RoleAddMembers is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - entityID
-//   - roleID
-//   - members
+//   - ctx context.Context
+//   - session authn.Session
+//   - entityID string
+//   - roleID string
+//   - members []string
 func (_e *Service_Expecter) RoleAddMembers(ctx interface{}, session interface{}, entityID interface{}, roleID interface{}, members interface{}) *Service_RoleAddMembers_Call {
 	return &Service_RoleAddMembers_Call{Call: _e.mock.On("RoleAddMembers", ctx, session, entityID, roleID, members)}
 }
 
 func (_c *Service_RoleAddMembers_Call) Run(run func(ctx context.Context, session authn.Session, entityID string, roleID string, members []string)) *Service_RoleAddMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(string), args[4].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		var arg4 []string
+		if args[4] != nil {
+			arg4 = args[4].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+		)
 	})
 	return _c
 }
@@ -1234,18 +1624,44 @@ type Service_RoleCheckActionsExists_Call struct {
 }
 
 // RoleCheckActionsExists is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - entityID
-//   - roleID
-//   - actions
+//   - ctx context.Context
+//   - session authn.Session
+//   - entityID string
+//   - roleID string
+//   - actions []string
 func (_e *Service_Expecter) RoleCheckActionsExists(ctx interface{}, session interface{}, entityID interface{}, roleID interface{}, actions interface{}) *Service_RoleCheckActionsExists_Call {
 	return &Service_RoleCheckActionsExists_Call{Call: _e.mock.On("RoleCheckActionsExists", ctx, session, entityID, roleID, actions)}
 }
 
 func (_c *Service_RoleCheckActionsExists_Call) Run(run func(ctx context.Context, session authn.Session, entityID string, roleID string, actions []string)) *Service_RoleCheckActionsExists_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(string), args[4].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		var arg4 []string
+		if args[4] != nil {
+			arg4 = args[4].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+		)
 	})
 	return _c
 }
@@ -1292,18 +1708,44 @@ type Service_RoleCheckMembersExists_Call struct {
 }
 
 // RoleCheckMembersExists is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - entityID
-//   - roleID
-//   - members
+//   - ctx context.Context
+//   - session authn.Session
+//   - entityID string
+//   - roleID string
+//   - members []string
 func (_e *Service_Expecter) RoleCheckMembersExists(ctx interface{}, session interface{}, entityID interface{}, roleID interface{}, members interface{}) *Service_RoleCheckMembersExists_Call {
 	return &Service_RoleCheckMembersExists_Call{Call: _e.mock.On("RoleCheckMembersExists", ctx, session, entityID, roleID, members)}
 }
 
 func (_c *Service_RoleCheckMembersExists_Call) Run(run func(ctx context.Context, session authn.Session, entityID string, roleID string, members []string)) *Service_RoleCheckMembersExists_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(string), args[4].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		var arg4 []string
+		if args[4] != nil {
+			arg4 = args[4].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+		)
 	})
 	return _c
 }
@@ -1352,17 +1794,38 @@ type Service_RoleListActions_Call struct {
 }
 
 // RoleListActions is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - entityID
-//   - roleID
+//   - ctx context.Context
+//   - session authn.Session
+//   - entityID string
+//   - roleID string
 func (_e *Service_Expecter) RoleListActions(ctx interface{}, session interface{}, entityID interface{}, roleID interface{}) *Service_RoleListActions_Call {
 	return &Service_RoleListActions_Call{Call: _e.mock.On("RoleListActions", ctx, session, entityID, roleID)}
 }
 
 func (_c *Service_RoleListActions_Call) Run(run func(ctx context.Context, session authn.Session, entityID string, roleID string)) *Service_RoleListActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -1409,19 +1872,50 @@ type Service_RoleListMembers_Call struct {
 }
 
 // RoleListMembers is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - entityID
-//   - roleID
-//   - limit
-//   - offset
+//   - ctx context.Context
+//   - session authn.Session
+//   - entityID string
+//   - roleID string
+//   - limit uint64
+//   - offset uint64
 func (_e *Service_Expecter) RoleListMembers(ctx interface{}, session interface{}, entityID interface{}, roleID interface{}, limit interface{}, offset interface{}) *Service_RoleListMembers_Call {
 	return &Service_RoleListMembers_Call{Call: _e.mock.On("RoleListMembers", ctx, session, entityID, roleID, limit, offset)}
 }
 
 func (_c *Service_RoleListMembers_Call) Run(run func(ctx context.Context, session authn.Session, entityID string, roleID string, limit uint64, offset uint64)) *Service_RoleListMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(string), args[4].(uint64), args[5].(uint64))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		var arg4 uint64
+		if args[4] != nil {
+			arg4 = args[4].(uint64)
+		}
+		var arg5 uint64
+		if args[5] != nil {
+			arg5 = args[5].(uint64)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+			arg5,
+		)
 	})
 	return _c
 }
@@ -1459,18 +1953,44 @@ type Service_RoleRemoveActions_Call struct {
 }
 
 // RoleRemoveActions is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - entityID
-//   - roleID
-//   - actions
+//   - ctx context.Context
+//   - session authn.Session
+//   - entityID string
+//   - roleID string
+//   - actions []string
 func (_e *Service_Expecter) RoleRemoveActions(ctx interface{}, session interface{}, entityID interface{}, roleID interface{}, actions interface{}) *Service_RoleRemoveActions_Call {
 	return &Service_RoleRemoveActions_Call{Call: _e.mock.On("RoleRemoveActions", ctx, session, entityID, roleID, actions)}
 }
 
 func (_c *Service_RoleRemoveActions_Call) Run(run func(ctx context.Context, session authn.Session, entityID string, roleID string, actions []string)) *Service_RoleRemoveActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(string), args[4].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		var arg4 []string
+		if args[4] != nil {
+			arg4 = args[4].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+		)
 	})
 	return _c
 }
@@ -1508,17 +2028,38 @@ type Service_RoleRemoveAllActions_Call struct {
 }
 
 // RoleRemoveAllActions is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - entityID
-//   - roleID
+//   - ctx context.Context
+//   - session authn.Session
+//   - entityID string
+//   - roleID string
 func (_e *Service_Expecter) RoleRemoveAllActions(ctx interface{}, session interface{}, entityID interface{}, roleID interface{}) *Service_RoleRemoveAllActions_Call {
 	return &Service_RoleRemoveAllActions_Call{Call: _e.mock.On("RoleRemoveAllActions", ctx, session, entityID, roleID)}
 }
 
 func (_c *Service_RoleRemoveAllActions_Call) Run(run func(ctx context.Context, session authn.Session, entityID string, roleID string)) *Service_RoleRemoveAllActions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -1556,17 +2097,38 @@ type Service_RoleRemoveAllMembers_Call struct {
 }
 
 // RoleRemoveAllMembers is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - entityID
-//   - roleID
+//   - ctx context.Context
+//   - session authn.Session
+//   - entityID string
+//   - roleID string
 func (_e *Service_Expecter) RoleRemoveAllMembers(ctx interface{}, session interface{}, entityID interface{}, roleID interface{}) *Service_RoleRemoveAllMembers_Call {
 	return &Service_RoleRemoveAllMembers_Call{Call: _e.mock.On("RoleRemoveAllMembers", ctx, session, entityID, roleID)}
 }
 
 func (_c *Service_RoleRemoveAllMembers_Call) Run(run func(ctx context.Context, session authn.Session, entityID string, roleID string)) *Service_RoleRemoveAllMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -1604,18 +2166,44 @@ type Service_RoleRemoveMembers_Call struct {
 }
 
 // RoleRemoveMembers is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - entityID
-//   - roleID
-//   - members
+//   - ctx context.Context
+//   - session authn.Session
+//   - entityID string
+//   - roleID string
+//   - members []string
 func (_e *Service_Expecter) RoleRemoveMembers(ctx interface{}, session interface{}, entityID interface{}, roleID interface{}, members interface{}) *Service_RoleRemoveMembers_Call {
 	return &Service_RoleRemoveMembers_Call{Call: _e.mock.On("RoleRemoveMembers", ctx, session, entityID, roleID, members)}
 }
 
 func (_c *Service_RoleRemoveMembers_Call) Run(run func(ctx context.Context, session authn.Session, entityID string, roleID string, members []string)) *Service_RoleRemoveMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(string), args[4].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		var arg4 []string
+		if args[4] != nil {
+			arg4 = args[4].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+		)
 	})
 	return _c
 }
@@ -1653,16 +2241,32 @@ type Service_SendInvitation_Call struct {
 }
 
 // SendInvitation is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - invitation
+//   - ctx context.Context
+//   - session authn.Session
+//   - invitation domains.Invitation
 func (_e *Service_Expecter) SendInvitation(ctx interface{}, session interface{}, invitation interface{}) *Service_SendInvitation_Call {
 	return &Service_SendInvitation_Call{Call: _e.mock.On("SendInvitation", ctx, session, invitation)}
 }
 
 func (_c *Service_SendInvitation_Call) Run(run func(ctx context.Context, session authn.Session, invitation domains.Invitation)) *Service_SendInvitation_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(domains.Invitation))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 domains.Invitation
+		if args[2] != nil {
+			arg2 = args[2].(domains.Invitation)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -1709,17 +2313,38 @@ type Service_UpdateDomain_Call struct {
 }
 
 // UpdateDomain is a helper method to define mock.On call
-//   - ctx
-//   - sesssion
-//   - id
-//   - d
+//   - ctx context.Context
+//   - sesssion authn.Session
+//   - id string
+//   - d domains.DomainReq
 func (_e *Service_Expecter) UpdateDomain(ctx interface{}, sesssion interface{}, id interface{}, d interface{}) *Service_UpdateDomain_Call {
 	return &Service_UpdateDomain_Call{Call: _e.mock.On("UpdateDomain", ctx, sesssion, id, d)}
 }
 
 func (_c *Service_UpdateDomain_Call) Run(run func(ctx context.Context, sesssion authn.Session, id string, d domains.DomainReq)) *Service_UpdateDomain_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(domains.DomainReq))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 domains.DomainReq
+		if args[3] != nil {
+			arg3 = args[3].(domains.DomainReq)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -1766,18 +2391,44 @@ type Service_UpdateRoleName_Call struct {
 }
 
 // UpdateRoleName is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - entityID
-//   - roleID
-//   - newRoleName
+//   - ctx context.Context
+//   - session authn.Session
+//   - entityID string
+//   - roleID string
+//   - newRoleName string
 func (_e *Service_Expecter) UpdateRoleName(ctx interface{}, session interface{}, entityID interface{}, roleID interface{}, newRoleName interface{}) *Service_UpdateRoleName_Call {
 	return &Service_UpdateRoleName_Call{Call: _e.mock.On("UpdateRoleName", ctx, session, entityID, roleID, newRoleName)}
 }
 
 func (_c *Service_UpdateRoleName_Call) Run(run func(ctx context.Context, session authn.Session, entityID string, roleID string, newRoleName string)) *Service_UpdateRoleName_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(string), args[4].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		var arg4 string
+		if args[4] != nil {
+			arg4 = args[4].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+		)
 	})
 	return _c
 }
@@ -1824,17 +2475,38 @@ type Service_ViewInvitation_Call struct {
 }
 
 // ViewInvitation is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - inviteeUserID
-//   - domainID
+//   - ctx context.Context
+//   - session authn.Session
+//   - inviteeUserID string
+//   - domainID string
 func (_e *Service_Expecter) ViewInvitation(ctx interface{}, session interface{}, inviteeUserID interface{}, domainID interface{}) *Service_ViewInvitation_Call {
 	return &Service_ViewInvitation_Call{Call: _e.mock.On("ViewInvitation", ctx, session, inviteeUserID, domainID)}
 }
 
 func (_c *Service_ViewInvitation_Call) Run(run func(ctx context.Context, session authn.Session, inviteeUserID string, domainID string)) *Service_ViewInvitation_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(string), args[3].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }

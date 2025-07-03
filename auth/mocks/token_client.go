@@ -10,7 +10,7 @@ package mocks
 import (
 	"context"
 
-	v1 "github.com/absmach/supermq/api/grpc/token/v1"
+	"github.com/absmach/supermq/api/grpc/token/v1"
 	mock "github.com/stretchr/testify/mock"
 	"google.golang.org/grpc"
 )
@@ -58,8 +58,8 @@ func (_mock *TokenServiceClient) Issue(ctx context.Context, in *v1.IssueReq, opt
 
 	var r0 *v1.Token
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.IssueReq, []grpc.CallOption) (*v1.Token, error)); ok {
-		return returnFunc(ctx, in, opts)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.IssueReq, ...grpc.CallOption) (*v1.Token, error)); ok {
+		return returnFunc(ctx, in, opts...)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.IssueReq, ...grpc.CallOption) *v1.Token); ok {
 		r0 = returnFunc(ctx, in, opts...)
@@ -82,9 +82,9 @@ type TokenServiceClient_Issue_Call struct {
 }
 
 // Issue is a helper method to define mock.On call
-//   - ctx
-//   - in
-//   - opts
+//   - ctx context.Context
+//   - in *v1.IssueReq
+//   - opts ...grpc.CallOption
 func (_e *TokenServiceClient_Expecter) Issue(ctx interface{}, in interface{}, opts ...interface{}) *TokenServiceClient_Issue_Call {
 	return &TokenServiceClient_Issue_Call{Call: _e.mock.On("Issue",
 		append([]interface{}{ctx, in}, opts...)...)}
@@ -92,13 +92,25 @@ func (_e *TokenServiceClient_Expecter) Issue(ctx interface{}, in interface{}, op
 
 func (_c *TokenServiceClient_Issue_Call) Run(run func(ctx context.Context, in *v1.IssueReq, opts ...grpc.CallOption)) *TokenServiceClient_Issue_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]grpc.CallOption, len(args)-2)
-		for i, a := range args[2:] {
-			if a != nil {
-				variadicArgs[i] = a.(grpc.CallOption)
-			}
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
 		}
-		run(args[0].(context.Context), args[1].(*v1.IssueReq), variadicArgs...)
+		var arg1 *v1.IssueReq
+		if args[1] != nil {
+			arg1 = args[1].(*v1.IssueReq)
+		}
+		var arg2 []grpc.CallOption
+		var variadicArgs []grpc.CallOption
+		if len(args) > 2 {
+			variadicArgs = args[2].([]grpc.CallOption)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
 	})
 	return _c
 }
@@ -129,8 +141,8 @@ func (_mock *TokenServiceClient) Refresh(ctx context.Context, in *v1.RefreshReq,
 
 	var r0 *v1.Token
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.RefreshReq, []grpc.CallOption) (*v1.Token, error)); ok {
-		return returnFunc(ctx, in, opts)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.RefreshReq, ...grpc.CallOption) (*v1.Token, error)); ok {
+		return returnFunc(ctx, in, opts...)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, *v1.RefreshReq, ...grpc.CallOption) *v1.Token); ok {
 		r0 = returnFunc(ctx, in, opts...)
@@ -153,9 +165,9 @@ type TokenServiceClient_Refresh_Call struct {
 }
 
 // Refresh is a helper method to define mock.On call
-//   - ctx
-//   - in
-//   - opts
+//   - ctx context.Context
+//   - in *v1.RefreshReq
+//   - opts ...grpc.CallOption
 func (_e *TokenServiceClient_Expecter) Refresh(ctx interface{}, in interface{}, opts ...interface{}) *TokenServiceClient_Refresh_Call {
 	return &TokenServiceClient_Refresh_Call{Call: _e.mock.On("Refresh",
 		append([]interface{}{ctx, in}, opts...)...)}
@@ -163,13 +175,25 @@ func (_e *TokenServiceClient_Expecter) Refresh(ctx interface{}, in interface{}, 
 
 func (_c *TokenServiceClient_Refresh_Call) Run(run func(ctx context.Context, in *v1.RefreshReq, opts ...grpc.CallOption)) *TokenServiceClient_Refresh_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]grpc.CallOption, len(args)-2)
-		for i, a := range args[2:] {
-			if a != nil {
-				variadicArgs[i] = a.(grpc.CallOption)
-			}
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
 		}
-		run(args[0].(context.Context), args[1].(*v1.RefreshReq), variadicArgs...)
+		var arg1 *v1.RefreshReq
+		if args[1] != nil {
+			arg1 = args[1].(*v1.RefreshReq)
+		}
+		var arg2 []grpc.CallOption
+		var variadicArgs []grpc.CallOption
+		if len(args) > 2 {
+			variadicArgs = args[2].([]grpc.CallOption)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
 	})
 	return _c
 }

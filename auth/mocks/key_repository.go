@@ -64,16 +64,32 @@ type KeyRepository_Remove_Call struct {
 }
 
 // Remove is a helper method to define mock.On call
-//   - ctx
-//   - issuer
-//   - id
+//   - ctx context.Context
+//   - issuer string
+//   - id string
 func (_e *KeyRepository_Expecter) Remove(ctx interface{}, issuer interface{}, id interface{}) *KeyRepository_Remove_Call {
 	return &KeyRepository_Remove_Call{Call: _e.mock.On("Remove", ctx, issuer, id)}
 }
 
 func (_c *KeyRepository_Remove_Call) Run(run func(ctx context.Context, issuer string, id string)) *KeyRepository_Remove_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -120,16 +136,32 @@ type KeyRepository_Retrieve_Call struct {
 }
 
 // Retrieve is a helper method to define mock.On call
-//   - ctx
-//   - issuer
-//   - id
+//   - ctx context.Context
+//   - issuer string
+//   - id string
 func (_e *KeyRepository_Expecter) Retrieve(ctx interface{}, issuer interface{}, id interface{}) *KeyRepository_Retrieve_Call {
 	return &KeyRepository_Retrieve_Call{Call: _e.mock.On("Retrieve", ctx, issuer, id)}
 }
 
 func (_c *KeyRepository_Retrieve_Call) Run(run func(ctx context.Context, issuer string, id string)) *KeyRepository_Retrieve_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -176,15 +208,26 @@ type KeyRepository_Save_Call struct {
 }
 
 // Save is a helper method to define mock.On call
-//   - ctx
-//   - key
+//   - ctx context.Context
+//   - key auth.Key
 func (_e *KeyRepository_Expecter) Save(ctx interface{}, key interface{}) *KeyRepository_Save_Call {
 	return &KeyRepository_Save_Call{Call: _e.mock.On("Save", ctx, key)}
 }
 
 func (_c *KeyRepository_Save_Call) Run(run func(ctx context.Context, key auth.Key)) *KeyRepository_Save_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(auth.Key))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 auth.Key
+		if args[1] != nil {
+			arg1 = args[1].(auth.Key)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

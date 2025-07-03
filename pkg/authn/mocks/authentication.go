@@ -73,15 +73,26 @@ type Authentication_Authenticate_Call struct {
 }
 
 // Authenticate is a helper method to define mock.On call
-//   - ctx
-//   - token
+//   - ctx context.Context
+//   - token string
 func (_e *Authentication_Expecter) Authenticate(ctx interface{}, token interface{}) *Authentication_Authenticate_Call {
 	return &Authentication_Authenticate_Call{Call: _e.mock.On("Authenticate", ctx, token)}
 }
 
 func (_c *Authentication_Authenticate_Call) Run(run func(ctx context.Context, token string)) *Authentication_Authenticate_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

@@ -64,15 +64,26 @@ type Service_AddPolicies_Call struct {
 }
 
 // AddPolicies is a helper method to define mock.On call
-//   - ctx
-//   - prs
+//   - ctx context.Context
+//   - prs []policies.Policy
 func (_e *Service_Expecter) AddPolicies(ctx interface{}, prs interface{}) *Service_AddPolicies_Call {
 	return &Service_AddPolicies_Call{Call: _e.mock.On("AddPolicies", ctx, prs)}
 }
 
 func (_c *Service_AddPolicies_Call) Run(run func(ctx context.Context, prs []policies.Policy)) *Service_AddPolicies_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].([]policies.Policy))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []policies.Policy
+		if args[1] != nil {
+			arg1 = args[1].([]policies.Policy)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -110,15 +121,26 @@ type Service_AddPolicy_Call struct {
 }
 
 // AddPolicy is a helper method to define mock.On call
-//   - ctx
-//   - pr
+//   - ctx context.Context
+//   - pr policies.Policy
 func (_e *Service_Expecter) AddPolicy(ctx interface{}, pr interface{}) *Service_AddPolicy_Call {
 	return &Service_AddPolicy_Call{Call: _e.mock.On("AddPolicy", ctx, pr)}
 }
 
 func (_c *Service_AddPolicy_Call) Run(run func(ctx context.Context, pr policies.Policy)) *Service_AddPolicy_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(policies.Policy))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 policies.Policy
+		if args[1] != nil {
+			arg1 = args[1].(policies.Policy)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -165,15 +187,26 @@ type Service_CountObjects_Call struct {
 }
 
 // CountObjects is a helper method to define mock.On call
-//   - ctx
-//   - pr
+//   - ctx context.Context
+//   - pr policies.Policy
 func (_e *Service_Expecter) CountObjects(ctx interface{}, pr interface{}) *Service_CountObjects_Call {
 	return &Service_CountObjects_Call{Call: _e.mock.On("CountObjects", ctx, pr)}
 }
 
 func (_c *Service_CountObjects_Call) Run(run func(ctx context.Context, pr policies.Policy)) *Service_CountObjects_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(policies.Policy))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 policies.Policy
+		if args[1] != nil {
+			arg1 = args[1].(policies.Policy)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -220,15 +253,26 @@ type Service_CountSubjects_Call struct {
 }
 
 // CountSubjects is a helper method to define mock.On call
-//   - ctx
-//   - pr
+//   - ctx context.Context
+//   - pr policies.Policy
 func (_e *Service_Expecter) CountSubjects(ctx interface{}, pr interface{}) *Service_CountSubjects_Call {
 	return &Service_CountSubjects_Call{Call: _e.mock.On("CountSubjects", ctx, pr)}
 }
 
 func (_c *Service_CountSubjects_Call) Run(run func(ctx context.Context, pr policies.Policy)) *Service_CountSubjects_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(policies.Policy))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 policies.Policy
+		if args[1] != nil {
+			arg1 = args[1].(policies.Policy)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -266,15 +310,26 @@ type Service_DeletePolicies_Call struct {
 }
 
 // DeletePolicies is a helper method to define mock.On call
-//   - ctx
-//   - prs
+//   - ctx context.Context
+//   - prs []policies.Policy
 func (_e *Service_Expecter) DeletePolicies(ctx interface{}, prs interface{}) *Service_DeletePolicies_Call {
 	return &Service_DeletePolicies_Call{Call: _e.mock.On("DeletePolicies", ctx, prs)}
 }
 
 func (_c *Service_DeletePolicies_Call) Run(run func(ctx context.Context, prs []policies.Policy)) *Service_DeletePolicies_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].([]policies.Policy))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []policies.Policy
+		if args[1] != nil {
+			arg1 = args[1].([]policies.Policy)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -312,15 +367,26 @@ type Service_DeletePolicyFilter_Call struct {
 }
 
 // DeletePolicyFilter is a helper method to define mock.On call
-//   - ctx
-//   - pr
+//   - ctx context.Context
+//   - pr policies.Policy
 func (_e *Service_Expecter) DeletePolicyFilter(ctx interface{}, pr interface{}) *Service_DeletePolicyFilter_Call {
 	return &Service_DeletePolicyFilter_Call{Call: _e.mock.On("DeletePolicyFilter", ctx, pr)}
 }
 
 func (_c *Service_DeletePolicyFilter_Call) Run(run func(ctx context.Context, pr policies.Policy)) *Service_DeletePolicyFilter_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(policies.Policy))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 policies.Policy
+		if args[1] != nil {
+			arg1 = args[1].(policies.Policy)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -367,15 +433,26 @@ type Service_ListAllObjects_Call struct {
 }
 
 // ListAllObjects is a helper method to define mock.On call
-//   - ctx
-//   - pr
+//   - ctx context.Context
+//   - pr policies.Policy
 func (_e *Service_Expecter) ListAllObjects(ctx interface{}, pr interface{}) *Service_ListAllObjects_Call {
 	return &Service_ListAllObjects_Call{Call: _e.mock.On("ListAllObjects", ctx, pr)}
 }
 
 func (_c *Service_ListAllObjects_Call) Run(run func(ctx context.Context, pr policies.Policy)) *Service_ListAllObjects_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(policies.Policy))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 policies.Policy
+		if args[1] != nil {
+			arg1 = args[1].(policies.Policy)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -422,15 +499,26 @@ type Service_ListAllSubjects_Call struct {
 }
 
 // ListAllSubjects is a helper method to define mock.On call
-//   - ctx
-//   - pr
+//   - ctx context.Context
+//   - pr policies.Policy
 func (_e *Service_Expecter) ListAllSubjects(ctx interface{}, pr interface{}) *Service_ListAllSubjects_Call {
 	return &Service_ListAllSubjects_Call{Call: _e.mock.On("ListAllSubjects", ctx, pr)}
 }
 
 func (_c *Service_ListAllSubjects_Call) Run(run func(ctx context.Context, pr policies.Policy)) *Service_ListAllSubjects_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(policies.Policy))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 policies.Policy
+		if args[1] != nil {
+			arg1 = args[1].(policies.Policy)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -477,17 +565,38 @@ type Service_ListObjects_Call struct {
 }
 
 // ListObjects is a helper method to define mock.On call
-//   - ctx
-//   - pr
-//   - nextPageToken
-//   - limit
+//   - ctx context.Context
+//   - pr policies.Policy
+//   - nextPageToken string
+//   - limit uint64
 func (_e *Service_Expecter) ListObjects(ctx interface{}, pr interface{}, nextPageToken interface{}, limit interface{}) *Service_ListObjects_Call {
 	return &Service_ListObjects_Call{Call: _e.mock.On("ListObjects", ctx, pr, nextPageToken, limit)}
 }
 
 func (_c *Service_ListObjects_Call) Run(run func(ctx context.Context, pr policies.Policy, nextPageToken string, limit uint64)) *Service_ListObjects_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(policies.Policy), args[2].(string), args[3].(uint64))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 policies.Policy
+		if args[1] != nil {
+			arg1 = args[1].(policies.Policy)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 uint64
+		if args[3] != nil {
+			arg3 = args[3].(uint64)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -536,16 +645,32 @@ type Service_ListPermissions_Call struct {
 }
 
 // ListPermissions is a helper method to define mock.On call
-//   - ctx
-//   - pr
-//   - permissionsFilter
+//   - ctx context.Context
+//   - pr policies.Policy
+//   - permissionsFilter []string
 func (_e *Service_Expecter) ListPermissions(ctx interface{}, pr interface{}, permissionsFilter interface{}) *Service_ListPermissions_Call {
 	return &Service_ListPermissions_Call{Call: _e.mock.On("ListPermissions", ctx, pr, permissionsFilter)}
 }
 
 func (_c *Service_ListPermissions_Call) Run(run func(ctx context.Context, pr policies.Policy, permissionsFilter []string)) *Service_ListPermissions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(policies.Policy), args[2].([]string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 policies.Policy
+		if args[1] != nil {
+			arg1 = args[1].(policies.Policy)
+		}
+		var arg2 []string
+		if args[2] != nil {
+			arg2 = args[2].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -592,17 +717,38 @@ type Service_ListSubjects_Call struct {
 }
 
 // ListSubjects is a helper method to define mock.On call
-//   - ctx
-//   - pr
-//   - nextPageToken
-//   - limit
+//   - ctx context.Context
+//   - pr policies.Policy
+//   - nextPageToken string
+//   - limit uint64
 func (_e *Service_Expecter) ListSubjects(ctx interface{}, pr interface{}, nextPageToken interface{}, limit interface{}) *Service_ListSubjects_Call {
 	return &Service_ListSubjects_Call{Call: _e.mock.On("ListSubjects", ctx, pr, nextPageToken, limit)}
 }
 
 func (_c *Service_ListSubjects_Call) Run(run func(ctx context.Context, pr policies.Policy, nextPageToken string, limit uint64)) *Service_ListSubjects_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(policies.Policy), args[2].(string), args[3].(uint64))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 policies.Policy
+		if args[1] != nil {
+			arg1 = args[1].(policies.Policy)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 uint64
+		if args[3] != nil {
+			arg3 = args[3].(uint64)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }

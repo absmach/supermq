@@ -108,16 +108,32 @@ type PubSub_Publish_Call struct {
 }
 
 // Publish is a helper method to define mock.On call
-//   - ctx
-//   - topic
-//   - msg
+//   - ctx context.Context
+//   - topic string
+//   - msg *messaging.Message
 func (_e *PubSub_Expecter) Publish(ctx interface{}, topic interface{}, msg interface{}) *PubSub_Publish_Call {
 	return &PubSub_Publish_Call{Call: _e.mock.On("Publish", ctx, topic, msg)}
 }
 
 func (_c *PubSub_Publish_Call) Run(run func(ctx context.Context, topic string, msg *messaging.Message)) *PubSub_Publish_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(*messaging.Message))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 *messaging.Message
+		if args[2] != nil {
+			arg2 = args[2].(*messaging.Message)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -155,15 +171,26 @@ type PubSub_Subscribe_Call struct {
 }
 
 // Subscribe is a helper method to define mock.On call
-//   - ctx
-//   - cfg
+//   - ctx context.Context
+//   - cfg messaging.SubscriberConfig
 func (_e *PubSub_Expecter) Subscribe(ctx interface{}, cfg interface{}) *PubSub_Subscribe_Call {
 	return &PubSub_Subscribe_Call{Call: _e.mock.On("Subscribe", ctx, cfg)}
 }
 
 func (_c *PubSub_Subscribe_Call) Run(run func(ctx context.Context, cfg messaging.SubscriberConfig)) *PubSub_Subscribe_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(messaging.SubscriberConfig))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 messaging.SubscriberConfig
+		if args[1] != nil {
+			arg1 = args[1].(messaging.SubscriberConfig)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -201,16 +228,32 @@ type PubSub_Unsubscribe_Call struct {
 }
 
 // Unsubscribe is a helper method to define mock.On call
-//   - ctx
-//   - id
-//   - topic
+//   - ctx context.Context
+//   - id string
+//   - topic string
 func (_e *PubSub_Expecter) Unsubscribe(ctx interface{}, id interface{}, topic interface{}) *PubSub_Unsubscribe_Call {
 	return &PubSub_Unsubscribe_Call{Call: _e.mock.On("Unsubscribe", ctx, id, topic)}
 }
 
 func (_c *PubSub_Unsubscribe_Call) Run(run func(ctx context.Context, id string, topic string)) *PubSub_Unsubscribe_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }

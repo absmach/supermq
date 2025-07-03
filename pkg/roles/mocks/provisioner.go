@@ -76,19 +76,50 @@ type Provisioner_AddNewEntitiesRoles_Call struct {
 }
 
 // AddNewEntitiesRoles is a helper method to define mock.On call
-//   - ctx
-//   - domainID
-//   - userID
-//   - entityIDs
-//   - optionalEntityPolicies
-//   - newBuiltInRoleMembers
+//   - ctx context.Context
+//   - domainID string
+//   - userID string
+//   - entityIDs []string
+//   - optionalEntityPolicies []policies.Policy
+//   - newBuiltInRoleMembers map[roles.BuiltInRoleName][]roles.Member
 func (_e *Provisioner_Expecter) AddNewEntitiesRoles(ctx interface{}, domainID interface{}, userID interface{}, entityIDs interface{}, optionalEntityPolicies interface{}, newBuiltInRoleMembers interface{}) *Provisioner_AddNewEntitiesRoles_Call {
 	return &Provisioner_AddNewEntitiesRoles_Call{Call: _e.mock.On("AddNewEntitiesRoles", ctx, domainID, userID, entityIDs, optionalEntityPolicies, newBuiltInRoleMembers)}
 }
 
 func (_c *Provisioner_AddNewEntitiesRoles_Call) Run(run func(ctx context.Context, domainID string, userID string, entityIDs []string, optionalEntityPolicies []policies.Policy, newBuiltInRoleMembers map[roles.BuiltInRoleName][]roles.Member)) *Provisioner_AddNewEntitiesRoles_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].([]string), args[4].([]policies.Policy), args[5].(map[roles.BuiltInRoleName][]roles.Member))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 []string
+		if args[3] != nil {
+			arg3 = args[3].([]string)
+		}
+		var arg4 []policies.Policy
+		if args[4] != nil {
+			arg4 = args[4].([]policies.Policy)
+		}
+		var arg5 map[roles.BuiltInRoleName][]roles.Member
+		if args[5] != nil {
+			arg5 = args[5].(map[roles.BuiltInRoleName][]roles.Member)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+			arg5,
+		)
 	})
 	return _c
 }
@@ -126,19 +157,50 @@ type Provisioner_RemoveEntitiesRoles_Call struct {
 }
 
 // RemoveEntitiesRoles is a helper method to define mock.On call
-//   - ctx
-//   - domainID
-//   - userID
-//   - entityIDs
-//   - optionalFilterDeletePolicies
-//   - optionalDeletePolicies
+//   - ctx context.Context
+//   - domainID string
+//   - userID string
+//   - entityIDs []string
+//   - optionalFilterDeletePolicies []policies.Policy
+//   - optionalDeletePolicies []policies.Policy
 func (_e *Provisioner_Expecter) RemoveEntitiesRoles(ctx interface{}, domainID interface{}, userID interface{}, entityIDs interface{}, optionalFilterDeletePolicies interface{}, optionalDeletePolicies interface{}) *Provisioner_RemoveEntitiesRoles_Call {
 	return &Provisioner_RemoveEntitiesRoles_Call{Call: _e.mock.On("RemoveEntitiesRoles", ctx, domainID, userID, entityIDs, optionalFilterDeletePolicies, optionalDeletePolicies)}
 }
 
 func (_c *Provisioner_RemoveEntitiesRoles_Call) Run(run func(ctx context.Context, domainID string, userID string, entityIDs []string, optionalFilterDeletePolicies []policies.Policy, optionalDeletePolicies []policies.Policy)) *Provisioner_RemoveEntitiesRoles_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].([]string), args[4].([]policies.Policy), args[5].([]policies.Policy))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 []string
+		if args[3] != nil {
+			arg3 = args[3].([]string)
+		}
+		var arg4 []policies.Policy
+		if args[4] != nil {
+			arg4 = args[4].([]policies.Policy)
+		}
+		var arg5 []policies.Policy
+		if args[5] != nil {
+			arg5 = args[5].([]policies.Policy)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+			arg5,
+		)
 	})
 	return _c
 }

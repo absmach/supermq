@@ -72,15 +72,26 @@ type Cache_ID_Call struct {
 }
 
 // ID is a helper method to define mock.On call
-//   - ctx
-//   - clientSecret
+//   - ctx context.Context
+//   - clientSecret string
 func (_e *Cache_Expecter) ID(ctx interface{}, clientSecret interface{}) *Cache_ID_Call {
 	return &Cache_ID_Call{Call: _e.mock.On("ID", ctx, clientSecret)}
 }
 
 func (_c *Cache_ID_Call) Run(run func(ctx context.Context, clientSecret string)) *Cache_ID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -118,15 +129,26 @@ type Cache_Remove_Call struct {
 }
 
 // Remove is a helper method to define mock.On call
-//   - ctx
-//   - clientID
+//   - ctx context.Context
+//   - clientID string
 func (_e *Cache_Expecter) Remove(ctx interface{}, clientID interface{}) *Cache_Remove_Call {
 	return &Cache_Remove_Call{Call: _e.mock.On("Remove", ctx, clientID)}
 }
 
 func (_c *Cache_Remove_Call) Run(run func(ctx context.Context, clientID string)) *Cache_Remove_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -164,16 +186,32 @@ type Cache_Save_Call struct {
 }
 
 // Save is a helper method to define mock.On call
-//   - ctx
-//   - clientSecret
-//   - clientID
+//   - ctx context.Context
+//   - clientSecret string
+//   - clientID string
 func (_e *Cache_Expecter) Save(ctx interface{}, clientSecret interface{}, clientID interface{}) *Cache_Save_Call {
 	return &Cache_Save_Call{Call: _e.mock.On("Save", ctx, clientSecret, clientID)}
 }
 
 func (_c *Cache_Save_Call) Run(run func(ctx context.Context, clientSecret string, clientID string)) *Cache_Save_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }

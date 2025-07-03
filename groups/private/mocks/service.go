@@ -73,15 +73,26 @@ type Service_RetrieveById_Call struct {
 }
 
 // RetrieveById is a helper method to define mock.On call
-//   - ctx
-//   - id
+//   - ctx context.Context
+//   - id string
 func (_e *Service_Expecter) RetrieveById(ctx interface{}, id interface{}) *Service_RetrieveById_Call {
 	return &Service_RetrieveById_Call{Call: _e.mock.On("RetrieveById", ctx, id)}
 }
 
 func (_c *Service_RetrieveById_Call) Run(run func(ctx context.Context, id string)) *Service_RetrieveById_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
