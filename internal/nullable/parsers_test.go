@@ -130,15 +130,3 @@ func TestParseQueryParam(t *testing.T) {
 		})
 	}
 }
-
-func BenchmarkNewGeneric(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = New("test")
-	}
-}
-
-func BenchmarkNewString(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = NewString("test")
-	}
-}
