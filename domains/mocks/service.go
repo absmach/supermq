@@ -670,16 +670,32 @@ type Service_ListDomainInvitations_Call struct {
 }
 
 // ListDomainInvitations is a helper method to define mock.On call
-//   - ctx
-//   - session
-//   - page
+//   - ctx context.Context
+//   - session authn.Session
+//   - page domains.InvitationPageMeta
 func (_e *Service_Expecter) ListDomainInvitations(ctx interface{}, session interface{}, page interface{}) *Service_ListDomainInvitations_Call {
 	return &Service_ListDomainInvitations_Call{Call: _e.mock.On("ListDomainInvitations", ctx, session, page)}
 }
 
 func (_c *Service_ListDomainInvitations_Call) Run(run func(ctx context.Context, session authn.Session, page domains.InvitationPageMeta)) *Service_ListDomainInvitations_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(authn.Session), args[2].(domains.InvitationPageMeta))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		var arg2 domains.InvitationPageMeta
+		if args[2] != nil {
+			arg2 = args[2].(domains.InvitationPageMeta)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
