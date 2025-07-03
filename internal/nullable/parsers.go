@@ -11,7 +11,11 @@ import (
 
 var ErrInvalidQueryParams = errors.New("invalid query parameters")
 
-func Parse[T any](q url.Values, key string, parser Parser[T]) (Value[T], error) {
+type Nullable interface {
+	~string | ~int | ~uint | ~float64
+}
+
+func Parse[T Nullable](q url.Values, key string, parser Parser[T]) (Value[T], error) {
 	vals, ok := q[key]
 	if !ok {
 		return Value[T]{}, nil
