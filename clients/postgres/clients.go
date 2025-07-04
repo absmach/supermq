@@ -721,10 +721,13 @@ func (repo *clientRepo) userClientBaseQuery(domainID, userID string) string {
 			"groups" g ON g.id = gr.entity_id
 		JOIN
 			groups_role_actions all_actions ON all_actions.role_id = grm.role_id
+		LEFT JOIN "groups" g2
+			ON g2.path <@ g.path AND nlevel(g2.path) = nlevel(g.path) + 1
 		WHERE
 			grm.member_id = '%s'
 			AND g.domain_id = '%s'
 			AND gra."action" LIKE 'subgroup_client%%'
+			AND g2.path IS NULL
 		GROUP BY
 			gr.entity_id, grm.member_id, gr.id, gr."name", g."path", g.id
 	),
