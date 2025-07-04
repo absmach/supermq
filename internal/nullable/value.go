@@ -12,13 +12,13 @@ import (
 // Value type is used to represent difference betweeen an
 // intentionally omitted value and default type value.
 type Value[T any] struct {
-	Set   bool
+	Valid bool
 	Value T
 }
 
-func New[T nullable](v T, set bool) Value[T] {
+func New[T nullable](v T) Value[T] {
 	return Value[T]{
-		Set:   set,
+		Valid: true,
 		Value: v,
 	}
 }
@@ -30,7 +30,7 @@ type Parser[T nullable] func(string) (Value[T], error)
 
 // MarshalJSON encodes the value if set, otherwise returns `null`.
 func (n Value[T]) MarshalJSON() ([]byte, error) {
-	if !n.Set {
+	if !n.Valid {
 		return []byte("null"), nil
 	}
 	return json.Marshal(n.Value)
@@ -39,7 +39,7 @@ func (n Value[T]) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON decodes JSON and sets the value and Set flag.
 func (n *Value[T]) UnmarshalJSON(data []byte) error {
 	if bytes.Equal(data, []byte("null")) {
-		n.Set = false
+		n.Valid = false
 		var empty T
 		n.Value = empty
 		return nil
@@ -50,6 +50,6 @@ func (n *Value[T]) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("nullable: failed to unmarshal: %w", err)
 	}
 	n.Value = val
-	n.Set = true
+	n.Valid = true
 	return nil
 }

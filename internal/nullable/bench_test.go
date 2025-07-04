@@ -23,11 +23,11 @@ func BenchmarkPointerString(b *testing.B) {
 
 func BenchmarkNullableString(b *testing.B) {
 	n := func() Value[string] {
-		return Value[string]{Set: true, Value: "test"}
+		return Value[string]{Valid: true, Value: "test"}
 	}()
 
 	for b.Loop() {
-		if n.Set {
+		if n.Valid {
 			_ = n.Value + "test"
 		}
 	}
@@ -66,11 +66,11 @@ func BenchmarkPointerInt(b *testing.B) {
 
 func BenchmarkNullableInt(b *testing.B) {
 	n := func() Value[int] {
-		return Value[int]{Set: true, Value: 42}
+		return Value[int]{Valid: true, Value: 42}
 	}()
 
 	for b.Loop() {
-		if n.Set {
+		if n.Valid {
 			_ = n.Value + 1
 		}
 	}
@@ -113,11 +113,11 @@ func BenchmarkPointerFloat(b *testing.B) {
 
 func BenchmarkNullableFloat(b *testing.B) {
 	n := func() Value[float64] {
-		return Value[float64]{Set: true, Value: 42}
+		return Value[float64]{Valid: true, Value: 42}
 	}()
 
 	for b.Loop() {
-		if n.Set {
+		if n.Valid {
 			_ = n.Value + 1
 		}
 	}

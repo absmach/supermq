@@ -79,7 +79,9 @@ func ToGroups(data map[string]interface{}) (groups.Group, error) {
 	// Following fields of groups are allowed to be empty.
 
 	desc, ok := data["description"].(string)
-	g.Description = nullable.New(desc, ok)
+	if ok {
+		g.Description = nullable.New(desc)
+	}
 
 	parent, ok := data["parent"].(string)
 	if ok {

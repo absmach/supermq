@@ -78,7 +78,7 @@ func (cge createGroupEvent) Encode() (map[string]interface{}, error) {
 	if cge.Name != "" {
 		val["name"] = cge.Name
 	}
-	if cge.Description.Set {
+	if cge.Description.Valid {
 		val["description"] = cge.Description
 	}
 	if cge.Metadata != nil {
@@ -120,7 +120,7 @@ func (uge updateGroupEvent) Encode() (map[string]interface{}, error) {
 	if uge.Name != "" {
 		val["name"] = uge.Name
 	}
-	if uge.Description.Set {
+	if uge.Description.Valid {
 		val["description"] = uge.Description
 	}
 	if uge.Metadata != nil {
@@ -184,7 +184,7 @@ func (vge viewGroupEvent) Encode() (map[string]interface{}, error) {
 	if vge.Name != "" {
 		val["name"] = vge.Name
 	}
-	if vge.Description.Set {
+	if vge.Description.Valid {
 		val["description"] = vge.Description
 	}
 	if vge.Metadata != nil {

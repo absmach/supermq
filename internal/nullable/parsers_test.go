@@ -13,59 +13,59 @@ func TestParseHelpers(t *testing.T) {
 	t.Run("ParseString", func(t *testing.T) {
 		val, err := ParseString("hello")
 		assert.NoError(t, err)
-		assert.True(t, val.Set)
+		assert.True(t, val.Valid)
 		assert.Equal(t, "hello", val.Value)
 	})
 
 	t.Run("ParseInt", func(t *testing.T) {
 		val, err := ParseInt("42")
 		assert.NoError(t, err)
-		assert.True(t, val.Set)
+		assert.True(t, val.Valid)
 		assert.Equal(t, 42, val.Value)
 
 		val, err = ParseInt("notanint")
 		assert.Error(t, err)
-		assert.False(t, val.Set)
+		assert.False(t, val.Valid)
 	})
 
 	t.Run("ParseFloat", func(t *testing.T) {
 		val, err := ParseFloat("3.14")
 		assert.NoError(t, err)
-		assert.True(t, val.Set)
+		assert.True(t, val.Valid)
 		assert.Equal(t, 3.14, val.Value)
 	})
 
 	t.Run("ParseBool", func(t *testing.T) {
 		val, err := ParseBool("true")
 		assert.NoError(t, err)
-		assert.True(t, val.Set)
+		assert.True(t, val.Valid)
 		assert.True(t, val.Value)
 
 		val, err = ParseBool("false")
 		assert.NoError(t, err)
-		assert.True(t, val.Set)
+		assert.True(t, val.Valid)
 		assert.False(t, val.Value)
 
 		val, err = ParseBool("maybe")
 		assert.Error(t, err)
-		assert.False(t, val.Set)
+		assert.False(t, val.Valid)
 	})
 
 	t.Run("ParseU16", func(t *testing.T) {
 		val, err := ParseU16("65535")
 		assert.NoError(t, err)
-		assert.True(t, val.Set)
+		assert.True(t, val.Valid)
 		assert.Equal(t, uint16(65535), val.Value)
 
 		val, err = ParseU16("70000")
 		assert.Error(t, err)
-		assert.False(t, val.Set)
+		assert.False(t, val.Valid)
 	})
 
 	t.Run("ParseU64", func(t *testing.T) {
 		val, err := ParseU64("1234567890")
 		assert.NoError(t, err)
-		assert.True(t, val.Set)
+		assert.True(t, val.Valid)
 		assert.Equal(t, uint64(1234567890), val.Value)
 	})
 }
@@ -86,21 +86,21 @@ func TestParseQueryParam(t *testing.T) {
 			query:  url.Values{},
 			key:    "limit",
 			parser: ParseInt,
-			expect: Value[int]{Set: false},
+			expect: Value[int]{Valid: false},
 		},
 		{
 			name:   "empty value",
 			query:  url.Values{"limit": {""}},
 			key:    "limit",
 			parser: ParseInt,
-			expect: Value[int]{Set: true},
+			expect: Value[int]{Valid: true},
 		},
 		{
 			name:   "valid int",
 			query:  url.Values{"limit": {"10"}},
 			key:    "limit",
 			parser: ParseInt,
-			expect: Value[int]{Set: true, Value: 10},
+			expect: Value[int]{Valid: true, Value: 10},
 		},
 		{
 			name:      "invalid int",

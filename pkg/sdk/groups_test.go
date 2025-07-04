@@ -77,7 +77,7 @@ func TestCreateGroup(t *testing.T) {
 		"key": make(chan int),
 	}
 
-	desc := nullable.New(description, true)
+	desc := nullable.New(description)
 
 	cases := []struct {
 		desc            string
