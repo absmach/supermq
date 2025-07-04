@@ -681,7 +681,7 @@ func TestUpdateGroup(t *testing.T) {
 
 	group.ID = generateUUID(t)
 
-	updatedDesc := nullable.New(updatedDescription, true)
+	updatedDesc := nullable.New(updatedDescription)
 
 	cases := []struct {
 		desc            string
