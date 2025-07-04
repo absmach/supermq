@@ -262,10 +262,17 @@ func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
+
+	ot, err := apiutil.ReadBoolQuery(r, api.OnlyTotal, false)
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
 	req := listUsersReq{
 		status:    st,
 		offset:    o,
 		limit:     l,
+		onlyTotal: ot,
 		metadata:  m,
 		userName:  n,
 		firstName: i,

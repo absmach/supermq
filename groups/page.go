@@ -8,6 +8,7 @@ type PageMeta struct {
 	Total      uint64   `json:"total"`
 	Offset     uint64   `json:"offset"`
 	Limit      uint64   `json:"limit"`
+	OnlyTotal  bool     `json:"only_total"`
 	Name       string   `json:"name,omitempty"`
 	ID         string   `json:"id,omitempty"`
 	Path       string   `json:"path,omitempty"`

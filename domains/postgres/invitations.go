@@ -77,19 +77,21 @@ func (repo domainRepo) RetrieveAllInvitations(ctx context.Context, pm domains.In
 		LIMIT :limit OFFSET :offset;
 		`, query)
 
-	rows, err := repo.db.NamedQueryContext(ctx, q, pm)
-	if err != nil {
-		return domains.InvitationPage{}, postgres.HandleError(repoerr.ErrViewEntity, err)
-	}
-	defer rows.Close()
-
 	var items []domains.Invitation
-	for rows.Next() {
-		var dbinv dbInvitation
-		if err = rows.StructScan(&dbinv); err != nil {
+	if !pm.OnlyTotal {
+		rows, err := repo.db.NamedQueryContext(ctx, q, pm)
+		if err != nil {
 			return domains.InvitationPage{}, postgres.HandleError(repoerr.ErrViewEntity, err)
 		}
-		items = append(items, toInvitation(dbinv))
+		defer rows.Close()
+
+		for rows.Next() {
+			var dbinv dbInvitation
+			if err = rows.StructScan(&dbinv); err != nil {
+				return domains.InvitationPage{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+			}
+			items = append(items, toInvitation(dbinv))
+		}
 	}
 
 	tq := fmt.Sprintf(`

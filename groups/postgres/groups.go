@@ -418,15 +418,19 @@ func (repo groupRepository) RetrieveAll(ctx context.Context, pm groups.PageMeta)
 	if err != nil {
 		return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
-	rows, err := repo.db.NamedQueryContext(ctx, q, dbPageMeta)
-	if err != nil {
-		return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
-	}
-	defer rows.Close()
 
-	items, err := repo.processRows(rows)
-	if err != nil {
-		return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+	var items []groups.Group
+	if !pm.OnlyTotal {
+		rows, err := repo.db.NamedQueryContext(ctx, q, dbPageMeta)
+		if err != nil {
+			return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+		}
+		defer rows.Close()
+
+		items, err = repo.processRows(rows)
+		if err != nil {
+			return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+		}
 	}
 
 	cq := fmt.Sprintf(`	SELECT COUNT(*) AS total_count
@@ -864,15 +868,19 @@ func (repo groupRepository) retrieveGroups(ctx context.Context, domainID, userID
 	if err != nil {
 		return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
-	rows, err := repo.db.NamedQueryContext(ctx, q, dbPageMeta)
-	if err != nil {
-		return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
-	}
-	defer rows.Close()
 
-	items, err := repo.processRows(rows)
-	if err != nil {
-		return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+	var items []groups.Group
+	if !pm.OnlyTotal {
+		rows, err := repo.db.NamedQueryContext(ctx, q, dbPageMeta)
+		if err != nil {
+			return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+		}
+		defer rows.Close()
+
+		items, err = repo.processRows(rows)
+		if err != nil {
+			return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+		}
 	}
 
 	cq := fmt.Sprintf(`%s

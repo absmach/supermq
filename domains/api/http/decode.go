@@ -162,19 +162,25 @@ func decodePageRequest(_ context.Context, r *http.Request) (domains.Page, error)
 		return domains.Page{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
+	ot, err := apiutil.ReadBoolQuery(r, api.OnlyTotal, false)
+	if err != nil {
+		return domains.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
 	return domains.Page{
-		Offset:   o,
-		Order:    or,
-		Dir:      dir,
-		Limit:    l,
-		Name:     n,
-		Metadata: m,
-		Tag:      t,
-		RoleID:   roleID,
-		RoleName: roleName,
-		Actions:  actions,
-		Status:   st,
-		ID:       id,
+		Offset:    o,
+		Order:     or,
+		Dir:       dir,
+		Limit:     l,
+		Name:      n,
+		Metadata:  m,
+		Tag:       t,
+		RoleID:    roleID,
+		RoleName:  roleName,
+		Actions:   actions,
+		Status:    st,
+		ID:        id,
+		OnlyTotal: ot,
 	}, nil
 }
 
@@ -224,6 +230,10 @@ func decodeListInvitationsReq(_ context.Context, r *http.Request) (interface{}, 
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
+	ot, err := apiutil.ReadBoolQuery(r, api.OnlyTotal, false)
+	if err != nil {
+		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
 	req := listInvitationsReq{
 		InvitationPageMeta: domains.InvitationPageMeta{
 			Offset:        offset,
@@ -233,6 +243,7 @@ func decodeListInvitationsReq(_ context.Context, r *http.Request) (interface{}, 
 			RoleID:        roleID,
 			DomainID:      domainID,
 			State:         state,
+			OnlyTotal:     ot,
 		},
 	}
 
