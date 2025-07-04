@@ -26,7 +26,7 @@ func New[T nullable](v T, set bool) Value[T] {
 // Parser[T any] represents a parser function. It is used to avoid
 // a single parser for all nullables for improved readability and performance.
 // Parser should always return Nullable with Set=true, error otherwise.
-type Parser[T any] func(string) (Value[T], error)
+type Parser[T nullable] func(string) (Value[T], error)
 
 // MarshalJSON encodes the value if set, otherwise returns `null`.
 func (n Value[T]) MarshalJSON() ([]byte, error) {
