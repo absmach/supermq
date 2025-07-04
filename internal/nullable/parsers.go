@@ -11,7 +11,11 @@ import (
 
 var ErrInvalidQueryParams = errors.New("invalid query parameters")
 
-func Parse[T any](q url.Values, key string, parser FromString[T]) (Value[T], error) {
+type nullable interface {
+	~string | ~int | ~uint | ~float64
+}
+
+func Parse[T nullable](q url.Values, key string, parser Parser[T]) (Value[T], error) {
 	vals, ok := q[key]
 	if !ok {
 		return Value[T]{}, nil
@@ -22,13 +26,13 @@ func Parse[T any](q url.Values, key string, parser FromString[T]) (Value[T], err
 	s := vals[0]
 	if s == "" {
 		// The actual value is sent in query, so nullable is set, but empty.
-		return Value[T]{Set: true}, nil
+		return Value[T]{Valid: true}, nil
 	}
 	return parser(s)
 }
 
 func ParseString(s string) (Value[string], error) {
-	return Value[string]{Set: true, Value: s}, nil
+	return Value[string]{Valid: true, Value: s}, nil
 }
 
 func ParseInt(s string) (Value[int], error) {
@@ -36,7 +40,7 @@ func ParseInt(s string) (Value[int], error) {
 	if err != nil {
 		return Value[int]{}, err
 	}
-	return Value[int]{Set: true, Value: val}, nil
+	return Value[int]{Valid: true, Value: val}, nil
 }
 
 func ParseFloat(s string) (Value[float64], error) {
@@ -44,7 +48,7 @@ func ParseFloat(s string) (Value[float64], error) {
 	if err != nil {
 		return Value[float64]{}, err
 	}
-	return Value[float64]{Set: true, Value: val}, nil
+	return Value[float64]{Valid: true, Value: val}, nil
 }
 
 func ParseBool(s string) (Value[bool], error) {
@@ -52,7 +56,7 @@ func ParseBool(s string) (Value[bool], error) {
 	if err != nil {
 		return Value[bool]{}, err
 	}
-	return Value[bool]{Set: true, Value: b}, nil
+	return Value[bool]{Valid: true, Value: b}, nil
 }
 
 func ParseU16(s string) (Value[uint16], error) {
@@ -60,7 +64,7 @@ func ParseU16(s string) (Value[uint16], error) {
 	if err != nil {
 		return Value[uint16]{}, err
 	}
-	return Value[uint16]{Set: true, Value: uint16(val)}, nil
+	return Value[uint16]{Valid: true, Value: uint16(val)}, nil
 }
 
 func ParseU64(s string) (Value[uint64], error) {
@@ -68,5 +72,5 @@ func ParseU64(s string) (Value[uint64], error) {
 	if err != nil {
 		return Value[uint64]{}, err
 	}
-	return Value[uint64]{Set: true, Value: val}, nil
+	return Value[uint64]{Valid: true, Value: val}, nil
 }

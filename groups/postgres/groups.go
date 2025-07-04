@@ -85,7 +85,7 @@ func (repo groupRepository) Update(ctx context.Context, g groups.Group) (groups.
 	if g.Name != "" {
 		query = append(query, "name = :name,")
 	}
-	if g.Description.Set {
+	if g.Description.Valid {
 		query = append(query, "description = :description,")
 	}
 	if g.Metadata != nil {
@@ -1207,7 +1207,7 @@ func toDBGroup(g groups.Group) (dbGroup, error) {
 		Name:        g.Name,
 		ParentID:    parentID,
 		DomainID:    g.Domain,
-		Description: sql.NullString{String: g.Description.Value, Valid: g.Description.Set},
+		Description: sql.NullString{String: g.Description.Value, Valid: g.Description.Valid},
 		Tags:        tags,
 		Metadata:    data,
 		Path:        g.Path,
@@ -1254,7 +1254,7 @@ func toGroup(g dbGroup) (groups.Group, error) {
 		Name:                      g.Name,
 		Parent:                    parentID,
 		Domain:                    g.DomainID,
-		Description:               nullable.Value[string]{Value: g.Description.String, Set: g.Description.Valid},
+		Description:               nullable.Value[string]{Value: g.Description.String, Valid: g.Description.Valid},
 		Tags:                      tags,
 		Metadata:                  metadata,
 		Level:                     g.Level,

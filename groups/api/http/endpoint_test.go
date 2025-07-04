@@ -32,7 +32,7 @@ import (
 )
 
 var (
-	desc           = nullable.Value[string]{Set: true, Value: valid}
+	desc           = nullable.New(valid)
 	validGroupResp = groups.Group{
 		ID:          testsutil.GenerateUUID(&testing.T{}),
 		Name:        valid,

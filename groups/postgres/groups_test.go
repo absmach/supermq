@@ -27,9 +27,9 @@ var (
 	invalidID          = strings.Repeat("a", 37)
 	validTimestamp     = time.Now().UTC().Truncate(time.Millisecond)
 	description        = strings.Repeat("a", 64)
-	desc               = nullable.Value[string]{Set: true, Value: description}
+	desc               = nullable.New(description)
 	invalidDescription = strings.Repeat("a", 1025)
-	invalidDesc        = nullable.Value[string]{Set: true, Value: invalidDescription}
+	invalidDesc        = nullable.New(invalidDescription)
 
 	validGroup = groups.Group{
 		ID:          testsutil.GenerateUUID(&testing.T{}),
