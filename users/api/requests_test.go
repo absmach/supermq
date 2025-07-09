@@ -533,7 +533,7 @@ func TestLoginUserReqValidate(t *testing.T) {
 				Username: "",
 				Password: secret,
 			},
-			err: apiutil.ErrMissingIdentity,
+			err: apiutil.ErrMissingUsernameEmail,
 		},
 		{
 			desc: "empty secret",

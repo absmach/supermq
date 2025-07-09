@@ -253,7 +253,7 @@ type loginUserReq struct {
 
 func (req loginUserReq) validate() error {
 	if req.Username == "" {
-		return apiutil.ErrMissingIdentity
+		return apiutil.ErrMissingUsernameEmail
 	}
 	if req.Password == "" {
 		return apiutil.ErrMissingPass

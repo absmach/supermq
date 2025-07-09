@@ -265,4 +265,7 @@ var (
 
 	// ErrInvalidRouteFormat indicates invalid route format.
 	ErrInvalidRouteFormat = errors.New("invalid route format")
+
+	// ErrMissingUsernameEmail indicates missing user name / email.
+	ErrMissingUsernameEmail = errors.New("missing username / email")
 )

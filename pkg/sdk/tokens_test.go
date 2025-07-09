@@ -85,7 +85,7 @@ func TestIssueToken(t *testing.T) {
 			svcRes:   &grpcTokenV1.Token{},
 			svcErr:   nil,
 			response: sdk.Token{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingIdentity), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingUsernameEmail), http.StatusBadRequest),
 		},
 		{
 			desc: "issue token with empty secret",
