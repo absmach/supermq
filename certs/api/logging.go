@@ -37,7 +37,7 @@ func (lm *loggingMiddleware) IssueCert(ctx context.Context, domainID, token, cli
 			slog.String("ttl", ttl),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Issue certificate failed", args...)
 			return
 		}
@@ -61,7 +61,7 @@ func (lm *loggingMiddleware) ListCerts(ctx context.Context, clientID string, pm 
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("List certificates failed", args...)
 			return
 		}
@@ -87,7 +87,7 @@ func (lm *loggingMiddleware) ListSerials(ctx context.Context, clientID string, p
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("List certifcates serials failed", args...)
 			return
 		}
@@ -107,7 +107,7 @@ func (lm *loggingMiddleware) ViewCert(ctx context.Context, serialID string) (c c
 			slog.String("serial_id", serialID),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("View certificate failed", args...)
 			return
 		}
@@ -127,7 +127,7 @@ func (lm *loggingMiddleware) RevokeCert(ctx context.Context, domainID, token, cl
 			slog.String("client_id", clientID),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Revoke certificate failed", args...)
 			return
 		}

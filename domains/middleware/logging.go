@@ -183,7 +183,7 @@ func (lm *loggingMiddleware) SendInvitation(ctx context.Context, session authn.S
 			slog.String("domain_id", invitation.DomainID),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Send invitation failed", args...)
 			return
 		}
@@ -200,7 +200,7 @@ func (lm *loggingMiddleware) ViewInvitation(ctx context.Context, session authn.S
 			slog.String("domain_id", domainID),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("View invitation failed", args...)
 			return
 		}
@@ -220,7 +220,7 @@ func (lm *loggingMiddleware) ListInvitations(ctx context.Context, session authn.
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("List invitations failed", args...)
 			return
 		}
@@ -240,7 +240,7 @@ func (lm *loggingMiddleware) ListDomainInvitations(ctx context.Context, session 
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("List domain invitations failed", args...)
 			return
 		}
@@ -256,7 +256,7 @@ func (lm *loggingMiddleware) AcceptInvitation(ctx context.Context, session authn
 			slog.String("domain_id", domainID),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Accept invitation failed", args...)
 			return
 		}
@@ -272,7 +272,7 @@ func (lm *loggingMiddleware) RejectInvitation(ctx context.Context, session authn
 			slog.String("domain_id", domainID),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Reject invitation failed", args...)
 			return
 		}
@@ -289,7 +289,7 @@ func (lm *loggingMiddleware) DeleteInvitation(ctx context.Context, session authn
 			slog.String("domain_id", domainID),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Delete invitation failed", args...)
 			return
 		}

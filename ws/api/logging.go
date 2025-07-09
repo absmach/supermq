@@ -37,7 +37,7 @@ func (lm *loggingMiddleware) Subscribe(ctx context.Context, sessionID, clientKey
 			args = append(args, "subtopic", subtopic)
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Subscribe failed", args...)
 			return
 		}
@@ -59,7 +59,7 @@ func (lm *loggingMiddleware) Unsubscribe(ctx context.Context, sessionID, domainI
 			args = append(args, "subtopic", subtopic)
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Unsubscribe failed", args...)
 			return
 		}

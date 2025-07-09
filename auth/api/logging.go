@@ -36,7 +36,7 @@ func (lm *loggingMiddleware) Issue(ctx context.Context, token string, key auth.K
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Issue key failed", args...)
 			return
 		}
@@ -53,7 +53,7 @@ func (lm *loggingMiddleware) Revoke(ctx context.Context, token, id string) (err 
 			slog.String("key_id", id),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Revoke key failed", args...)
 			return
 		}
@@ -70,7 +70,7 @@ func (lm *loggingMiddleware) RetrieveKey(ctx context.Context, token, id string) 
 			slog.String("key_id", id),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Retrieve key failed", args...)
 			return
 		}
@@ -90,7 +90,7 @@ func (lm *loggingMiddleware) Identify(ctx context.Context, token string) (id aut
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Identify key failed", args...)
 			return
 		}
@@ -116,7 +116,7 @@ func (lm *loggingMiddleware) Authorize(ctx context.Context, pr policies.Policy) 
 			slog.String("permission", pr.Permission),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Authorize failed", args...)
 			return
 		}
@@ -134,7 +134,7 @@ func (lm *loggingMiddleware) CreatePAT(ctx context.Context, token, name, descrip
 			slog.String("pat_duration", duration.String()),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Create PAT failed", args...)
 			return
 		}
@@ -151,7 +151,7 @@ func (lm *loggingMiddleware) UpdatePATName(ctx context.Context, token, patID, na
 			slog.String("name", name),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Update PAT name failed", args...)
 			return
 		}
@@ -168,7 +168,7 @@ func (lm *loggingMiddleware) UpdatePATDescription(ctx context.Context, token, pa
 			slog.String("description", description),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Update PAT description failed", args...)
 			return
 		}
@@ -184,7 +184,7 @@ func (lm *loggingMiddleware) RetrievePAT(ctx context.Context, token, patID strin
 			slog.String("pat_id", patID),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Retrieve PAT  failed", args...)
 			return
 		}
@@ -201,7 +201,7 @@ func (lm *loggingMiddleware) ListPATS(ctx context.Context, token string, pm auth
 			slog.Uint64("offset", pm.Offset),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("List PATS  failed", args...)
 			return
 		}
@@ -219,7 +219,7 @@ func (lm *loggingMiddleware) ListScopes(ctx context.Context, token string, pm au
 			slog.String("pat_id", pm.PatID),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("List Scopes  failed", args...)
 			return
 		}
@@ -235,7 +235,7 @@ func (lm *loggingMiddleware) DeletePAT(ctx context.Context, token, patID string)
 			slog.String("pat_id", patID),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Delete PAT  failed", args...)
 			return
 		}
@@ -252,7 +252,7 @@ func (lm *loggingMiddleware) ResetPATSecret(ctx context.Context, token, patID st
 			slog.String("pat_duration", duration.String()),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Reset PAT secret failed", args...)
 			return
 		}
@@ -268,7 +268,7 @@ func (lm *loggingMiddleware) RevokePATSecret(ctx context.Context, token, patID s
 			slog.String("pat_id", patID),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Revoke PAT secret failed", args...)
 			return
 		}
@@ -283,7 +283,7 @@ func (lm *loggingMiddleware) RemoveAllPAT(ctx context.Context, token string) (er
 			slog.String("duration", time.Since(begin).String()),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Remove all PAT failed", args...)
 			return
 		}
@@ -308,7 +308,7 @@ func (lm *loggingMiddleware) AddScope(ctx context.Context, token, patID string, 
 			slog.Group("scope", groupArgs...),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Add PAT scope failed", args...)
 			return
 		}
@@ -329,7 +329,7 @@ func (lm *loggingMiddleware) RemoveScope(ctx context.Context, token, patID strin
 			slog.Group("scope", groupArgs...),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Remove entry from PAT scope failed", args...)
 			return
 		}
@@ -345,7 +345,7 @@ func (lm *loggingMiddleware) RemovePATAllScope(ctx context.Context, token, patID
 			slog.String("pat_id", patID),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Remove all scopes from PAT failed", args...)
 			return
 		}
@@ -360,7 +360,7 @@ func (lm *loggingMiddleware) IdentifyPAT(ctx context.Context, paToken string) (p
 			slog.String("duration", time.Since(begin).String()),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Identify PAT failed", args...)
 			return
 		}
@@ -379,7 +379,7 @@ func (lm *loggingMiddleware) AuthorizePAT(ctx context.Context, userID, patID str
 			slog.String("entities", entityID),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Authorize PAT failed complete successfully", args...)
 			return
 		}

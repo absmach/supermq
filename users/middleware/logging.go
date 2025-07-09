@@ -40,7 +40,7 @@ func (lm *loggingMiddleware) Register(ctx context.Context, session authn.Session
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Register user failed", args...)
 			return
 		}
@@ -62,7 +62,7 @@ func (lm *loggingMiddleware) IssueToken(ctx context.Context, username, secret st
 			args = append(args, slog.String("access_type", t.AccessType))
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Issue token failed", args...)
 			return
 		}
@@ -83,7 +83,7 @@ func (lm *loggingMiddleware) RefreshToken(ctx context.Context, session authn.Ses
 			args = append(args, slog.String("access_type", t.AccessType))
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Refresh token failed", args...)
 			return
 		}
@@ -104,7 +104,7 @@ func (lm *loggingMiddleware) View(ctx context.Context, session authn.Session, id
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("View user failed", args...)
 			return
 		}
@@ -126,7 +126,7 @@ func (lm *loggingMiddleware) ViewProfile(ctx context.Context, session authn.Sess
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("View profile failed", args...)
 			return
 		}
@@ -149,7 +149,7 @@ func (lm *loggingMiddleware) ListUsers(ctx context.Context, session authn.Sessio
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("List users failed", args...)
 			return
 		}
@@ -171,7 +171,7 @@ func (lm *loggingMiddleware) SearchUsers(ctx context.Context, cp users.Page) (mp
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Search users failed to complete successfully", args...)
 			return
 		}
@@ -196,7 +196,7 @@ func (lm *loggingMiddleware) Update(ctx context.Context, session authn.Session, 
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Update user failed", args...)
 			return
 		}
@@ -218,7 +218,7 @@ func (lm *loggingMiddleware) UpdateTags(ctx context.Context, session authn.Sessi
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Update user tags failed", args...)
 			return
 		}
@@ -240,7 +240,7 @@ func (lm *loggingMiddleware) UpdateEmail(ctx context.Context, session authn.Sess
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Update user email failed", args...)
 			return
 		}
@@ -261,7 +261,7 @@ func (lm *loggingMiddleware) UpdateSecret(ctx context.Context, session authn.Ses
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Update user secret failed", args...)
 			return
 		}
@@ -283,7 +283,7 @@ func (lm *loggingMiddleware) UpdateUsername(ctx context.Context, session authn.S
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Update user names failed", args...)
 			return
 		}
@@ -305,7 +305,7 @@ func (lm *loggingMiddleware) UpdateProfilePicture(ctx context.Context, session a
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Update profile picture failed", args...)
 			return
 		}
@@ -324,7 +324,7 @@ func (lm *loggingMiddleware) GenerateResetToken(ctx context.Context, email, host
 			slog.String("host", host),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Generate reset token failed", args...)
 			return
 		}
@@ -342,7 +342,7 @@ func (lm *loggingMiddleware) ResetSecret(ctx context.Context, session authn.Sess
 			slog.String("request_id", middleware.GetReqID(ctx)),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Reset secret failed", args...)
 			return
 		}
@@ -361,7 +361,7 @@ func (lm *loggingMiddleware) SendPasswordReset(ctx context.Context, host, email,
 			slog.String("host", host),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Send password reset failed", args...)
 			return
 		}
@@ -383,7 +383,7 @@ func (lm *loggingMiddleware) UpdateRole(ctx context.Context, session authn.Sessi
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Update user role failed", args...)
 			return
 		}
@@ -404,7 +404,7 @@ func (lm *loggingMiddleware) Enable(ctx context.Context, session authn.Session, 
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Enable user failed", args...)
 			return
 		}
@@ -425,7 +425,7 @@ func (lm *loggingMiddleware) Disable(ctx context.Context, session authn.Session,
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Disable user failed", args...)
 			return
 		}
@@ -443,7 +443,7 @@ func (lm *loggingMiddleware) Identify(ctx context.Context, session authn.Session
 			slog.String("user_id", id),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Identify user failed", args...)
 			return
 		}
@@ -460,7 +460,7 @@ func (lm *loggingMiddleware) OAuthCallback(ctx context.Context, user users.User)
 			slog.String("user_id", user.ID),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("OAuth callback failed", args...)
 			return
 		}
@@ -478,7 +478,7 @@ func (lm *loggingMiddleware) Delete(ctx context.Context, session authn.Session, 
 			slog.String("user_id", id),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Delete user failed to complete successfully", args...)
 			return
 		}
@@ -496,7 +496,7 @@ func (lm *loggingMiddleware) OAuthAddUserPolicy(ctx context.Context, user users.
 			slog.String("user_id", user.ID),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Add user policy failed", args...)
 			return
 		}

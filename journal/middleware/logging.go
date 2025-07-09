@@ -39,7 +39,7 @@ func (lm *loggingMiddleware) Save(ctx context.Context, j journal.Journal) (err e
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Save journal failed", args...)
 			return
 		}
@@ -63,7 +63,7 @@ func (lm *loggingMiddleware) RetrieveAll(ctx context.Context, session smqauthn.S
 			),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Retrieve all journals failed", args...)
 			return
 		}
@@ -82,7 +82,7 @@ func (lm *loggingMiddleware) RetrieveClientTelemetry(ctx context.Context, sessio
 			slog.String("domain_id", session.DomainID),
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Retrieve client telemetry failed", args...)
 			return
 		}

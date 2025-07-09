@@ -39,7 +39,7 @@ func (lm *loggingMiddleware) Publish(ctx context.Context, key string, msg *messa
 			args = append(args, slog.String("subtopic", msg.GetSubtopic()))
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Publish message failed", args...)
 			return
 		}
@@ -62,7 +62,7 @@ func (lm *loggingMiddleware) Subscribe(ctx context.Context, key, domainID, chanI
 			args = append(args, slog.String("subtopic", subtopic))
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Subscribe failed", args...)
 			return
 		}
@@ -85,7 +85,7 @@ func (lm *loggingMiddleware) Unsubscribe(ctx context.Context, key, domainID, cha
 			args = append(args, slog.String("subtopic", subtopic))
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Unsubscribe failed", args...)
 			return
 		}
@@ -109,7 +109,7 @@ func (lm *loggingMiddleware) DisconnectHandler(ctx context.Context, domainID, ch
 			args = append(args, slog.String("subtopic", subtopic))
 		}
 		if err != nil {
-			args = append(args, slog.Any("error", err))
+			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Unsubscribe failed", args...)
 			return
 		}
