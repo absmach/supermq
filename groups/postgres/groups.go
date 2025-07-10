@@ -1142,7 +1142,7 @@ func buildQuery(gm groups.PageMeta, ids ...string) string {
 		queries = append(queries, "g.metadata @> :metadata")
 	}
 	if gm.RootGroup {
-		queries = append(queries, "g.parent_id IS NULL")
+		queries = append(queries, "nlevel(g.path) = 1")
 	}
 	if len(queries) > 0 {
 		return fmt.Sprintf("WHERE %s", strings.Join(queries, " AND "))
