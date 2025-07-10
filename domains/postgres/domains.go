@@ -61,9 +61,12 @@ func (repo domainRepo) SaveDomain(ctx context.Context, d domains.Domain) (dd dom
 	if err != nil {
 		return domains.Domain{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
 	}
-
 	defer row.Close()
-	row.Next()
+
+	if !row.Next() {
+		return domains.Domain{}, repoerr.ErrNotFound
+	}
+
 	dbd = dbDomain{}
 	if err := row.StructScan(&dbd); err != nil {
 		return domains.Domain{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
@@ -386,6 +389,7 @@ func (repo domainRepo) UpdateDomain(ctx context.Context, id string, dr domains.D
 	var query []string
 	var upq string
 	d := domains.Domain{ID: id}
+
 	if dr.Name != nil && *dr.Name != "" {
 		query = append(query, "name = :name")
 		d.Name = *dr.Name
@@ -411,25 +415,30 @@ func (repo domainRepo) UpdateDomain(ctx context.Context, id string, dr domains.D
 		query = append(query, "updated_by = :updated_by")
 		d.UpdatedAt = *dr.UpdatedAt
 	}
+
 	if len(query) > 0 {
 		upq = strings.Join(query, ", ")
 	}
+
 	q := fmt.Sprintf(`UPDATE domains SET %s
-        WHERE id = :id
-        RETURNING id, name, tags, route, metadata, created_at, updated_at, updated_by, created_by, status;`,
-		upq)
+		WHERE id = :id
+		RETURNING id, name, tags, route, metadata, created_at, updated_at, updated_by, created_by, status;`, upq)
 
 	dbd, err := toDBDomain(d)
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
+
 	row, err := repo.db.NamedQueryContext(ctx, q, dbd)
 	if err != nil {
 		return domains.Domain{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
+	defer row.Close()
 
-	// defer row.Close()
-	row.Next()
+	if !row.Next() {
+		return domains.Domain{}, repoerr.ErrNotFound
+	}
+
 	dbd = dbDomain{}
 	if err := row.StructScan(&dbd); err != nil {
 		return domains.Domain{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
