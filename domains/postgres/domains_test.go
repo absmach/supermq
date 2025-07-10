@@ -593,7 +593,7 @@ func TestUpdate(t *testing.T) {
 				Metadata: &updatedMetadata,
 			},
 			response: domains.Domain{},
-			err:      repoerr.ErrFailedOpDB,
+			err:      repoerr.ErrNotFound,
 		},
 		{
 			desc:     "update domain with empty ID",
@@ -603,7 +603,7 @@ func TestUpdate(t *testing.T) {
 				Metadata: &updatedMetadata,
 			},
 			response: domains.Domain{},
-			err:      repoerr.ErrFailedOpDB,
+			err:      repoerr.ErrNotFound,
 		},
 		{
 			desc:     "update domain with malformed metadata",
