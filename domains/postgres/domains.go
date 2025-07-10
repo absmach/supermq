@@ -72,12 +72,12 @@ func (repo domainRepo) SaveDomain(ctx context.Context, d domains.Domain) (dd dom
 		return domains.Domain{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
 	}
 
-	dd, err = toDomain(dbd)
+	domain, err := toDomain(dbd)
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
 	}
 
-	return dd, nil
+	return domain, nil
 }
 
 // RetrieveDomainByIDWithRoles retrieves Domain by its unique ID along with member roles.
