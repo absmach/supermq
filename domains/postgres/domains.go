@@ -47,7 +47,7 @@ func NewRepository(db postgres.Database) domains.Repository {
 	}
 }
 
-func (repo domainRepo) SaveDomain(ctx context.Context, d domains.Domain) (domains.Domain, error) {
+func (repo domainRepo) SaveDomain(ctx context.Context, d domains.Domain) (dd domains.Domain, err error) {
 	q := `INSERT INTO domains (id, name, tags, route, metadata, created_at, updated_at, updated_by, created_by, status)
 	VALUES (:id, :name, :tags, :route, :metadata, :created_at, :updated_at, :updated_by, :created_by, :status)
 	RETURNING id, name, tags, route, metadata, created_at, updated_at, updated_by, created_by, status;`
@@ -72,12 +72,12 @@ func (repo domainRepo) SaveDomain(ctx context.Context, d domains.Domain) (domain
 		return domains.Domain{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
 	}
 
-	domain, err := toDomain(dbd)
+	dd, err = toDomain(dbd)
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
 	}
 
-	return domain, nil
+	return dd, nil
 }
 
 // RetrieveDomainByIDWithRoles retrieves Domain by its unique ID along with member roles.
