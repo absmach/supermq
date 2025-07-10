@@ -206,6 +206,7 @@ func (pr *patRepo) UpdateName(ctx context.Context, userID, patID, name string) (
 	if err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
+	defer rows.Close()
 
 	if !rows.Next() {
 		return auth.PAT{}, repoerr.ErrNotFound
@@ -240,6 +241,7 @@ func (pr *patRepo) UpdateDescription(ctx context.Context, userID, patID, descrip
 	if err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
+	defer rows.Close()
 
 	if !rows.Next() {
 		return auth.PAT{}, repoerr.ErrNotFound
@@ -275,6 +277,7 @@ func (pr *patRepo) UpdateTokenHash(ctx context.Context, userID, patID, tokenHash
 	if err != nil {
 		return auth.PAT{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
+	defer rows.Close()
 
 	if !rows.Next() {
 		return auth.PAT{}, repoerr.ErrNotFound
