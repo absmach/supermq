@@ -15,6 +15,7 @@ import (
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
 	chmocks "github.com/absmach/supermq/channels/mocks"
 	climocks "github.com/absmach/supermq/clients/mocks"
+	dmocks "github.com/absmach/supermq/domains/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/mqtt"
@@ -534,6 +535,11 @@ func newHandler() session.Handler {
 	}
 	clients = new(climocks.ClientsServiceClient)
 	channels = new(chmocks.ChannelsServiceClient)
+	domains := new(dmocks.DomainsServiceClient)
+	parser, err := messaging.NewTopicParser(messaging.DefaultCacheConfig, channels, domains)
+	if err != nil {
+		log.Fatalf("failed to create topic parser: %s", err)
+	}
 	publisher = new(mocks.PubSub)
-	return mqtt.NewHandler(publisher, logger, clients, channels)
+	return mqtt.NewHandler(publisher, logger, clients, channels, parser)
 }

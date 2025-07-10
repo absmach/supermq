@@ -70,19 +70,20 @@ var (
 	domains   = new(dmocks.DomainsServiceClient)
 )
 
-func newHandler() session.Handler {
+func newHandler(t *testing.T) session.Handler {
 	logger := smqlog.NewMock()
 	authn = new(authnmocks.Authentication)
 	clients = new(clmocks.ClientsServiceClient)
 	channels = new(chmocks.ChannelsServiceClient)
 	publisher = new(mocks.PubSub)
-	resolver := messaging.NewTopicResolver(channels, domains)
+	parser, err := messaging.NewTopicParser(messaging.DefaultCacheConfig, channels, domains)
+	assert.Nil(t, err, fmt.Sprintf("unexpected error while creating topic parser: %v", err))
 
-	return mhttp.NewHandler(publisher, authn, clients, channels, resolver, logger)
+	return mhttp.NewHandler(publisher, authn, clients, channels, parser, logger)
 }
 
 func TestAuthConnect(t *testing.T) {
-	handler := newHandler()
+	handler := newHandler(t)
 
 	cases := []struct {
 		desc    string
@@ -136,7 +137,7 @@ func TestAuthConnect(t *testing.T) {
 }
 
 func TestPublish(t *testing.T) {
-	handler := newHandler()
+	handler := newHandler(t)
 
 	malformedSubtopics := topic + "/" + subtopic + "%"
 

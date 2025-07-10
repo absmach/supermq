@@ -57,16 +57,18 @@ type handler struct {
 	publisher messaging.Publisher
 	clients   grpcClientsV1.ClientsServiceClient
 	channels  grpcChannelsV1.ChannelsServiceClient
+	parser    messaging.TopicParser
 	logger    *slog.Logger
 }
 
 // NewHandler creates new Handler entity.
-func NewHandler(publisher messaging.Publisher, logger *slog.Logger, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient) session.Handler {
+func NewHandler(publisher messaging.Publisher, logger *slog.Logger, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, parser messaging.TopicParser) session.Handler {
 	return &handler{
 		logger:    logger,
 		publisher: publisher,
 		clients:   clients,
 		channels:  channels,
+		parser:    parser,
 	}
 }
 
@@ -110,7 +112,7 @@ func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byt
 		return ErrClientNotInitialized
 	}
 
-	domainID, chanID, _, err := messaging.ParsePublishTopic(*topic)
+	domainID, chanID, _, err := h.parser.ParsePublishTopic(ctx, *topic, false)
 	if err != nil {
 		return err
 	}
@@ -130,7 +132,7 @@ func (h *handler) AuthSubscribe(ctx context.Context, topics *[]string) error {
 	}
 
 	for _, topic := range *topics {
-		domainID, chanID, _, err := messaging.ParseSubscribeTopic(topic)
+		domainID, chanID, _, err := h.parser.ParseSubscribeTopic(ctx, topic, false)
 		if err != nil {
 			return err
 		}
@@ -161,7 +163,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 	}
 	h.logger.Info(fmt.Sprintf(LogInfoPublished, s.ID, *topic))
 
-	domainID, chanID, subTopic, err := messaging.ParsePublishTopic(*topic)
+	domainID, chanID, subTopic, err := h.parser.ParsePublishTopic(ctx, *topic, false)
 	if err != nil {
 		return errors.Wrap(ErrFailedPublish, err)
 	}

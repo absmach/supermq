@@ -47,6 +47,7 @@ import (
 
 const (
 	svcName           = "mqtt"
+	envPrefixCache    = "SMQ_MQTT_ADAPTER_CACHE_"
 	envPrefixClients  = "SMQ_CLIENTS_GRPC_"
 	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
 	envPrefixDomains  = "SMQ_DOMAINS_GRPC_"
@@ -221,7 +222,20 @@ func main() {
 	defer channelsHandler.Close()
 	logger.Info("Channels service gRPC client successfully connected to channels gRPC server " + channelsHandler.Secure())
 
-	h := mqtt.NewHandler(np, logger, clientsClient, channelsClient)
+	cacheConfig := messaging.CacheConfig{}
+	if err := env.ParseWithOptions(&cacheConfig, env.Options{Prefix: envPrefixCache}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load cache configuration : %s", err))
+		exitCode = 1
+		return
+	}
+	parser, err := messaging.NewTopicParser(cacheConfig, channelsClient, domainsClient)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to create topic parsers: %s", err))
+		exitCode = 1
+		return
+	}
+
+	h := mqtt.NewHandler(np, logger, clientsClient, channelsClient, parser)
 
 	h, err = events.NewEventStoreMiddleware(ctx, h, cfg.ESURL, cfg.Instance)
 	if err != nil {

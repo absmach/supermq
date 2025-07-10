@@ -41,14 +41,16 @@ var (
 	domainsGRPCClient  *dmocks.DomainsServiceClient
 )
 
-func setupMessages() (*httptest.Server, *pubsub.PubSub) {
+func setupMessages(t *testing.T) (*httptest.Server, *pubsub.PubSub) {
 	clientsGRPCClient = new(climocks.ClientsServiceClient)
 	channelsGRPCClient = new(chmocks.ChannelsServiceClient)
 	domainsGRPCClient = new(dmocks.DomainsServiceClient)
 	pub := new(pubsub.PubSub)
 	authn := new(authnmocks.Authentication)
-	resolver := messaging.NewTopicResolver(channelsGRPCClient, domainsGRPCClient)
-	handler := adapter.NewHandler(pub, authn, clientsGRPCClient, channelsGRPCClient, resolver, smqlog.NewMock())
+
+	parser, err := messaging.NewTopicParser(messaging.DefaultCacheConfig, channelsGRPCClient, domainsGRPCClient)
+	assert.Nil(t, err, fmt.Sprintf("unexpected error while setting up parser: %v", err))
+	handler := adapter.NewHandler(pub, authn, clientsGRPCClient, channelsGRPCClient, parser, smqlog.NewMock())
 
 	mux := api.MakeHandler(smqlog.NewMock(), "")
 	target := httptest.NewServer(mux)
@@ -74,7 +76,7 @@ func setupMessages() (*httptest.Server, *pubsub.PubSub) {
 }
 
 func TestSendMessage(t *testing.T) {
-	ts, pub := setupMessages()
+	ts, pub := setupMessages(t)
 	defer ts.Close()
 
 	msg := `[{"n":"current","t":-1,"v":1.6}]`
@@ -203,7 +205,7 @@ func TestSendMessage(t *testing.T) {
 }
 
 func TestSetContentType(t *testing.T) {
-	ts, _ := setupMessages()
+	ts, _ := setupMessages(t)
 	defer ts.Close()
 
 	sdkConf := sdk.Config{
