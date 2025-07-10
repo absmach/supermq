@@ -456,25 +456,27 @@ func (repo *clientRepo) RetrieveAll(ctx context.Context, pm clients.Page) (clien
 	if err != nil {
 		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
-	rows, err := repo.DB.NamedQueryContext(ctx, q, dbPage)
-	if err != nil {
-		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
-	}
-	defer rows.Close()
-
 	var items []clients.Client
-	for rows.Next() {
-		dbc := DBClient{}
-		if err := rows.StructScan(&dbc); err != nil {
-			return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
-		}
-
-		c, err := ToClient(dbc)
+	if !pm.OnlyTotal {
+		rows, err := repo.DB.NamedQueryContext(ctx, q, dbPage)
 		if err != nil {
-			return clients.ClientsPage{}, err
+			return clients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 		}
+		defer rows.Close()
 
-		items = append(items, c)
+		for rows.Next() {
+			dbc := DBClient{}
+			if err := rows.StructScan(&dbc); err != nil {
+				return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+			}
+
+			c, err := ToClient(dbc)
+			if err != nil {
+				return clients.ClientsPage{}, err
+			}
+
+			items = append(items, c)
+		}
 	}
 	cq := fmt.Sprintf(`SELECT COUNT(*) AS total_count
 			FROM (
@@ -571,25 +573,27 @@ func (repo *clientRepo) retrieveClients(ctx context.Context, domainID, userID st
 		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
 
-	rows, err := repo.DB.NamedQueryContext(ctx, q, dbPage)
-	if err != nil {
-		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
-	}
-	defer rows.Close()
-
 	var items []clients.Client
-	for rows.Next() {
-		dbc := DBClient{}
-		if err := rows.StructScan(&dbc); err != nil {
+	if !pm.OnlyTotal {
+		rows, err := repo.DB.NamedQueryContext(ctx, q, dbPage)
+		if err != nil {
 			return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
+		defer rows.Close()
 
-		c, err := ToClient(dbc)
-		if err != nil {
-			return clients.ClientsPage{}, err
+		for rows.Next() {
+			dbc := DBClient{}
+			if err := rows.StructScan(&dbc); err != nil {
+				return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+			}
+
+			c, err := ToClient(dbc)
+			if err != nil {
+				return clients.ClientsPage{}, err
+			}
+
+			items = append(items, c)
 		}
-
-		items = append(items, c)
 	}
 
 	cq := fmt.Sprintf(`%s

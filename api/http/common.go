@@ -26,6 +26,7 @@ const (
 	DirKey    = "dir"
 	OrderKey  = "order"
 	LimitKey  = "limit"
+	OnlyTotal = "only_total"
 
 	NameOrder = "name"
 	IDOrder   = "id"

@@ -432,25 +432,28 @@ func (cr *channelRepository) RetrieveAll(ctx context.Context, pm channels.Page) 
 	if err != nil {
 		return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
-	rows, err := cr.db.NamedQueryContext(ctx, q, dbPage)
-	if err != nil {
-		return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
-	}
-	defer rows.Close()
 
 	var items []channels.Channel
-	for rows.Next() {
-		dbch := dbChannel{}
-		if err := rows.StructScan(&dbch); err != nil {
-			return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
-		}
-
-		ch, err := toChannel(dbch)
+	if !pm.OnlyTotal {
+		rows, err := cr.db.NamedQueryContext(ctx, q, dbPage)
 		if err != nil {
-			return channels.ChannelsPage{}, err
+			return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 		}
+		defer rows.Close()
 
-		items = append(items, ch)
+		for rows.Next() {
+			dbch := dbChannel{}
+			if err := rows.StructScan(&dbch); err != nil {
+				return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+			}
+
+			ch, err := toChannel(dbch)
+			if err != nil {
+				return channels.ChannelsPage{}, err
+			}
+
+			items = append(items, ch)
+		}
 	}
 	cq := fmt.Sprintf(`SELECT COUNT(*) AS total_count
 			FROM (
@@ -546,25 +549,27 @@ func (repo *channelRepository) retrieveChannels(ctx context.Context, domainID, u
 		return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
 
-	rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
-	if err != nil {
-		return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
-	}
-	defer rows.Close()
-
 	var items []channels.Channel
-	for rows.Next() {
-		dbc := dbChannel{}
-		if err := rows.StructScan(&dbc); err != nil {
+	if !pm.OnlyTotal {
+		rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
+		if err != nil {
 			return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 		}
+		defer rows.Close()
 
-		c, err := toChannel(dbc)
-		if err != nil {
-			return channels.ChannelsPage{}, err
+		for rows.Next() {
+			dbc := dbChannel{}
+			if err := rows.StructScan(&dbc); err != nil {
+				return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+			}
+
+			c, err := toChannel(dbc)
+			if err != nil {
+				return channels.ChannelsPage{}, err
+			}
+
+			items = append(items, c)
 		}
-
-		items = append(items, c)
 	}
 
 	cq := fmt.Sprintf(`%s

@@ -22,7 +22,7 @@ var (
 
 type clientsPageMetaRes struct {
 	Limit  uint64 `json:"limit,omitempty"`
-	Offset uint64 `json:"offset"`
+	Offset uint64 `json:"offset,omitempty"`
 	Total  uint64 `json:"total"`
 }
 
@@ -103,7 +103,7 @@ func (res viewClientPermsRes) Empty() bool {
 
 type clientsPageRes struct {
 	clientsPageMetaRes
-	Clients []viewClientRes `json:"clients"`
+	Clients []viewClientRes `json:"clients,omitempty"`
 }
 
 func (res clientsPageRes) Code() int {

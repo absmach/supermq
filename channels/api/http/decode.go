@@ -145,6 +145,10 @@ func decodeListChannels(_ context.Context, r *http.Request) (interface{}, error)
 	if err != nil {
 		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
+	ot, err := apiutil.ReadBoolQuery(r, api.OnlyTotal, false)
+	if err != nil {
+		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
 
 	req := listChannelsReq{
 		Page: channels.Page{
@@ -163,6 +167,7 @@ func decodeListChannels(_ context.Context, r *http.Request) (interface{}, error)
 			Group:      groupID,
 			Client:     clientID,
 			ID:         id,
+			OnlyTotal:  ot,
 		},
 		userID: userID,
 	}

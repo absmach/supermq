@@ -83,6 +83,7 @@ type listUsersReq struct {
 	status    users.Status
 	offset    uint64
 	limit     uint64
+	onlyTotal bool
 	userName  string
 	tag       string
 	firstName string

@@ -71,12 +71,12 @@ func (res createGroupRes) Empty() bool {
 
 type groupPageRes struct {
 	pageRes
-	Groups []viewGroupRes `json:"groups"`
+	Groups []viewGroupRes `json:"groups,omitempty"`
 }
 
 type pageRes struct {
 	Limit  uint64 `json:"limit,omitempty"`
-	Offset uint64 `json:"offset"`
+	Offset uint64 `json:"offset,omitempty"`
 	Total  uint64 `json:"total"`
 }
 

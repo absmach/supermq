@@ -349,15 +349,18 @@ func (repo domainRepo) ListDomains(ctx context.Context, pm domains.Page) (domain
 		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
 
-	rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
-	if err != nil {
-		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
-	}
-	defer rows.Close()
+	var doms []domains.Domain
+	if !pm.OnlyTotal {
+		rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
+		if err != nil {
+			return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+		}
+		defer rows.Close()
 
-	doms, err := repo.processRows(rows)
-	if err != nil {
-		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+		doms, err = repo.processRows(rows)
+		if err != nil {
+			return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+		}
 	}
 
 	cq := `SELECT COUNT(*)
