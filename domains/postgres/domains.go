@@ -51,6 +51,7 @@ func (repo domainRepo) SaveDomain(ctx context.Context, d domains.Domain) (domain
 	q := `INSERT INTO domains (id, name, tags, route, metadata, created_at, updated_at, updated_by, created_by, status)
 	VALUES (:id, :name, :tags, :route, :metadata, :created_at, :updated_at, :updated_by, :created_by, :status)
 	RETURNING id, name, tags, route, metadata, created_at, updated_at, updated_by, created_by, status;`
+
 	dbd, err := toDBDomain(d)
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(repoerr.ErrCreateEntity, errors.ErrRollbackTx)
@@ -62,18 +63,21 @@ func (repo domainRepo) SaveDomain(ctx context.Context, d domains.Domain) (domain
 	}
 	defer row.Close()
 
-	if row.Next() {
-		dbd = dbDomain{}
-		if err := row.StructScan(&dbd); err != nil {
-			return domains.Domain{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
-		}
-		domain, err := toDomain(dbd)
-		if err != nil {
-			return domains.Domain{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
-		}
-		return domain, nil
+	if !row.Next() {
+		return domains.Domain{}, repoerr.ErrNotFound
 	}
-	return domains.Domain{}, repoerr.ErrNotFound
+
+	dbd = dbDomain{}
+	if err := row.StructScan(&dbd); err != nil {
+		return domains.Domain{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
+	}
+
+	domain, err := toDomain(dbd)
+	if err != nil {
+		return domains.Domain{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
+	}
+
+	return domain, nil
 }
 
 // RetrieveDomainByIDWithRoles retrieves Domain by its unique ID along with member roles.
@@ -385,6 +389,7 @@ func (repo domainRepo) UpdateDomain(ctx context.Context, id string, dr domains.D
 	var query []string
 	var upq string
 	d := domains.Domain{ID: id}
+
 	if dr.Name != nil && *dr.Name != "" {
 		query = append(query, "name = :name")
 		d.Name = *dr.Name
@@ -410,36 +415,41 @@ func (repo domainRepo) UpdateDomain(ctx context.Context, id string, dr domains.D
 		query = append(query, "updated_by = :updated_by")
 		d.UpdatedAt = *dr.UpdatedAt
 	}
+
 	if len(query) > 0 {
 		upq = strings.Join(query, ", ")
 	}
+
 	q := fmt.Sprintf(`UPDATE domains SET %s
 		WHERE id = :id
-		RETURNING id, name, tags, route, metadata, created_at, updated_at, updated_by, created_by, status;`,
-		upq)
+		RETURNING id, name, tags, route, metadata, created_at, updated_at, updated_by, created_by, status;`, upq)
 
 	dbd, err := toDBDomain(d)
 	if err != nil {
 		return domains.Domain{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
 	}
+
 	row, err := repo.db.NamedQueryContext(ctx, q, dbd)
 	if err != nil {
 		return domains.Domain{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	defer row.Close()
 
-	if row.Next() {
-		dbd = dbDomain{}
-		if err := row.StructScan(&dbd); err != nil {
-			return domains.Domain{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
-		}
-		domain, err := toDomain(dbd)
-		if err != nil {
-			return domains.Domain{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
-		}
-		return domain, nil
+	if !row.Next() {
+		return domains.Domain{}, repoerr.ErrNotFound
 	}
-	return domains.Domain{}, repoerr.ErrNotFound
+
+	dbd = dbDomain{}
+	if err := row.StructScan(&dbd); err != nil {
+		return domains.Domain{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
+	}
+
+	domain, err := toDomain(dbd)
+	if err != nil {
+		return domains.Domain{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
+	}
+
+	return domain, nil
 }
 
 // Delete delete domain from database.
