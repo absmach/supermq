@@ -16,12 +16,12 @@ import (
 
 type coapServer struct {
 	server.BaseServer
-	handler mux.HandlerFunc
+	handler mux.Handler
 }
 
 var _ server.Server = (*coapServer)(nil)
 
-func NewServer(ctx context.Context, cancel context.CancelFunc, name string, config server.Config, handler mux.HandlerFunc, logger *slog.Logger) server.Server {
+func NewServer(ctx context.Context, cancel context.CancelFunc, name string, config server.Config, handler mux.Handler, logger *slog.Logger) server.Server {
 	baseServer := server.NewBaseServer(ctx, cancel, name, config, logger)
 
 	return &coapServer{
