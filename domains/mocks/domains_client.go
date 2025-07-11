@@ -209,8 +209,8 @@ func (_c *DomainsServiceClient_RetrieveByRoute_Call) RunAndReturn(run func(ctx c
 	return _c
 }
 
-// RetrieveEntity provides a mock function for the type DomainsServiceClient
-func (_mock *DomainsServiceClient) RetrieveEntity(ctx context.Context, in *v10.RetrieveEntityReq, opts ...grpc.CallOption) (*v10.RetrieveEntityRes, error) {
+// RetrieveStatus provides a mock function for the type DomainsServiceClient
+func (_mock *DomainsServiceClient) RetrieveStatus(ctx context.Context, in *v10.RetrieveEntityReq, opts ...grpc.CallOption) (*v10.RetrieveEntityRes, error) {
 	var tmpRet mock.Arguments
 	if len(opts) > 0 {
 		tmpRet = _mock.Called(ctx, in, opts)
@@ -220,7 +220,7 @@ func (_mock *DomainsServiceClient) RetrieveEntity(ctx context.Context, in *v10.R
 	ret := tmpRet
 
 	if len(ret) == 0 {
-		panic("no return value specified for RetrieveEntity")
+		panic("no return value specified for RetrieveStatus")
 	}
 
 	var r0 *v10.RetrieveEntityRes
@@ -243,21 +243,21 @@ func (_mock *DomainsServiceClient) RetrieveEntity(ctx context.Context, in *v10.R
 	return r0, r1
 }
 
-// DomainsServiceClient_RetrieveEntity_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RetrieveEntity'
-type DomainsServiceClient_RetrieveEntity_Call struct {
+// DomainsServiceClient_RetrieveStatus_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RetrieveStatus'
+type DomainsServiceClient_RetrieveStatus_Call struct {
 	*mock.Call
 }
 
-// RetrieveEntity is a helper method to define mock.On call
+// RetrieveStatus is a helper method to define mock.On call
 //   - ctx context.Context
 //   - in *v10.RetrieveEntityReq
 //   - opts ...grpc.CallOption
-func (_e *DomainsServiceClient_Expecter) RetrieveEntity(ctx interface{}, in interface{}, opts ...interface{}) *DomainsServiceClient_RetrieveEntity_Call {
-	return &DomainsServiceClient_RetrieveEntity_Call{Call: _e.mock.On("RetrieveEntity",
+func (_e *DomainsServiceClient_Expecter) RetrieveStatus(ctx interface{}, in interface{}, opts ...interface{}) *DomainsServiceClient_RetrieveStatus_Call {
+	return &DomainsServiceClient_RetrieveStatus_Call{Call: _e.mock.On("RetrieveStatus",
 		append([]interface{}{ctx, in}, opts...)...)}
 }
 
-func (_c *DomainsServiceClient_RetrieveEntity_Call) Run(run func(ctx context.Context, in *v10.RetrieveEntityReq, opts ...grpc.CallOption)) *DomainsServiceClient_RetrieveEntity_Call {
+func (_c *DomainsServiceClient_RetrieveStatus_Call) Run(run func(ctx context.Context, in *v10.RetrieveEntityReq, opts ...grpc.CallOption)) *DomainsServiceClient_RetrieveStatus_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -282,12 +282,12 @@ func (_c *DomainsServiceClient_RetrieveEntity_Call) Run(run func(ctx context.Con
 	return _c
 }
 
-func (_c *DomainsServiceClient_RetrieveEntity_Call) Return(retrieveEntityRes *v10.RetrieveEntityRes, err error) *DomainsServiceClient_RetrieveEntity_Call {
+func (_c *DomainsServiceClient_RetrieveStatus_Call) Return(retrieveEntityRes *v10.RetrieveEntityRes, err error) *DomainsServiceClient_RetrieveStatus_Call {
 	_c.Call.Return(retrieveEntityRes, err)
 	return _c
 }
 
-func (_c *DomainsServiceClient_RetrieveEntity_Call) RunAndReturn(run func(ctx context.Context, in *v10.RetrieveEntityReq, opts ...grpc.CallOption) (*v10.RetrieveEntityRes, error)) *DomainsServiceClient_RetrieveEntity_Call {
+func (_c *DomainsServiceClient_RetrieveStatus_Call) RunAndReturn(run func(ctx context.Context, in *v10.RetrieveEntityReq, opts ...grpc.CallOption) (*v10.RetrieveEntityRes, error)) *DomainsServiceClient_RetrieveStatus_Call {
 	_c.Call.Return(run)
 	return _c
 }
