@@ -623,25 +623,14 @@ func TestResetTokenReqValidate(t *testing.T) {
 		{
 			desc: "valid request",
 			req: resetTokenReq{
-				Token:    valid,
 				Password: secret,
 				ConfPass: secret,
 			},
 			err: nil,
 		},
 		{
-			desc: "empty token",
-			req: resetTokenReq{
-				Token:    "",
-				Password: secret,
-				ConfPass: secret,
-			},
-			err: apiutil.ErrBearerToken,
-		},
-		{
 			desc: "empty password",
 			req: resetTokenReq{
-				Token:    valid,
 				Password: "",
 				ConfPass: secret,
 			},
@@ -650,7 +639,6 @@ func TestResetTokenReqValidate(t *testing.T) {
 		{
 			desc: "empty confpass",
 			req: resetTokenReq{
-				Token:    valid,
 				Password: secret,
 				ConfPass: "",
 			},
@@ -659,7 +647,6 @@ func TestResetTokenReqValidate(t *testing.T) {
 		{
 			desc: "mismatching password and confpass",
 			req: resetTokenReq{
-				Token:    valid,
 				Password: "secret",
 				ConfPass: secret,
 			},

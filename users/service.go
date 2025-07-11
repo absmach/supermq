@@ -275,8 +275,9 @@ func (svc service) GenerateResetToken(ctx context.Context, email, host string) e
 		return errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	issueReq := &grpcTokenV1.IssueReq{
-		UserId: user.ID,
-		Type:   uint32(smqauth.RecoveryKey),
+		UserId:   user.ID,
+		UserRole: uint32(user.Role + 1),
+		Type:     uint32(smqauth.RecoveryKey),
 	}
 	token, err := svc.token.Issue(ctx, issueReq)
 	if err != nil {

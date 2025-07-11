@@ -292,7 +292,6 @@ func (req passwResetReq) validate() error {
 }
 
 type resetTokenReq struct {
-	Token    string `json:"token"`
 	Password string `json:"password"`
 	ConfPass string `json:"confirm_password"`
 }
@@ -303,9 +302,6 @@ func (req resetTokenReq) validate() error {
 	}
 	if req.ConfPass == "" {
 		return apiutil.ErrMissingConfPass
-	}
-	if req.Token == "" {
-		return apiutil.ErrBearerToken
 	}
 	if req.Password != req.ConfPass {
 		return apiutil.ErrInvalidResetPass
