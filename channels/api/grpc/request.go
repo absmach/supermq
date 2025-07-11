@@ -39,12 +39,12 @@ type retrieveEntityReq struct {
 	Id string
 }
 
-type retrieveByRouteReq struct {
+type retrieveIDByRouteReq struct {
 	route    string
 	domainID string
 }
 
-func (req retrieveByRouteReq) validate() error {
+func (req retrieveIDByRouteReq) validate() error {
 	if req.route == "" {
 		return apiutil.ErrMissingRoute
 	}

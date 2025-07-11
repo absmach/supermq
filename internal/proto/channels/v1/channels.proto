@@ -22,7 +22,7 @@ service ChannelsService {
   rpc RetrieveEntity(common.v1.RetrieveEntityReq)
     returns (common.v1.RetrieveEntityRes) {}
 
-  rpc RetrieveByRoute(common.v1.RetrieveByRouteReq)
+  rpc RetrieveIDByRoute(common.v1.RetrieveIDByRouteReq)
     returns (common.v1.RetrieveEntityRes) {}
 }
 

@@ -19,7 +19,7 @@ type domainsGrpcServer struct {
 	grpcDomainsV1.UnimplementedDomainsServiceServer
 	deleteUserFromDomains kitgrpc.Handler
 	retrieveEntity        kitgrpc.Handler
-	retrieveByRoute       kitgrpc.Handler
+	retrieveIDByRoute     kitgrpc.Handler
 }
 
 func NewDomainsServer(svc domains.Service) grpcDomainsV1.DomainsServiceServer {
@@ -34,10 +34,10 @@ func NewDomainsServer(svc domains.Service) grpcDomainsV1.DomainsServiceServer {
 			decodeRetrieveEntityRequest,
 			encodeRetrieveEntityResponse,
 		),
-		retrieveByRoute: kitgrpc.NewServer(
-			retrieveByRouteEndpoint(svc),
-			decodeRetrieveByRouteRequest,
-			encodeRetrieveByRouteResponse,
+		retrieveIDByRoute: kitgrpc.NewServer(
+			retrieveIDByRouteEndpoint(svc),
+			decodeRetrieveIDByRouteRequest,
+			encodeRetrieveIDByRouteResponse,
 		),
 	}
 }
@@ -90,27 +90,26 @@ func (s *domainsGrpcServer) RetrieveEntity(ctx context.Context, req *grpcCommonV
 	return res.(*grpcCommonV1.RetrieveEntityRes), nil
 }
 
-func decodeRetrieveByRouteRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*grpcCommonV1.RetrieveByRouteReq)
+func decodeRetrieveIDByRouteRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*grpcCommonV1.RetrieveIDByRouteReq)
 
-	return retrieveByRouteReq{
+	return retrieveIDByRouteReq{
 		Route: req.GetRoute(),
 	}, nil
 }
 
-func encodeRetrieveByRouteResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
-	res := grpcRes.(retrieveEntityRes)
+func encodeRetrieveIDByRouteResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(retrieveIDByRouteRes)
 
 	return &grpcCommonV1.RetrieveEntityRes{
 		Entity: &grpcCommonV1.EntityBasic{
-			Id:     res.id,
-			Status: uint32(res.status),
+			Id: res.id,
 		},
 	}, nil
 }
 
-func (s *domainsGrpcServer) RetrieveByRoute(ctx context.Context, req *grpcCommonV1.RetrieveByRouteReq) (*grpcCommonV1.RetrieveEntityRes, error) {
-	_, res, err := s.retrieveByRoute.ServeGRPC(ctx, req)
+func (s *domainsGrpcServer) RetrieveIDByRoute(ctx context.Context, req *grpcCommonV1.RetrieveIDByRouteReq) (*grpcCommonV1.RetrieveEntityRes, error) {
+	_, res, err := s.retrieveIDByRoute.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, grpcapi.EncodeError(err)
 	}

@@ -117,12 +117,12 @@ func TestResolve(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			domainsCall := domains.On("RetrieveByRoute", mock.Anything, &grpcCommonV1.RetrieveByRouteReq{Route: tc.domain}).Return(&grpcCommonV1.RetrieveEntityRes{
+			domainsCall := domains.On("RetrieveIDByRoute", mock.Anything, &grpcCommonV1.RetrieveIDByRouteReq{Route: tc.domain}).Return(&grpcCommonV1.RetrieveEntityRes{
 				Entity: &grpcCommonV1.EntityBasic{
 					Id: tc.domainID,
 				},
 			}, tc.domainsErr)
-			channelsCall := channels.On("RetrieveByRoute", mock.Anything, &grpcCommonV1.RetrieveByRouteReq{Route: tc.channel, DomainId: tc.domainID}).Return(&grpcCommonV1.RetrieveEntityRes{
+			channelsCall := channels.On("RetrieveIDByRoute", mock.Anything, &grpcCommonV1.RetrieveIDByRouteReq{Route: tc.channel, DomainId: tc.domainID}).Return(&grpcCommonV1.RetrieveEntityRes{
 				Entity: &grpcCommonV1.EntityBasic{
 					Id: tc.channelID,
 				},
@@ -226,12 +226,12 @@ func TestResolveTopic(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			domainsCall := domains.On("RetrieveByRoute", mock.Anything, &grpcCommonV1.RetrieveByRouteReq{Route: tc.domain}).Return(&grpcCommonV1.RetrieveEntityRes{
+			domainsCall := domains.On("RetrieveIDByRoute", mock.Anything, &grpcCommonV1.RetrieveIDByRouteReq{Route: tc.domain}).Return(&grpcCommonV1.RetrieveEntityRes{
 				Entity: &grpcCommonV1.EntityBasic{
 					Id: tc.domainID,
 				},
 			}, tc.domainsErr)
-			channelsCall := channels.On("RetrieveByRoute", mock.Anything, &grpcCommonV1.RetrieveByRouteReq{Route: tc.channel, DomainId: tc.domainID}).Return(&grpcCommonV1.RetrieveEntityRes{
+			channelsCall := channels.On("RetrieveIDByRoute", mock.Anything, &grpcCommonV1.RetrieveIDByRouteReq{Route: tc.channel, DomainId: tc.domainID}).Return(&grpcCommonV1.RetrieveEntityRes{
 				Entity: &grpcCommonV1.EntityBasic{
 					Id: tc.channelID,
 				},
