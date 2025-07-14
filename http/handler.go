@@ -136,11 +136,11 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		secret := strings.TrimPrefix(string(s.Password), apiutil.ClientPrefix)
 		authnRes, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{ClientSecret: secret})
 		if err != nil {
-			h.logger.Info(fmt.Sprintf(logInfoFailedAuthNClient, secret, *topic, err))
+			h.logger.Warn(fmt.Sprintf(logInfoFailedAuthNClient, secret, *topic, err))
 			return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
 		}
 		if !authnRes.Authenticated {
-			h.logger.Info(fmt.Sprintf(logInfoFailedAuthNClient, secret, *topic, svcerr.ErrAuthentication))
+			h.logger.Warn(fmt.Sprintf(logInfoFailedAuthNClient, secret, *topic, svcerr.ErrAuthentication))
 			return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
 		}
 		clientType = policies.ClientType
@@ -149,7 +149,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		token := strings.TrimPrefix(string(s.Password), apiutil.BearerPrefix)
 		authnSession, err := h.authn.Authenticate(ctx, token)
 		if err != nil {
-			h.logger.Info(fmt.Sprintf(logInfoFailedAuthNToken, *topic, err))
+			h.logger.Warn(fmt.Sprintf(logInfoFailedAuthNToken, *topic, err))
 			return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
 		}
 		clientType = policies.UserType
