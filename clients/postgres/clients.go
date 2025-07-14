@@ -1093,7 +1093,7 @@ func ToClient(t DBClient) (clients.Client, error) {
 
 	var updatedAt time.Time
 	if t.UpdatedAt.Valid {
-		updatedAt = t.UpdatedAt.Time
+		updatedAt = t.UpdatedAt.Time.UTC()
 	}
 
 	var connTypes []connections.ConnType
@@ -1123,7 +1123,7 @@ func ToClient(t DBClient) (clients.Client, error) {
 			Secret:   t.Secret,
 		},
 		Metadata:                  metadata,
-		CreatedAt:                 t.CreatedAt,
+		CreatedAt:                 t.CreatedAt.UTC(),
 		UpdatedAt:                 updatedAt,
 		UpdatedBy:                 updatedBy,
 		Status:                    t.Status,

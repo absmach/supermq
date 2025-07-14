@@ -86,6 +86,17 @@ func Migration() *migrate.MemoryMigrationSource {
 					`ALTER TABLE users ALTER COLUMN last_name SET DEFAULT ''`,
 				},
 			},
+			{
+				Id: "clients_06",
+				Up: []string{
+					`ALTER TABLE users ALTER COLUMN created_at TYPE TIMESTAMPTZ;`,
+					`ALTER TABLE users ALTER COLUMN updated_at TYPE TIMESTAMPTZ;`,
+				},
+				Down: []string{
+					`ALTER TABLE users ALTER COLUMN created_at TYPE TIMESTAMP;`,
+					`ALTER TABLE users ALTER COLUMN updated_at TYPE TIMESTAMP;`,
+				},
+			},
 		},
 	}
 }

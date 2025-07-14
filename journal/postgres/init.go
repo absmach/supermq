@@ -50,6 +50,19 @@ func Migration() *migrate.MemoryMigrationSource {
 					`DROP TABLE IF EXISTS journal`,
 				},
 			},
+			{
+				Id: "journal_02",
+				Up: []string{
+					`ALTER TABLE journal ALTER COLUMN occurred_at TYPE TIMESTAMPTZ;`,
+					`ALTER TABLE clients_telemetry ALTER COLUMN first_seen TYPE TIMESTAMPTZ;`,
+					`ALTER TABLE clients_telemetry ALTER COLUMN last_seen TYPE TIMESTAMPTZ;`,
+				},
+				Down: []string{
+					`ALTER TABLE journal ALTER COLUMN occurred_at TYPE TIMESTAMP;`,
+					`ALTER TABLE clients_telemetry ALTER COLUMN first_seen TYPE TIMESTAMP;`,
+					`ALTER TABLE clients_telemetry ALTER COLUMN last_seen TYPE TIMESTAMP;`,
+				},
+			},
 		},
 	}
 }

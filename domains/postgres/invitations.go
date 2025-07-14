@@ -243,10 +243,10 @@ func toInvitation(dbinv dbInvitation) domains.Invitation {
 		updatedAt = dbinv.UpdatedAt.Time
 	}
 	if dbinv.ConfirmedAt.Valid {
-		confirmedAt = dbinv.ConfirmedAt.Time
+		confirmedAt = dbinv.ConfirmedAt.Time.UTC()
 	}
 	if dbinv.RejectedAt.Valid {
-		rejectedAt = dbinv.RejectedAt.Time
+		rejectedAt = dbinv.RejectedAt.Time.UTC()
 	}
 
 	return domains.Invitation{
@@ -256,7 +256,7 @@ func toInvitation(dbinv dbInvitation) domains.Invitation {
 		DomainName:    toString(dbinv.DomainName),
 		RoleID:        dbinv.RoleID,
 		RoleName:      toString(dbinv.RoleName),
-		CreatedAt:     dbinv.CreatedAt,
+		CreatedAt:     dbinv.CreatedAt.UTC(),
 		UpdatedAt:     updatedAt,
 		ConfirmedAt:   confirmedAt,
 		RejectedAt:    rejectedAt,

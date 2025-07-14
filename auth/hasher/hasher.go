@@ -76,7 +76,7 @@ func (bh *bcryptHasher) Compare(plain, hashed string) error {
 }
 
 func generateSalt(length int) ([]byte, error) {
-	rand.New(rand.NewSource(time.Now().UnixNano()))
+	rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
 	salt := make([]byte, length)
 	_, err := rand.Read(salt)
 	if err != nil {

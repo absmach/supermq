@@ -185,7 +185,7 @@ func toJournal(dbj dbJournal) (journal.Journal, error) {
 	return journal.Journal{
 		Operation:  dbj.Operation,
 		Domain:     dbj.Domain,
-		OccurredAt: dbj.OccurredAt,
+		OccurredAt: dbj.OccurredAt.UTC(),
 		Attributes: attributes,
 		Metadata:   metadata,
 	}, nil

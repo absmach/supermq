@@ -104,6 +104,27 @@ func Migration() *migrate.MemoryMigrationSource {
 					`DROP TABLE IF EXISTS pat_scopes;`,
 				},
 			},
+			{
+				Id: "auth_6",
+				Up: []string{
+					`ALTER TABLE keys ALTER COLUMN issued_at TYPE TIMESTAMPTZ;`,
+					`ALTER TABLE keys ALTER COLUMN expires_at TYPE TIMESTAMPTZ;`,
+					`ALTER TABLE pats ALTER COLUMN issued_at TYPE TIMESTAMPTZ;`,
+					`ALTER TABLE pats ALTER COLUMN expires_at TYPE TIMESTAMPTZ;`,
+					`ALTER TABLE pats ALTER COLUMN updated_at TYPE TIMESTAMPTZ;`,
+					`ALTER TABLE pats ALTER COLUMN revoked_at TYPE TIMESTAMPTZ;`,
+					`ALTER TABLE pats ALTER COLUMN last_used_at TYPE TIMESTAMPTZ;`,
+				},
+				Down: []string{
+					`ALTER TABLE keys ALTER COLUMN issued_at TYPE TIMESTAMP;`,
+					`ALTER TABLE keys ALTER COLUMN expires_at TYPE TIMESTAMP;`,
+					`ALTER TABLE pats ALTER COLUMN issued_at TYPE TIMESTAMP;`,
+					`ALTER TABLE pats ALTER COLUMN expires_at TYPE TIMESTAMP;`,
+					`ALTER TABLE pats ALTER COLUMN updated_at TYPE TIMESTAMP;`,
+					`ALTER TABLE pats ALTER COLUMN revoked_at TYPE TIMESTAMP;`,
+					`ALTER TABLE pats ALTER COLUMN last_used_at TYPE TIMESTAMP;`,
+				},
+			},
 		},
 	}
 }

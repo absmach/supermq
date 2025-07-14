@@ -65,6 +65,17 @@ func Migration() (*migrate.MemoryMigrationSource, error) {
 					`ALTER TABLE clients ADD CONSTRAINT clients_domain_id_name_key UNIQUE (domain_id, name)`,
 				},
 			},
+			{
+				Id: "clients_03",
+				Up: []string{
+					`ALTER TABLE clients ALTER COLUMN created_at TYPE TIMESTAMPTZ;`,
+					`ALTER TABLE clients ALTER COLUMN updated_at TYPE TIMESTAMPTZ;`,
+				},
+				Down: []string{
+					`ALTER TABLE clients ALTER COLUMN created_at TYPE TIMESTAMP;`,
+					`ALTER TABLE clients ALTER COLUMN updated_at TYPE TIMESTAMP;`,
+				},
+			},
 		},
 	}
 

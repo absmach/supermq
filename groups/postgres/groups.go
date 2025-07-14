@@ -1243,7 +1243,7 @@ func toGroup(g dbGroup) (groups.Group, error) {
 	}
 	var updatedAt time.Time
 	if g.UpdatedAt.Valid {
-		updatedAt = g.UpdatedAt.Time
+		updatedAt = g.UpdatedAt.Time.UTC()
 	}
 	var updatedBy string
 	if g.UpdatedBy != nil {
@@ -1269,7 +1269,7 @@ func toGroup(g dbGroup) (groups.Group, error) {
 		Path:                      g.Path,
 		UpdatedAt:                 updatedAt,
 		UpdatedBy:                 updatedBy,
-		CreatedAt:                 g.CreatedAt,
+		CreatedAt:                 g.CreatedAt.UTC(),
 		Status:                    g.Status,
 		RoleID:                    g.RoleID,
 		RoleName:                  g.RoleName,

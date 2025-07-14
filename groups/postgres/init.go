@@ -73,6 +73,17 @@ func Migration() (*migrate.MemoryMigrationSource, error) {
 					`ALTER TABLE groups DROP COLUMN tags`,
 				},
 			},
+			{
+				Id: "groups_05",
+				Up: []string{
+					`ALTER TABLE groups ALTER COLUMN created_at TYPE TIMESTAMPTZ;`,
+					`ALTER TABLE groups ALTER COLUMN updated_at TYPE TIMESTAMPTZ;`,
+				},
+				Down: []string{
+					`ALTER TABLE groups ALTER COLUMN created_at TYPE TIMESTAMP;`,
+					`ALTER TABLE groups ALTER COLUMN updated_at TYPE TIMESTAMP;`,
+				},
+			},
 		},
 	}
 

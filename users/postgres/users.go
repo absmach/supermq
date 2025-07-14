@@ -554,7 +554,7 @@ func ToUser(dbu DBUser) (users.User, error) {
 	}
 	var updatedAt time.Time
 	if dbu.UpdatedAt.Valid {
-		updatedAt = dbu.UpdatedAt.Time
+		updatedAt = dbu.UpdatedAt.Time.UTC()
 	}
 
 	user := users.User{
@@ -567,7 +567,7 @@ func ToUser(dbu DBUser) (users.User, error) {
 		},
 		Email:          dbu.Email,
 		Metadata:       metadata,
-		CreatedAt:      dbu.CreatedAt,
+		CreatedAt:      dbu.CreatedAt.UTC(),
 		UpdatedAt:      updatedAt,
 		UpdatedBy:      updatedBy,
 		Status:         dbu.Status,

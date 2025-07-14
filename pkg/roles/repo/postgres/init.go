@@ -55,6 +55,17 @@ func Migration(rolesTableNamePrefix, entityTableName, entityIDColumnName string)
 					fmt.Sprintf(`DROP TABLE IF EXISTS %s_role_members`, rolesTableNamePrefix),
 				},
 			},
+			{
+				Id: fmt.Sprintf("%s_roles_2", rolesTableNamePrefix),
+				Up: []string{
+					fmt.Sprintf(`ALTER TABLE %s_roles ALTER COLUMN created_at TYPE TIMESTAMPTZ;`, rolesTableNamePrefix),
+					fmt.Sprintf(`ALTER TABLE %s_roles ALTER COLUMN updated_at TYPE TIMESTAMPTZ;`, rolesTableNamePrefix),
+				},
+				Down: []string{
+					fmt.Sprintf(`ALTER TABLE %s_roles ALTER COLUMN created_at TYPE TIMESTAMP;`, rolesTableNamePrefix),
+					fmt.Sprintf(`ALTER TABLE %s_roles ALTER COLUMN updated_at TYPE TIMESTAMP;`, rolesTableNamePrefix),
+				},
+			},
 		},
 	}, nil
 }

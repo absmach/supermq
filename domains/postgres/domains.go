@@ -612,7 +612,7 @@ func toDomain(d dbDomain) (domains.Domain, error) {
 	}
 	var updatedAt time.Time
 	if d.UpdatedAt.Valid {
-		updatedAt = d.UpdatedAt.Time
+		updatedAt = d.UpdatedAt.Time.UTC()
 	}
 
 	var mra []roles.MemberRoleActions
@@ -633,7 +633,7 @@ func toDomain(d dbDomain) (domains.Domain, error) {
 		Actions:   d.Actions,
 		Status:    d.Status,
 		CreatedBy: d.CreatedBy,
-		CreatedAt: d.CreatedAt,
+		CreatedAt: d.CreatedAt.UTC(),
 		UpdatedBy: updatedBy,
 		UpdatedAt: updatedAt,
 		MemberID:  d.MemberID,

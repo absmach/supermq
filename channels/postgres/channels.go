@@ -1218,7 +1218,7 @@ func toChannel(ch dbChannel) (channels.Channel, error) {
 	}
 	var updatedAt time.Time
 	if ch.UpdatedAt.Valid {
-		updatedAt = ch.UpdatedAt.Time
+		updatedAt = ch.UpdatedAt.Time.UTC()
 	}
 
 	connTypes := []connections.ConnType{}
@@ -1246,7 +1246,7 @@ func toChannel(ch dbChannel) (channels.Channel, error) {
 		ParentGroup:               toString(ch.ParentGroup),
 		Metadata:                  metadata,
 		CreatedBy:                 createdBy,
-		CreatedAt:                 ch.CreatedAt,
+		CreatedAt:                 ch.CreatedAt.UTC(),
 		UpdatedAt:                 updatedAt,
 		UpdatedBy:                 updatedBy,
 		Status:                    ch.Status,

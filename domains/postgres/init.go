@@ -70,6 +70,25 @@ func Migration() (*migrate.MemoryMigrationSource, error) {
 					`ALTER TABLE domains RENAME COLUMN route TO alias;`,
 				},
 			},
+			{
+				Id: "domain_4",
+				Up: []string{
+					`ALTER TABLE domains ALTER COLUMN created_at TYPE TIMESTAMPTZ;`,
+					`ALTER TABLE domains ALTER COLUMN updated_at TYPE TIMESTAMPTZ;`,
+					`ALTER TABLE invitations ALTER COLUMN created_at TYPE TIMESTAMPTZ;`,
+					`ALTER TABLE invitations ALTER COLUMN updated_at TYPE TIMESTAMPTZ;`,
+					`ALTER TABLE invitations ALTER COLUMN confirmed_at TYPE TIMESTAMPTZ;`,
+					`ALTER TABLE invitations ALTER COLUMN rejected_at TYPE TIMESTAMPTZ;`,
+				},
+				Down: []string{
+					`ALTER TABLE domains ALTER COLUMN created_at TYPE TIMESTAMP;`,
+					`ALTER TABLE domains ALTER COLUMN updated_at TYPE TIMESTAMP;`,
+					`ALTER TABLE invitations ALTER COLUMN created_at TYPE TIMESTAMP;`,
+					`ALTER TABLE invitations ALTER COLUMN updated_at TYPE TIMESTAMP;`,
+					`ALTER TABLE invitations ALTER COLUMN confirmed_at TYPE TIMESTAMP;`,
+					`ALTER TABLE invitations ALTER COLUMN rejected_at TYPE TIMESTAMP;`,
+				},
+			},
 		},
 	}
 

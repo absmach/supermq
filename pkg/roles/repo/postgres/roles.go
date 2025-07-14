@@ -161,7 +161,7 @@ func toRole(r dbRole) roles.Role {
 	}
 	var createdAt time.Time
 	if r.CreatedAt.Valid {
-		createdAt = r.CreatedAt.Time
+		createdAt = r.CreatedAt.Time.UTC()
 	}
 
 	var updatedBy string
@@ -170,7 +170,7 @@ func toRole(r dbRole) roles.Role {
 	}
 	var updatedAt time.Time
 	if r.UpdatedAt.Valid {
-		updatedAt = r.UpdatedAt.Time
+		updatedAt = r.UpdatedAt.Time.UTC()
 	}
 
 	return roles.Role{

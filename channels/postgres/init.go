@@ -73,6 +73,17 @@ func Migration() (*migrate.MemoryMigrationSource, error) {
 					`ALTER TABLE channels DROP COLUMN route;`,
 				},
 			},
+			{
+				Id: "channels_04",
+				Up: []string{
+					`ALTER TABLE channels ALTER COLUMN created_at TYPE TIMESTAMPTZ;`,
+					`ALTER TABLE channels ALTER COLUMN updated_at TYPE TIMESTAMPTZ;`,
+				},
+				Down: []string{
+					`ALTER TABLE channels ALTER COLUMN created_at TYPE TIMESTAMP;`,
+					`ALTER TABLE channels ALTER COLUMN updated_at TYPE TIMESTAMP;`,
+				},
+			},
 		},
 	}
 	channelsMigration.Migrations = append(channelsMigration.Migrations, rolesMigration.Migrations...)
