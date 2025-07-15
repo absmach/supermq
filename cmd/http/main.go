@@ -47,6 +47,7 @@ import (
 const (
 	svcName            = "http_adapter"
 	envPrefix          = "SMQ_HTTP_ADAPTER_"
+	envPrefixCache     = "SMQ_HTTP_ADAPTER_CACHE_"
 	envPrefixClients   = "SMQ_CLIENTS_GRPC_"
 	envPrefixChannels  = "SMQ_CHANNELS_GRPC_"
 	envPrefixAuth      = "SMQ_AUTH_GRPC_"
@@ -96,6 +97,13 @@ func main() {
 	httpServerConfig := server.Config{Port: defSvcHTTPPort}
 	if err := env.ParseWithOptions(&httpServerConfig, env.Options{Prefix: envPrefix}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
+		exitCode = 1
+		return
+	}
+
+	cacheConfig := messaging.CacheConfig{}
+	if err := env.ParseWithOptions(&cacheConfig, env.Options{Prefix: envPrefixCache}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load cache configuration : %s", err))
 		exitCode = 1
 		return
 	}
@@ -193,7 +201,12 @@ func main() {
 		return
 	}
 
-	svc := newService(pub, authn, clientsClient, channelsClient, domainsClient, logger, tracer)
+	svc, err := newService(pub, authn, cacheConfig, clientsClient, channelsClient, domainsClient, logger, tracer)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to create service: %s", err))
+		exitCode = 1
+		return
+	}
 	targetServerCfg := server.Config{Port: targetHTTPPort}
 
 	hs := httpserver.NewServer(ctx, cancel, svcName, targetServerCfg, httpapi.MakeHandler(logger, cfg.InstanceID), logger)
@@ -220,14 +233,17 @@ func main() {
 	}
 }
 
-func newService(pub messaging.Publisher, authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, domains grpcDomainsV1.DomainsServiceClient, logger *slog.Logger, tracer trace.Tracer) session.Handler {
-	resolver := messaging.NewTopicResolver(channels, domains)
-	svc := adapter.NewHandler(pub, authn, clients, channels, resolver, logger)
+func newService(pub messaging.Publisher, authn smqauthn.Authentication, cacheCfg messaging.CacheConfig, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, domains grpcDomainsV1.DomainsServiceClient, logger *slog.Logger, tracer trace.Tracer) (session.Handler, error) {
+	parser, err := messaging.NewTopicParser(cacheCfg, channels, domains)
+	if err != nil {
+		return nil, err
+	}
+	svc := adapter.NewHandler(pub, authn, clients, channels, parser, logger)
 	svc = handler.NewTracing(tracer, svc)
 	svc = handler.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics(svcName, "api")
 	svc = handler.MetricsMiddleware(svc, counter, latency)
-	return svc
+	return svc, nil
 }
 
 func proxyHTTP(ctx context.Context, cfg server.Config, logger *slog.Logger, sessionHandler session.Handler) error {

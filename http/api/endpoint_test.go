@@ -49,10 +49,14 @@ var (
 	domainID = testsutil.GenerateUUID(&testing.T{})
 )
 
-func newService(authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, domains grpcDomainsV1.DomainsServiceClient) (session.Handler, *pubsub.PubSub) {
+func newService(authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, domains grpcDomainsV1.DomainsServiceClient) (session.Handler, *pubsub.PubSub, error) {
 	pub := new(pubsub.PubSub)
-	resolver := messaging.NewTopicResolver(channels, domains)
-	return server.NewHandler(pub, authn, clients, channels, resolver, smqlog.NewMock()), pub
+	parser, err := messaging.NewTopicParser(messaging.DefaultCacheConfig, channels, domains)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return server.NewHandler(pub, authn, clients, channels, parser, smqlog.NewMock()), pub, nil
 }
 
 func newTargetHTTPServer() *httptest.Server {
@@ -120,7 +124,8 @@ func TestPublish(t *testing.T) {
 	msg := `[{"n":"current","t":-1,"v":1.6}]`
 	msgJSON := `{"field1":"val1","field2":"val2"}`
 	msgCBOR := `81A3616E6763757272656E746174206176FB3FF999999999999A`
-	svc, pub := newService(authn, clients, channels, domains)
+	svc, pub, err := newService(authn, clients, channels, domains)
+	assert.Nil(t, err, fmt.Sprintf("failed to create service with err: %v", err))
 	target := newTargetHTTPServer()
 	defer target.Close()
 	ts, err := newProxyHTPPServer(svc, target)

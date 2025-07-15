@@ -37,6 +37,7 @@ const (
 	svcName           = "coap_adapter"
 	envPrefix         = "SMQ_COAP_ADAPTER_"
 	envPrefixHTTP     = "SMQ_COAP_ADAPTER_HTTP_"
+	envPrefixCache    = "SMQ_COAP_CACHE_"
 	envPrefixClients  = "SMQ_CLIENTS_GRPC_"
 	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
 	envPrefixDomains  = "SMQ_DOMAINS_GRPC_"
@@ -89,6 +90,13 @@ func main() {
 	coapServerConfig := server.Config{Port: defSvcCoAPPort}
 	if err := env.ParseWithOptions(&coapServerConfig, env.Options{Prefix: envPrefix}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load %s CoAP server configuration : %s", svcName, err))
+		exitCode = 1
+		return
+	}
+
+	cacheConfig := messaging.CacheConfig{}
+	if err := env.ParseWithOptions(&cacheConfig, env.Options{Prefix: envPrefixCache}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load cache configuration : %s", err))
 		exitCode = 1
 		return
 	}
@@ -182,8 +190,13 @@ func main() {
 
 	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(cfg.InstanceID), logger)
 
-	resolver := messaging.NewTopicResolver(channelsClient, domainsClient)
-	cs := coapserver.NewServer(ctx, cancel, svcName, coapServerConfig, httpapi.MakeCoAPHandler(svc, channelsClient, resolver, logger), logger)
+	parser, err := messaging.NewTopicParser(cacheConfig, channelsClient, domainsClient)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to create topic parsers: %s", err))
+		exitCode = 1
+		return
+	}
+	cs := coapserver.NewServer(ctx, cancel, svcName, coapServerConfig, httpapi.MakeCoAPHandler(svc, channelsClient, parser, logger), logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, supermq.Version, logger, cancel)

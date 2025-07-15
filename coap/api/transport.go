@@ -50,16 +50,16 @@ type CoAPHandler struct {
 	logger   *slog.Logger
 	service  coap.Service
 	channels grpcChannelsV1.ChannelsServiceClient
-	resolver messaging.TopicResolver
+	parser   messaging.TopicParser
 }
 
 // MakeCoAPHandler creates handler for CoAP messages.
-func MakeCoAPHandler(svc coap.Service, channelsClient grpcChannelsV1.ChannelsServiceClient, resolver messaging.TopicResolver, l *slog.Logger) mux.Handler {
+func MakeCoAPHandler(svc coap.Service, channelsClient grpcChannelsV1.ChannelsServiceClient, parser messaging.TopicParser, l *slog.Logger) mux.Handler {
 	return &CoAPHandler{
 		logger:   l,
 		service:  svc,
 		channels: channelsClient,
-		resolver: resolver,
+		parser:   parser,
 	}
 }
 
@@ -138,18 +138,13 @@ func (h *CoAPHandler) decodeMessage(msg *mux.Message) (*messaging.Message, error
 		return &messaging.Message{}, err
 	}
 
-	var domain, channel, subTopic string
+	var domainID, channelID, subTopic string
 	switch msg.Code() {
 	case codes.GET:
-		domain, channel, subTopic, err = messaging.ParseSubscribeTopic(path)
+		domainID, channelID, subTopic, err = h.parser.ParseSubscribeTopic(msg.Context(), path, true)
 	case codes.POST:
-		domain, channel, subTopic, err = messaging.ParsePublishTopic(path)
+		domainID, channelID, subTopic, err = h.parser.ParsePublishTopic(msg.Context(), path, true)
 	}
-	if err != nil {
-		return &messaging.Message{}, err
-	}
-
-	domainID, channelID, err := h.resolver.Resolve(msg.Context(), domain, channel)
 	if err != nil {
 		return &messaging.Message{}, err
 	}

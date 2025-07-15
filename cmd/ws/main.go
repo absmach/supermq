@@ -43,6 +43,7 @@ import (
 const (
 	svcName           = "ws-adapter"
 	envPrefixHTTP     = "SMQ_WS_ADAPTER_HTTP_"
+	envPrefixCache    = "SMQ_WS_ADAPTER_CACHE_"
 	envPrefixClients  = "SMQ_CLIENTS_GRPC_"
 	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
 	envPrefixAuth     = "SMQ_AUTH_GRPC_"
@@ -195,6 +196,19 @@ func main() {
 	}
 	resolver := messaging.NewTopicResolver(channelsClient, domainsClient)
 
+	cacheConfig := messaging.CacheConfig{}
+	if err := env.ParseWithOptions(&cacheConfig, env.Options{Prefix: envPrefixCache}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load cache configuration : %s", err))
+		exitCode = 1
+		return
+	}
+	parser, err := messaging.NewTopicParser(cacheConfig, channelsClient, domainsClient)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to create topic parser: %s", err))
+		exitCode = 1
+		return
+	}
+
 	svc := newService(clientsClient, channelsClient, nps, logger, tracer)
 
 	hs := httpserver.NewServer(ctx, cancel, svcName, targetServerConfig, httpapi.MakeHandler(ctx, svc, resolver, logger, cfg.InstanceID), logger)
@@ -209,7 +223,7 @@ func main() {
 	})
 
 	g.Go(func() error {
-		handler := ws.NewHandler(nps, logger, authn, clientsClient, channelsClient, resolver)
+		handler := ws.NewHandler(nps, logger, authn, clientsClient, channelsClient, parser)
 		return proxyWS(ctx, httpServerConfig, targetServerConfig, logger, handler)
 	})
 

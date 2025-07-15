@@ -19,6 +19,9 @@ The service is configured using the environment variables presented in the follo
 | SMQ_MQTT_ADAPTER_WS_TARGET_HOST           | MQTT broker host for MQTT over WS                                                   | localhost                           |
 | SMQ_MQTT_ADAPTER_WS_TARGET_PORT           | MQTT broker port for MQTT over WS                                                   | 8080                                |
 | SMQ_MQTT_ADAPTER_WS_TARGET_PATH           | MQTT broker MQTT over WS path                                                       | /mqtt                               |
+| SMQ_MQTT_ADAPTER_CACHE_NUM_COUNTERS       | Number of cache counters to keep that hold access frequency information             | 200000                              |
+| SMQ_MQTT_ADAPTER_CACHE_MAX_COST           | Maximum size of the cache(in bytes)                                                 | 1048576                             |
+| SMQ_MQTT_ADAPTER_CACHE_BUFFER_ITEMS       | Number of cache `Get` buffers                                                       | 64                                  |
 | SMQ_MQTT_ADAPTER_INSTANCE                 | Instance name for MQTT adapter                                                      | ""                                  |
 | SMQ_CLIENTS_GRPC_URL                      | Clients service Auth gRPC URL                                                       | <localhost:7000>                    |
 | SMQ_CLIENTS_GRPC_TIMEOUT                  | Clients service Auth gRPC request timeout in seconds                                | 1s                                  |
@@ -63,6 +66,9 @@ SMQ_MQTT_ADAPTER_WS_PORT=8080 \
 SMQ_MQTT_ADAPTER_WS_TARGET_HOST=localhost \
 SMQ_MQTT_ADAPTER_WS_TARGET_PORT=8080 \
 SMQ_MQTT_ADAPTER_WS_TARGET_PATH=/mqtt \
+SMQ_MQTT_ADAPTER_CACHE_NUM_COUNTERS=200000 \
+SMQ_MQTT_ADAPTER_CACHE_MAX_COST=1048576 \
+SMQ_MQTT_ADAPTER_CACHE_BUFFER_ITEMS=64 \
 SMQ_MQTT_ADAPTER_INSTANCE="" \
 SMQ_CLIENTS_GRPC_URL=localhost:7000 \
 SMQ_CLIENTS_GRPC_TIMEOUT=1s \

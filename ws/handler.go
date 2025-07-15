@@ -52,18 +52,18 @@ type handler struct {
 	channels grpcChannelsV1.ChannelsServiceClient
 	authn    smqauthn.Authentication
 	logger   *slog.Logger
-	resolver messaging.TopicResolver
+	parser   messaging.TopicParser
 }
 
 // NewHandler creates new Handler entity.
-func NewHandler(pubsub messaging.PubSub, logger *slog.Logger, authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, resolver messaging.TopicResolver) session.Handler {
+func NewHandler(pubsub messaging.PubSub, logger *slog.Logger, authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, parser messaging.TopicParser) session.Handler {
 	return &handler{
 		logger:   logger,
 		pubsub:   pubsub,
 		authn:    authn,
 		clients:  clients,
 		channels: channels,
-		resolver: resolver,
+		parser:   parser,
 	}
 }
 
@@ -92,11 +92,7 @@ func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byt
 		token = string(s.Password)
 	}
 
-	domain, channel, _, err := messaging.ParsePublishTopic(*topic)
-	if err != nil {
-		return mgate.NewHTTPProxyError(http.StatusBadRequest, errors.Wrap(errFailedPublish, err))
-	}
-	domainID, channelID, err := h.resolver.Resolve(ctx, domain, channel)
+	domainID, channelID, _, err := h.parser.ParsePublishTopic(ctx, *topic, true)
 	if err != nil {
 		return mgate.NewHTTPProxyError(http.StatusBadRequest, errors.Wrap(errFailedPublish, err))
 	}
@@ -125,15 +121,11 @@ func (h *handler) AuthSubscribe(ctx context.Context, topics *[]string) error {
 	}
 
 	for _, topic := range *topics {
-		domain, channel, _, err := messaging.ParseSubscribeTopic(topic)
+		domainID, channelID, _, err := h.parser.ParseSubscribeTopic(ctx, topic, true)
 		if err != nil {
 			return err
 		}
-		domainID, chanID, err := h.resolver.Resolve(ctx, domain, channel)
-		if err != nil {
-			return mgate.NewHTTPProxyError(http.StatusBadRequest, errors.Wrap(errFailedPublish, err))
-		}
-		if _, _, err := h.authAccess(ctx, string(s.Password), domainID, chanID, connections.Subscribe); err != nil {
+		if _, _, err := h.authAccess(ctx, string(s.Password), domainID, channelID, connections.Subscribe); err != nil {
 			return err
 		}
 	}
@@ -157,13 +149,9 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		return nil
 	}
 
-	domain, channel, subtopic, err := messaging.ParsePublishTopic(*topic)
+	domainID, channelID, subtopic, err := h.parser.ParsePublishTopic(ctx, *topic, true)
 	if err != nil {
 		return errors.Wrap(errFailedPublish, err)
-	}
-	domainID, channelID, err := h.resolver.Resolve(ctx, domain, channel)
-	if err != nil {
-		return mgate.NewHTTPProxyError(http.StatusBadRequest, errors.Wrap(errFailedPublish, err))
 	}
 
 	msg := messaging.Message{
