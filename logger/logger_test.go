@@ -42,6 +42,10 @@ func TestLoggerInitialization(t *testing.T) {
 			level: slog.LevelError.String(),
 		},
 		{
+			desc:  "trace level",
+			level: smqlog.LevelTrace.String(),
+		},
+		{
 			desc:  "invalid level",
 			level: "invalid",
 		},
