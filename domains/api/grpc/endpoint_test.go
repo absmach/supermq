@@ -162,63 +162,57 @@ func TestRetrieveStatus(t *testing.T) {
 	}
 }
 
-func TestRetrieveByRoute(t *testing.T) {
+func TestRetrieveIDByRoute(t *testing.T) {
 	conn, err := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.Nil(t, err, fmt.Sprintf("Unexpected error creating client connection %s", err))
 	grpcClient := grpcapi.NewDomainsClient(conn, time.Second)
 
 	validRoute := "validRoute"
-	dom := domains.Domain{
-		ID:     id,
-		Route:  validRoute,
-		Status: domains.EnabledStatus,
-	}
 
 	cases := []struct {
 		desc        string
-		retrieveReq *grpcCommonV1.RetrieveByRouteReq
-		svcRes      domains.Domain
+		retrieveReq *grpcCommonV1.RetrieveIDByRouteReq
+		svcRes      string
 		svcErr      error
 		retrieveRes *grpcCommonV1.RetrieveEntityRes
 		err         error
 	}{
 		{
-			desc: "retrieve entity with valid req",
-			retrieveReq: &grpcCommonV1.RetrieveByRouteReq{
+			desc: "retrieve id with valid route",
+			retrieveReq: &grpcCommonV1.RetrieveIDByRouteReq{
 				Route: validRoute,
 			},
-			svcRes: dom,
+			svcRes: id,
 			retrieveRes: &grpcCommonV1.RetrieveEntityRes{
 				Entity: &grpcCommonV1.EntityBasic{
-					Id:     id,
-					Status: uint32(domains.EnabledStatus),
+					Id: id,
 				},
 			},
 			err: nil,
 		},
 		{
-			desc: "retrieve entity with empty route",
-			retrieveReq: &grpcCommonV1.RetrieveByRouteReq{
+			desc: "retrieve id with empty route",
+			retrieveReq: &grpcCommonV1.RetrieveIDByRouteReq{
 				Route: "",
 			},
-			svcRes:      domains.Domain{},
+			svcRes:      "",
 			retrieveRes: &grpcCommonV1.RetrieveEntityRes{},
 			err:         apiutil.ErrMissingRoute,
 		},
 		{
-			desc: "retrieve entity with invalid route",
-			retrieveReq: &grpcCommonV1.RetrieveByRouteReq{
+			desc: "retrieve id with invalid route",
+			retrieveReq: &grpcCommonV1.RetrieveIDByRouteReq{
 				Route: "invalid",
 			},
-			svcRes:      domains.Domain{},
+			svcRes:      "",
 			svcErr:      svcerr.ErrNotFound,
 			retrieveRes: &grpcCommonV1.RetrieveEntityRes{},
 			err:         svcerr.ErrNotFound,
 		},
 	}
 	for _, tc := range cases {
-		svcCall := svc.On("RetrieveByRoute", mock.Anything, tc.retrieveReq.Route).Return(tc.svcRes, tc.svcErr)
-		dpr, err := grpcClient.RetrieveByRoute(context.Background(), tc.retrieveReq)
+		svcCall := svc.On("RetrieveIDByRoute", mock.Anything, tc.retrieveReq.Route).Return(tc.svcRes, tc.svcErr)
+		dpr, err := grpcClient.RetrieveIDByRoute(context.Background(), tc.retrieveReq)
 		assert.Equal(t, tc.retrieveRes.Entity, dpr.Entity, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.retrieveRes.Entity, dpr.Entity))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		svcCall.Unset()

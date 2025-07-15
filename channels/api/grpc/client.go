@@ -30,7 +30,7 @@ type grpcClient struct {
 	removeClientConnections      endpoint.Endpoint
 	unsetParentGroupFromChannels endpoint.Endpoint
 	retrieveEntity               endpoint.Endpoint
-	retrieveByRoute              endpoint.Endpoint
+	retrieveIDByRoute            endpoint.Endpoint
 }
 
 // NewClient returns new gRPC client instance.
@@ -68,12 +68,12 @@ func NewClient(conn *grpc.ClientConn, timeout time.Duration) grpcChannelsV1.Chan
 			decodeRetrieveEntityResponse,
 			grpcCommonV1.RetrieveEntityRes{},
 		).Endpoint(),
-		retrieveByRoute: kitgrpc.NewClient(
+		retrieveIDByRoute: kitgrpc.NewClient(
 			conn,
 			svcName,
-			"RetrieveByRoute",
-			encodeRetrieveByRouteRequest,
-			decodeRetrieveByRouteResponse,
+			"RetrieveIDByRoute",
+			encodeRetrieveIDByRouteRequest,
+			decodeRetrieveIDByRouteResponse,
 			grpcCommonV1.RetrieveEntityRes{},
 		).Endpoint(),
 		timeout: timeout,
@@ -176,11 +176,11 @@ func decodeRetrieveEntityResponse(_ context.Context, grpcRes interface{}) (inter
 	return grpcRes.(*grpcCommonV1.RetrieveEntityRes), nil
 }
 
-func (client grpcClient) RetrieveByRoute(ctx context.Context, req *grpcCommonV1.RetrieveByRouteReq, _ ...grpc.CallOption) (r *grpcCommonV1.RetrieveEntityRes, err error) {
+func (client grpcClient) RetrieveIDByRoute(ctx context.Context, req *grpcCommonV1.RetrieveIDByRouteReq, _ ...grpc.CallOption) (r *grpcCommonV1.RetrieveEntityRes, err error) {
 	ctx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
 
-	res, err := client.retrieveByRoute(ctx, req)
+	res, err := client.retrieveIDByRoute(ctx, req)
 	if err != nil {
 		return &grpcCommonV1.RetrieveEntityRes{}, decodeError(err)
 	}
@@ -188,11 +188,11 @@ func (client grpcClient) RetrieveByRoute(ctx context.Context, req *grpcCommonV1.
 	return res.(*grpcCommonV1.RetrieveEntityRes), nil
 }
 
-func encodeRetrieveByRouteRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	return grpcReq.(*grpcCommonV1.RetrieveByRouteReq), nil
+func encodeRetrieveIDByRouteRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	return grpcReq.(*grpcCommonV1.RetrieveIDByRouteReq), nil
 }
 
-func decodeRetrieveByRouteResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func decodeRetrieveIDByRouteResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	return grpcRes.(*grpcCommonV1.RetrieveEntityRes), nil
 }
 

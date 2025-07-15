@@ -126,8 +126,8 @@ func (_c *DomainsServiceClient_DeleteUserFromDomains_Call) RunAndReturn(run func
 	return _c
 }
 
-// RetrieveByRoute provides a mock function for the type DomainsServiceClient
-func (_mock *DomainsServiceClient) RetrieveByRoute(ctx context.Context, in *v10.RetrieveByRouteReq, opts ...grpc.CallOption) (*v10.RetrieveEntityRes, error) {
+// RetrieveIDByRoute provides a mock function for the type DomainsServiceClient
+func (_mock *DomainsServiceClient) RetrieveIDByRoute(ctx context.Context, in *v10.RetrieveIDByRouteReq, opts ...grpc.CallOption) (*v10.RetrieveEntityRes, error) {
 	var tmpRet mock.Arguments
 	if len(opts) > 0 {
 		tmpRet = _mock.Called(ctx, in, opts)
@@ -137,22 +137,22 @@ func (_mock *DomainsServiceClient) RetrieveByRoute(ctx context.Context, in *v10.
 	ret := tmpRet
 
 	if len(ret) == 0 {
-		panic("no return value specified for RetrieveByRoute")
+		panic("no return value specified for RetrieveIDByRoute")
 	}
 
 	var r0 *v10.RetrieveEntityRes
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *v10.RetrieveByRouteReq, ...grpc.CallOption) (*v10.RetrieveEntityRes, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *v10.RetrieveIDByRouteReq, ...grpc.CallOption) (*v10.RetrieveEntityRes, error)); ok {
 		return returnFunc(ctx, in, opts...)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *v10.RetrieveByRouteReq, ...grpc.CallOption) *v10.RetrieveEntityRes); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *v10.RetrieveIDByRouteReq, ...grpc.CallOption) *v10.RetrieveEntityRes); ok {
 		r0 = returnFunc(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*v10.RetrieveEntityRes)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, *v10.RetrieveByRouteReq, ...grpc.CallOption) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *v10.RetrieveIDByRouteReq, ...grpc.CallOption) error); ok {
 		r1 = returnFunc(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -160,29 +160,29 @@ func (_mock *DomainsServiceClient) RetrieveByRoute(ctx context.Context, in *v10.
 	return r0, r1
 }
 
-// DomainsServiceClient_RetrieveByRoute_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RetrieveByRoute'
-type DomainsServiceClient_RetrieveByRoute_Call struct {
+// DomainsServiceClient_RetrieveIDByRoute_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RetrieveIDByRoute'
+type DomainsServiceClient_RetrieveIDByRoute_Call struct {
 	*mock.Call
 }
 
-// RetrieveByRoute is a helper method to define mock.On call
+// RetrieveIDByRoute is a helper method to define mock.On call
 //   - ctx context.Context
-//   - in *v10.RetrieveByRouteReq
+//   - in *v10.RetrieveIDByRouteReq
 //   - opts ...grpc.CallOption
-func (_e *DomainsServiceClient_Expecter) RetrieveByRoute(ctx interface{}, in interface{}, opts ...interface{}) *DomainsServiceClient_RetrieveByRoute_Call {
-	return &DomainsServiceClient_RetrieveByRoute_Call{Call: _e.mock.On("RetrieveByRoute",
+func (_e *DomainsServiceClient_Expecter) RetrieveIDByRoute(ctx interface{}, in interface{}, opts ...interface{}) *DomainsServiceClient_RetrieveIDByRoute_Call {
+	return &DomainsServiceClient_RetrieveIDByRoute_Call{Call: _e.mock.On("RetrieveIDByRoute",
 		append([]interface{}{ctx, in}, opts...)...)}
 }
 
-func (_c *DomainsServiceClient_RetrieveByRoute_Call) Run(run func(ctx context.Context, in *v10.RetrieveByRouteReq, opts ...grpc.CallOption)) *DomainsServiceClient_RetrieveByRoute_Call {
+func (_c *DomainsServiceClient_RetrieveIDByRoute_Call) Run(run func(ctx context.Context, in *v10.RetrieveIDByRouteReq, opts ...grpc.CallOption)) *DomainsServiceClient_RetrieveIDByRoute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 *v10.RetrieveByRouteReq
+		var arg1 *v10.RetrieveIDByRouteReq
 		if args[1] != nil {
-			arg1 = args[1].(*v10.RetrieveByRouteReq)
+			arg1 = args[1].(*v10.RetrieveIDByRouteReq)
 		}
 		var arg2 []grpc.CallOption
 		var variadicArgs []grpc.CallOption
@@ -199,12 +199,12 @@ func (_c *DomainsServiceClient_RetrieveByRoute_Call) Run(run func(ctx context.Co
 	return _c
 }
 
-func (_c *DomainsServiceClient_RetrieveByRoute_Call) Return(retrieveEntityRes *v10.RetrieveEntityRes, err error) *DomainsServiceClient_RetrieveByRoute_Call {
+func (_c *DomainsServiceClient_RetrieveIDByRoute_Call) Return(retrieveEntityRes *v10.RetrieveEntityRes, err error) *DomainsServiceClient_RetrieveIDByRoute_Call {
 	_c.Call.Return(retrieveEntityRes, err)
 	return _c
 }
 
-func (_c *DomainsServiceClient_RetrieveByRoute_Call) RunAndReturn(run func(ctx context.Context, in *v10.RetrieveByRouteReq, opts ...grpc.CallOption) (*v10.RetrieveEntityRes, error)) *DomainsServiceClient_RetrieveByRoute_Call {
+func (_c *DomainsServiceClient_RetrieveIDByRoute_Call) RunAndReturn(run func(ctx context.Context, in *v10.RetrieveIDByRouteReq, opts ...grpc.CallOption) (*v10.RetrieveEntityRes, error)) *DomainsServiceClient_RetrieveIDByRoute_Call {
 	_c.Call.Return(run)
 	return _c
 }

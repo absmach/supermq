@@ -43,21 +43,20 @@ func retrieveStatusEndpoint(svc domains.Service) endpoint.Endpoint {
 	}
 }
 
-func retrieveByRouteEndpoint(svc domains.Service) endpoint.Endpoint {
+func retrieveIDByRouteEndpoint(svc domains.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(retrieveByRouteReq)
+		req := request.(retrieveIDByRouteReq)
 		if err := req.validate(); err != nil {
-			return retrieveEntityRes{}, err
+			return retrieveIDByRouteRes{}, err
 		}
 
-		dom, err := svc.RetrieveByRoute(ctx, req.Route)
+		id, err := svc.RetrieveIDByRoute(ctx, req.Route)
 		if err != nil {
-			return retrieveEntityRes{}, err
+			return retrieveIDByRouteRes{}, err
 		}
 
-		return retrieveEntityRes{
-			id:     dom.ID,
-			status: uint8(dom.Status),
+		return retrieveIDByRouteRes{
+			id: id,
 		}, nil
 	}
 }

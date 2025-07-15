@@ -267,7 +267,7 @@ func TestRetrieveEntity(t *testing.T) {
 	}
 }
 
-func TestRetrieveByRoute(t *testing.T) {
+func TestRetrieveIDByRoute(t *testing.T) {
 	svc := new(mocks.Service)
 	server := startGRPCServer(svc, port)
 	defer server.GracefulStop()
@@ -278,62 +278,55 @@ func TestRetrieveByRoute(t *testing.T) {
 	validRoute := "validRoute"
 	domainID := testsutil.GenerateUUID(t)
 
-	channel := ch.Channel{
-		ID:     validID,
-		Route:  validRoute,
-		Status: channels.EnabledStatus,
-	}
-
 	cases := []struct {
 		desc        string
-		retrieveReq *grpcCommonV1.RetrieveByRouteReq
-		svcRes      ch.Channel
+		retrieveReq *grpcCommonV1.RetrieveIDByRouteReq
+		svcRes      string
 		svcErr      error
 		retrieveRes *grpcCommonV1.RetrieveEntityRes
 		err         error
 	}{
 		{
 			desc: "retrieve entity by route successfully",
-			retrieveReq: &grpcCommonV1.RetrieveByRouteReq{
+			retrieveReq: &grpcCommonV1.RetrieveIDByRouteReq{
 				Route:    validRoute,
 				DomainId: domainID,
 			},
-			svcRes: channel,
+			svcRes: validID,
 			retrieveRes: &grpcCommonV1.RetrieveEntityRes{
 				Entity: &grpcCommonV1.EntityBasic{
-					Id:     channel.ID,
-					Status: uint32(ch.EnabledStatus),
+					Id: validID,
 				},
 			},
 			err: nil,
 		},
 		{
 			desc: "retrieve entity by route with empty route",
-			retrieveReq: &grpcCommonV1.RetrieveByRouteReq{
+			retrieveReq: &grpcCommonV1.RetrieveIDByRouteReq{
 				Route:    "",
 				DomainId: domainID,
 			},
-			svcRes:      ch.Channel{},
+			svcRes:      "",
 			retrieveRes: &grpcCommonV1.RetrieveEntityRes{},
 			err:         apiutil.ErrMissingRoute,
 		},
 		{
 			desc: "retrieve entity by route with empty domain ID",
-			retrieveReq: &grpcCommonV1.RetrieveByRouteReq{
+			retrieveReq: &grpcCommonV1.RetrieveIDByRouteReq{
 				Route:    validRoute,
 				DomainId: "",
 			},
-			svcRes:      ch.Channel{},
+			svcRes:      "",
 			retrieveRes: &grpcCommonV1.RetrieveEntityRes{},
 			err:         apiutil.ErrMissingDomainID,
 		},
 		{
 			desc: "retrieve entity by route with invalid route",
-			retrieveReq: &grpcCommonV1.RetrieveByRouteReq{
+			retrieveReq: &grpcCommonV1.RetrieveIDByRouteReq{
 				Route:    "invalidRoute",
 				DomainId: domainID,
 			},
-			svcRes:      ch.Channel{},
+			svcRes:      "",
 			svcErr:      svcerr.ErrNotFound,
 			retrieveRes: &grpcCommonV1.RetrieveEntityRes{},
 			err:         svcerr.ErrNotFound,
@@ -342,8 +335,8 @@ func TestRetrieveByRoute(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			svcCall := svc.On("RetrieveByRoute", mock.Anything, tc.retrieveReq.Route, tc.retrieveReq.DomainId).Return(tc.svcRes, tc.svcErr)
-			res, err := client.RetrieveByRoute(context.Background(), tc.retrieveReq)
+			svcCall := svc.On("RetrieveIDByRoute", mock.Anything, tc.retrieveReq.Route, tc.retrieveReq.DomainId).Return(tc.svcRes, tc.svcErr)
+			res, err := client.RetrieveIDByRoute(context.Background(), tc.retrieveReq)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.err, err))
 			assert.Equal(t, tc.retrieveRes.Entity, res.Entity)
 			svcCall.Unset()

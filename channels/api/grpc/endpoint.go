@@ -68,18 +68,18 @@ func retrieveEntityEndpoint(svc channels.Service) endpoint.Endpoint {
 	}
 }
 
-func retrieveByRouteEndpoint(svc channels.Service) endpoint.Endpoint {
+func retrieveIDByRouteEndpoint(svc channels.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(retrieveByRouteReq)
+		req := request.(retrieveIDByRouteReq)
 		if err := req.validate(); err != nil {
-			return retrieveEntityRes{}, err
+			return retrieveIDByRouteRes{}, err
 		}
 
-		channel, err := svc.RetrieveByRoute(ctx, req.route, req.domainID)
+		id, err := svc.RetrieveIDByRoute(ctx, req.route, req.domainID)
 		if err != nil {
-			return retrieveEntityRes{}, err
+			return retrieveIDByRouteRes{}, err
 		}
 
-		return retrieveEntityRes{id: channel.ID, status: uint8(channel.Status)}, nil
+		return retrieveIDByRouteRes{id: id}, nil
 	}
 }

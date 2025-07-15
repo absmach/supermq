@@ -536,7 +536,7 @@ func (x *Connection) GetType() uint32 {
 	return 0
 }
 
-type RetrieveByRouteReq struct {
+type RetrieveIDByRouteReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Route         string                 `protobuf:"bytes,1,opt,name=route,proto3" json:"route,omitempty"`
 	DomainId      string                 `protobuf:"bytes,2,opt,name=domain_id,json=domainId,proto3" json:"domain_id,omitempty"`
@@ -544,20 +544,20 @@ type RetrieveByRouteReq struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *RetrieveByRouteReq) Reset() {
-	*x = RetrieveByRouteReq{}
+func (x *RetrieveIDByRouteReq) Reset() {
+	*x = RetrieveIDByRouteReq{}
 	mi := &file_common_v1_common_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *RetrieveByRouteReq) String() string {
+func (x *RetrieveIDByRouteReq) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RetrieveByRouteReq) ProtoMessage() {}
+func (*RetrieveIDByRouteReq) ProtoMessage() {}
 
-func (x *RetrieveByRouteReq) ProtoReflect() protoreflect.Message {
+func (x *RetrieveIDByRouteReq) ProtoReflect() protoreflect.Message {
 	mi := &file_common_v1_common_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -569,19 +569,19 @@ func (x *RetrieveByRouteReq) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use RetrieveByRouteReq.ProtoReflect.Descriptor instead.
-func (*RetrieveByRouteReq) Descriptor() ([]byte, []int) {
+// Deprecated: Use RetrieveIDByRouteReq.ProtoReflect.Descriptor instead.
+func (*RetrieveIDByRouteReq) Descriptor() ([]byte, []int) {
 	return file_common_v1_common_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *RetrieveByRouteReq) GetRoute() string {
+func (x *RetrieveIDByRouteReq) GetRoute() string {
 	if x != nil {
 		return x.Route
 	}
 	return ""
 }
 
-func (x *RetrieveByRouteReq) GetDomainId() string {
+func (x *RetrieveIDByRouteReq) GetDomainId() string {
 	if x != nil {
 		return x.DomainId
 	}
@@ -623,8 +623,8 @@ const file_common_v1_common_proto_rawDesc = "" +
 	"\n" +
 	"channel_id\x18\x02 \x01(\tR\tchannelId\x12\x1b\n" +
 	"\tdomain_id\x18\x03 \x01(\tR\bdomainId\x12\x12\n" +
-	"\x04type\x18\x04 \x01(\rR\x04type\"G\n" +
-	"\x12RetrieveByRouteReq\x12\x14\n" +
+	"\x04type\x18\x04 \x01(\rR\x04type\"I\n" +
+	"\x14RetrieveIDByRouteReq\x12\x14\n" +
 	"\x05route\x18\x01 \x01(\tR\x05route\x12\x1b\n" +
 	"\tdomain_id\x18\x02 \x01(\tR\bdomainIdB/Z-github.com/absmach/supermq/api/grpc/common/v1b\x06proto3"
 
@@ -652,7 +652,7 @@ var file_common_v1_common_proto_goTypes = []any{
 	(*RemoveConnectionsReq)(nil), // 7: common.v1.RemoveConnectionsReq
 	(*RemoveConnectionsRes)(nil), // 8: common.v1.RemoveConnectionsRes
 	(*Connection)(nil),           // 9: common.v1.Connection
-	(*RetrieveByRouteReq)(nil),   // 10: common.v1.RetrieveByRouteReq
+	(*RetrieveIDByRouteReq)(nil), // 10: common.v1.RetrieveIDByRouteReq
 }
 var file_common_v1_common_proto_depIdxs = []int32{
 	4, // 0: common.v1.RetrieveEntitiesRes.entities:type_name -> common.v1.EntityBasic

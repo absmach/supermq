@@ -122,11 +122,11 @@ const file_domains_v1_domains_proto_rawDesc = "" +
 	"\rDeleteUserRes\x12\x18\n" +
 	"\adeleted\x18\x01 \x01(\bR\adeleted\"\x1f\n" +
 	"\rDeleteUserReq\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id2\x83\x02\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id2\x87\x02\n" +
 	"\x0eDomainsService\x12O\n" +
 	"\x15DeleteUserFromDomains\x12\x19.domains.v1.DeleteUserReq\x1a\x19.domains.v1.DeleteUserRes\"\x00\x12N\n" +
-	"\x0eRetrieveStatus\x12\x1c.common.v1.RetrieveEntityReq\x1a\x1c.common.v1.RetrieveEntityRes\"\x00\x12P\n" +
-	"\x0fRetrieveByRoute\x12\x1d.common.v1.RetrieveByRouteReq\x1a\x1c.common.v1.RetrieveEntityRes\"\x00B5Z3github.com/absmach/supermq/internal/grpc/domains/v1b\x06proto3"
+	"\x0eRetrieveStatus\x12\x1c.common.v1.RetrieveEntityReq\x1a\x1c.common.v1.RetrieveEntityRes\"\x00\x12T\n" +
+	"\x11RetrieveIDByRoute\x12\x1f.common.v1.RetrieveIDByRouteReq\x1a\x1c.common.v1.RetrieveEntityRes\"\x00B5Z3github.com/absmach/supermq/internal/grpc/domains/v1b\x06proto3"
 
 var (
 	file_domains_v1_domains_proto_rawDescOnce sync.Once
@@ -142,19 +142,19 @@ func file_domains_v1_domains_proto_rawDescGZIP() []byte {
 
 var file_domains_v1_domains_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_domains_v1_domains_proto_goTypes = []any{
-	(*DeleteUserRes)(nil),         // 0: domains.v1.DeleteUserRes
-	(*DeleteUserReq)(nil),         // 1: domains.v1.DeleteUserReq
-	(*v1.RetrieveEntityReq)(nil),  // 2: common.v1.RetrieveEntityReq
-	(*v1.RetrieveByRouteReq)(nil), // 3: common.v1.RetrieveByRouteReq
-	(*v1.RetrieveEntityRes)(nil),  // 4: common.v1.RetrieveEntityRes
+	(*DeleteUserRes)(nil),           // 0: domains.v1.DeleteUserRes
+	(*DeleteUserReq)(nil),           // 1: domains.v1.DeleteUserReq
+	(*v1.RetrieveEntityReq)(nil),    // 2: common.v1.RetrieveEntityReq
+	(*v1.RetrieveIDByRouteReq)(nil), // 3: common.v1.RetrieveIDByRouteReq
+	(*v1.RetrieveEntityRes)(nil),    // 4: common.v1.RetrieveEntityRes
 }
 var file_domains_v1_domains_proto_depIdxs = []int32{
 	1, // 0: domains.v1.DomainsService.DeleteUserFromDomains:input_type -> domains.v1.DeleteUserReq
 	2, // 1: domains.v1.DomainsService.RetrieveStatus:input_type -> common.v1.RetrieveEntityReq
-	3, // 2: domains.v1.DomainsService.RetrieveByRoute:input_type -> common.v1.RetrieveByRouteReq
+	3, // 2: domains.v1.DomainsService.RetrieveIDByRoute:input_type -> common.v1.RetrieveIDByRouteReq
 	0, // 3: domains.v1.DomainsService.DeleteUserFromDomains:output_type -> domains.v1.DeleteUserRes
 	4, // 4: domains.v1.DomainsService.RetrieveStatus:output_type -> common.v1.RetrieveEntityRes
-	4, // 5: domains.v1.DomainsService.RetrieveByRoute:output_type -> common.v1.RetrieveEntityRes
+	4, // 5: domains.v1.DomainsService.RetrieveIDByRoute:output_type -> common.v1.RetrieveEntityRes
 	3, // [3:6] is the sub-list for method output_type
 	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name

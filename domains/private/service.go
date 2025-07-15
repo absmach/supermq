@@ -16,7 +16,7 @@ const defLimit = 100
 type Service interface {
 	RetrieveStatus(ctx context.Context, id string) (domains.Status, error)
 	DeleteUserFromDomains(ctx context.Context, id string) error
-	RetrieveByRoute(ctx context.Context, route string) (domains.Domain, error)
+	RetrieveIDByRoute(ctx context.Context, route string) (string, error)
 }
 
 var _ Service = (*service)(nil)
@@ -70,18 +70,18 @@ func (svc service) DeleteUserFromDomains(ctx context.Context, id string) (err er
 	return nil
 }
 
-func (svc service) RetrieveByRoute(ctx context.Context, route string) (domains.Domain, error) {
+func (svc service) RetrieveIDByRoute(ctx context.Context, route string) (string, error) {
 	id, err := svc.cache.ID(ctx, route)
 	if err == nil {
-		return domains.Domain{ID: id}, nil
+		return id, nil
 	}
 	dom, err := svc.repo.RetrieveDomainByRoute(ctx, route)
 	if err != nil {
-		return domains.Domain{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		return "", errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	if err := svc.cache.SaveID(ctx, route, dom.ID); err != nil {
-		return domains.Domain{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return "", errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 
-	return domains.Domain{ID: dom.ID}, nil
+	return dom.ID, nil
 }

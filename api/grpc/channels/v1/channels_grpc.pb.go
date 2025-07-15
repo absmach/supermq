@@ -27,7 +27,7 @@ const (
 	ChannelsService_RemoveClientConnections_FullMethodName      = "/channels.v1.ChannelsService/RemoveClientConnections"
 	ChannelsService_UnsetParentGroupFromChannels_FullMethodName = "/channels.v1.ChannelsService/UnsetParentGroupFromChannels"
 	ChannelsService_RetrieveEntity_FullMethodName               = "/channels.v1.ChannelsService/RetrieveEntity"
-	ChannelsService_RetrieveByRoute_FullMethodName              = "/channels.v1.ChannelsService/RetrieveByRoute"
+	ChannelsService_RetrieveIDByRoute_FullMethodName            = "/channels.v1.ChannelsService/RetrieveIDByRoute"
 )
 
 // ChannelsServiceClient is the client API for ChannelsService service.
@@ -38,7 +38,7 @@ type ChannelsServiceClient interface {
 	RemoveClientConnections(ctx context.Context, in *RemoveClientConnectionsReq, opts ...grpc.CallOption) (*RemoveClientConnectionsRes, error)
 	UnsetParentGroupFromChannels(ctx context.Context, in *UnsetParentGroupFromChannelsReq, opts ...grpc.CallOption) (*UnsetParentGroupFromChannelsRes, error)
 	RetrieveEntity(ctx context.Context, in *v1.RetrieveEntityReq, opts ...grpc.CallOption) (*v1.RetrieveEntityRes, error)
-	RetrieveByRoute(ctx context.Context, in *v1.RetrieveByRouteReq, opts ...grpc.CallOption) (*v1.RetrieveEntityRes, error)
+	RetrieveIDByRoute(ctx context.Context, in *v1.RetrieveIDByRouteReq, opts ...grpc.CallOption) (*v1.RetrieveEntityRes, error)
 }
 
 type channelsServiceClient struct {
@@ -89,10 +89,10 @@ func (c *channelsServiceClient) RetrieveEntity(ctx context.Context, in *v1.Retri
 	return out, nil
 }
 
-func (c *channelsServiceClient) RetrieveByRoute(ctx context.Context, in *v1.RetrieveByRouteReq, opts ...grpc.CallOption) (*v1.RetrieveEntityRes, error) {
+func (c *channelsServiceClient) RetrieveIDByRoute(ctx context.Context, in *v1.RetrieveIDByRouteReq, opts ...grpc.CallOption) (*v1.RetrieveEntityRes, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(v1.RetrieveEntityRes)
-	err := c.cc.Invoke(ctx, ChannelsService_RetrieveByRoute_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, ChannelsService_RetrieveIDByRoute_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ type ChannelsServiceServer interface {
 	RemoveClientConnections(context.Context, *RemoveClientConnectionsReq) (*RemoveClientConnectionsRes, error)
 	UnsetParentGroupFromChannels(context.Context, *UnsetParentGroupFromChannelsReq) (*UnsetParentGroupFromChannelsRes, error)
 	RetrieveEntity(context.Context, *v1.RetrieveEntityReq) (*v1.RetrieveEntityRes, error)
-	RetrieveByRoute(context.Context, *v1.RetrieveByRouteReq) (*v1.RetrieveEntityRes, error)
+	RetrieveIDByRoute(context.Context, *v1.RetrieveIDByRouteReq) (*v1.RetrieveEntityRes, error)
 	mustEmbedUnimplementedChannelsServiceServer()
 }
 
@@ -130,8 +130,8 @@ func (UnimplementedChannelsServiceServer) UnsetParentGroupFromChannels(context.C
 func (UnimplementedChannelsServiceServer) RetrieveEntity(context.Context, *v1.RetrieveEntityReq) (*v1.RetrieveEntityRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RetrieveEntity not implemented")
 }
-func (UnimplementedChannelsServiceServer) RetrieveByRoute(context.Context, *v1.RetrieveByRouteReq) (*v1.RetrieveEntityRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RetrieveByRoute not implemented")
+func (UnimplementedChannelsServiceServer) RetrieveIDByRoute(context.Context, *v1.RetrieveIDByRouteReq) (*v1.RetrieveEntityRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RetrieveIDByRoute not implemented")
 }
 func (UnimplementedChannelsServiceServer) mustEmbedUnimplementedChannelsServiceServer() {}
 func (UnimplementedChannelsServiceServer) testEmbeddedByValue()                         {}
@@ -226,20 +226,20 @@ func _ChannelsService_RetrieveEntity_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ChannelsService_RetrieveByRoute_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.RetrieveByRouteReq)
+func _ChannelsService_RetrieveIDByRoute_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(v1.RetrieveIDByRouteReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ChannelsServiceServer).RetrieveByRoute(ctx, in)
+		return srv.(ChannelsServiceServer).RetrieveIDByRoute(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ChannelsService_RetrieveByRoute_FullMethodName,
+		FullMethod: ChannelsService_RetrieveIDByRoute_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChannelsServiceServer).RetrieveByRoute(ctx, req.(*v1.RetrieveByRouteReq))
+		return srv.(ChannelsServiceServer).RetrieveIDByRoute(ctx, req.(*v1.RetrieveIDByRouteReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -268,8 +268,8 @@ var ChannelsService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ChannelsService_RetrieveEntity_Handler,
 		},
 		{
-			MethodName: "RetrieveByRoute",
-			Handler:    _ChannelsService_RetrieveByRoute_Handler,
+			MethodName: "RetrieveIDByRoute",
+			Handler:    _ChannelsService_RetrieveIDByRoute_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
