@@ -21,7 +21,7 @@ var _ grpcDomainsV1.DomainsServiceClient = (*domainsGrpcClient)(nil)
 
 type domainsGrpcClient struct {
 	deleteUserFromDomains endpoint.Endpoint
-	retrieveEntity        endpoint.Endpoint
+	retrieveStatus        endpoint.Endpoint
 	retrieveByRoute       endpoint.Endpoint
 	timeout               time.Duration
 }
@@ -37,12 +37,12 @@ func NewDomainsClient(conn *grpc.ClientConn, timeout time.Duration) grpcDomainsV
 			decodeDeleteUserResponse,
 			grpcDomainsV1.DeleteUserRes{},
 		).Endpoint(),
-		retrieveEntity: kitgrpc.NewClient(
+		retrieveStatus: kitgrpc.NewClient(
 			conn,
 			domainsSvcName,
-			"RetrieveEntity",
-			encodeRetrieveEntityRequest,
-			decodeRetrieveEntityResponse,
+			"RetrieveStatus",
+			encodeRetrieveStatusRequest,
+			decodeRetrieveStatusResponse,
 			grpcCommonV1.RetrieveEntityRes{},
 		).Endpoint(),
 		retrieveByRoute: kitgrpc.NewClient(
@@ -84,33 +84,32 @@ func encodeDeleteUserRequest(_ context.Context, grpcReq interface{}) (interface{
 	}, nil
 }
 
-func (client domainsGrpcClient) RetrieveEntity(ctx context.Context, in *grpcCommonV1.RetrieveEntityReq, opts ...grpc.CallOption) (*grpcCommonV1.RetrieveEntityRes, error) {
+func (client domainsGrpcClient) RetrieveStatus(ctx context.Context, in *grpcCommonV1.RetrieveEntityReq, opts ...grpc.CallOption) (*grpcCommonV1.RetrieveEntityRes, error) {
 	ctx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
 
-	res, err := client.retrieveEntity(ctx, retrieveEntityReq{
+	res, err := client.retrieveStatus(ctx, retrieveStatusReq{
 		ID: in.GetId(),
 	})
 	if err != nil {
 		return &grpcCommonV1.RetrieveEntityRes{}, grpcapi.DecodeError(err)
 	}
 
-	rdsr := res.(retrieveEntityRes)
+	rdsr := res.(retrieveStatusRes)
 	return &grpcCommonV1.RetrieveEntityRes{
 		Entity: &grpcCommonV1.EntityBasic{
-			Id:     rdsr.id,
 			Status: uint32(rdsr.status),
 		},
 	}, nil
 }
 
-func decodeRetrieveEntityResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func decodeRetrieveStatusResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(*grpcCommonV1.RetrieveEntityRes)
-	return retrieveEntityRes{id: res.Entity.GetId(), status: uint8(res.Entity.GetStatus())}, nil
+	return retrieveStatusRes{status: uint8(res.Entity.GetStatus())}, nil
 }
 
-func encodeRetrieveEntityRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(retrieveEntityReq)
+func encodeRetrieveStatusRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(retrieveStatusReq)
 	return &grpcCommonV1.RetrieveEntityReq{
 		Id: req.ID,
 	}, nil

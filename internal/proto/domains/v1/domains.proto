@@ -15,7 +15,7 @@ option go_package = "github.com/absmach/supermq/internal/grpc/domains/v1";
 service DomainsService {
   rpc DeleteUserFromDomains(DeleteUserReq)
     returns (DeleteUserRes) {}
-  rpc RetrieveEntity(common.v1.RetrieveEntityReq) 
+  rpc RetrieveStatus(common.v1.RetrieveEntityReq) 
     returns (common.v1.RetrieveEntityRes) {}
   rpc RetrieveByRoute(common.v1.RetrieveByRouteReq)
     returns (common.v1.RetrieveEntityRes) {}

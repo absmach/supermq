@@ -40,11 +40,11 @@ func New(repo channels.Repository, cache channels.Cache, evaluator policies.Eval
 }
 
 func (svc service) Authorize(ctx context.Context, req channels.AuthzReq) error {
-	d, err := svc.domains.RetrieveEntity(ctx, req.DomainID)
+	status, err := svc.domains.RetrieveStatus(ctx, req.DomainID)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthorization, err)
 	}
-	if d.Status != dom.EnabledStatus {
+	if status != dom.EnabledStatus {
 		return errors.Wrap(svcerr.ErrAuthorization, errDisabledDomain)
 	}
 	switch req.ClientType {

@@ -25,21 +25,20 @@ func deleteUserFromDomainsEndpoint(svc domains.Service) endpoint.Endpoint {
 	}
 }
 
-func retrieveEntityEndpoint(svc domains.Service) endpoint.Endpoint {
+func retrieveStatusEndpoint(svc domains.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(retrieveEntityReq)
+		req := request.(retrieveStatusReq)
 		if err := req.validate(); err != nil {
-			return retrieveEntityRes{}, err
+			return retrieveStatusRes{}, err
 		}
 
-		dom, err := svc.RetrieveEntity(ctx, req.ID)
+		status, err := svc.RetrieveStatus(ctx, req.ID)
 		if err != nil {
-			return retrieveEntityRes{}, err
+			return retrieveStatusRes{}, err
 		}
 
-		return retrieveEntityRes{
-			id:     dom.ID,
-			status: uint8(dom.Status),
+		return retrieveStatusRes{
+			status: uint8(status),
 		}, nil
 	}
 }
