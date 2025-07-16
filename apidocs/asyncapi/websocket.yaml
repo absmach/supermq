@@ -29,7 +29,7 @@ servers:
         default: localhost
       port:
         description: SuperMQ WebSocket Adapter port
-        default: '8186'
+        default: '8008'
 
 channels:
   'm/{domainPrefix}/c/{channelPrefix}/{subtopic}':

@@ -37,9 +37,10 @@ const (
 // Log message formats.
 const (
 	logInfoConnected         = "connected with client_key %s"
-	logInfoPublished         = "published with client_type %s client_id %s to the topic %s"
-	logInfoFailedAuthNToken  = "failed to authenticate token for topic %s with error %s"
-	logInfoFailedAuthNClient = "failed to authenticate client key %s for topic %s with error %s"
+	LogInfoPublished         = "published with client_id %s to the topic %s"
+	LogInfoSubscribed        = "subscribed with client_id %s to topics %s"
+	logInfoFailedAuthNToken  = "failed to authenticate token with error %s"
+	logInfoFailedAuthNClient = "failed to authenticate client key %s with error %s"
 )
 
 // Error wrappers for MQTT errors.
@@ -49,6 +50,7 @@ var (
 	errFailedPublishToMsgBroker = errors.New("failed to publish to supermq message broker")
 	errMalformedTopic           = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("malformed topic"))
 	errMissingTopicPub          = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("failed to publish due to missing topic"))
+	errMissingTopicSub          = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("failed to subscribe due to missing topic"))
 )
 
 // Event implements events.Event interface.
@@ -95,13 +97,54 @@ func (h *handler) AuthConnect(ctx context.Context) error {
 	return nil
 }
 
-// AuthPublish is not used in HTTP service.
+// AuthPublish is called on device publish,
+// prior forwarding to the HTTP server.
 func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byte) error {
+	if topic == nil {
+		return errMissingTopicPub
+	}
+	s, ok := session.FromContext(ctx)
+	if !ok {
+		return errClientNotInitialized
+	}
+
+	domainID, channelID, _, err := h.parser.ParsePublishTopic(ctx, *topic, true)
+	if err != nil {
+		return mgate.NewHTTPProxyError(http.StatusBadRequest, errors.Wrap(errFailedPublish, err))
+	}
+
+	clientID, clientType, err := h.authAccess(ctx, string(s.Password), domainID, channelID, connections.Publish)
+	if err != nil {
+		return err
+	}
+
+	if s.Username == "" && clientType == policies.ClientType {
+		s.Username = clientID
+	}
 	return nil
 }
 
-// AuthSubscribe is not used in HTTP service.
+// AuthPublish is called on device publish,
+// prior forwarding to the HTTP server.
 func (h *handler) AuthSubscribe(ctx context.Context, topics *[]string) error {
+	s, ok := session.FromContext(ctx)
+	if !ok {
+		return errClientNotInitialized
+	}
+	if topics == nil || *topics == nil {
+		return errMissingTopicSub
+	}
+
+	for _, topic := range *topics {
+		domainID, channelID, _, err := h.parser.ParseSubscribeTopic(ctx, topic, true)
+		if err != nil {
+			return err
+		}
+		if _, _, err := h.authAccess(ctx, string(s.Password), domainID, channelID, connections.Subscribe); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -120,38 +163,14 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 	if !ok {
 		return errors.Wrap(errFailedPublish, errClientNotInitialized)
 	}
+	if payload == nil || len(*payload) == 0 {
+		h.logger.Warn("Empty payload, not publishing to broker", slog.String("client_id", s.Username))
+		return nil
+	}
 
 	domainID, channelID, subtopic, err := h.parser.ParsePublishTopic(ctx, *topic, true)
 	if err != nil {
 		return errors.Wrap(errMalformedTopic, err)
-	}
-
-	var clientID, clientType string
-	switch {
-	case strings.HasPrefix(string(s.Password), "Client"):
-		secret := strings.TrimPrefix(string(s.Password), apiutil.ClientPrefix)
-		authnRes, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{ClientSecret: secret})
-		if err != nil {
-			h.logger.Warn(fmt.Sprintf(logInfoFailedAuthNClient, secret, *topic, err))
-			return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
-		}
-		if !authnRes.Authenticated {
-			h.logger.Warn(fmt.Sprintf(logInfoFailedAuthNClient, secret, *topic, svcerr.ErrAuthentication))
-			return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
-		}
-		clientType = policies.ClientType
-		clientID = authnRes.GetId()
-	case strings.HasPrefix(string(s.Password), apiutil.BearerPrefix):
-		token := strings.TrimPrefix(string(s.Password), apiutil.BearerPrefix)
-		authnSession, err := h.authn.Authenticate(ctx, token)
-		if err != nil {
-			h.logger.Warn(fmt.Sprintf(logInfoFailedAuthNToken, *topic, err))
-			return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
-		}
-		clientType = policies.UserType
-		clientID = authnSession.DomainUserID
-	default:
-		return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
 	}
 
 	msg := messaging.Message{
@@ -163,36 +182,22 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		Created:  time.Now().UnixNano(),
 	}
 
-	ar := &grpcChannelsV1.AuthzReq{
-		DomainId:   domainID,
-		ClientId:   clientID,
-		ClientType: clientType,
-		ChannelId:  msg.Channel,
-		Type:       uint32(connections.Publish),
-	}
-	res, err := h.channels.Authorize(ctx, ar)
-	if err != nil {
-		return mgate.NewHTTPProxyError(http.StatusBadRequest, err)
-	}
-	if !res.GetAuthorized() {
-		return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthorization)
-	}
-
-	if clientType == policies.ClientType {
-		msg.Publisher = clientID
-	}
-
 	if err := h.publisher.Publish(ctx, messaging.EncodeMessageTopic(&msg), &msg); err != nil {
 		return errors.Wrap(errFailedPublishToMsgBroker, err)
 	}
 
-	h.logger.Info(fmt.Sprintf(logInfoPublished, clientType, clientID, *topic))
+	h.logger.Info(fmt.Sprintf(LogInfoPublished, s.ID, *topic))
 
 	return nil
 }
 
-// Subscribe - not used for HTTP.
+// Subscribe - after client successfully subscribed.
 func (h *handler) Subscribe(ctx context.Context, topics *[]string) error {
+	s, ok := session.FromContext(ctx)
+	if !ok {
+		return errClientNotInitialized
+	}
+	h.logger.Info(fmt.Sprintf(LogInfoSubscribed, s.ID, strings.Join(*topics, ",")))
 	return nil
 }
 
@@ -204,4 +209,55 @@ func (h *handler) Unsubscribe(ctx context.Context, topics *[]string) error {
 // Disconnect - not used for HTTP.
 func (h *handler) Disconnect(ctx context.Context) error {
 	return nil
+}
+
+func (h *handler) authAccess(ctx context.Context, token, domainID, chanID string, msgType connections.ConnType) (string, string, error) {
+	var clientID, clientType, secret string
+	switch {
+	case strings.HasPrefix(string(token), apiutil.BearerPrefix):
+		token := strings.TrimPrefix(string(token), apiutil.BearerPrefix)
+		authnSession, err := h.authn.Authenticate(ctx, token)
+		if err != nil {
+			h.logger.Warn(fmt.Sprintf(logInfoFailedAuthNToken, err))
+			return "", "", mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
+		}
+		clientType = policies.UserType
+		clientID = authnSession.DomainUserID
+	default:
+		if token == "" {
+			return "", "", mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
+		}
+		secret = token
+		if strings.HasPrefix(string(token), "Client") {
+			secret = strings.TrimPrefix(string(token), apiutil.ClientPrefix)
+		}
+		authnRes, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{ClientSecret: secret})
+		if err != nil {
+			h.logger.Warn(fmt.Sprintf(logInfoFailedAuthNClient, secret, err))
+			return "", "", mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
+		}
+		if !authnRes.Authenticated {
+			h.logger.Warn(fmt.Sprintf(logInfoFailedAuthNClient, secret, svcerr.ErrAuthentication))
+			return "", "", mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
+		}
+		clientType = policies.ClientType
+		clientID = authnRes.GetId()
+	}
+
+	ar := &grpcChannelsV1.AuthzReq{
+		Type:       uint32(msgType),
+		ClientId:   clientID,
+		ClientType: clientType,
+		ChannelId:  chanID,
+		DomainId:   domainID,
+	}
+	res, err := h.channels.Authorize(ctx, ar)
+	if err != nil {
+		return "", "", mgate.NewHTTPProxyError(http.StatusUnauthorized, errors.Wrap(svcerr.ErrAuthorization, err))
+	}
+	if !res.GetAuthorized() {
+		return "", "", mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthorization)
+	}
+
+	return clientID, clientType, nil
 }

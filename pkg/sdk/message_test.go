@@ -24,6 +24,7 @@ import (
 	dmocks "github.com/absmach/supermq/domains/mocks"
 	adapter "github.com/absmach/supermq/http"
 	"github.com/absmach/supermq/http/api"
+	httpmocks "github.com/absmach/supermq/http/mocks"
 	smqlog "github.com/absmach/supermq/logger"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
@@ -47,12 +48,14 @@ func setupMessages(t *testing.T) (*httptest.Server, *pubsub.PubSub) {
 	domainsGRPCClient = new(dmocks.DomainsServiceClient)
 	pub := new(pubsub.PubSub)
 	authn := new(authnmocks.Authentication)
+	svc := new(httpmocks.Service)
 
 	parser, err := messaging.NewTopicParser(messaging.DefaultCacheConfig, channelsGRPCClient, domainsGRPCClient)
 	assert.Nil(t, err, fmt.Sprintf("unexpected error while setting up parser: %v", err))
 	handler := adapter.NewHandler(pub, authn, clientsGRPCClient, channelsGRPCClient, parser, smqlog.NewMock())
+	resolver := messaging.NewTopicResolver(channelsGRPCClient, domainsGRPCClient)
 
-	mux := api.MakeHandler(smqlog.NewMock(), "")
+	mux := api.MakeHandler(context.Background(), svc, resolver, smqlog.NewMock(), "")
 	target := httptest.NewServer(mux)
 
 	ptUrl, _ := url.Parse(target.URL)
@@ -121,7 +124,7 @@ func TestSendMessage(t *testing.T) {
 			msg:      msg,
 			secret:   "",
 			authRes:  &grpcClientsV1.AuthnRes{Authenticated: false, Id: ""},
-			authErr:  svcerr.ErrAuthentication,
+			authErr:  nil,
 			svcErr:   nil,
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrAuthentication, http.StatusUnauthorized),
 		},
