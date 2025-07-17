@@ -79,7 +79,6 @@ func (lm *loggingMiddleware) ListSerials(ctx context.Context, clientID string, p
 			slog.String("duration", time.Since(begin).String()),
 			slog.String("request_id", middleware.GetReqID(ctx)),
 			slog.String("client_id", clientID),
-			slog.String("revoke", pm.Revoked),
 			slog.Group("page",
 				slog.Uint64("offset", cp.Offset),
 				slog.Uint64("limit", cp.Limit),

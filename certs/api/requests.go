@@ -70,7 +70,7 @@ func (req *viewReq) validate() error {
 
 type revokeReq struct {
 	token    string
-	certID   string
+	clientID string
 	domainID string
 }
 
@@ -83,7 +83,7 @@ func (req *revokeReq) validate() error {
 		return apiutil.ErrMissingDomainID
 	}
 
-	if req.certID == "" {
+	if req.clientID == "" {
 		return apiutil.ErrMissingID
 	}
 

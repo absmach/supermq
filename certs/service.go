@@ -7,8 +7,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/absmach/certs/sdk"
-	pki "github.com/absmach/supermq/certs/pki/amcerts"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	mgsdk "github.com/absmach/supermq/pkg/sdk"
@@ -24,6 +22,8 @@ var (
 	ErrFailedToRemoveCertFromDB = errors.New("failed to remove cert serial from db")
 
 	ErrFailedReadFromPKI = errors.New("failed to read certificate from PKI")
+
+	ErrFailedReadFromDB = errors.New("failed to read certificate from database")
 )
 
 var _ Service = (*certsService)(nil)
@@ -47,22 +47,23 @@ type Service interface {
 	RevokeCert(ctx context.Context, domainID, token, clientID string) (Revoke, error)
 }
 
+// Revoke defines the conditions to revoke a certificate.
+type Revoke struct {
+	RevocationTime time.Time `json:"revocation_time"`
+}
 type certsService struct {
-	sdk mgsdk.SDK
-	pki pki.Agent
+	sdk       mgsdk.SDK
+	certsRepo Repository
+	pki       Agent
 }
 
 // New returns new Certs service.
-func New(sdk mgsdk.SDK, pkiAgent pki.Agent) Service {
+func New(sdk mgsdk.SDK, certsRepo Repository, pkiAgent Agent) Service {
 	return &certsService{
-		sdk: sdk,
-		pki: pkiAgent,
+		sdk:       sdk,
+		pki:       pkiAgent,
+		certsRepo: certsRepo,
 	}
-}
-
-// Revoke defines the conditions to revoke a certificate.
-type Revoke struct {
-	RevocationTime time.Time `mapstructure:"revocation_time"`
 }
 
 func (cs *certsService) IssueCert(ctx context.Context, domainID, token, clientID, ttl string) (Cert, error) {
@@ -78,12 +79,14 @@ func (cs *certsService) IssueCert(ctx context.Context, domainID, token, clientID
 		return Cert{}, errors.Wrap(ErrFailedCertCreation, err)
 	}
 
+	_, err = cs.certsRepo.Save(ctx, cert)
 	return Cert{
 		SerialNumber: cert.SerialNumber,
 		Certificate:  cert.Certificate,
 		Key:          cert.Key,
-		Revoked:      cert.Revoked,
 		ExpiryTime:   cert.ExpiryTime,
+		IssuingCA:    cert.IssuingCA,
+		CAChain:      cert.CAChain,
 		ClientID:     cert.ClientID,
 	}, err
 }
@@ -97,9 +100,12 @@ func (cs *certsService) RevokeCert(ctx context.Context, domainID, token, clientI
 		return revoke, errors.Wrap(ErrFailedCertRevocation, err)
 	}
 
-	cp, err := cs.pki.ListCerts(sdk.PageMetadata{Offset: 0, Limit: 10000, EntityID: client.ID})
+	cp, err := cs.certsRepo.RetrieveByClient(ctx, client.ID, 0, 10000)
 	if err != nil {
-		return revoke, errors.Wrap(ErrFailedCertRevocation, err)
+		cp, err = cs.pki.ListCerts(PageMetadata{Offset: 0, Limit: 10000, ClientID: client.ID})
+		if err != nil {
+			return revoke, errors.Wrap(ErrFailedCertRevocation, err)
+		}
 	}
 
 	for _, c := range cp.Certificates {
@@ -110,74 +116,57 @@ func (cs *certsService) RevokeCert(ctx context.Context, domainID, token, clientI
 		revoke.RevocationTime = time.Now().UTC()
 	}
 
+	err = cs.certsRepo.Remove(ctx, client.ID)
+	if err != nil {
+		return revoke, errors.Wrap(ErrFailedToRemoveCertFromDB, err)
+	}
+
 	return revoke, nil
 }
 
 func (cs *certsService) ListCerts(ctx context.Context, clientID string, pm PageMetadata) (CertPage, error) {
-	cp, err := cs.pki.ListCerts(sdk.PageMetadata{Offset: pm.Offset, Limit: pm.Limit, EntityID: clientID})
+	cp, err := cs.certsRepo.RetrieveByClient(ctx, clientID, pm.Offset, pm.Limit)
 	if err != nil {
 		return CertPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	var crts []Cert
-
-	for _, c := range cp.Certificates {
-		crts = append(crts, Cert{
-			SerialNumber: c.SerialNumber,
-			Certificate:  c.Certificate,
-			Key:          c.Key,
-			Revoked:      c.Revoked,
-			ExpiryTime:   c.ExpiryTime,
-			ClientID:     c.ClientID,
-		})
+	for i, cert := range cp.Certificates {
+		vcert, err := cs.pki.View(cert.SerialNumber)
+		if err != nil {
+			return CertPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		}
+		cp.Certificates[i].Certificate = vcert.Certificate
+		cp.Certificates[i].Key = vcert.Key
 	}
 
-	return CertPage{
-		Total:        cp.Total,
-		Limit:        cp.Limit,
-		Offset:       cp.Offset,
-		Certificates: crts,
-	}, nil
+	return cp, nil
 }
 
 func (cs *certsService) ListSerials(ctx context.Context, clientID string, pm PageMetadata) (CertPage, error) {
-	cp, err := cs.pki.ListCerts(sdk.PageMetadata{Offset: pm.Offset, Limit: pm.Limit, EntityID: clientID})
+	cp, err := cs.certsRepo.RetrieveByClient(ctx, clientID, pm.Offset, pm.Limit)
 	if err != nil {
 		return CertPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	var certs []Cert
-	for _, c := range cp.Certificates {
-		if (pm.Revoked == "true" && c.Revoked) || (pm.Revoked == "false" && !c.Revoked) || (pm.Revoked == "all") {
-			certs = append(certs, Cert{
-				SerialNumber: c.SerialNumber,
-				ClientID:     c.ClientID,
-				ExpiryTime:   c.ExpiryTime,
-				Revoked:      c.Revoked,
-			})
-		}
-	}
-
-	return CertPage{
-		Offset:       cp.Offset,
-		Limit:        cp.Limit,
-		Total:        uint64(len(certs)),
-		Certificates: certs,
-	}, nil
+	return cp, nil
 }
 
 func (cs *certsService) ViewCert(ctx context.Context, serialID string) (Cert, error) {
-	cert, err := cs.pki.View(serialID)
+	cert, err := cs.certsRepo.RetrieveBySerial(ctx, serialID)
+	if err != nil {
+		return Cert{}, errors.Wrap(ErrFailedReadFromDB, err)
+	}
+
+	vcert, err := cs.pki.View(serialID)
 	if err != nil {
 		return Cert{}, errors.Wrap(ErrFailedReadFromPKI, err)
 	}
 
 	return Cert{
 		SerialNumber: cert.SerialNumber,
-		Certificate:  cert.Certificate,
-		Key:          cert.Key,
-		Revoked:      cert.Revoked,
-		ExpiryTime:   cert.ExpiryTime,
+		Certificate:  vcert.Certificate,
+		Key:          vcert.Key,
+		ExpiryTime:   vcert.ExpiryTime,
 		ClientID:     cert.ClientID,
 	}, nil
 }

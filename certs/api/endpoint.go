@@ -27,8 +27,10 @@ func issueCert(svc certs.Service) endpoint.Endpoint {
 			SerialNumber: res.SerialNumber,
 			ClientID:     res.ClientID,
 			Certificate:  res.Certificate,
+			Key:          res.Key,
+			CAChain:      res.CAChain,
+			IssuingCA:    res.IssuingCA,
 			ExpiryTime:   res.ExpiryTime,
-			Revoked:      res.Revoked,
 			issued:       true,
 		}, nil
 	}
@@ -58,7 +60,6 @@ func listSerials(svc certs.Service) endpoint.Endpoint {
 			cr := certsRes{
 				SerialNumber: cert.SerialNumber,
 				ExpiryTime:   cert.ExpiryTime,
-				Revoked:      cert.Revoked,
 				ClientID:     cert.ClientID,
 			}
 			res.Certs = append(res.Certs, cr)
@@ -85,7 +86,6 @@ func viewCert(svc certs.Service) endpoint.Endpoint {
 			Key:          cert.Key,
 			SerialNumber: cert.SerialNumber,
 			ExpiryTime:   cert.ExpiryTime,
-			Revoked:      cert.Revoked,
 			issued:       false,
 		}, nil
 	}
@@ -97,7 +97,7 @@ func revokeCert(svc certs.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		res, err := svc.RevokeCert(ctx, req.domainID, req.token, req.certID)
+		res, err := svc.RevokeCert(ctx, req.domainID, req.token, req.clientID)
 		if err != nil {
 			return nil, err
 		}
