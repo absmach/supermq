@@ -4,7 +4,9 @@
 package api
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -71,6 +73,17 @@ func (h *CoAPHandler) ServeCOAP(w mux.ResponseWriter, m *mux.Message) {
 		resp.AddOptionBytes(opt.ID, opt.Value)
 	}
 	defer h.sendResp(w, resp)
+
+	path, err := m.Path()
+	if err != nil {
+		h.logger.Warn(fmt.Sprintf("Error reading path: %s", err))
+		resp.SetCode(codes.BadRequest)
+		return
+	}
+	if strings.TrimPrefix(path, "/") == messaging.HealthTopicPrefix {
+		h.handleHealthCheck(w, m)
+		return
+	}
 
 	msg, err := h.decodeMessage(m)
 	if err != nil {
@@ -172,6 +185,25 @@ func (h *CoAPHandler) sendResp(w mux.ResponseWriter, resp *pool.Message) {
 	if err := w.Conn().WriteMessage(resp); err != nil {
 		h.logger.Warn(fmt.Sprintf("Can't set response: %s", err))
 	}
+}
+
+func (h *CoAPHandler) handleHealthCheck(w mux.ResponseWriter, m *mux.Message) {
+	pd := messaging.HealthInfo{
+		Status:    messaging.StatusOK,
+		Protocol:  protocol,
+		Timestamp: time.Now().UTC(),
+	}
+	pdBytes, err := json.Marshal(pd)
+	if err != nil {
+		h.logger.Warn(fmt.Sprintf("Error marshaling health info: %s", err))
+	}
+	resp := w.Conn().AcquireMessage(m.Context())
+	defer w.Conn().ReleaseMessage(resp)
+	resp.SetCode(codes.Content)
+	resp.SetToken(m.Token())
+	resp.SetContentFormat(message.AppJSON)
+	resp.SetBody(bytes.NewReader(pdBytes))
+	h.sendResp(w, resp)
 }
 
 func parseKey(msg *mux.Message) (string, error) {
