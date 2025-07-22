@@ -3,26 +3,26 @@
 
 //go:build !test
 
-package api
+package middleware
 
 import (
 	"context"
 	"time"
 
-	"github.com/absmach/supermq/ws"
+	"github.com/absmach/supermq/http"
 	"github.com/go-kit/kit/metrics"
 )
 
-var _ ws.Service = (*metricsMiddleware)(nil)
+var _ http.Service = (*metricsMiddleware)(nil)
 
 type metricsMiddleware struct {
 	counter metrics.Counter
 	latency metrics.Histogram
-	svc     ws.Service
+	svc     http.Service
 }
 
-// MetricsMiddleware instruments adapter by tracking request count and latency.
-func MetricsMiddleware(svc ws.Service, counter metrics.Counter, latency metrics.Histogram) ws.Service {
+// Metrics instruments http adapter by tracking request count and latency.
+func Metrics(svc http.Service, counter metrics.Counter, latency metrics.Histogram) http.Service {
 	return &metricsMiddleware{
 		counter: counter,
 		latency: latency,
@@ -31,7 +31,7 @@ func MetricsMiddleware(svc ws.Service, counter metrics.Counter, latency metrics.
 }
 
 // Subscribe instruments Subscribe method with metrics.
-func (mm *metricsMiddleware) Subscribe(ctx context.Context, sessionID, clientKey, domainID, chanID, subtopic string, c *ws.Client) error {
+func (mm *metricsMiddleware) Subscribe(ctx context.Context, sessionID, clientKey, domainID, chanID, subtopic string, c *http.Client) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "subscribe").Add(1)
 		mm.latency.With("method", "subscribe").Observe(time.Since(begin).Seconds())
@@ -40,6 +40,7 @@ func (mm *metricsMiddleware) Subscribe(ctx context.Context, sessionID, clientKey
 	return mm.svc.Subscribe(ctx, sessionID, clientKey, domainID, chanID, subtopic, c)
 }
 
+// Unsubscribe instruments Unsubscribe method with metrics.
 func (mm *metricsMiddleware) Unsubscribe(ctx context.Context, sessionID, domainID, chanID, subtopic string) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "unsubscribe").Add(1)

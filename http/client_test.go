@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package ws_test
+package http_test
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/absmach/supermq/ws"
+	smqhttp "github.com/absmach/supermq/http"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 )
@@ -23,7 +23,7 @@ const expectedCount = uint64(2)
 
 var (
 	msgChan = make(chan []byte)
-	c       *ws.Client
+	c       *smqhttp.Client
 	count   uint64
 
 	upgrader = websocket.Upgrader{
@@ -63,7 +63,7 @@ func TestHandle(t *testing.T) {
 	}
 	defer wsConn.Close()
 
-	c = ws.NewClient(slog.Default(), wsConn, "sessionID")
+	c = smqhttp.NewClient(slog.Default(), wsConn, "sessionID")
 	go c.Start(context.Background())
 
 	cases := []struct {
