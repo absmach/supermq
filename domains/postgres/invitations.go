@@ -150,10 +150,18 @@ func (repo domainRepo) UpdateRejection(ctx context.Context, invitation domains.I
 	return nil
 }
 
-func (repo domainRepo) DeleteInvitation(ctx context.Context, inviteeUserID, domain string) (err error) {
-	q := `DELETE FROM invitations WHERE invitee_user_id = $1 AND domain_id = $2`
+func (repo domainRepo) DeleteUsersInvitation(ctx context.Context, domain string, inviteeUserIDs ...string) (err error) {
+	if len(inviteeUserIDs) == 0 {
+		return repoerr.ErrNotFound
+	}
 
-	result, err := repo.db.ExecContext(ctx, q, inviteeUserID, domain)
+	q := `DELETE FROM invitations WHERE domain_id = :domain_id AND invitee_user_id = ANY(:invitee_user_ids);`
+
+	params := map[string]any{
+		"invitee_user_ids": inviteeUserIDs,
+		"domain_id":        domain,
+	}
+	result, err := repo.db.NamedExecContext(ctx, q, params)
 	if err != nil {
 		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
 	}
