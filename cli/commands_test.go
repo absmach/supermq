@@ -39,8 +39,9 @@ const (
 
 // Certs commands
 const (
-	revokeCmd = "revoke"
-	issueCmd  = "issue"
+	revokeCmd    = "revoke"
+	revokeAllCmd = "revoke-all"
+	issueCmd     = "issue"
 )
 
 // Messages commands

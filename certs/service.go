@@ -7,8 +7,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/absmach/certs/sdk"
-	pki "github.com/absmach/supermq/certs/pki/amcerts"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	mgsdk "github.com/absmach/supermq/pkg/sdk"
@@ -24,6 +22,8 @@ var (
 	ErrFailedToRemoveCertFromDB = errors.New("failed to remove cert serial from db")
 
 	ErrFailedReadFromPKI = errors.New("failed to read certificate from PKI")
+
+	ErrFailedReadFromDB = errors.New("failed to read certificate from database")
 )
 
 var _ Service = (*certsService)(nil)
@@ -45,24 +45,28 @@ type Service interface {
 
 	// RevokeCert revokes a certificate for a given client ID
 	RevokeCert(ctx context.Context, domainID, token, clientID string) (Revoke, error)
-}
 
-type certsService struct {
-	sdk mgsdk.SDK
-	pki pki.Agent
-}
-
-// New returns new Certs service.
-func New(sdk mgsdk.SDK, pkiAgent pki.Agent) Service {
-	return &certsService{
-		sdk: sdk,
-		pki: pkiAgent,
-	}
+	// RevokeBySerial revokes a certificate by its serial number from both PKI and database
+	RevokeBySerial(ctx context.Context, serialID string) (Revoke, error)
 }
 
 // Revoke defines the conditions to revoke a certificate.
 type Revoke struct {
-	RevocationTime time.Time `mapstructure:"revocation_time"`
+	RevocationTime time.Time `json:"revocation_time"`
+}
+type certsService struct {
+	sdk       mgsdk.SDK
+	certsRepo Repository
+	pki       Agent
+}
+
+// New returns new Certs service.
+func New(sdk mgsdk.SDK, certsRepo Repository, pkiAgent Agent) Service {
+	return &certsService{
+		sdk:       sdk,
+		pki:       pkiAgent,
+		certsRepo: certsRepo,
+	}
 }
 
 func (cs *certsService) IssueCert(ctx context.Context, domainID, token, clientID, ttl string) (Cert, error) {
@@ -78,13 +82,20 @@ func (cs *certsService) IssueCert(ctx context.Context, domainID, token, clientID
 		return Cert{}, errors.Wrap(ErrFailedCertCreation, err)
 	}
 
+	_, err = cs.certsRepo.Save(ctx, cert)
+	if err != nil {
+		return Cert{}, errors.Wrap(ErrFailedCertCreation, err)
+	}
+
 	return Cert{
 		SerialNumber: cert.SerialNumber,
 		Certificate:  cert.Certificate,
 		Key:          cert.Key,
-		Revoked:      cert.Revoked,
 		ExpiryTime:   cert.ExpiryTime,
+		IssuingCA:    cert.IssuingCA,
+		CAChain:      cert.CAChain,
 		ClientID:     cert.ClientID,
+		Revoked:      cert.Revoked,
 	}, err
 }
 
@@ -92,12 +103,7 @@ func (cs *certsService) RevokeCert(ctx context.Context, domainID, token, clientI
 	var revoke Revoke
 	var err error
 
-	client, err := cs.sdk.Client(ctx, clientID, domainID, token)
-	if err != nil {
-		return revoke, errors.Wrap(ErrFailedCertRevocation, err)
-	}
-
-	cp, err := cs.pki.ListCerts(sdk.PageMetadata{Offset: 0, Limit: 10000, EntityID: client.ID})
+	cp, err := cs.certsRepo.RetrieveByClient(ctx, clientID, PageMetadata{Offset: 0, Limit: 10000})
 	if err != nil {
 		return revoke, errors.Wrap(ErrFailedCertRevocation, err)
 	}
@@ -107,77 +113,86 @@ func (cs *certsService) RevokeCert(ctx context.Context, domainID, token, clientI
 		if err != nil {
 			return revoke, errors.Wrap(ErrFailedCertRevocation, err)
 		}
+
+		c.Revoked = true
+		err = cs.certsRepo.Update(ctx, c)
+		if err != nil {
+			return revoke, errors.Wrap(ErrFailedReadFromDB, err)
+		}
+
 		revoke.RevocationTime = time.Now().UTC()
 	}
 
 	return revoke, nil
 }
 
+func (cs *certsService) RevokeBySerial(ctx context.Context, serialID string) (Revoke, error) {
+	var revoke Revoke
+
+	cert, err := cs.certsRepo.RetrieveBySerial(ctx, serialID)
+	if err != nil {
+		return revoke, errors.Wrap(ErrFailedReadFromDB, err)
+	}
+
+	err = cs.pki.Revoke(serialID)
+	if err != nil {
+		return revoke, errors.Wrap(ErrFailedCertRevocation, err)
+	}
+
+	cert.Revoked = true
+	err = cs.certsRepo.Update(ctx, cert)
+	if err != nil {
+		return revoke, errors.Wrap(ErrFailedReadFromDB, err)
+	}
+
+	revoke.RevocationTime = time.Now().UTC()
+	return revoke, nil
+}
+
 func (cs *certsService) ListCerts(ctx context.Context, clientID string, pm PageMetadata) (CertPage, error) {
-	cp, err := cs.pki.ListCerts(sdk.PageMetadata{Offset: pm.Offset, Limit: pm.Limit, EntityID: clientID})
+	cp, err := cs.certsRepo.RetrieveByClient(ctx, clientID, pm)
 	if err != nil {
 		return CertPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	var crts []Cert
-
-	for _, c := range cp.Certificates {
-		crts = append(crts, Cert{
-			SerialNumber: c.SerialNumber,
-			Certificate:  c.Certificate,
-			Key:          c.Key,
-			Revoked:      c.Revoked,
-			ExpiryTime:   c.ExpiryTime,
-			ClientID:     c.ClientID,
-		})
+	for i, cert := range cp.Certificates {
+		vcert, err := cs.pki.View(cert.SerialNumber)
+		if err != nil {
+			return CertPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		}
+		cp.Certificates[i].Certificate = vcert.Certificate
+		cp.Certificates[i].Key = vcert.Key
 	}
 
-	return CertPage{
-		Total:        cp.Total,
-		Limit:        cp.Limit,
-		Offset:       cp.Offset,
-		Certificates: crts,
-	}, nil
+	return cp, nil
 }
 
 func (cs *certsService) ListSerials(ctx context.Context, clientID string, pm PageMetadata) (CertPage, error) {
-	cp, err := cs.pki.ListCerts(sdk.PageMetadata{Offset: pm.Offset, Limit: pm.Limit, EntityID: clientID})
+	cp, err := cs.certsRepo.RetrieveByClient(ctx, clientID, pm)
 	if err != nil {
 		return CertPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	var certs []Cert
-	for _, c := range cp.Certificates {
-		if (pm.Revoked == "true" && c.Revoked) || (pm.Revoked == "false" && !c.Revoked) || (pm.Revoked == "all") {
-			certs = append(certs, Cert{
-				SerialNumber: c.SerialNumber,
-				ClientID:     c.ClientID,
-				ExpiryTime:   c.ExpiryTime,
-				Revoked:      c.Revoked,
-			})
-		}
-	}
-
-	return CertPage{
-		Offset:       cp.Offset,
-		Limit:        cp.Limit,
-		Total:        uint64(len(certs)),
-		Certificates: certs,
-	}, nil
+	return cp, nil
 }
 
 func (cs *certsService) ViewCert(ctx context.Context, serialID string) (Cert, error) {
-	cert, err := cs.pki.View(serialID)
+	cert, err := cs.certsRepo.RetrieveBySerial(ctx, serialID)
+	if err != nil {
+		return Cert{}, errors.Wrap(ErrFailedReadFromDB, err)
+	}
+
+	vcert, err := cs.pki.View(serialID)
 	if err != nil {
 		return Cert{}, errors.Wrap(ErrFailedReadFromPKI, err)
 	}
 
 	return Cert{
 		SerialNumber: cert.SerialNumber,
-		Certificate:  cert.Certificate,
-		Key:          cert.Key,
-		Revoked:      cert.Revoked,
-		ExpiryTime:   cert.ExpiryTime,
+		Certificate:  vcert.Certificate,
+		Key:          vcert.Key,
+		ExpiryTime:   vcert.ExpiryTime,
 		ClientID:     cert.ClientID,
+		Revoked:      cert.Revoked,
 	}, nil
 }

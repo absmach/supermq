@@ -1,23 +1,23 @@
 # Certs Service
 
 Issues certificates for clients. `Certs` service can create certificates to be used when `SuperMQ` is deployed to support mTLS.
-Certificate service can create certificates using PKI mode - where certificates issued by PKI, when you deploy `Vault` as PKI certificate management `cert` service will proxy requests to `Vault` previously checking access rights and saving info on successfully created certificate.
+Certificate service can create certificates using PKI mode - where certificates issued by PKI, when you deploy `OpenBao` as PKI certificate management `cert` service will proxy requests to `OpenBao` previously checking access rights and saving info on successfully created certificate.
 
 ## PKI mode
 
-When `SMQ_CERTS_VAULT_HOST` is set it is presumed that `Vault` is installed and `certs` service will issue certificates using `Vault` API.
-First you'll need to set up `Vault`.
-To setup `Vault` follow steps in [Build Your Own Certificate Authority (CA)](https://learn.hashicorp.com/tutorials/vault/pki-engine).
+When `SMQ_CERTS_OPENBAO_HOST` is set it is presumed that `OpenBao` is installed and `certs` service will issue certificates using `OpenBao` API.
+First you'll need to set up `OpenBao`.
+To setup `OpenBao` follow steps in the [OpenBao PKI Documentation](https://openbao.org/docs/secrets/pki/).
 
-For lab purposes you can use docker-compose and script for setting up PKI in [https://github.com/absmach/supermq/blob/main/docker/addons/vault/README.md](https://github.com/absmach/supermq/blob/main/docker/addons/vault/README.md)
+For lab purposes you can use docker-compose and script for setting up PKI in [https://github.com/absmach/supermq/blob/main/docker/addons/certs/README.md](https://github.com/absmach/supermq/blob/main/docker/addons/certs/README.md)
 
 ```bash
-SMQ_CERTS_VAULT_HOST=<https://vault-domain:8200>
-SMQ_CERTS_VAULT_NAMESPACE=<vault_namespace>
-SMQ_CERTS_VAULT_APPROLE_ROLEID=<vault_approle_roleid>
-SMQ_CERTS_VAULT_APPROLE_SECRET=<vault_approle_sceret>
-SMQ_CERTS_VAULT_CLIENTS_CERTS_PKI_PATH=<vault_clients_certs_pki_path>
-SMQ_CERTS_VAULT_CLIENTS_CERTS_PKI_ROLE_NAME=<vault_clients_certs_issue_role_name>
+SMQ_CERTS_OPENBAO_HOST=<https://openbao-domain:8200>
+SMQ_CERTS_OPENBAO_NAMESPACE=<openbao_namespace>
+SMQ_CERTS_OPENBAO_APP_ROLE=<openbao_app_role>
+SMQ_CERTS_OPENBAO_APP_SECRET=<openbao_app_secret>
+SMQ_CERTS_OPENBAO_PKI_PATH=<openbao_pki_path>
+SMQ_CERTS_OPENBAO_ROLE=<openbao_role_name>
 ```
 
 The certificates can also be revoked using `certs` service. To revoke a certificate you need to provide `client_id` of the client for which the certificate was issued.
@@ -44,12 +44,12 @@ The service is configured using the environment variables presented in the follo
 | SMQ_AUTH_GRPC_SERVER_CERTS                  | Path to the PEM encoded auth server gRPC server trusted CA certificate file | ""                                                                  |
 | SMQ_CERTS_SIGN_CA_PATH                      | Path to the PEM encoded CA certificate file                                 | ca.crt                                                              |
 | SMQ_CERTS_SIGN_CA_KEY_PATH                  | Path to the PEM encoded CA key file                                         | ca.key                                                              |
-| SMQ_CERTS_VAULT_HOST                        | Vault host                                                                  | http://vault:8200                                                   |
-| SMQ_CERTS_VAULT_NAMESPACE                   | Vault namespace in which pki is present                                     | supermq                                                             |
-| SMQ_CERTS_VAULT_APPROLE_ROLEID              | Vault AppRole auth RoleID                                                   | supermq                                                             |
-| SMQ_CERTS_VAULT_APPROLE_SECRET              | Vault AppRole auth Secret                                                   | supermq                                                             |
-| SMQ_CERTS_VAULT_CLIENTS_CERTS_PKI_PATH      | Vault PKI path for issuing Clients Certificates                             | pki_int                                                             |
-| SMQ_CERTS_VAULT_CLIENTS_CERTS_PKI_ROLE_NAME | Vault PKI Role Name for issuing Clients Certificates                        | supermq_clients_certs                                               |
+| SMQ_CERTS_OPENBAO_HOST                      | OpenBao host                                                                | http://localhost:8200                                               |
+| SMQ_CERTS_OPENBAO_NAMESPACE                 | OpenBao namespace in which pki is present                                   | ""                                                                  |
+| SMQ_CERTS_OPENBAO_APP_ROLE                  | OpenBao AppRole auth RoleID                                                 | ""                                                                  |
+| SMQ_CERTS_OPENBAO_APP_SECRET                | OpenBao AppRole auth Secret                                                 | ""                                                                  |
+| SMQ_CERTS_OPENBAO_PKI_PATH                  | OpenBao PKI path for issuing Clients Certificates                           | pki                                                                 |
+| SMQ_CERTS_OPENBAO_ROLE                      | OpenBao PKI Role Name for issuing Clients Certificates                      | supermq                                                             |
 | SMQ_CERTS_DB_HOST                           | Database host                                                               | localhost                                                           |
 | SMQ_CERTS_DB_PORT                           | Database port                                                               | 5432                                                                |
 | SMQ_CERTS_DB_PASS                           | Database password                                                           | supermq                                                             |
@@ -69,7 +69,7 @@ The service is configured using the environment variables presented in the follo
 
 The service is distributed as Docker container. Check the [`certs`](https://github.com/absmach/supermq/blob/main/docker/addons/certs/docker-compose.yaml) service section in docker-compose file to see how the service is deployed.
 
-Running this service outside of container requires working instance of the auth service, clients service, postgres database, vault and Jaeger server.
+Running this service outside of container requires working instance of the auth service, clients service, postgres database, OpenBao and Jaeger server.
 To start the service outside of the container, execute the following shell script:
 
 ```bash
@@ -97,12 +97,12 @@ SMQ_AUTH_GRPC_CLIENT_KEY="" \
 SMQ_AUTH_GRPC_SERVER_CERTS="" \
 SMQ_CERTS_SIGN_CA_PATH=ca.crt \
 SMQ_CERTS_SIGN_CA_KEY_PATH=ca.key \
-SMQ_CERTS_VAULT_HOST=http://vault:8200 \
-SMQ_CERTS_VAULT_NAMESPACE=supermq \
-SMQ_CERTS_VAULT_APPROLE_ROLEID=supermq \
-SMQ_CERTS_VAULT_APPROLE_SECRET=supermq \
-SMQ_CERTS_VAULT_CLIENTS_CERTS_PKI_PATH=pki_int \
-SMQ_CERTS_VAULT_CLIENTS_CERTS_PKI_ROLE_NAME=supermq_clients_certs \
+SMQ_CERTS_OPENBAO_HOST=http://localhost:8200 \
+SMQ_CERTS_OPENBAO_NAMESPACE="" \
+SMQ_CERTS_OPENBAO_APP_ROLE=supermq \
+SMQ_CERTS_OPENBAO_APP_SECRET=supermq \
+SMQ_CERTS_OPENBAO_PKI_PATH=pki \
+SMQ_CERTS_OPENBAO_ROLE=supermq \
 SMQ_CERTS_DB_HOST=localhost \
 SMQ_CERTS_DB_PORT=5432 \
 SMQ_CERTS_DB_PASS=supermq \

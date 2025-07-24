@@ -78,3 +78,13 @@ func (tm *tracingMiddleware) RevokeCert(ctx context.Context, domainID, token, se
 
 	return tm.svc.RevokeCert(ctx, domainID, token, serialID)
 }
+
+// RevokeBySerial traces the "RevokeBySerial" operation of the wrapped certs.Service.
+func (tm *tracingMiddleware) RevokeBySerial(ctx context.Context, serialID string) (certs.Revoke, error) {
+	ctx, span := tracing.StartSpan(ctx, tm.tracer, "svc_revoke_by_serial", trace.WithAttributes(
+		attribute.String("serial_id", serialID),
+	))
+	defer span.End()
+
+	return tm.svc.RevokeBySerial(ctx, serialID)
+}

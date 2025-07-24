@@ -61,7 +61,7 @@ jobs:
               - "users/emailer.go"
               - "users/hasher.go"
               - "certs/certs.go"
-              - "certs/pki/vault.go"
+              - "certs/pki/openbao/openbao.go"
               - "certs/service.go"
               - "journal/journal.go"
               - "consumers/notifier.go"

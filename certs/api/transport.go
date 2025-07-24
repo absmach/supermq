@@ -25,8 +25,7 @@ const (
 	contentType = "application/json"
 	offsetKey   = "offset"
 	limitKey    = "limit"
-	revokeKey   = "revoked"
-	defRevoke   = "false"
+	revokedKey  = "revoked"
 	defOffset   = 0
 	defLimit    = 10
 )
@@ -57,12 +56,18 @@ func MakeHandler(svc certs.Service, authn smqauthn.Authentication, logger *slog.
 					api.EncodeResponse,
 					opts...,
 				), "view").ServeHTTP)
-				r.Delete("/{certID}", otelhttp.NewHandler(kithttp.NewServer(
-					revokeCert(svc),
-					decodeRevokeCerts,
+				r.Post("/{clientID}/revoke-all", otelhttp.NewHandler(kithttp.NewServer(
+					revokeAllCerts(svc),
+					decodeRevokeAllCerts,
 					api.EncodeResponse,
 					opts...,
 				), "revoke").ServeHTTP)
+				r.Post("/{certID}/revoke", otelhttp.NewHandler(kithttp.NewServer(
+					revokeBySerial(svc),
+					decodeRevokeBySerial,
+					api.EncodeResponse,
+					opts...,
+				), "revoke_by_serial").ServeHTTP)
 			})
 			r.Get("/serials/{clientID}", otelhttp.NewHandler(kithttp.NewServer(
 				listSerials(svc),
@@ -87,7 +92,7 @@ func decodeListCerts(_ context.Context, r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	rv, err := apiutil.ReadStringQuery(r, revokeKey, defRevoke)
+	revoked, err := apiutil.ReadStringQuery(r, revokedKey, "all")
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
@@ -97,7 +102,7 @@ func decodeListCerts(_ context.Context, r *http.Request) (interface{}, error) {
 		pm: certs.PageMetadata{
 			Offset:  o,
 			Limit:   l,
-			Revoked: rv,
+			Revoked: revoked,
 		},
 	}
 	return req, nil
@@ -127,11 +132,19 @@ func decodeCerts(_ context.Context, r *http.Request) (interface{}, error) {
 	return req, nil
 }
 
-func decodeRevokeCerts(_ context.Context, r *http.Request) (interface{}, error) {
-	req := revokeReq{
+func decodeRevokeAllCerts(_ context.Context, r *http.Request) (interface{}, error) {
+	req := revokeAllReq{
 		token:    apiutil.ExtractBearerToken(r),
-		certID:   chi.URLParam(r, "certID"),
+		clientID: chi.URLParam(r, "clientID"),
 		domainID: chi.URLParam(r, "domainID"),
+	}
+
+	return req, nil
+}
+
+func decodeRevokeBySerial(_ context.Context, r *http.Request) (interface{}, error) {
+	req := revokeBySerialReq{
+		serialID: chi.URLParam(r, "certID"),
 	}
 
 	return req, nil

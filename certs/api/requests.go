@@ -68,13 +68,13 @@ func (req *viewReq) validate() error {
 	return nil
 }
 
-type revokeReq struct {
+type revokeAllReq struct {
 	token    string
-	certID   string
+	clientID string
 	domainID string
 }
 
-func (req *revokeReq) validate() error {
+func (req *revokeAllReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
@@ -83,7 +83,19 @@ func (req *revokeReq) validate() error {
 		return apiutil.ErrMissingDomainID
 	}
 
-	if req.certID == "" {
+	if req.clientID == "" {
+		return apiutil.ErrMissingID
+	}
+
+	return nil
+}
+
+type revokeBySerialReq struct {
+	serialID string
+}
+
+func (req *revokeBySerialReq) validate() error {
+	if req.serialID == "" {
 		return apiutil.ErrMissingID
 	}
 

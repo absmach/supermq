@@ -35,9 +35,26 @@ var cmdCerts = []cobra.Command{
 		},
 	},
 	{
-		Use:   "revoke <client_id> <domain_id> <user_auth_token>",
+		Use:   "revoke-all <client_id> <domain_id> <user_auth_token>",
 		Short: "Revoke certificate",
 		Long:  `Revokes a certificate for a given client ID.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) != 3 {
+				logUsageCmd(*cmd, cmd.Use)
+				return
+			}
+			rtime, err := sdk.RevokeAllCerts(cmd.Context(), args[0], args[1], args[2])
+			if err != nil {
+				logErrorCmd(*cmd, err)
+				return
+			}
+			logRevokedTimeCmd(*cmd, rtime)
+		},
+	},
+	{
+		Use:   "revoke <cert_serial> <domain_id> <user_auth_token>",
+		Short: "Revoke certificate",
+		Long:  `Revokes a certificate for a given cert serial.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
 				logUsageCmd(*cmd, cmd.Use)

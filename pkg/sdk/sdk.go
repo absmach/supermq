@@ -1065,12 +1065,19 @@ type SDK interface {
 	//  fmt.Println(cserial)
 	ViewCertByClient(ctx context.Context, clientID, domainID, token string) (CertSerials, errors.SDKError)
 
-	// RevokeCert revokes certificate for client with clientID
+	// RevokeAllCerts revokes all certificates for client with clientID
 	//
 	// example:
-	//  tm, _ := sdk.RevokeCert("clientID", "domainID", "token")
+	//  tm, _ := sdk.RevokeAllCerts("clientID", "domainID", "token")
 	//  fmt.Println(tm)
-	RevokeCert(ctx context.Context, clientID, domainID, token string) (time.Time, errors.SDKError)
+	RevokeAllCerts(ctx context.Context, clientID, domainID, token string) (time.Time, errors.SDKError)
+
+	//RevokeCert revokes a certificate with given certID.
+	//
+	// example:
+	//  tm, _ := sdk.RevokeCert("certID", "domainID", "token")
+	//  fmt.Println(tm)
+	RevokeCert(ctx context.Context, certID, domainID, token string) (time.Time, errors.SDKError)
 
 	// CreateDomain creates new domain and returns its details.
 	//

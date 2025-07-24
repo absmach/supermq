@@ -16,18 +16,22 @@ import (
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/certs"
 	httpapi "github.com/absmach/supermq/certs/api"
-	pki "github.com/absmach/supermq/certs/pki/amcerts"
+	pki "github.com/absmach/supermq/certs/pki/openbao"
+	"github.com/absmach/supermq/certs/postgres"
 	"github.com/absmach/supermq/certs/tracing"
 	smqlog "github.com/absmach/supermq/logger"
 	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
 	"github.com/absmach/supermq/pkg/grpcclient"
 	jaegerclient "github.com/absmach/supermq/pkg/jaeger"
+	pg "github.com/absmach/supermq/pkg/postgres"
+	pgclient "github.com/absmach/supermq/pkg/postgres"
 	"github.com/absmach/supermq/pkg/prometheus"
 	mgsdk "github.com/absmach/supermq/pkg/sdk"
 	"github.com/absmach/supermq/pkg/server"
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/caarlos0/env/v11"
+	"github.com/jmoiron/sqlx"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 )
@@ -53,10 +57,13 @@ type config struct {
 	SignCAPath    string `env:"SMQ_CERTS_SIGN_CA_PATH"        envDefault:"ca.crt"`
 	SignCAKeyPath string `env:"SMQ_CERTS_SIGN_CA_KEY_PATH"    envDefault:"ca.key"`
 
-	// Amcerts SDK settings
-	SDKHost         string `env:"SMQ_CERTS_SDK_HOST"             envDefault:""`
-	SDKCertsURL     string `env:"SMQ_CERTS_SDK_CERTS_URL"        envDefault:"http://localhost:9010"`
-	TLSVerification bool   `env:"SMQ_CERTS_SDK_TLS_VERIFICATION" envDefault:"false"`
+	// OpenBao PKI settings
+	OpenBaoHost      string `env:"SMQ_CERTS_OPENBAO_HOST"         envDefault:"http://localhost:8200"`
+	OpenBaoAppRole   string `env:"SMQ_CERTS_OPENBAO_APP_ROLE"     envDefault:""`
+	OpenBaoAppSecret string `env:"SMQ_CERTS_OPENBAO_APP_SECRET"   envDefault:""`
+	OpenBaoNamespace string `env:"SMQ_CERTS_OPENBAO_NAMESPACE"    envDefault:""`
+	OpenBaoPKIPath   string `env:"SMQ_CERTS_OPENBAO_PKI_PATH"     envDefault:"pki"`
+	OpenBaoRole      string `env:"SMQ_CERTS_OPENBAO_ROLE"         envDefault:"supermq"`
 }
 
 func main() {
@@ -84,15 +91,21 @@ func main() {
 		}
 	}
 
-	if cfg.SDKHost == "" {
-		logger.Error("No host specified for PKI engine")
+	if cfg.OpenBaoHost == "" {
+		logger.Error("No host specified for OpenBao PKI engine")
 		exitCode = 1
 		return
 	}
 
-	pkiclient, err := pki.NewAgent(cfg.SDKHost, cfg.SDKCertsURL, cfg.TLSVerification)
+	if cfg.OpenBaoAppRole == "" || cfg.OpenBaoAppSecret == "" {
+		logger.Error("OpenBao AppRole credentials not specified")
+		exitCode = 1
+		return
+	}
+
+	pkiclient, err := pki.NewAgent(cfg.OpenBaoAppRole, cfg.OpenBaoAppSecret, cfg.OpenBaoHost, cfg.OpenBaoNamespace, cfg.OpenBaoPKIPath, cfg.OpenBaoRole, logger)
 	if err != nil {
-		logger.Error("failed to configure client for PKI engine")
+		logger.Error("failed to configure client for OpenBao PKI engine")
 		exitCode = 1
 		return
 	}
@@ -103,6 +116,20 @@ func main() {
 		exitCode = 1
 		return
 	}
+
+	dbConfig := pgclient.Config{Name: defDB}
+	if err := env.ParseWithOptions(&dbConfig, env.Options{Prefix: envPrefixDB}); err != nil {
+		logger.Error(err.Error())
+	}
+	migrations := postgres.Migration()
+	db, err := pgclient.Setup(dbConfig, *migrations)
+	if err != nil {
+		logger.Error(err.Error())
+		exitCode = 1
+		return
+	}
+	defer db.Close()
+
 	authn, authnClient, err := authsvcAuthn.NewAuthentication(ctx, grpcCfg)
 	if err != nil {
 		logger.Error(err.Error())
@@ -125,7 +152,7 @@ func main() {
 	}()
 	tracer := tp.Tracer(svcName)
 
-	svc := newService(tracer, logger, cfg, pkiclient)
+	svc := newService(db, dbConfig, tracer, logger, cfg, pkiclient)
 
 	httpServerConfig := server.Config{Port: defSvcHTTPPort}
 	if err := env.ParseWithOptions(&httpServerConfig, env.Options{Prefix: envPrefixHTTP}); err != nil {
@@ -156,12 +183,14 @@ func main() {
 	}
 }
 
-func newService(tracer trace.Tracer, logger *slog.Logger, cfg config, pkiAgent pki.Agent) certs.Service {
+func newService(db *sqlx.DB, dbConfig pgclient.Config, tracer trace.Tracer, logger *slog.Logger, cfg config, pkiAgent pki.Agent) certs.Service {
+	database := pg.NewDatabase(db, dbConfig, tracer)
 	config := mgsdk.Config{
 		ClientsURL: cfg.ClientsURL,
 	}
 	sdk := mgsdk.NewSDK(config)
-	svc := certs.New(sdk, pkiAgent)
+	repo := postgres.NewRepository(database)
+	svc := certs.New(sdk, repo, pkiAgent)
 	svc = httpapi.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics(svcName, "api")
 	svc = httpapi.MetricsMiddleware(svc, counter, latency)

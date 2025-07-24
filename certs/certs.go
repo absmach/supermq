@@ -4,6 +4,7 @@
 package certs
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
@@ -15,11 +16,13 @@ import (
 
 type Cert struct {
 	SerialNumber string    `json:"serial_number"`
+	CAChain      []string  `json:"ca_chain,omitempty"`
+	IssuingCA    string    `json:"issuing_ca,omitempty"`
 	Certificate  string    `json:"certificate,omitempty"`
 	Key          string    `json:"key,omitempty"`
-	Revoked      bool      `json:"revoked"`
 	ExpiryTime   time.Time `json:"expiry_time"`
 	ClientID     string    `json:"entity_id"`
+	Revoked      bool      `json:"revoked"`
 }
 
 type CertPage struct {
@@ -29,12 +32,34 @@ type CertPage struct {
 	Certificates []Cert `json:"certificates,omitempty"`
 }
 
+// Repository specifies a Config persistence API.
+type Repository interface {
+	// Save saves cert for client into database
+	Save(ctx context.Context, cert Cert) (string, error)
+
+	// Update updates an existing certificate in the database
+	Update(ctx context.Context, cert Cert) error
+
+	// RetrieveAll retrieve issued certificates
+	RetrieveAll(ctx context.Context, offset, limit uint64) (CertPage, error)
+
+	// Remove removes certificate from DB for a given client ID
+	Remove(ctx context.Context, clientID string) error
+
+	// RemoveBySerial removes certificate from DB for a given serial number
+	RemoveBySerial(ctx context.Context, serialID string) error
+
+	// RetrieveByClient retrieves issued certificates for a given client ID
+	RetrieveByClient(ctx context.Context, clientID string, pm PageMetadata) (CertPage, error)
+
+	// RetrieveBySerial retrieves a certificate for a given serial ID
+	RetrieveBySerial(ctx context.Context, serialID string) (Cert, error)
+}
+
 type PageMetadata struct {
 	Total      uint64 `json:"total,omitempty"`
 	Offset     uint64 `json:"offset,omitempty"`
 	Limit      uint64 `json:"limit,omitempty"`
-	ClientID   string `json:"client_id,omitempty"`
-	Token      string `json:"token,omitempty"`
 	CommonName string `json:"common_name,omitempty"`
 	Revoked    string `json:"revoked,omitempty"`
 }

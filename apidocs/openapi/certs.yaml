@@ -81,11 +81,41 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-    delete:
-      operationId: revokeCert
-      summary: Revokes a certificate
+
+  /{domainID}/certs/{clientID}/revoke-all:
+    post:
+      operationId: revokeAllCerts
+      summary: Revokes all certificates for a given client ID
       description: |
-        Revokes a certificate for a given cert ID.
+        Revokes all certificates for a given client ID.
+      tags:
+        - certs
+      parameters:
+        - $ref: "auth.yaml#/components/parameters/DomainID"
+        - $ref: "#/components/parameters/ClientID"
+      responses:
+        "200":
+          $ref: "#/components/responses/RevokeRes"
+        "400":
+          description: Failed due to malformed query parameters.
+        "401":
+          description: Missing or invalid access token provided.
+        "403":
+          description: Failed to perform authorization over the entity.
+        "404":
+          description: |
+            Failed to revoke corresponding certificate.
+        "422":
+          description: Database can't process request.
+        "500":
+          $ref: "#/components/responses/ServiceError"
+
+  /{domainID}/certs/{certID}/revoke:
+    post:
+      operationId: revokeCertBySerial
+      summary: Revokes a certificate by serial number
+      description: |
+        Revokes a certificate for a given certificate serial number.
       tags:
         - certs
       parameters:
@@ -164,7 +194,7 @@ components:
       in: path
       schema:
         type: string
-        format: uuid
+        example: "7c:a9:91:e7:13:e9:5c:6b:1d:16:cf:76:20:82:f3:01:c3:d5:a6:66"
       required: true
 
   schemas:
@@ -245,7 +275,7 @@ components:
       description: |
         Issues a certificate that is required for mTLS. To create a certificate for a client
         provide a client id, data identifying particular client will be embedded into the Certificate.
-        x509 and ECC certificates are supported when using when Vault is used as PKI.
+        x509 and ECC certificates are supported when using when Openbao is used as PKI.
       content:
         application/json:
           schema:

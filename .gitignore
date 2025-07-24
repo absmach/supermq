@@ -16,5 +16,5 @@ coverage
 # Schemathesis
 .hypothesis
 
-# Ignore Vault data directory as it contains runtime-generated data
-docker/addons/vault/data/
+# Ignore Openbao data directory as it contains runtime-generated data
+docker/addons/certs/openbao/

@@ -130,7 +130,7 @@ func TestGetCertCmd(t *testing.T) {
 	}
 }
 
-func TestRevokeCertCmd(t *testing.T) {
+func TestRevokeAllCertCmd(t *testing.T) {
 	sdkMock := new(sdkmocks.SDK)
 	cli.SetSDK(sdkMock)
 	certCmd := cli.NewCertsCmd()
@@ -172,6 +172,75 @@ func TestRevokeCertCmd(t *testing.T) {
 			desc: "revoke cert with invalid token",
 			args: []string{
 				client.ID,
+				domainID,
+				invalidToken,
+			},
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden)),
+			logType:       errLog,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			sdkCall := sdkMock.On("RevokeAllCerts", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.time, tc.sdkErr)
+			out := executeCommand(t, rootCmd, append([]string{revokeAllCmd}, tc.args...)...)
+
+			switch tc.logType {
+			case revokeLog:
+				assert.Equal(t, tc.response, out, fmt.Sprintf("%s unexpected error response: expected %s got errLogMessage:%s", tc.desc, tc.response, out))
+			case errLog:
+				assert.Equal(t, tc.errLogMessage, out, fmt.Sprintf("%s unexpected error response: expected %s got errLogMessage:%s", tc.desc, tc.errLogMessage, out))
+			case usageLog:
+				assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+			}
+			sdkCall.Unset()
+		})
+	}
+}
+
+func TestRevokeCertCmd(t *testing.T) {
+	sdkMock := new(sdkmocks.SDK)
+	cli.SetSDK(sdkMock)
+	certCmd := cli.NewCertsCmd()
+	rootCmd := setFlags(certCmd)
+
+	revokeTime := time.Now()
+
+	cases := []struct {
+		desc          string
+		args          []string
+		sdkErr        errors.SDKError
+		logType       outputLog
+		errLogMessage string
+		time          time.Time
+		response      string
+	}{
+		{
+			desc: "revoke cert successfully",
+			args: []string{
+				cert.SerialNumber,
+				domainID,
+				token,
+			},
+			logType:  revokeLog,
+			response: fmt.Sprintf("\nrevoked: %s\n\n", revokeTime),
+			time:     revokeTime,
+		},
+		{
+			desc: "revoke cert with invalid args",
+			args: []string{
+				cert.SerialNumber,
+				domainID,
+				token,
+				extraArg,
+			},
+			logType: usageLog,
+		},
+		{
+			desc: "revoke cert with invalid token",
+			args: []string{
+				cert.SerialNumber,
 				domainID,
 				invalidToken,
 			},

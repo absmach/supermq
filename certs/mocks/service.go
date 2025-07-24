@@ -269,6 +269,72 @@ func (_c *Service_ListSerials_Call) RunAndReturn(run func(ctx context.Context, c
 	return _c
 }
 
+// RevokeBySerial provides a mock function for the type Service
+func (_mock *Service) RevokeBySerial(ctx context.Context, serialID string) (certs.Revoke, error) {
+	ret := _mock.Called(ctx, serialID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RevokeBySerial")
+	}
+
+	var r0 certs.Revoke
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (certs.Revoke, error)); ok {
+		return returnFunc(ctx, serialID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) certs.Revoke); ok {
+		r0 = returnFunc(ctx, serialID)
+	} else {
+		r0 = ret.Get(0).(certs.Revoke)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = returnFunc(ctx, serialID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Service_RevokeBySerial_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RevokeBySerial'
+type Service_RevokeBySerial_Call struct {
+	*mock.Call
+}
+
+// RevokeBySerial is a helper method to define mock.On call
+//   - ctx context.Context
+//   - serialID string
+func (_e *Service_Expecter) RevokeBySerial(ctx interface{}, serialID interface{}) *Service_RevokeBySerial_Call {
+	return &Service_RevokeBySerial_Call{Call: _e.mock.On("RevokeBySerial", ctx, serialID)}
+}
+
+func (_c *Service_RevokeBySerial_Call) Run(run func(ctx context.Context, serialID string)) *Service_RevokeBySerial_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Service_RevokeBySerial_Call) Return(revoke certs.Revoke, err error) *Service_RevokeBySerial_Call {
+	_c.Call.Return(revoke, err)
+	return _c
+}
+
+func (_c *Service_RevokeBySerial_Call) RunAndReturn(run func(ctx context.Context, serialID string) (certs.Revoke, error)) *Service_RevokeBySerial_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // RevokeCert provides a mock function for the type Service
 func (_mock *Service) RevokeCert(ctx context.Context, domainID string, token string, clientID string) (certs.Revoke, error) {
 	ret := _mock.Called(ctx, domainID, token, clientID)

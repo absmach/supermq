@@ -79,3 +79,13 @@ func (ms *metricsMiddleware) RevokeCert(ctx context.Context, domainID, token, cl
 
 	return ms.svc.RevokeCert(ctx, domainID, token, clientID)
 }
+
+// RevokeBySerial instruments RevokeBySerial method with metrics.
+func (ms *metricsMiddleware) RevokeBySerial(ctx context.Context, serialID string) (certs.Revoke, error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "revoke_by_serial").Add(1)
+		ms.latency.With("method", "revoke_by_serial").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.RevokeBySerial(ctx, serialID)
+}

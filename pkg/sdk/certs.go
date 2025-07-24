@@ -23,6 +23,8 @@ const (
 type Cert struct {
 	SerialNumber string    `json:"serial_number,omitempty"`
 	Certificate  string    `json:"certificate,omitempty"`
+	IssuingCA    string    `json:"issuing_ca,omitempty"`
+	CAChain      []string  `json:"ca_chain,omitempty"`
 	Key          string    `json:"key,omitempty"`
 	Revoked      bool      `json:"revoked,omitempty"`
 	ExpiryTime   time.Time `json:"expiry_time,omitempty"`
@@ -87,10 +89,29 @@ func (sdk mgSDK) ViewCertByClient(ctx context.Context, clientID, domainID, token
 	return cs, nil
 }
 
-func (sdk mgSDK) RevokeCert(ctx context.Context, id, domainID, token string) (time.Time, errors.SDKError) {
-	url := fmt.Sprintf("%s/%s/%s/%s", sdk.certsURL, domainID, certsEndpoint, id)
+func (sdk mgSDK) RevokeAllCerts(ctx context.Context, id, domainID, token string) (time.Time, errors.SDKError) {
+	url := fmt.Sprintf("%s/%s/%s/%s/revoke-all", sdk.certsURL, domainID, certsEndpoint, id)
 
-	_, body, err := sdk.processRequest(ctx, http.MethodDelete, url, token, nil, nil, http.StatusOK)
+	_, body, err := sdk.processRequest(ctx, http.MethodPost, url, token, nil, nil, http.StatusOK)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	var rcr revokeCertsRes
+	if err := json.Unmarshal(body, &rcr); err != nil {
+		return time.Time{}, errors.NewSDKError(err)
+	}
+
+	return rcr.RevocationTime, nil
+}
+
+func (sdk mgSDK) RevokeCert(ctx context.Context, certID, domainID, token string) (time.Time, errors.SDKError) {
+	if certID == "" {
+		return time.Time{}, errors.NewSDKError(apiutil.ErrMissingID)
+	}
+	url := fmt.Sprintf("%s/%s/%s/%s/revoke", sdk.certsURL, domainID, certsEndpoint, certID)
+
+	_, body, err := sdk.processRequest(ctx, http.MethodPost, url, token, nil, nil, http.StatusOK)
 	if err != nil {
 		return time.Time{}, err
 	}

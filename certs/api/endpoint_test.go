@@ -332,7 +332,7 @@ func TestViewCert(t *testing.T) {
 	}
 }
 
-func TestRevokeCert(t *testing.T) {
+func TestRevokeAllCerts(t *testing.T) {
 	cs, svc, auth := newCertServer()
 	defer cs.Close()
 
@@ -400,8 +400,8 @@ func TestRevokeCert(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			req := testRequest{
 				client: cs.Client(),
-				method: http.MethodDelete,
-				url:    fmt.Sprintf("%s/%s/certs/%s", cs.URL, tc.domainID, tc.serialID),
+				method: http.MethodPost,
+				url:    fmt.Sprintf("%s/%s/certs/%s/revoke-all", cs.URL, tc.domainID, tc.serialID),
 				token:  tc.token,
 			}
 			if tc.token == valid {
@@ -418,6 +418,119 @@ func TestRevokeCert(t *testing.T) {
 				err = errors.Wrap(errors.New(errRes.Err), errors.New(errRes.Message))
 			}
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n ", tc.desc, tc.err, err))
+			assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+			svcCall.Unset()
+			authCall.Unset()
+		})
+	}
+}
+
+func TestRevokeBySerial(t *testing.T) {
+	cs, svc, auth := newCertServer()
+	defer cs.Close()
+
+	cases := []struct {
+		desc            string
+		token           string
+		domainID        string
+		session         smqauthn.Session
+		serialID        string
+		status          int
+		authenticateErr error
+		svcRes          certs.Revoke
+		svcErr          error
+		err             error
+	}{
+		{
+			desc:     "revoke cert by serial successfully",
+			token:    valid,
+			domainID: valid,
+			serialID: serial,
+			status:   http.StatusOK,
+			svcRes:   certs.Revoke{RevocationTime: time.Now()},
+			svcErr:   nil,
+			err:      nil,
+		},
+		{
+			desc:            "revoke by serial with invalid token",
+			token:           invalid,
+			domainID:        valid,
+			serialID:        serial,
+			status:          http.StatusUnauthorized,
+			svcRes:          certs.Revoke{},
+			authenticateErr: svcerr.ErrAuthentication,
+			err:             svcerr.ErrAuthentication,
+		},
+		{
+			desc:     "revoke by serial with empty domain id",
+			token:    valid,
+			domainID: "",
+			serialID: serial,
+			status:   http.StatusBadRequest,
+			svcErr:   nil,
+			err:      apiutil.ErrMissingDomainID,
+		},
+		{
+			desc:     "revoke by serial with empty token",
+			token:    "",
+			serialID: serial,
+			domainID: valid,
+			status:   http.StatusUnauthorized,
+			svcErr:   nil,
+			err:      apiutil.ErrBearerToken,
+		},
+		{
+			desc:     "revoke by serial with empty serial ID",
+			token:    valid,
+			domainID: valid,
+			serialID: "",
+			status:   http.StatusBadRequest,
+			svcErr:   nil,
+			err:      apiutil.ErrMissingID,
+		},
+		{
+			desc:     "revoke non-existing cert by serial",
+			token:    valid,
+			domainID: valid,
+			serialID: invalid,
+			status:   http.StatusNotFound,
+			svcRes:   certs.Revoke{},
+			svcErr:   svcerr.ErrNotFound,
+			err:      svcerr.ErrNotFound,
+		},
+		{
+			desc:     "revoke by serial with service error",
+			token:    valid,
+			domainID: valid,
+			serialID: serial,
+			status:   http.StatusUnprocessableEntity,
+			svcRes:   certs.Revoke{},
+			svcErr:   svcerr.ErrRemoveEntity,
+			err:      svcerr.ErrRemoveEntity,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			req := testRequest{
+				client: cs.Client(),
+				method: http.MethodPost,
+				url:    fmt.Sprintf("%s/%s/certs/%s/revoke", cs.URL, tc.domainID, tc.serialID),
+				token:  tc.token,
+			}
+			if tc.token == valid {
+				tc.session = smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID}
+			}
+			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
+			svcCall := svc.On("RevokeBySerial", mock.Anything, tc.serialID).Return(tc.svcRes, tc.svcErr)
+			res, err := req.make()
+			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+			var errRes respBody
+			err = json.NewDecoder(res.Body).Decode(&errRes)
+			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while decoding response body: %s", tc.desc, err))
+			if errRes.Err != "" || errRes.Message != "" {
+				err = errors.Wrap(errors.New(errRes.Err), errors.New(errRes.Message))
+			}
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 			assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 			svcCall.Unset()
 			authCall.Unset()
@@ -651,7 +764,7 @@ func TestListSerials(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := svc.On("ListSerials", mock.Anything, tc.clientID, certs.PageMetadata{Revoked: tc.revoked, Offset: tc.offset, Limit: tc.limit}).Return(tc.svcRes, tc.svcErr)
+			svcCall := svc.On("ListSerials", mock.Anything, tc.clientID, certs.PageMetadata{Offset: tc.offset, Limit: tc.limit, Revoked: "all"}).Return(tc.svcRes, tc.svcErr)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 			var errRes respBody

@@ -8,8 +8,7 @@
 package mocks
 
 import (
-	"github.com/absmach/certs/sdk"
-	"github.com/absmach/supermq/certs/pki/amcerts"
+	"github.com/absmach/supermq/certs"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -41,22 +40,22 @@ func (_m *Agent) EXPECT() *Agent_Expecter {
 }
 
 // Issue provides a mock function for the type Agent
-func (_mock *Agent) Issue(entityId string, ttl string, ipAddrs []string) (amcerts.Cert, error) {
+func (_mock *Agent) Issue(entityId string, ttl string, ipAddrs []string) (certs.Cert, error) {
 	ret := _mock.Called(entityId, ttl, ipAddrs)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Issue")
 	}
 
-	var r0 amcerts.Cert
+	var r0 certs.Cert
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(string, string, []string) (amcerts.Cert, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(string, string, []string) (certs.Cert, error)); ok {
 		return returnFunc(entityId, ttl, ipAddrs)
 	}
-	if returnFunc, ok := ret.Get(0).(func(string, string, []string) amcerts.Cert); ok {
+	if returnFunc, ok := ret.Get(0).(func(string, string, []string) certs.Cert); ok {
 		r0 = returnFunc(entityId, ttl, ipAddrs)
 	} else {
-		r0 = ret.Get(0).(amcerts.Cert)
+		r0 = ret.Get(0).(certs.Cert)
 	}
 	if returnFunc, ok := ret.Get(1).(func(string, string, []string) error); ok {
 		r1 = returnFunc(entityId, ttl, ipAddrs)
@@ -102,35 +101,35 @@ func (_c *Agent_Issue_Call) Run(run func(entityId string, ttl string, ipAddrs []
 	return _c
 }
 
-func (_c *Agent_Issue_Call) Return(cert amcerts.Cert, err error) *Agent_Issue_Call {
+func (_c *Agent_Issue_Call) Return(cert certs.Cert, err error) *Agent_Issue_Call {
 	_c.Call.Return(cert, err)
 	return _c
 }
 
-func (_c *Agent_Issue_Call) RunAndReturn(run func(entityId string, ttl string, ipAddrs []string) (amcerts.Cert, error)) *Agent_Issue_Call {
+func (_c *Agent_Issue_Call) RunAndReturn(run func(entityId string, ttl string, ipAddrs []string) (certs.Cert, error)) *Agent_Issue_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // ListCerts provides a mock function for the type Agent
-func (_mock *Agent) ListCerts(pm sdk.PageMetadata) (amcerts.CertPage, error) {
+func (_mock *Agent) ListCerts(pm certs.PageMetadata) (certs.CertPage, error) {
 	ret := _mock.Called(pm)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListCerts")
 	}
 
-	var r0 amcerts.CertPage
+	var r0 certs.CertPage
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(sdk.PageMetadata) (amcerts.CertPage, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(certs.PageMetadata) (certs.CertPage, error)); ok {
 		return returnFunc(pm)
 	}
-	if returnFunc, ok := ret.Get(0).(func(sdk.PageMetadata) amcerts.CertPage); ok {
+	if returnFunc, ok := ret.Get(0).(func(certs.PageMetadata) certs.CertPage); ok {
 		r0 = returnFunc(pm)
 	} else {
-		r0 = ret.Get(0).(amcerts.CertPage)
+		r0 = ret.Get(0).(certs.CertPage)
 	}
-	if returnFunc, ok := ret.Get(1).(func(sdk.PageMetadata) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(certs.PageMetadata) error); ok {
 		r1 = returnFunc(pm)
 	} else {
 		r1 = ret.Error(1)
@@ -144,16 +143,16 @@ type Agent_ListCerts_Call struct {
 }
 
 // ListCerts is a helper method to define mock.On call
-//   - pm sdk.PageMetadata
+//   - pm certs.PageMetadata
 func (_e *Agent_Expecter) ListCerts(pm interface{}) *Agent_ListCerts_Call {
 	return &Agent_ListCerts_Call{Call: _e.mock.On("ListCerts", pm)}
 }
 
-func (_c *Agent_ListCerts_Call) Run(run func(pm sdk.PageMetadata)) *Agent_ListCerts_Call {
+func (_c *Agent_ListCerts_Call) Run(run func(pm certs.PageMetadata)) *Agent_ListCerts_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 sdk.PageMetadata
+		var arg0 certs.PageMetadata
 		if args[0] != nil {
-			arg0 = args[0].(sdk.PageMetadata)
+			arg0 = args[0].(certs.PageMetadata)
 		}
 		run(
 			arg0,
@@ -162,12 +161,12 @@ func (_c *Agent_ListCerts_Call) Run(run func(pm sdk.PageMetadata)) *Agent_ListCe
 	return _c
 }
 
-func (_c *Agent_ListCerts_Call) Return(certPage amcerts.CertPage, err error) *Agent_ListCerts_Call {
+func (_c *Agent_ListCerts_Call) Return(certPage certs.CertPage, err error) *Agent_ListCerts_Call {
 	_c.Call.Return(certPage, err)
 	return _c
 }
 
-func (_c *Agent_ListCerts_Call) RunAndReturn(run func(pm sdk.PageMetadata) (amcerts.CertPage, error)) *Agent_ListCerts_Call {
+func (_c *Agent_ListCerts_Call) RunAndReturn(run func(pm certs.PageMetadata) (certs.CertPage, error)) *Agent_ListCerts_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -224,22 +223,22 @@ func (_c *Agent_Revoke_Call) RunAndReturn(run func(serialNumber string) error) *
 }
 
 // View provides a mock function for the type Agent
-func (_mock *Agent) View(serialNumber string) (amcerts.Cert, error) {
+func (_mock *Agent) View(serialNumber string) (certs.Cert, error) {
 	ret := _mock.Called(serialNumber)
 
 	if len(ret) == 0 {
 		panic("no return value specified for View")
 	}
 
-	var r0 amcerts.Cert
+	var r0 certs.Cert
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(string) (amcerts.Cert, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(string) (certs.Cert, error)); ok {
 		return returnFunc(serialNumber)
 	}
-	if returnFunc, ok := ret.Get(0).(func(string) amcerts.Cert); ok {
+	if returnFunc, ok := ret.Get(0).(func(string) certs.Cert); ok {
 		r0 = returnFunc(serialNumber)
 	} else {
-		r0 = ret.Get(0).(amcerts.Cert)
+		r0 = ret.Get(0).(certs.Cert)
 	}
 	if returnFunc, ok := ret.Get(1).(func(string) error); ok {
 		r1 = returnFunc(serialNumber)
@@ -273,12 +272,12 @@ func (_c *Agent_View_Call) Run(run func(serialNumber string)) *Agent_View_Call {
 	return _c
 }
 
-func (_c *Agent_View_Call) Return(cert amcerts.Cert, err error) *Agent_View_Call {
+func (_c *Agent_View_Call) Return(cert certs.Cert, err error) *Agent_View_Call {
 	_c.Call.Return(cert, err)
 	return _c
 }
 
-func (_c *Agent_View_Call) RunAndReturn(run func(serialNumber string) (amcerts.Cert, error)) *Agent_View_Call {
+func (_c *Agent_View_Call) RunAndReturn(run func(serialNumber string) (certs.Cert, error)) *Agent_View_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -74,7 +74,7 @@ endef
 
 ADDON_SERVICES = journal certs
 
-EXTERNAL_SERVICES = vault prometheus
+EXTERNAL_SERVICES = prometheus
 
 ifneq ($(filter run%,$(firstword $(MAKECMDGOALS))),)
   temp_args := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))

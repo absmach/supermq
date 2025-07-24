@@ -27,6 +27,9 @@ func issueCert(svc certs.Service) endpoint.Endpoint {
 			SerialNumber: res.SerialNumber,
 			ClientID:     res.ClientID,
 			Certificate:  res.Certificate,
+			Key:          res.Key,
+			CAChain:      res.CAChain,
+			IssuingCA:    res.IssuingCA,
 			ExpiryTime:   res.ExpiryTime,
 			Revoked:      res.Revoked,
 			issued:       true,
@@ -58,8 +61,8 @@ func listSerials(svc certs.Service) endpoint.Endpoint {
 			cr := certsRes{
 				SerialNumber: cert.SerialNumber,
 				ExpiryTime:   cert.ExpiryTime,
-				Revoked:      cert.Revoked,
 				ClientID:     cert.ClientID,
+				Revoked:      cert.Revoked,
 			}
 			res.Certs = append(res.Certs, cr)
 		}
@@ -91,13 +94,29 @@ func viewCert(svc certs.Service) endpoint.Endpoint {
 	}
 }
 
-func revokeCert(svc certs.Service) endpoint.Endpoint {
+func revokeAllCerts(svc certs.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(revokeReq)
+		req := request.(revokeAllReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
-		res, err := svc.RevokeCert(ctx, req.domainID, req.token, req.certID)
+		res, err := svc.RevokeCert(ctx, req.domainID, req.token, req.clientID)
+		if err != nil {
+			return nil, err
+		}
+		return revokeCertsRes{
+			RevocationTime: res.RevocationTime,
+		}, nil
+	}
+}
+
+func revokeBySerial(svc certs.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(revokeBySerialReq)
+		if err := req.validate(); err != nil {
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
+		}
+		res, err := svc.RevokeBySerial(ctx, req.serialID)
 		if err != nil {
 			return nil, err
 		}

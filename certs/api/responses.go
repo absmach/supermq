@@ -25,6 +25,8 @@ type certsRes struct {
 	Key          string    `json:"key,omitempty"`
 	SerialNumber string    `json:"serial_number"`
 	ExpiryTime   time.Time `json:"expiry_time"`
+	CAChain      []string  `json:"ca_chain,omitempty"`
+	IssuingCA    string    `json:"issuing_ca,omitempty"`
 	Revoked      bool      `json:"revoked"`
 	issued       bool
 }
