@@ -25,7 +25,6 @@ import (
 	"github.com/absmach/supermq/auth/jwt"
 	"github.com/absmach/supermq/auth/middleware"
 	apostgres "github.com/absmach/supermq/auth/postgres"
-	"github.com/absmach/supermq/auth/tracing"
 	redisclient "github.com/absmach/supermq/internal/clients/redis"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/jaeger"
@@ -245,7 +244,7 @@ func newService(db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.
 	t := jwt.New([]byte(cfg.SecretKey))
 
 	svc := auth.New(keysRepo, patsRepo, nil, hasher, idProvider, t, pEvaluator, pService, cfg.AccessDuration, cfg.RefreshDuration, cfg.InvitationDuration)
-	svc = api.LoggingMiddleware(svc, logger)
+	svc = middleware.Logging(svc, logger)
 	counter, latency := prometheus.MakeMetrics("auth", "api")
 	svc = middleware.Metrics(svc, counter, latency)
 	svc = middleware.Tracing(svc, tracer)

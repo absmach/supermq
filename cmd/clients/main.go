@@ -26,7 +26,6 @@ import (
 	"github.com/absmach/supermq/clients/middleware"
 	"github.com/absmach/supermq/clients/postgres"
 	pClients "github.com/absmach/supermq/clients/private"
-	"github.com/absmach/supermq/clients/tracing"
 	dpostgres "github.com/absmach/supermq/domains/postgres"
 	gpostgres "github.com/absmach/supermq/groups/postgres"
 	redisclient "github.com/absmach/supermq/internal/clients/redis"
@@ -360,17 +359,16 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 		return nil, nil, err
 	}
 
-	csvc = tracing.New(csvc, tracer)
+	csvc = middleware.Tracing(csvc, tracer)
 
 	counter, latency := prometheus.MakeMetrics(svcName, "api")
-	csvc = middleware.MetricsMiddleware(csvc, counter, latency)
-	csvc = middleware.MetricsMiddleware(csvc, counter, latency)
+	csvc = middleware.Metrics(csvc, counter, latency)
 
-	csvc, err = middleware.AuthorizationMiddleware(policies.ClientType, csvc, authz, repo, clients.NewOperationPermissionMap(), clients.NewRolesOperationPermissionMap(), clients.NewExternalOperationPermissionMap(), callout)
+	csvc, err = middleware.Authorization(policies.ClientType, csvc, authz, repo, clients.NewOperationPermissionMap(), clients.NewRolesOperationPermissionMap(), clients.NewExternalOperationPermissionMap(), callout)
 	if err != nil {
 		return nil, nil, err
 	}
-	csvc = middleware.LoggingMiddleware(csvc, logger)
+	csvc = middleware.Logging(csvc, logger)
 
 	isvc := pClients.New(repo, cache, pe, ps)
 

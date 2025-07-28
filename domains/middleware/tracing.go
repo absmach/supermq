@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package tracing
+package middleware
 
 import (
 	"context"
@@ -23,8 +23,8 @@ type tracingMiddleware struct {
 	rmTrace.RoleManagerTracing
 }
 
-// New returns a new group service with tracing capabilities.
-func New(svc domains.Service, tracer trace.Tracer) domains.Service {
+// Tracing returns a new domains service with tracing capabilities.
+func Tracing(svc domains.Service, tracer trace.Tracer) domains.Service {
 	return &tracingMiddleware{tracer, svc, rmTrace.NewRoleManagerTracing("domain", svc, tracer)}
 }
 

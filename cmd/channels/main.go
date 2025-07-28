@@ -26,7 +26,6 @@ import (
 	"github.com/absmach/supermq/channels/middleware"
 	"github.com/absmach/supermq/channels/postgres"
 	pChannels "github.com/absmach/supermq/channels/private"
-	"github.com/absmach/supermq/channels/tracing"
 	dpostgres "github.com/absmach/supermq/domains/postgres"
 	gpostgres "github.com/absmach/supermq/groups/postgres"
 	redisclient "github.com/absmach/supermq/internal/clients/redis"
@@ -359,16 +358,16 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, cach
 		return nil, nil, err
 	}
 
-	svc = tracing.New(svc, tracer)
+	svc = middleware.Tracing(svc, tracer)
 
 	counter, latency := prometheus.MakeMetrics("channels", "api")
-	svc = middleware.MetricsMiddleware(svc, counter, latency)
+	svc = middleware.Metrics(svc, counter, latency)
 
-	svc, err = middleware.AuthorizationMiddleware(svc, repo, authz, channels.NewOperationPermissionMap(), channels.NewRolesOperationPermissionMap(), channels.NewExternalOperationPermissionMap(), callout)
+	svc, err = middleware.Authorization(svc, repo, authz, channels.NewOperationPermissionMap(), channels.NewRolesOperationPermissionMap(), channels.NewExternalOperationPermissionMap(), callout)
 	if err != nil {
 		return nil, nil, err
 	}
-	svc = middleware.LoggingMiddleware(svc, logger)
+	svc = middleware.Logging(svc, logger)
 
 	psvc := pChannels.New(repo, cache, pe, ps, da)
 	return svc, psvc, err

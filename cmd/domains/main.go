@@ -24,7 +24,6 @@ import (
 	dmw "github.com/absmach/supermq/domains/middleware"
 	dpostgres "github.com/absmach/supermq/domains/postgres"
 	"github.com/absmach/supermq/domains/private"
-	dtracing "github.com/absmach/supermq/domains/tracing"
 	redisclient "github.com/absmach/supermq/internal/clients/redis"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
@@ -282,17 +281,17 @@ func newDomainService(ctx context.Context, domainsRepo domainsSvc.Repository, ca
 		return nil, fmt.Errorf("failed to init domain event store middleware: %w", err)
 	}
 
-	svc, err = dmw.AuthorizationMiddleware(policies.DomainType, svc, authz, domains.NewOperationPermissionMap(), domains.NewRolesOperationPermissionMap(), callout)
+	svc, err = dmw.Authorization(policies.DomainType, svc, authz, domains.NewOperationPermissionMap(), domains.NewRolesOperationPermissionMap(), callout)
 	if err != nil {
 		return nil, err
 	}
 
 	counter, latency := prometheus.MakeMetrics("domains", "api")
-	svc = dmw.MetricsMiddleware(svc, counter, latency)
+	svc = dmw.Metrics(svc, counter, latency)
 
-	svc = dmw.LoggingMiddleware(svc, logger)
+	svc = dmw.Logging(svc, logger)
 
-	svc = dtracing.New(svc, tracer)
+	svc = dmw.Tracing(svc, tracer)
 	return svc, nil
 }
 

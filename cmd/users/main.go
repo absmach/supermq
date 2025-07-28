@@ -296,7 +296,7 @@ func newService(ctx context.Context, authz smqauthz.Authorization, token grpcTok
 	if err != nil {
 		return nil, err
 	}
-	svc = middleware.AuthorizationMiddleware(svc, authz, c.SelfRegister)
+	svc = middleware.Authorization(svc, authz, c.SelfRegister)
 
 	svc = middleware.Tracing(svc, tracer)
 	svc = middleware.Logging(svc, logger)

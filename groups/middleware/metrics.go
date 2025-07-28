@@ -23,8 +23,8 @@ type metricsMiddleware struct {
 	rmMW.RoleManagerMetricsMiddleware
 }
 
-// MetricsMiddleware instruments policies service by tracking request count and latency.
-func MetricsMiddleware(svc groups.Service, counter metrics.Counter, latency metrics.Histogram) groups.Service {
+// Metrics instruments policies service by tracking request count and latency.
+func Metrics(svc groups.Service, counter metrics.Counter, latency metrics.Histogram) groups.Service {
 	rmm := rmMW.NewRoleManagerMetricsMiddleware("group", svc, counter, latency)
 	return &metricsMiddleware{
 		counter:                      counter,
