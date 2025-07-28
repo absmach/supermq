@@ -54,8 +54,8 @@ type authorizationMiddleware struct {
 	rmMW.RoleManagerAuthorizationMiddleware
 }
 
-// AuthorizationMiddleware adds authorization to the channels service.
-func AuthorizationMiddleware(
+// Authorization adds authorization to the channels service.
+func Authorization(
 	svc channels.Service,
 	repo channels.Repository,
 	authz smqauthz.Authorization,
