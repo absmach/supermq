@@ -89,8 +89,10 @@ func (repo *clientRepo) Save(ctx context.Context, cls ...clients.Client) ([]clie
 func (repo *clientRepo) RetrieveBySecret(ctx context.Context, key, domain string) (clients.Client, error) {
 	q := fmt.Sprintf(`SELECT id, name, tags, COALESCE(domain_id, '') AS domain_id,  COALESCE(parent_group_id, '') AS parent_group_id, identity, secret, metadata, created_at, updated_at, updated_by, status
         FROM clients
-        WHERE secret = :secret AND domain_id = :domain AND status = %d`, clients.EnabledStatus)
-
+        WHERE secret = :secret AND status = %d`, clients.EnabledStatus)
+	if domain != "" {
+		q += " AND domain_id = :domain_id"
+	}
 	dbc := DBClient{
 		Secret: key,
 		Domain: domain,
