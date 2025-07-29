@@ -9,6 +9,7 @@ import (
 
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
+	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -91,13 +92,10 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, sessionID, domainID,
 // authorize checks if the clientKey is authorized to access the channel
 // and returns the clientID if it is.
 func (svc *adapterService) authorize(ctx context.Context, clientKey, domainID, chanID string, msgType connections.ConnType) (string, error) {
-	authnReq := &grpcClientsV1.AuthnReq{
-		ClientSecret: clientKey,
-	}
 	if strings.HasPrefix(clientKey, "Client") {
-		authnReq.ClientSecret = extractClientSecret(clientKey)
+		clientKey = extractClientSecret(clientKey)
 	}
-	authnRes, err := svc.clients.Authenticate(ctx, authnReq)
+	authnRes, err := svc.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{ClientSecret: authn.AuthPack(clientKey, domainID)})
 	if err != nil {
 		return "", errors.Wrap(svcerr.ErrAuthentication, err)
 	}

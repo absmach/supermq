@@ -5,6 +5,9 @@ package authn
 
 import (
 	"context"
+	"encoding/base64"
+	"errors"
+	"strings"
 )
 
 type TokenType uint32
@@ -47,4 +50,26 @@ type Session struct {
 // Authn is supermq authentication library.
 type Authentication interface {
 	Authenticate(ctx context.Context, token string) (Session, error)
+}
+
+const authSep = ":"
+
+// ErrNotEncoded acts similarly to EOF - it does indicate there is no suffix in
+// the token, but that does not have to be treated as the error in some cases.
+var ErrNotEncoded = errors.New("token is not encoded with domain ID suffix")
+
+func AuthUnpack(token string) (string, string, error) {
+	payload, err := base64.StdEncoding.DecodeString(token)
+	if err != nil {
+		return "", "", err
+	}
+	key, domainID, found := strings.Cut(string(payload), authSep)
+	if !found {
+		return key, domainID, ErrNotEncoded
+	}
+	return key, domainID, nil
+}
+
+func AuthPack(key, domainID string) string {
+	return base64.StdEncoding.EncodeToString([]byte(key + ":" + domainID))
 }

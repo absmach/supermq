@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/absmach/supermq/clients"
+	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
@@ -47,17 +48,21 @@ type service struct {
 	policy    policies.Service
 }
 
-func (svc service) Authenticate(ctx context.Context, key string) (string, error) {
-	id, err := svc.cache.ID(ctx, key)
+func (svc service) Authenticate(ctx context.Context, token string) (string, error) {
+	id, err := svc.cache.ID(ctx, token)
 	if err == nil {
 		return id, nil
 	}
+	key, domainID, err := authn.AuthUnpack(token)
+	if err != nil && err != authn.ErrNotEncoded {
+		return "", err
+	}
 
-	client, err := svc.repo.RetrieveBySecret(ctx, key)
+	client, err := svc.repo.RetrieveBySecret(ctx, key, domainID)
 	if err != nil {
 		return "", errors.Wrap(svcerr.ErrAuthorization, err)
 	}
-	if err := svc.cache.Save(ctx, key, client.ID); err != nil {
+	if err := svc.cache.Save(ctx, token, client.ID); err != nil {
 		return "", errors.Wrap(svcerr.ErrAuthorization, err)
 	}
 

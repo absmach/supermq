@@ -16,6 +16,7 @@ import (
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
 	apiutil "github.com/absmach/supermq/api/http/util"
+	"github.com/absmach/supermq/pkg/authn"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
@@ -194,14 +195,10 @@ func (h *handler) Disconnect(ctx context.Context) error {
 }
 
 func (h *handler) authAccess(ctx context.Context, token, domainID, chanID string, msgType connections.ConnType) (string, string, error) {
-	authnReq := &grpcClientsV1.AuthnReq{
-		ClientSecret: token,
-	}
 	if strings.HasPrefix(token, "Client") {
-		authnReq.ClientSecret = extractClientSecret(token)
+		token = extractClientSecret(token)
 	}
-
-	authnRes, err := h.clients.Authenticate(ctx, authnReq)
+	authnRes, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{ClientSecret: authn.AuthPack(token, domainID)})
 	if err != nil {
 		return "", "", mgate.NewHTTPProxyError(http.StatusUnauthorized, errors.Wrap(svcerr.ErrAuthentication, err))
 	}

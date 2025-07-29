@@ -11,6 +11,7 @@ import (
 
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
+	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -59,7 +60,7 @@ func New(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.Cha
 
 func (svc *adapterService) Publish(ctx context.Context, key string, msg *messaging.Message) error {
 	authnRes, err := svc.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{
-		ClientSecret: key,
+		ClientSecret: authn.AuthPack(key, msg.GetDomain()),
 	})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthentication, err)
@@ -89,7 +90,7 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 
 func (svc *adapterService) Subscribe(ctx context.Context, key, domainID, chanID, subtopic string, c Client) error {
 	authnRes, err := svc.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{
-		ClientSecret: key,
+		ClientSecret: authn.AuthPack(key, domainID),
 	})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthentication, err)
@@ -126,7 +127,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, domainID, chanID,
 
 func (svc *adapterService) Unsubscribe(ctx context.Context, key, domainID, chanID, subtopic, token string) error {
 	authnRes, err := svc.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{
-		ClientSecret: key,
+		ClientSecret: authn.AuthPack(key, domainID),
 	})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthentication, err)
