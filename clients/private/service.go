@@ -53,11 +53,17 @@ func (svc service) Authenticate(ctx context.Context, token string) (string, erro
 	if err == nil {
 		return id, nil
 	}
-	key, domainID, err := authn.AuthUnpack(token)
+	prefix, key, id, err := authn.AuthUnpack(token)
 	if err != nil && err != authn.ErrNotEncoded {
 		return "", err
 	}
-	client, err := svc.repo.RetrieveBySecret(ctx, key, domainID)
+	var client clients.Client
+	switch prefix {
+	case authn.DomainAuthPrefix:
+		client, err = svc.repo.RetrieveBySecret(ctx, key, id)
+	case authn.BasicAuthPrefix:
+
+	}
 	if err != nil {
 		return "", errors.Wrap(svcerr.ErrAuthorization, err)
 	}

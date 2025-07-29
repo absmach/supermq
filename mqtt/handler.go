@@ -13,6 +13,7 @@ import (
 	"github.com/absmach/mgate/pkg/session"
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
+	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -86,7 +87,7 @@ func (h *handler) AuthConnect(ctx context.Context) error {
 
 	pwd := string(s.Password)
 
-	res, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{ClientSecret: pwd})
+	res, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{ClientSecret: authn.AuthPack(authn.BasicAuthPrefix, pwd, s.ID)})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthentication, err)
 	}

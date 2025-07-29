@@ -52,24 +52,39 @@ type Authentication interface {
 	Authenticate(ctx context.Context, token string) (Session, error)
 }
 
-const authSep = ":"
+const (
+	authSep = ":"
+
+	BasicAuthPrefix  = "Basic "
+	DomainAuthPrefix = "Domain "
+)
 
 // ErrNotEncoded acts similarly to EOF - it does indicate there is no suffix in
 // the token, but that does not have to be treated as the error in some cases.
 var ErrNotEncoded = errors.New("token is not encoded with domain ID suffix")
 
-func AuthUnpack(token string) (string, string, error) {
+func AuthUnpack(token string) (string, string, string, error) {
 	payload, err := base64.StdEncoding.DecodeString(token)
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
-	key, domainID, found := strings.Cut(string(payload), authSep)
+	s := string(payload)
+	var prefix string
+	switch {
+	case strings.HasPrefix(s, BasicAuthPrefix):
+		prefix = BasicAuthPrefix
+		s = s[len(BasicAuthPrefix):]
+	case strings.HasPrefix(s, DomainAuthPrefix):
+		prefix = DomainAuthPrefix
+		s = s[len(DomainAuthPrefix):]
+	}
+	key, id, found := strings.Cut(s, authSep)
 	if !found {
-		return key, domainID, ErrNotEncoded
+		return prefix, key, id, ErrNotEncoded
 	}
-	return key, domainID, nil
+	return prefix, key, id, nil
 }
 
-func AuthPack(key, domainID string) string {
-	return base64.StdEncoding.EncodeToString([]byte(key + ":" + domainID))
+func AuthPack(prefix, key, id string) string {
+	return base64.StdEncoding.EncodeToString([]byte(prefix + key + ":" + id))
 }
