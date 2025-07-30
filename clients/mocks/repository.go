@@ -11,6 +11,7 @@ import (
 	"context"
 
 	"github.com/absmach/supermq/clients"
+	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/roles"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -1257,8 +1258,8 @@ func (_c *Repository_RetrieveByIds_Call) RunAndReturn(run func(ctx context.Conte
 }
 
 // RetrieveBySecret provides a mock function for the type Repository
-func (_mock *Repository) RetrieveBySecret(ctx context.Context, key string) (clients.Client, error) {
-	ret := _mock.Called(ctx, key)
+func (_mock *Repository) RetrieveBySecret(ctx context.Context, key string, id string, idType authn.AuthPrefix) (clients.Client, error) {
+	ret := _mock.Called(ctx, key, id, idType)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RetrieveBySecret")
@@ -1266,16 +1267,16 @@ func (_mock *Repository) RetrieveBySecret(ctx context.Context, key string) (clie
 
 	var r0 clients.Client
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (clients.Client, error)); ok {
-		return returnFunc(ctx, key)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, authn.AuthPrefix) (clients.Client, error)); ok {
+		return returnFunc(ctx, key, id, idType)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) clients.Client); ok {
-		r0 = returnFunc(ctx, key)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, authn.AuthPrefix) clients.Client); ok {
+		r0 = returnFunc(ctx, key, id, idType)
 	} else {
 		r0 = ret.Get(0).(clients.Client)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = returnFunc(ctx, key)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string, authn.AuthPrefix) error); ok {
+		r1 = returnFunc(ctx, key, id, idType)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1290,11 +1291,13 @@ type Repository_RetrieveBySecret_Call struct {
 // RetrieveBySecret is a helper method to define mock.On call
 //   - ctx context.Context
 //   - key string
-func (_e *Repository_Expecter) RetrieveBySecret(ctx interface{}, key interface{}) *Repository_RetrieveBySecret_Call {
-	return &Repository_RetrieveBySecret_Call{Call: _e.mock.On("RetrieveBySecret", ctx, key)}
+//   - id string
+//   - idType authn.AuthPrefix
+func (_e *Repository_Expecter) RetrieveBySecret(ctx interface{}, key interface{}, id interface{}, idType interface{}) *Repository_RetrieveBySecret_Call {
+	return &Repository_RetrieveBySecret_Call{Call: _e.mock.On("RetrieveBySecret", ctx, key, id, idType)}
 }
 
-func (_c *Repository_RetrieveBySecret_Call) Run(run func(ctx context.Context, key string)) *Repository_RetrieveBySecret_Call {
+func (_c *Repository_RetrieveBySecret_Call) Run(run func(ctx context.Context, key string, id string, idType authn.AuthPrefix)) *Repository_RetrieveBySecret_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -1304,9 +1307,19 @@ func (_c *Repository_RetrieveBySecret_Call) Run(run func(ctx context.Context, ke
 		if args[1] != nil {
 			arg1 = args[1].(string)
 		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 authn.AuthPrefix
+		if args[3] != nil {
+			arg3 = args[3].(authn.AuthPrefix)
+		}
 		run(
 			arg0,
 			arg1,
+			arg2,
+			arg3,
 		)
 	})
 	return _c
@@ -1317,7 +1330,7 @@ func (_c *Repository_RetrieveBySecret_Call) Return(client clients.Client, err er
 	return _c
 }
 
-func (_c *Repository_RetrieveBySecret_Call) RunAndReturn(run func(ctx context.Context, key string) (clients.Client, error)) *Repository_RetrieveBySecret_Call {
+func (_c *Repository_RetrieveBySecret_Call) RunAndReturn(run func(ctx context.Context, key string, id string, idType authn.AuthPrefix) (clients.Client, error)) *Repository_RetrieveBySecret_Call {
 	_c.Call.Return(run)
 	return _c
 }

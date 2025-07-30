@@ -57,13 +57,7 @@ func (svc service) Authenticate(ctx context.Context, token string) (string, erro
 	if err != nil && err != authn.ErrNotEncoded {
 		return "", err
 	}
-	var client clients.Client
-	switch prefix {
-	case authn.DomainAuthPrefix:
-		client, err = svc.repo.RetrieveBySecret(ctx, key, id)
-	case authn.BasicAuthPrefix:
-
-	}
+	client, err := svc.repo.RetrieveBySecret(ctx, key, id, prefix)
 	if err != nil {
 		return "", errors.Wrap(svcerr.ErrAuthorization, err)
 	}

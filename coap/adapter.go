@@ -60,7 +60,7 @@ func New(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.Cha
 
 func (svc *adapterService) Publish(ctx context.Context, key string, msg *messaging.Message) error {
 	authnRes, err := svc.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{
-		ClientSecret: authn.AuthPack(authn.DomainAuthPrefix, key, msg.GetDomain()),
+		ClientSecret: authn.AuthPack(authn.DomainAuth, key, msg.GetDomain()),
 	})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthentication, err)
@@ -90,7 +90,7 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 
 func (svc *adapterService) Subscribe(ctx context.Context, key, domainID, chanID, subtopic string, c Client) error {
 	authnRes, err := svc.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{
-		ClientSecret: authn.AuthPack(authn.DomainAuthPrefix, key, domainID),
+		ClientSecret: authn.AuthPack(authn.DomainAuth, key, domainID),
 	})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthentication, err)
@@ -127,7 +127,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, domainID, chanID,
 
 func (svc *adapterService) Unsubscribe(ctx context.Context, key, domainID, chanID, subtopic, token string) error {
 	authnRes, err := svc.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{
-		ClientSecret: authn.AuthPack(authn.DomainAuthPrefix, key, domainID),
+		ClientSecret: authn.AuthPack(authn.DomainAuth, key, domainID),
 	})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthentication, err)

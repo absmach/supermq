@@ -70,7 +70,7 @@ type Repository interface {
 	// RetrieveBySecret retrieves a client based on the secret (key) and domainID.
 	// Domain ID is required because the key is not globally unique,
 	// but unique on the level of Domain.
-	RetrieveBySecret(ctx context.Context, key, domainID string) (Client, error)
+	RetrieveBySecret(ctx context.Context, key, id string, idType authn.AuthPrefix) (Client, error)
 
 	AddConnections(ctx context.Context, conns []Connection) error
 
@@ -97,7 +97,7 @@ type Repository interface {
 	roles.Repository
 }
 
-// Service specifies an API that must be fullfiled by the domain service
+// Service specifies an API that must be fulfilled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
 	// CreateClients creates new client. In case of the failed registration, a
