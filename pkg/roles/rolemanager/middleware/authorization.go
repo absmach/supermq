@@ -28,9 +28,8 @@ type RoleManagerAuthorizationMiddleware struct {
 }
 
 // AuthorizationMiddleware adds authorization to the clients service.
-func NewRoleManagerAuthorizationMiddleware(entityType string, svc roles.RoleManager, authz smqauthz.Authorization, opnamePerm map[string]svcutil.Permission, callout callout.Callout) (RoleManagerAuthorizationMiddleware, error) {
-	ops, err := svcutil.NewOperations(roles.Operations(), opnamePerm)
-	if err != nil {
+func NewRoleManagerAuthorizationMiddleware(entityType string, svc roles.RoleManager, authz smqauthz.Authorization, roleOps svcutil.Operations[svcutil.RoleOperation], callout callout.Callout) (RoleManagerAuthorizationMiddleware, error) {
+	if err := roleOps.Validate(); err != nil {
 		return RoleManagerAuthorizationMiddleware{}, err
 	}
 
@@ -38,7 +37,7 @@ func NewRoleManagerAuthorizationMiddleware(entityType string, svc roles.RoleMana
 		entityType: entityType,
 		svc:        svc,
 		authz:      authz,
-		ops:        ops,
+		ops:        roleOps,
 		callout:    callout,
 	}
 

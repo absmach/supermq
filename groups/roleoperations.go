@@ -27,6 +27,8 @@ const (
 	OpCreateGroup
 	OpListGroups
 	OpListUserGroups
+	OpGroupSetChildClient
+	OpGroupRemoveChildClient
 )
 
 var expectedOperations = []svcutil.Operation{
