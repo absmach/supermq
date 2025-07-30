@@ -130,7 +130,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 	switch {
 	case strings.HasPrefix(string(s.Password), "Client"):
 		secret := strings.TrimPrefix(string(s.Password), apiutil.ClientPrefix)
-		authnRes, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, secret, domainID)})
+		authnRes, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, secret)})
 		if err != nil {
 			h.logger.Warn(fmt.Sprintf(logInfoFailedAuthNClient, secret, *topic, err))
 			return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)

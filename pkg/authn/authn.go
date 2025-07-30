@@ -64,11 +64,11 @@ const (
 
 var authPrefixStrings = [3]string{
 	"Unknown",
-	"Basic ",
-	"Domain ",
+	"Basic",
+	"Domain",
 }
 
-// String returns the string representation (e.g., "Basic ") of the AuthPrefix.
+// String returns the string representation (e.g., "Basic") of the AuthPrefix.
 func (a AuthPrefix) String() string {
 	if int(a) < len(authPrefixStrings) {
 		return authPrefixStrings[a]
@@ -78,12 +78,13 @@ func (a AuthPrefix) String() string {
 
 // ErrNotEncoded acts similarly to EOF - it does indicate there is no suffix in
 // the token, but that does not have to be treated as the error in some cases.
+// If token is not base64-encoded, the token is returned as a key alongside with the error.
 var ErrNotEncoded = errors.New("token is not encoded with domain ID suffix")
 
 func AuthUnpack(token string) (AuthPrefix, string, string, error) {
 	payload, err := base64.StdEncoding.DecodeString(token)
 	if err != nil {
-		return Unknown, "", "", err
+		return Unknown, token, "", err
 	}
 	s := string(payload)
 	var auth AuthPrefix
@@ -94,13 +95,13 @@ func AuthUnpack(token string) (AuthPrefix, string, string, error) {
 		}
 	}
 
-	key, id, found := strings.Cut(s, authSep)
+	id, key, found := strings.Cut(s, authSep)
 	if !found {
-		return auth, key, id, ErrNotEncoded
+		return auth, id, key, ErrNotEncoded
 	}
-	return auth, key, id, nil
+	return auth, id, key, nil
 }
 
-func AuthPack(prefix AuthPrefix, key, id string) string {
-	return base64.StdEncoding.EncodeToString([]byte(prefix.String() + key + ":" + id))
+func AuthPack(prefix AuthPrefix, id, key string) string {
+	return base64.StdEncoding.EncodeToString([]byte(prefix.String() + id + ":" + key))
 }

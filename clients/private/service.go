@@ -53,7 +53,7 @@ func (svc service) Authenticate(ctx context.Context, token string) (string, erro
 	if err == nil {
 		return id, nil
 	}
-	prefix, key, id, err := authn.AuthUnpack(token)
+	prefix, id, key, err := authn.AuthUnpack(token)
 	if err != nil && err != authn.ErrNotEncoded {
 		return "", err
 	}

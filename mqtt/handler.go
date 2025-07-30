@@ -87,7 +87,7 @@ func (h *handler) AuthConnect(ctx context.Context) error {
 
 	pwd := string(s.Password)
 
-	res, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{Token: authn.AuthPack(authn.BasicAuth, pwd, s.ID)})
+	res, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{Token: authn.AuthPack(authn.BasicAuth, s.ID, pwd)})
 	if err != nil {
 		return errors.Wrap(svcerr.ErrAuthentication, err)
 	}

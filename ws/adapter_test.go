@@ -191,9 +191,9 @@ func TestSubscribe(t *testing.T) {
 			ClientID: clientID,
 			Handler:  c,
 		}
-		authReq := &grpcClientsV1.AuthnReq{Token: authn.AuthPack(authn.DomainAuth, tc.clientKey, tc.domainID)}
+		authReq := &grpcClientsV1.AuthnReq{Token: authn.AuthPack(authn.DomainAuth, tc.domainID, tc.clientKey)}
 		if strings.HasPrefix(tc.clientKey, "Client") {
-			authReq.Token = authn.AuthPack(authn.DomainAuth, strings.TrimPrefix(tc.clientKey, "Client "), tc.domainID)
+			authReq.Token = authn.AuthPack(authn.DomainAuth, tc.domainID, strings.TrimPrefix(tc.clientKey, "Client "))
 		}
 		clientsCall := clients.On("Authenticate", mock.Anything, authReq).Return(tc.authNRes, tc.authNErr)
 		channelsCall := channels.On("Authorize", mock.Anything, &grpcChannelsV1.AuthzReq{

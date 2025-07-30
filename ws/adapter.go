@@ -95,7 +95,7 @@ func (svc *adapterService) authorize(ctx context.Context, clientKey, domainID, c
 	if strings.HasPrefix(clientKey, "Client") {
 		clientKey = extractClientSecret(clientKey)
 	}
-	authnRes, err := svc.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{Token: authn.AuthPack(authn.DomainAuth, clientKey, domainID)})
+	authnRes, err := svc.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{Token: authn.AuthPack(authn.DomainAuth, domainID, clientKey)})
 	if err != nil {
 		return "", errors.Wrap(svcerr.ErrAuthentication, err)
 	}
