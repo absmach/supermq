@@ -5,7 +5,12 @@ package svcutil
 
 import (
 	"fmt"
+
+	"github.com/absmach/supermq/pkg/errors"
 )
+
+var ErrMergeInvalidOperations = errors.New("failed to merge: invalid operations type")
+var ErrRemoveInvalidOperations = errors.New("failed to remove: invalid operations type")
 
 type Permission string
 
@@ -23,14 +28,16 @@ type OperationKey interface {
 	Operation | ExternalOperation | RoleOperation
 }
 
+type OperationName[K OperationKey] map[K]string
+
 type OperationDetails struct {
 	Name               string
 	PermissionRequired bool
 }
 
 type operations[K OperationKey] struct {
-	opp map[K]Permission
-	opd map[K]OperationDetails
+	opPermission map[K]Permission
+	opDetails    map[K]OperationDetails
 }
 
 type Operations[K OperationKey] interface {
@@ -38,6 +45,8 @@ type Operations[K OperationKey] interface {
 	GetPermissionAndRequired(op K) (Permission, bool, error)
 	OperationName(op K) string
 	Validate() error
+	Merge(nops Operations[K]) error
+	Remove(rops Operations[K]) error
 }
 
 func NewOperations[K OperationKey](opdetails map[K]OperationDetails, opnamePerm map[string]Permission) (Operations[K], error) {
@@ -54,36 +63,36 @@ func NewOperations[K OperationKey](opdetails map[K]OperationDetails, opnamePerm 
 
 func newEmptyOperations[K OperationKey](opdetails map[K]OperationDetails) operations[K] {
 	return operations[K]{
-		opp: make(map[K]Permission),
-		opd: opdetails,
+		opPermission: make(map[K]Permission),
+		opDetails:    opdetails,
 	}
 }
 
 func (ops *operations[K]) OperationName(op K) string {
-	opd, ok := ops.opd[op]
+	opDetail, ok := ops.opDetails[op]
 	if !ok {
 		return fmt.Sprintf("UnknownOperation(%v)", op)
 	}
-	return opd.Name
+	return opDetail.Name
 }
 
 func (ops *operations[K]) addOperationPermission(opnamePerm map[string]Permission) error {
-	for op, opd := range ops.opd {
+	for op, opd := range ops.opDetails {
 		if opd.PermissionRequired {
 			perm, ok := opnamePerm[opd.Name]
 			if !ok {
 				return fmt.Errorf("permission related to operation name %s not found", opd.Name)
 			}
-			ops.opp[op] = perm
+			ops.opPermission[op] = perm
 		}
 	}
 	return nil
 }
 
 func (ops *operations[K]) Validate() error {
-	for op, opd := range ops.opd {
+	for op, opd := range ops.opDetails {
 		if opd.PermissionRequired {
-			if _, ok := ops.opp[op]; !ok {
+			if _, ok := ops.opPermission[op]; !ok {
 				return fmt.Errorf("permission related to operation name %s not found", opd.Name)
 			}
 		}
@@ -92,20 +101,54 @@ func (ops *operations[K]) Validate() error {
 }
 
 func (ops *operations[K]) GetPermission(op K) (Permission, error) {
-	if perm, ok := ops.opp[op]; ok {
+	if perm, ok := ops.opPermission[op]; ok {
 		return perm, nil
 	}
 	return "", fmt.Errorf("operation %s doesn't have any permissions", ops.OperationName(op))
 }
 
 func (ops *operations[K]) GetPermissionAndRequired(op K) (Permission, bool, error) {
-	opd, ok := ops.opd[op]
+	opd, ok := ops.opDetails[op]
 	if !ok {
-		return "", false, fmt.Errorf("%s", ops.OperationName(op))
+		return "", false, fmt.Errorf("operation not found %s", ops.OperationName(op))
 	}
-	perm, ok := ops.opp[op]
+	perm, ok := ops.opPermission[op]
 	if opd.PermissionRequired && !ok {
 		return "", false, fmt.Errorf("operation %s doesn't have any permissions", ops.OperationName(op))
 	}
 	return perm, opd.PermissionRequired, nil
+}
+
+func (ops *operations[K]) Merge(nops Operations[K]) error {
+	newOps, ok := nops.(*operations[K])
+	if !ok {
+		return ErrMergeInvalidOperations
+	}
+
+	for op, opd := range newOps.opDetails {
+		ops.opDetails[op] = opd
+		if opd.PermissionRequired {
+			perm, exists := newOps.opPermission[op]
+			if !exists {
+				return fmt.Errorf("missing permission for required operation %s", opd.Name)
+			}
+			ops.opPermission[op] = perm
+		}
+	}
+
+	return nil
+}
+
+func (ops *operations[K]) Remove(rops Operations[K]) error {
+	remOps, ok := rops.(*operations[K])
+	if !ok {
+		return ErrRemoveInvalidOperations
+	}
+
+	for op := range remOps.opDetails {
+		delete(ops.opDetails, op)
+		delete(ops.opPermission, op)
+	}
+
+	return nil
 }
