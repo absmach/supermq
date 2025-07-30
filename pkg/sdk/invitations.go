@@ -22,6 +22,7 @@ type Invitation struct {
 	InvitedBy     string    `json:"invited_by"`
 	InviteeUserID string    `json:"invitee_user_id"`
 	DomainID      string    `json:"domain_id"`
+	DomainName    string    `json:"domain_name,omitempty"`
 	RoleID        string    `json:"role_id,omitempty"`
 	RoleName      string    `json:"role_name,omitempty"`
 	Actions       []string  `json:"actions,omitempty"`
