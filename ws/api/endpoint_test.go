@@ -130,7 +130,8 @@ func TestHandshake(t *testing.T) {
 	pubsub.On("Unsubscribe", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	pubsub.On("Publish", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	clients.On("Authenticate", mock.Anything, mock.MatchedBy(func(req *grpcClientsV1.AuthnReq) bool {
-		return req.ClientSecret == clientKey
+		_, key, _, _ := smqauthn.AuthUnpack(req.ClientSecret)
+		return key == clientKey
 	})).Return(&grpcClientsV1.AuthnRes{Authenticated: true}, nil)
 	clients.On("Authenticate", mock.Anything, mock.Anything).Return(&grpcClientsV1.AuthnRes{Authenticated: false}, nil)
 	authn.On("Authenticate", mock.Anything, mock.Anything).Return(smqauthn.Session{}, nil)

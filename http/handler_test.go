@@ -341,7 +341,7 @@ func TestPublish(t *testing.T) {
 			if tc.topic != nil {
 				internalTopic = strings.TrimPrefix(strings.ReplaceAll(*tc.topic, "/", "."), ".m.")
 			}
-			clientsCall := clients.On("Authenticate", ctx, &grpcClientsV1.AuthnReq{ClientSecret: tc.password}).Return(tc.authNRes, tc.authNErr)
+			clientsCall := clients.On("Authenticate", ctx, &grpcClientsV1.AuthnReq{ClientSecret: smqauthn.AuthPack(smqauthn.DomainAuth, tc.password, domainID)}).Return(tc.authNRes, tc.authNErr)
 			authCall := authn.On("Authenticate", ctx, mock.Anything).Return(tc.authNRes1, tc.authNErr)
 			channelsCall := channels.On("Authorize", ctx, mock.Anything).Return(tc.authZRes, tc.authZErr)
 			repoCall := publisher.On("Publish", ctx, internalTopic, mock.Anything).Return(tc.publishErr)

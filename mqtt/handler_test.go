@@ -19,6 +19,7 @@ import (
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/mqtt"
+	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -149,7 +150,7 @@ func TestAuthConnect(t *testing.T) {
 				ctx = session.NewContext(ctx, tc.session)
 				password = string(tc.session.Password)
 			}
-			clientsCall := clients.On("Authenticate", mock.Anything, &grpcClientsV1.AuthnReq{ClientSecret: password}).Return(tc.authNRes, tc.authNErr)
+			clientsCall := clients.On("Authenticate", mock.Anything, &grpcClientsV1.AuthnReq{ClientSecret: authn.AuthPack(authn.BasicAuth, password, clientID)}).Return(tc.authNRes, tc.authNErr)
 			err := handler.AuthConnect(ctx)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 			clientsCall.Unset()

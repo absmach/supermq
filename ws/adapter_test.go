@@ -15,6 +15,7 @@ import (
 	chmocks "github.com/absmach/supermq/channels/mocks"
 	climocks "github.com/absmach/supermq/clients/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
+	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -190,9 +191,9 @@ func TestSubscribe(t *testing.T) {
 			ClientID: clientID,
 			Handler:  c,
 		}
-		authReq := &grpcClientsV1.AuthnReq{ClientSecret: tc.clientKey}
+		authReq := &grpcClientsV1.AuthnReq{ClientSecret: authn.AuthPack(authn.DomainAuth, tc.clientKey, tc.domainID)}
 		if strings.HasPrefix(tc.clientKey, "Client") {
-			authReq.ClientSecret = strings.TrimPrefix(tc.clientKey, "Client ")
+			authReq.ClientSecret = authn.AuthPack(authn.DomainAuth, strings.TrimPrefix(tc.clientKey, "Client "), tc.domainID)
 		}
 		clientsCall := clients.On("Authenticate", mock.Anything, authReq).Return(tc.authNRes, tc.authNErr)
 		channelsCall := channels.On("Authorize", mock.Anything, &grpcChannelsV1.AuthzReq{
