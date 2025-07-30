@@ -15,6 +15,7 @@ import (
 	"github.com/absmach/supermq/clients"
 	"github.com/absmach/supermq/clients/postgres"
 	"github.com/absmach/supermq/internal/testsutil"
+	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
@@ -358,6 +359,7 @@ func TestClientsRetrieveBySecret(t *testing.T) {
 			Identity: clientIdentity,
 			Secret:   testsutil.GenerateUUID(t),
 		},
+		Domain:   testsutil.GenerateUUID(t),
 		Metadata: clients.Metadata{},
 		Status:   clients.EnabledStatus,
 	}
@@ -368,17 +370,27 @@ func TestClientsRetrieveBySecret(t *testing.T) {
 	cases := []struct {
 		desc     string
 		secret   string
+		id       string
 		response clients.Client
+		prefix   authn.AuthPrefix
 		err      error
 	}{
 		{
-			desc:     "retrieve client by secret successfully",
+			desc:     "retrieve client by secret with no id",
 			secret:   client.Credentials.Secret,
+			response: clients.Client{},
+			err:      repoerr.ErrNotFound,
+		},
+		{
+			desc:     "retrieve client by client ID and secret successfully",
+			secret:   client.Credentials.Secret,
+			id:       client.ID,
+			prefix:   authn.BasicAuth,
 			response: client,
 			err:      nil,
 		},
 		{
-			desc:     "retrieve client by invalid secret",
+			desc:     "retrieve client by client ID invalid secret",
 			secret:   "non-existent-secret",
 			response: clients.Client{},
 			err:      repoerr.ErrNotFound,
@@ -389,10 +401,34 @@ func TestClientsRetrieveBySecret(t *testing.T) {
 			response: clients.Client{},
 			err:      repoerr.ErrNotFound,
 		},
+		{
+			desc:     "retrieve client by client ID and secret with an invalid ID type",
+			secret:   client.Credentials.Secret,
+			id:       client.ID,
+			prefix:   authn.DomainAuth,
+			response: clients.Client{},
+			err:      repoerr.ErrNotFound,
+		},
+		{
+			desc:     "retrieve client by domain ID and secret successfully",
+			secret:   client.Credentials.Secret,
+			id:       client.Domain,
+			prefix:   authn.DomainAuth,
+			response: client,
+			err:      nil,
+		},
+		{
+			desc:     "retrieve client by domain ID and secret with an invalid ID type",
+			secret:   client.Credentials.Secret,
+			id:       client.Domain,
+			prefix:   authn.BasicAuth,
+			response: clients.Client{},
+			err:      repoerr.ErrNotFound,
+		},
 	}
 
 	for _, tc := range cases {
-		res, err := repo.RetrieveBySecret(context.Background(), tc.secret)
+		res, err := repo.RetrieveBySecret(context.Background(), tc.secret, tc.id, tc.prefix)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, res, tc.response, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, res))
 	}

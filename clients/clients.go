@@ -70,7 +70,7 @@ type Repository interface {
 	// RetrieveBySecret retrieves a client based on the secret (key) and domainID.
 	// Domain ID is required because the key is not globally unique,
 	// but unique on the level of Domain.
-	RetrieveBySecret(ctx context.Context, key, id string, idType authn.AuthPrefix) (Client, error)
+	RetrieveBySecret(ctx context.Context, key, id string, prefix authn.AuthPrefix) (Client, error)
 
 	AddConnections(ctx context.Context, conns []Connection) error
 

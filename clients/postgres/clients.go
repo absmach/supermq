@@ -87,16 +87,19 @@ func (repo *clientRepo) Save(ctx context.Context, cls ...clients.Client) ([]clie
 	return reClients, nil
 }
 
-func (repo *clientRepo) RetrieveBySecret(ctx context.Context, key, id string, idType authn.AuthPrefix) (clients.Client, error) {
+func (repo *clientRepo) RetrieveBySecret(ctx context.Context, key, id string, prefix authn.AuthPrefix) (clients.Client, error) {
 	q := fmt.Sprintf(`SELECT id, name, tags, COALESCE(domain_id, '') AS domain_id,  COALESCE(parent_group_id, '') AS parent_group_id, identity, secret, metadata, created_at, updated_at, updated_by, status
         FROM clients
         WHERE secret = :secret AND status = %d`, clients.EnabledStatus)
-	switch idType {
+	switch prefix {
 	case authn.DomainAuth:
 		q += " AND domain_id = :domain_id"
 	case authn.BasicAuth:
 		q += " AND id = :id"
+	default:
+		return clients.Client{}, repoerr.ErrNotFound
 	}
+
 	dbc := DBClient{
 		Secret: key,
 		Domain: id,
