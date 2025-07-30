@@ -4,8 +4,7 @@
 package grpc
 
 type authenticateReq struct {
-	ClientID     string
-	ClientSecret string
+	Token string
 }
 
 type retrieveEntitiesReq struct {

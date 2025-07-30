@@ -84,7 +84,7 @@ func (s *grpcServer) Authenticate(ctx context.Context, req *grpcClientsV1.AuthnR
 func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*grpcClientsV1.AuthnReq)
 	return authenticateReq{
-		ClientSecret: req.GetToken(),
+		Token: req.GetToken(),
 	}, nil
 }
 

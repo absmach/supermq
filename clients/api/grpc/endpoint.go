@@ -14,7 +14,7 @@ import (
 func authenticateEndpoint(svc pClients.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(authenticateReq)
-		id, err := svc.Authenticate(ctx, req.ClientSecret)
+		id, err := svc.Authenticate(ctx, req.Token)
 		if err != nil {
 			return authenticateRes{}, err
 		}
