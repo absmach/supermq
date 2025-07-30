@@ -1,76 +1,111 @@
 package svcutil
 
 import (
-	"os"
+	"fmt"
 
-	"gopkg.in/yaml.v2"
+	"github.com/absmach/supermq/pkg/errors"
 )
 
-type EntityOperations struct {
-	Operations         map[string]Permission `yaml:"operations"`
-	RolesOperations    map[string]Permission `yaml:"roles_operations"`
-	ExternalOperations map[string]Permission `yaml:"external_operations"`
+type EntitiesPermission map[string]map[string]Permission
+type EntitiesOperationDetails[K OperationKey] map[string]map[K]OperationDetails
+
+type EntitiesOperations[K OperationKey] interface {
+	GetPermission(et string, op K) (Permission, error)
+	GetPermissionAndRequired(et string, op K) (Permission, bool, error)
+	OperationName(et string, op K) string
+	Validate() error
+	AddEntityOperations(et string, ops Operations[K]) error
+	RemoveEntityOperations(et string, ops Operations[K]) error
 }
 
-type superMQEntities struct {
-	Clients  EntityOperations `yaml:"clients"`
-	Channels EntityOperations `yaml:"channels"`
-	Groups   EntityOperations `yaml:"groups"`
-	Domains  EntityOperations `yaml:"domains"`
-	Users    EntityOperations `yaml:"users"`
+var ErrEntityTypeNotFound = errors.New("entity type not found")
 
-	// Additional entities beyond the SuperMQ
-	Additional map[string]EntityOperations `yaml:",inline"`
-}
+type entitiesOperations[K OperationKey] map[string]Operations[K]
 
-type EntitiesOperations interface {
-	GetClients() EntityOperations
-	GetChannels() EntityOperations
-	GetGroups() EntityOperations
-	GetDomains() EntityOperations
-	GetUsers() EntityOperations
-	GetAdditionalEntity(name string) (EntityOperations, bool)
-}
+func NewEntitiesOperations[K OperationKey](entitiesPermission EntitiesPermission, entitiesOperationDetails EntitiesOperationDetails[K], filterEntities ...string) (EntitiesOperations[K], error) {
 
-func NewEntitiesOperationsFromPath(path string) (EntitiesOperations, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
+	if len(filterEntities) == 0 {
+		return newEntitiesOperations(entitiesPermission, entitiesOperationDetails)
 	}
 
-	return NewEntitiesOperations(data)
-}
-
-func NewEntitiesOperations(data []byte) (EntitiesOperations, error) {
-	var smqes superMQEntities
-	if err := yaml.Unmarshal(data, &smqes); err != nil {
-		return superMQEntities{}, err
+	filterSet := make(map[string]struct{}, len(filterEntities))
+	for _, entity := range filterEntities {
+		filterSet[entity] = struct{}{}
 	}
 
-	return smqes, nil
+	filteredDetails := make(EntitiesOperationDetails[K])
+	filteredPerms := make(EntitiesPermission)
+	for entity := range filterSet {
+		if opDetails, ok := entitiesOperationDetails[entity]; ok {
+			filteredDetails[entity] = opDetails
+		}
+		if perms, ok := entitiesPermission[entity]; ok {
+			filteredPerms[entity] = perms
+		}
+	}
+
+	return newEntitiesOperations(filteredPerms, filteredDetails)
 }
 
-func (s superMQEntities) GetClients() EntityOperations {
-	return s.Clients
+func newEntitiesOperations[K OperationKey](entitiesPermission EntitiesPermission, entitiesOperationDetails EntitiesOperationDetails[K]) (EntitiesOperations[K], error) {
+	eops := make(entitiesOperations[K])
+	for entity, opDetails := range entitiesOperationDetails {
+		opPerm, ok := entitiesPermission[entity]
+		if !ok {
+			return nil, fmt.Errorf("%s entity permission not found ", entity)
+		}
+		ops, err := NewOperations(opDetails, opPerm)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create new operations for %s entity: %w", entity, err)
+
+		}
+		eops[entity] = ops
+	}
+	return eops, nil
 }
 
-func (s superMQEntities) GetChannels() EntityOperations {
-	return s.Channels
+// Implement the interface
+func (eo entitiesOperations[K]) GetPermission(et string, op K) (Permission, error) {
+	if ops, ok := eo[et]; ok {
+		return ops.GetPermission(op)
+	}
+	return Permission(""), ErrEntityTypeNotFound
 }
 
-func (s superMQEntities) GetGroups() EntityOperations {
-	return s.Groups
+func (eo entitiesOperations[K]) GetPermissionAndRequired(et string, op K) (Permission, bool, error) {
+	if ops, ok := eo[et]; ok {
+		return ops.GetPermissionAndRequired(op)
+	}
+	return Permission(""), false, ErrEntityTypeNotFound
 }
 
-func (s superMQEntities) GetDomains() EntityOperations {
-	return s.Domains
+func (eo entitiesOperations[K]) OperationName(et string, op K) string {
+	if ops, ok := eo[et]; ok {
+		return ops.OperationName(op)
+	}
+	return ""
 }
 
-func (s superMQEntities) GetUsers() EntityOperations {
-	return s.Users
+func (eo entitiesOperations[K]) Validate() error {
+	for et, ops := range eo {
+		if err := ops.Validate(); err != nil {
+			return fmt.Errorf("entity type %s failed to validate: %w", et, err)
+		}
+	}
+	return nil
 }
 
-func (s superMQEntities) GetAdditionalEntity(name string) (EntityOperations, bool) {
-	eops, ok := s.Additional[name]
-	return eops, ok
+func (eo entitiesOperations[K]) AddEntityOperations(et string, ops Operations[K]) error {
+	if entityOperation, ok := eo[et]; ok {
+		return entityOperation.Merge(ops)
+	}
+	eo[et] = ops
+	return nil
+}
+
+func (eo entitiesOperations[K]) RemoveEntityOperations(et string, ops Operations[K]) error {
+	if entityOperation, ok := eo[et]; ok {
+		return entityOperation.Remove(ops)
+	}
+	return nil
 }
