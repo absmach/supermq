@@ -97,7 +97,7 @@ func TestAuthenticate(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			svcCall := svc.On("Authenticate", mock.Anything, tc.clientSecret).Return(tc.clientID, tc.svcErr)
-			res, err := client.Authenticate(context.Background(), &grpcClientsV1.AuthnReq{ClientSecret: tc.clientSecret})
+			res, err := client.Authenticate(context.Background(), &grpcClientsV1.AuthnReq{Token: tc.clientSecret})
 			assert.True(t, errors.Contains(err, tc.err))
 			assert.Equal(t, tc.resp, res)
 			svcCall.Unset()

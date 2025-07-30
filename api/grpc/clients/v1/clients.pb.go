@@ -27,8 +27,7 @@ const (
 
 type AuthnReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ClientId      string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	ClientSecret  string                 `protobuf:"bytes,2,opt,name=client_secret,json=clientSecret,proto3" json:"client_secret,omitempty"`
+	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -63,16 +62,9 @@ func (*AuthnReq) Descriptor() ([]byte, []int) {
 	return file_clients_v1_clients_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *AuthnReq) GetClientId() string {
+func (x *AuthnReq) GetToken() string {
 	if x != nil {
-		return x.ClientId
-	}
-	return ""
-}
-
-func (x *AuthnReq) GetClientSecret() string {
-	if x != nil {
-		return x.ClientSecret
+		return x.Token
 	}
 	return ""
 }
@@ -294,10 +286,9 @@ var File_clients_v1_clients_proto protoreflect.FileDescriptor
 const file_clients_v1_clients_proto_rawDesc = "" +
 	"\n" +
 	"\x18clients/v1/clients.proto\x12\n" +
-	"clients.v1\x1a\x16common/v1/common.proto\"L\n" +
-	"\bAuthnReq\x12\x1b\n" +
-	"\tclient_id\x18\x01 \x01(\tR\bclientId\x12#\n" +
-	"\rclient_secret\x18\x02 \x01(\tR\fclientSecret\"@\n" +
+	"clients.v1\x1a\x16common/v1/common.proto\" \n" +
+	"\bAuthnReq\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\"@\n" +
 	"\bAuthnRes\x12$\n" +
 	"\rauthenticated\x18\x01 \x01(\bR\rauthenticated\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\tR\x02id\"<\n" +

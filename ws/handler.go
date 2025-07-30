@@ -198,7 +198,7 @@ func (h *handler) authAccess(ctx context.Context, token, domainID, chanID string
 	if strings.HasPrefix(token, "Client") {
 		token = extractClientSecret(token)
 	}
-	authnRes, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{ClientSecret: authn.AuthPack(authn.DomainAuth, token, domainID)})
+	authnRes, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{Token: authn.AuthPack(authn.DomainAuth, token, domainID)})
 	if err != nil {
 		return "", "", mgate.NewHTTPProxyError(http.StatusUnauthorized, errors.Wrap(svcerr.ErrAuthentication, err))
 	}
