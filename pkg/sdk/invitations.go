@@ -6,6 +6,7 @@ package sdk
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -66,6 +67,27 @@ func (sdk mgSDK) Invitation(ctx context.Context, userID, domainID, token string)
 	}
 
 	return invitation, nil
+}
+
+func (sdk mgSDK) DomainInvitations(ctx context.Context, pm PageMetadata, token, domainID string) (invitations InvitationPage, err error) {
+	url := domainsEndpoint + "/" + domainID + "/" + invitationsEndpoint
+	url, err = sdk.withQueryParams(sdk.domainsURL, invitationsEndpoint, pm)
+	fmt.Println("URL:", url)
+	if err != nil {
+		return InvitationPage{}, errors.NewSDKError(err)
+	}
+
+	_, body, sdkerr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
+	if sdkerr != nil {
+		return InvitationPage{}, sdkerr
+	}
+
+	var invPage InvitationPage
+	if err := json.Unmarshal(body, &invPage); err != nil {
+		return InvitationPage{}, errors.NewSDKError(err)
+	}
+
+	return invPage, nil
 }
 
 func (sdk mgSDK) Invitations(ctx context.Context, pm PageMetadata, token string) (invitations InvitationPage, err error) {

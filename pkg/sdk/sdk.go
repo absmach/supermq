@@ -1326,6 +1326,16 @@ type SDK interface {
 	//  journals, _ := sdk.Journal("client", "clientID","domainID", PageMetadata{Offset: 0, Limit: 10, Operation: "client.create"}, "token")
 	//  fmt.Println(journals)
 	Journal(ctx context.Context, entityType, entityID, domainID string, pm PageMetadata, token string) (journal JournalsPage, err error)
+
+	// DomainInvitations returns a list of invitations for a specific domain.
+	// For example:
+	//  pm := sdk.PageMetadata{
+	//    Offset: 0,
+	//    Limit:  10,
+	//  }
+	//  invitations, _ := sdk.DomainInvitations("domainID", pm, "token")
+	//  fmt.Println(invitations)
+	DomainInvitations(ctx context.Context, pm PageMetadata, token, domainID string) (invitations InvitationPage, err error)
 }
 
 type mgSDK struct {
