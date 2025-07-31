@@ -203,6 +203,10 @@ func (am *authorizationMiddleware) SendInvitation(ctx context.Context, session a
 		return err
 	}
 
+	if err := am.extAuthorize(ctx, auth.EncodeDomainUserID(invitation.DomainID, session.UserID), policies.SendInvitationPermission, policies.DomainType, invitation.DomainID); err != nil {
+		return errors.Wrap(err, svcerr.ErrAuthorization)
+	}
+
 	return am.svc.SendInvitation(ctx, session, invitation)
 }
 
