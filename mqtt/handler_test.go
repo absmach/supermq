@@ -146,11 +146,13 @@ func TestAuthConnect(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			ctx := context.TODO()
 			password := ""
+			username := ""
 			if tc.session != nil {
 				ctx = session.NewContext(ctx, tc.session)
 				password = string(tc.session.Password)
+				username = tc.session.Username
 			}
-			clientsCall := clients.On("Authenticate", mock.Anything, &grpcClientsV1.AuthnReq{Token: authn.AuthPack(authn.BasicAuth, clientID, password)}).Return(tc.authNRes, tc.authNErr)
+			clientsCall := clients.On("Authenticate", mock.Anything, &grpcClientsV1.AuthnReq{Token: authn.AuthPack(authn.BasicAuth, username, password)}).Return(tc.authNRes, tc.authNErr)
 			err := handler.AuthConnect(ctx)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 			clientsCall.Unset()
