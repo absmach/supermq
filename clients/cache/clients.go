@@ -38,8 +38,8 @@ func (tc *clientCache) Save(ctx context.Context, clientKey, clientID string) err
 	if clientKey == "" || clientID == "" {
 		return errors.Wrap(repoerr.ErrCreateEntity, errors.New("client key or client id is empty"))
 	}
-	tkey := fmt.Sprintf("%s:%s", keyPrefix, clientKey)
-	if err := tc.client.Set(ctx, tkey, clientID, tc.keyDuration).Err(); err != nil {
+	ckey := fmt.Sprintf("%s:%s", keyPrefix, clientKey)
+	if err := tc.client.Set(ctx, ckey, clientID, tc.keyDuration).Err(); err != nil {
 		return errors.Wrap(repoerr.ErrCreateEntity, err)
 	}
 
@@ -56,8 +56,8 @@ func (tc *clientCache) ID(ctx context.Context, clientKey string) (string, error)
 		return "", repoerr.ErrNotFound
 	}
 
-	tkey := fmt.Sprintf("%s:%s", keyPrefix, clientKey)
-	clientID, err := tc.client.Get(ctx, tkey).Result()
+	ckey := fmt.Sprintf("%s:%s", keyPrefix, clientKey)
+	clientID, err := tc.client.Get(ctx, ckey).Result()
 	if err != nil {
 		return "", errors.Wrap(repoerr.ErrNotFound, err)
 	}

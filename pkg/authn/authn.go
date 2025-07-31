@@ -82,20 +82,19 @@ func (a AuthPrefix) String() string {
 var ErrNotEncoded = errors.New("token is not encoded with suffix")
 
 func AuthUnpack(token string) (AuthPrefix, string, string, error) {
+	var auth AuthPrefix
+	for i, pref := range authPrefixStrings {
+		if strings.HasPrefix(token, pref) {
+			token = token[len(pref):]
+			auth = AuthPrefix(i)
+			break
+		}
+	}
 	payload, err := base64.StdEncoding.DecodeString(token)
 	if err != nil {
 		return Unknown, token, "", err
 	}
-	s := string(payload)
-	var auth AuthPrefix
-	for i, pref := range authPrefixStrings {
-		if strings.HasPrefix(s, pref) {
-			s = s[len(pref):]
-			auth = AuthPrefix(i)
-		}
-	}
-
-	id, key, found := strings.Cut(s, authSep)
+	id, key, found := strings.Cut(string(payload), authSep)
 	if !found {
 		return auth, id, key, ErrNotEncoded
 	}
@@ -103,5 +102,5 @@ func AuthUnpack(token string) (AuthPrefix, string, string, error) {
 }
 
 func AuthPack(prefix AuthPrefix, id, key string) string {
-	return base64.StdEncoding.EncodeToString([]byte(prefix.String() + id + ":" + key))
+	return prefix.String() + base64.StdEncoding.EncodeToString([]byte(id+":"+key))
 }
