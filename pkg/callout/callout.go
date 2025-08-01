@@ -164,7 +164,6 @@ func (c *callout) makeRequest(ctx context.Context, urlStr string, params map[str
 			return errors.NewSDKErrorWithStatus(errors.Wrap(errFailedToRead, err), http.StatusInternalServerError)
 		}
 		return errors.NewSDKErrorWithStatus(errors.New(string(msg)), resp.StatusCode)
-
 	}
 
 	return nil
