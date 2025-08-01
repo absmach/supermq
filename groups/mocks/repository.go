@@ -1324,8 +1324,8 @@ func (_c *Repository_RetrieveEntityRole_Call) RunAndReturn(run func(ctx context.
 }
 
 // RetrieveHierarchy provides a mock function for the type Repository
-func (_mock *Repository) RetrieveHierarchy(ctx context.Context, id string, hm groups.HierarchyPageMeta) (groups.HierarchyPage, error) {
-	ret := _mock.Called(ctx, id, hm)
+func (_mock *Repository) RetrieveHierarchy(ctx context.Context, domainID string, userID string, groupID string, hm groups.HierarchyPageMeta) (groups.HierarchyPage, error) {
+	ret := _mock.Called(ctx, domainID, userID, groupID, hm)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RetrieveHierarchy")
@@ -1333,16 +1333,16 @@ func (_mock *Repository) RetrieveHierarchy(ctx context.Context, id string, hm gr
 
 	var r0 groups.HierarchyPage
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, groups.HierarchyPageMeta) (groups.HierarchyPage, error)); ok {
-		return returnFunc(ctx, id, hm)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, string, groups.HierarchyPageMeta) (groups.HierarchyPage, error)); ok {
+		return returnFunc(ctx, domainID, userID, groupID, hm)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, groups.HierarchyPageMeta) groups.HierarchyPage); ok {
-		r0 = returnFunc(ctx, id, hm)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, string, groups.HierarchyPageMeta) groups.HierarchyPage); ok {
+		r0 = returnFunc(ctx, domainID, userID, groupID, hm)
 	} else {
 		r0 = ret.Get(0).(groups.HierarchyPage)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, string, groups.HierarchyPageMeta) error); ok {
-		r1 = returnFunc(ctx, id, hm)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string, string, groups.HierarchyPageMeta) error); ok {
+		r1 = returnFunc(ctx, domainID, userID, groupID, hm)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1356,13 +1356,15 @@ type Repository_RetrieveHierarchy_Call struct {
 
 // RetrieveHierarchy is a helper method to define mock.On call
 //   - ctx context.Context
-//   - id string
+//   - domainID string
+//   - userID string
+//   - groupID string
 //   - hm groups.HierarchyPageMeta
-func (_e *Repository_Expecter) RetrieveHierarchy(ctx interface{}, id interface{}, hm interface{}) *Repository_RetrieveHierarchy_Call {
-	return &Repository_RetrieveHierarchy_Call{Call: _e.mock.On("RetrieveHierarchy", ctx, id, hm)}
+func (_e *Repository_Expecter) RetrieveHierarchy(ctx interface{}, domainID interface{}, userID interface{}, groupID interface{}, hm interface{}) *Repository_RetrieveHierarchy_Call {
+	return &Repository_RetrieveHierarchy_Call{Call: _e.mock.On("RetrieveHierarchy", ctx, domainID, userID, groupID, hm)}
 }
 
-func (_c *Repository_RetrieveHierarchy_Call) Run(run func(ctx context.Context, id string, hm groups.HierarchyPageMeta)) *Repository_RetrieveHierarchy_Call {
+func (_c *Repository_RetrieveHierarchy_Call) Run(run func(ctx context.Context, domainID string, userID string, groupID string, hm groups.HierarchyPageMeta)) *Repository_RetrieveHierarchy_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -1372,14 +1374,24 @@ func (_c *Repository_RetrieveHierarchy_Call) Run(run func(ctx context.Context, i
 		if args[1] != nil {
 			arg1 = args[1].(string)
 		}
-		var arg2 groups.HierarchyPageMeta
+		var arg2 string
 		if args[2] != nil {
-			arg2 = args[2].(groups.HierarchyPageMeta)
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		var arg4 groups.HierarchyPageMeta
+		if args[4] != nil {
+			arg4 = args[4].(groups.HierarchyPageMeta)
 		}
 		run(
 			arg0,
 			arg1,
 			arg2,
+			arg3,
+			arg4,
 		)
 	})
 	return _c
@@ -1390,7 +1402,7 @@ func (_c *Repository_RetrieveHierarchy_Call) Return(hierarchyPage groups.Hierarc
 	return _c
 }
 
-func (_c *Repository_RetrieveHierarchy_Call) RunAndReturn(run func(ctx context.Context, id string, hm groups.HierarchyPageMeta) (groups.HierarchyPage, error)) *Repository_RetrieveHierarchy_Call {
+func (_c *Repository_RetrieveHierarchy_Call) RunAndReturn(run func(ctx context.Context, domainID string, userID string, groupID string, hm groups.HierarchyPageMeta) (groups.HierarchyPage, error)) *Repository_RetrieveHierarchy_Call {
 	_c.Call.Return(run)
 	return _c
 }

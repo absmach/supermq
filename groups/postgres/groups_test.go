@@ -1509,6 +1509,8 @@ func TestRetrieveHierarchy(t *testing.T) {
 
 	repo := postgres.New(database)
 
+	userID := testsutil.GenerateUUID(t)
+	domainID := testsutil.GenerateUUID(t)
 	num := 10
 
 	var items []groups.Group
@@ -1517,7 +1519,7 @@ func TestRetrieveHierarchy(t *testing.T) {
 		name := namegen.Generate()
 		group := groups.Group{
 			ID:          testsutil.GenerateUUID(t),
-			Domain:      testsutil.GenerateUUID(t),
+			Domain:      domainID,
 			Parent:      parentID,
 			Name:        name,
 			Description: desc,
@@ -1527,6 +1529,21 @@ func TestRetrieveHierarchy(t *testing.T) {
 		}
 		_, err := repo.Save(context.Background(), group)
 		require.Nil(t, err, fmt.Sprintf("create group unexpected error: %s", err))
+		newRolesProvision := []roles.RoleProvision{
+			{
+				Role: roles.Role{
+					ID:        testsutil.GenerateUUID(t) + "_" + group.ID,
+					Name:      "admin",
+					EntityID:  group.ID,
+					CreatedAt: validTimestamp,
+					CreatedBy: userID,
+				},
+				OptionalActions: availableActions,
+				OptionalMembers: []string{userID},
+			},
+		}
+		_, err = repo.AddRoles(context.Background(), newRolesProvision)
+		require.Nil(t, err, fmt.Sprintf("add roles unexpected error: %s", err))
 		items = append(items, group)
 		if i == 0 {
 			parentID = group.ID
@@ -1534,15 +1551,19 @@ func TestRetrieveHierarchy(t *testing.T) {
 	}
 
 	cases := []struct {
-		desc string
-		id   string
-		hm   groups.HierarchyPageMeta
-		resp groups.HierarchyPage
-		err  error
+		desc     string
+		groupID  string
+		userID   string
+		domainID string
+		hm       groups.HierarchyPageMeta
+		resp     groups.HierarchyPage
+		err      error
 	}{
 		{
-			desc: "retrieve ancestors successfully",
-			id:   items[1].ID,
+			desc:     "retrieve ancestors successfully",
+			groupID:  items[1].ID,
+			userID:   userID,
+			domainID: domainID,
 			hm: groups.HierarchyPageMeta{
 				Level:     1,
 				Direction: +1,
@@ -1559,8 +1580,10 @@ func TestRetrieveHierarchy(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc: "retrieve descendants successfully",
-			id:   items[0].ID,
+			desc:     "retrieve descendants successfully",
+			groupID:  items[0].ID,
+			userID:   userID,
+			domainID: domainID,
 			hm: groups.HierarchyPageMeta{
 				Level:     1,
 				Direction: -1,
@@ -1577,20 +1600,64 @@ func TestRetrieveHierarchy(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc: "retrieve hierarchy with invalid ID",
-			id:   testsutil.GenerateUUID(t),
-			err:  nil,
+			desc:     "retrieve hierarchy with invalid ID",
+			groupID:  testsutil.GenerateUUID(t),
+			userID:   userID,
+			domainID: domainID,
+			err:      nil,
 		},
 		{
-			desc: "retrieve hierarchy with empty ID",
-			id:   "",
-			err:  nil,
+			desc:     "retrieve hierarchy with empty ID",
+			groupID:  "",
+			userID:   userID,
+			domainID: domainID,
+			err:      nil,
+		},
+		{
+			desc:     "retrieve hierarchy with invalid domain ID",
+			groupID:  items[0].ID,
+			userID:   userID,
+			domainID: testsutil.GenerateUUID(t),
+			hm: groups.HierarchyPageMeta{
+				Level:     1,
+				Direction: -1,
+				Tree:      false,
+			},
+			resp: groups.HierarchyPage{
+				Groups: []groups.Group(nil),
+				HierarchyPageMeta: groups.HierarchyPageMeta{
+					Level:     1,
+					Direction: -1,
+					Tree:      false,
+				},
+			},
+			err: nil,
+		},
+		{
+			desc:     "retrieve hierarchy with invalid user ID",
+			groupID:  items[0].ID,
+			userID:   testsutil.GenerateUUID(t),
+			domainID: domainID,
+			hm: groups.HierarchyPageMeta{
+				Level:     1,
+				Direction: -1,
+				Tree:      false,
+			},
+			resp: groups.HierarchyPage{
+				Groups: []groups.Group(nil),
+				HierarchyPageMeta: groups.HierarchyPageMeta{
+					Level:     1,
+					Direction: -1,
+					Tree:      false,
+				},
+			},
+			err: nil,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			gpPage, err := repo.RetrieveHierarchy(context.Background(), tc.id, tc.hm)
+			gpPage, err := repo.RetrieveHierarchy(context.Background(), tc.domainID, tc.userID, tc.groupID, tc.hm)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 			if err == nil {
 				got := stripGroupDetails(gpPage.Groups)

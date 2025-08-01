@@ -664,8 +664,6 @@ func TestRetrieveGroupHierarchy(t *testing.T) {
 		pageMeta             groups.HierarchyPageMeta
 		retrieveHierarchyRes groups.HierarchyPage
 		retrieveHierarchyErr error
-		listAllObjectsRes    policysvc.PolicyPage
-		listAllObjectsErr    error
 		err                  error
 	}{
 		{
@@ -684,9 +682,6 @@ func TestRetrieveGroupHierarchy(t *testing.T) {
 				},
 				Groups: []groups.Group{parentGroup},
 			},
-			listAllObjectsRes: policysvc.PolicyPage{
-				Policies: []string{parentGroupID, childGroupID},
-			},
 			err: nil,
 		},
 		{
@@ -701,64 +696,28 @@ func TestRetrieveGroupHierarchy(t *testing.T) {
 			err:                  repoerr.ErrNotFound,
 		},
 		{
-			desc: "retrieve group hierarchy with failed to list all objects",
-			id:   parentGroup.ID,
+			desc: "retrieve group hierarchy with invalid group ID",
+			id:   testsutil.GenerateUUID(t),
 			pageMeta: groups.HierarchyPageMeta{
 				Level:     1,
 				Direction: -1,
 				Tree:      false,
 			},
-			retrieveHierarchyRes: groups.HierarchyPage{
-				HierarchyPageMeta: groups.HierarchyPageMeta{
-					Level:     1,
-					Direction: -1,
-					Tree:      false,
-				},
-				Groups: []groups.Group{parentGroup},
-			},
-			listAllObjectsErr: svcerr.ErrAuthorization,
-			err:               svcerr.ErrAuthorization,
-		},
-		{
-			desc: "retrieve group hierarchy for group not allowed for user",
-			id:   parentGroup.ID,
-			pageMeta: groups.HierarchyPageMeta{
-				Level:     1,
-				Direction: -1,
-				Tree:      false,
-			},
-			retrieveHierarchyRes: groups.HierarchyPage{
-				HierarchyPageMeta: groups.HierarchyPageMeta{
-					Level:     1,
-					Direction: -1,
-					Tree:      false,
-				},
-				Groups: []groups.Group{parentGroup},
-			},
-			listAllObjectsRes: policysvc.PolicyPage{
-				Policies: []string{testsutil.GenerateUUID(t)},
-			},
-			err: nil,
+			retrieveHierarchyErr: nil,
+			err:                  nil,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := repo.On("RetrieveHierarchy", context.Background(), tc.id, tc.pageMeta).Return(tc.retrieveHierarchyRes, tc.retrieveHierarchyErr)
-			policyCall := policies.On("ListAllObjects", context.Background(), policysvc.Policy{
-				SubjectType: policysvc.UserType,
-				Subject:     validID,
-				Permission:  "read_permission",
-				ObjectType:  policysvc.GroupType,
-			}).Return(tc.listAllObjectsRes, tc.listAllObjectsErr)
+			repoCall := repo.On("RetrieveHierarchy", context.Background(), validSession.DomainID, validSession.UserID, tc.id, tc.pageMeta).Return(tc.retrieveHierarchyRes, tc.retrieveHierarchyErr)
 			_, err := svc.RetrieveGroupHierarchy(context.Background(), validSession, tc.id, tc.pageMeta)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v to contain %v", err, tc.err))
 			if tc.err == nil {
-				ok := repo.AssertCalled(t, "RetrieveHierarchy", context.Background(), tc.id, tc.pageMeta)
+				ok := repo.AssertCalled(t, "RetrieveHierarchy", context.Background(), validSession.DomainID, validSession.UserID, tc.id, tc.pageMeta)
 				assert.True(t, ok, fmt.Sprintf("RetrieveHierarchy was not called on %s", tc.desc))
 			}
 			repoCall.Unset()
-			policyCall.Unset()
 		})
 	}
 }

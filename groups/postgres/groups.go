@@ -494,60 +494,57 @@ func (repo groupRepository) RetrieveByIDs(ctx context.Context, pm groups.PageMet
 	return page, nil
 }
 
-func (repo groupRepository) RetrieveHierarchy(ctx context.Context, id string, hm groups.HierarchyPageMeta) (groups.HierarchyPage, error) {
-	query := ""
+func (repo groupRepository) RetrieveHierarchy(ctx context.Context, domainID, userID, groupID string, hm groups.HierarchyPageMeta) (groups.HierarchyPage, error) {
+	var dirQuery string
 	switch {
-	// ancestors
 	case hm.Direction >= 0:
-		query = `
-		SELECT
-			g.id,
-			COALESCE(g.parent_id, '') AS parent_id,
-			g.domain_id,
-			g.name,
-			g.description,
-			g.tags,
-			g.metadata,
-			g.created_at,
-			g.updated_at,
-			g.updated_by,
-			g.status,
-			g.path,
-			nlevel(g.path) AS level
-		FROM
-			groups g
-		WHERE
-			g.path @> (SELECT path FROM groups WHERE id = :id LIMIT 1);
-		`
-	// descendants
-	case hm.Direction < 0:
-		fallthrough
+		dirQuery = "g.path @> (SELECT path FROM groups WHERE id = :id)"
 	default:
-		query = `
-		SELECT
-			g.id,
-			COALESCE(g.parent_id, '') AS parent_id,
-			g.domain_id,
-			g.name,
-			g.tags,
-			g.description,
-			g.metadata,
-			g.created_at,
-			g.updated_at,
-			g.updated_by,
-			g.status,
-			g.path,
-			nlevel(g.path) AS level
-		FROM
-			groups g
-		WHERE
-			g.path <@ (SELECT path FROM groups WHERE id = :id LIMIT 1);
-		`
+		dirQuery = "g.path <@ (SELECT path FROM groups WHERE id = :id)"
 	}
+
+	baseQuery := repo.userGroupsBaseQuery(domainID, userID)
+	query := fmt.Sprintf(`%s,
+		target_hierarchy AS (
+			SELECT
+				g.id,
+				g.parent_id,
+				g.domain_id,
+				g.name,
+				g.tags,
+				g.description,
+				g.metadata,
+				g.created_at,
+				g.updated_at,
+				g.updated_by,
+				g.status,
+				g.path,
+				nlevel(g.path) AS level
+			FROM
+				groups g
+			WHERE
+				%s
+		),
+		filtered_hierarchy AS (
+			SELECT
+				th.*
+			FROM
+				target_hierarchy th
+			JOIN
+				final_groups fg ON th.id = fg.id
+		)
+		SELECT
+			*
+		FROM
+			filtered_hierarchy
+		ORDER BY path;
+		`, baseQuery, dirQuery)
+
 	parameters := map[string]interface{}{
-		"id":    id,
+		"id":    groupID,
 		"level": hm.Level,
 	}
+
 	rows, err := repo.db.NamedQueryContext(ctx, query, parameters)
 	if err != nil {
 		return groups.HierarchyPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)

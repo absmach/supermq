@@ -109,7 +109,7 @@ type Repository interface {
 	// RetrieveByIDs retrieves group by ids and query.
 	RetrieveByIDs(ctx context.Context, pm PageMeta, ids ...string) (Page, error)
 
-	RetrieveHierarchy(ctx context.Context, id string, hm HierarchyPageMeta) (HierarchyPage, error)
+	RetrieveHierarchy(ctx context.Context, domainID, userID, groupID string, hm HierarchyPageMeta) (HierarchyPage, error)
 
 	// ChangeStatus changes groups status to active or inactive
 	ChangeStatus(ctx context.Context, group Group) (Group, error)
