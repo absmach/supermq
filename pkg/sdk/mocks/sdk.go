@@ -3920,6 +3920,84 @@ func (_c *SDK_Domain_Call) RunAndReturn(run func(ctx context.Context, domainID s
 	return _c
 }
 
+// DomainInvitations provides a mock function for the type SDK
+func (_mock *SDK) DomainInvitations(ctx context.Context, pm sdk.PageMetadata, token string, domainID string) (sdk.InvitationPage, error) {
+	ret := _mock.Called(ctx, pm, token, domainID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DomainInvitations")
+	}
+
+	var r0 sdk.InvitationPage
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, sdk.PageMetadata, string, string) (sdk.InvitationPage, error)); ok {
+		return returnFunc(ctx, pm, token, domainID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, sdk.PageMetadata, string, string) sdk.InvitationPage); ok {
+		r0 = returnFunc(ctx, pm, token, domainID)
+	} else {
+		r0 = ret.Get(0).(sdk.InvitationPage)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, sdk.PageMetadata, string, string) error); ok {
+		r1 = returnFunc(ctx, pm, token, domainID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// SDK_DomainInvitations_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DomainInvitations'
+type SDK_DomainInvitations_Call struct {
+	*mock.Call
+}
+
+// DomainInvitations is a helper method to define mock.On call
+//   - ctx context.Context
+//   - pm sdk.PageMetadata
+//   - token string
+//   - domainID string
+func (_e *SDK_Expecter) DomainInvitations(ctx interface{}, pm interface{}, token interface{}, domainID interface{}) *SDK_DomainInvitations_Call {
+	return &SDK_DomainInvitations_Call{Call: _e.mock.On("DomainInvitations", ctx, pm, token, domainID)}
+}
+
+func (_c *SDK_DomainInvitations_Call) Run(run func(ctx context.Context, pm sdk.PageMetadata, token string, domainID string)) *SDK_DomainInvitations_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 sdk.PageMetadata
+		if args[1] != nil {
+			arg1 = args[1].(sdk.PageMetadata)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *SDK_DomainInvitations_Call) Return(invitations sdk.InvitationPage, err error) *SDK_DomainInvitations_Call {
+	_c.Call.Return(invitations, err)
+	return _c
+}
+
+func (_c *SDK_DomainInvitations_Call) RunAndReturn(run func(ctx context.Context, pm sdk.PageMetadata, token string, domainID string) (sdk.InvitationPage, error)) *SDK_DomainInvitations_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // DomainRole provides a mock function for the type SDK
 func (_mock *SDK) DomainRole(ctx context.Context, id string, roleID string, token string) (sdk.Role, errors.SDKError) {
 	ret := _mock.Called(ctx, id, roleID, token)
