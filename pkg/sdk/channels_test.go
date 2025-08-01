@@ -218,7 +218,7 @@ func TestCreateChannel(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: fmt.Sprintf("%s_%s", domainID, validID), UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("CreateChannels", mock.Anything, tc.session, []channels.Channel{tc.createChannelReq}).Return(tc.svcRes, []roles.RoleProvision{}, tc.svcErr)
@@ -339,7 +339,7 @@ func TestCreateChannels(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			if tc.token == validToken {
-				tc.session = smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID}
+				tc.session = smqauthn.Session{DomainUserID: fmt.Sprintf("%s_%s", domainID, validID), UserID: validID, DomainID: domainID}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
 			svcCall := gsvc.On("CreateChannels", mock.Anything, tc.session, tc.createChannelsReq).Return(tc.svcRes, []roles.RoleProvision{}, tc.svcErr)

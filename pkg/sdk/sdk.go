@@ -1401,7 +1401,7 @@ func NewSDK(conf Config) SDK {
 // It then returns the response headers, the response body, and the associated error(s) (if any).
 func (sdk mgSDK) processRequest(ctx context.Context, method, reqUrl, token string, data []byte, headers map[string]string, expectedRespCodes ...int) (http.Header, []byte, errors.SDKError) {
 	if sdk.roles {
-		reqUrl = reqUrl + fmt.Sprintf("?roles=%v", true)
+		reqUrl = fmt.Sprintf("%s?roles=%v", reqUrl, true)
 	}
 	req, err := http.NewRequestWithContext(ctx, method, reqUrl, bytes.NewReader(data))
 	if err != nil {
@@ -1418,7 +1418,7 @@ func (sdk mgSDK) processRequest(ctx context.Context, method, reqUrl, token strin
 
 	if token != "" {
 		if !strings.Contains(token, ClientPrefix) {
-			token = BearerPrefix + token
+			token = fmt.Sprintf("%s%s", BearerPrefix, token)
 		}
 		req.Header.Set("Authorization", token)
 	}

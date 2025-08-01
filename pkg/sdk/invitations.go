@@ -6,6 +6,7 @@ package sdk
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -46,7 +47,7 @@ func (sdk mgSDK) SendInvitation(ctx context.Context, invitation Invitation, toke
 		return errors.NewSDKError(err)
 	}
 
-	url := sdk.domainsURL + "/" + domainsEndpoint + "/" + invitation.DomainID + "/" + invitationsEndpoint
+	url := fmt.Sprintf("%s/%s/%s/%s", sdk.domainsURL, domainsEndpoint, invitation.DomainID, invitationsEndpoint)
 
 	_, _, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusCreated)
 
@@ -54,7 +55,7 @@ func (sdk mgSDK) SendInvitation(ctx context.Context, invitation Invitation, toke
 }
 
 func (sdk mgSDK) Invitation(ctx context.Context, userID, domainID, token string) (invitation Invitation, err error) {
-	url := sdk.domainsURL + "/" + domainsEndpoint + "/" + domainID + "/" + invitationsEndpoint + "/" + userID
+	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.domainsURL, domainsEndpoint, domainID, invitationsEndpoint, userID)
 
 	_, body, sdkerr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
 	if sdkerr != nil {
@@ -69,8 +70,8 @@ func (sdk mgSDK) Invitation(ctx context.Context, userID, domainID, token string)
 }
 
 func (sdk mgSDK) DomainInvitations(ctx context.Context, pm PageMetadata, token, domainID string) (invitations InvitationPage, err error) {
-	url := domainsEndpoint + "/" + domainID + "/" + invitationsEndpoint
-	url, err = sdk.withQueryParams(sdk.domainsURL, invitationsEndpoint, pm)
+	url := fmt.Sprintf("%s/%s/%s", domainsEndpoint, domainID, invitationsEndpoint)
+	url, err = sdk.withQueryParams(sdk.domainsURL, url, pm)
 	if err != nil {
 		return InvitationPage{}, errors.NewSDKError(err)
 	}
@@ -118,7 +119,7 @@ func (sdk mgSDK) AcceptInvitation(ctx context.Context, domainID, token string) (
 		return errors.NewSDKError(err)
 	}
 
-	url := sdk.domainsURL + "/" + invitationsEndpoint + "/" + acceptEndpoint
+	url := fmt.Sprintf("%s/%s/%s", sdk.domainsURL, invitationsEndpoint, acceptEndpoint)
 
 	_, _, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusNoContent)
 
@@ -136,7 +137,7 @@ func (sdk mgSDK) RejectInvitation(ctx context.Context, domainID, token string) (
 		return errors.NewSDKError(err)
 	}
 
-	url := sdk.domainsURL + "/" + invitationsEndpoint + "/" + rejectEndpoint
+	url := fmt.Sprintf("%s/%s/%s", sdk.domainsURL, invitationsEndpoint, rejectEndpoint)
 
 	_, _, sdkerr := sdk.processRequest(ctx, http.MethodPost, url, token, data, nil, http.StatusNoContent)
 
@@ -144,7 +145,7 @@ func (sdk mgSDK) RejectInvitation(ctx context.Context, domainID, token string) (
 }
 
 func (sdk mgSDK) DeleteInvitation(ctx context.Context, userID, domainID, token string) (err error) {
-	url := sdk.domainsURL + "/" + domainsEndpoint + "/" + domainID + "/" + invitationsEndpoint + "/" + userID
+	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.domainsURL, domainsEndpoint, domainID, invitationsEndpoint, userID)
 
 	_, _, sdkerr := sdk.processRequest(ctx, http.MethodDelete, url, token, nil, nil, http.StatusNoContent)
 
