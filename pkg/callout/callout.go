@@ -10,6 +10,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"io"
 	"maps"
 	"net/http"
 	"net/url"
@@ -20,7 +21,7 @@ import (
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 )
 
-var errLimitExceeded = errors.New("limit exceeded")
+var errFailedToRead = errors.New("failed to read callout response body")
 
 type Config struct {
 	URLs            []string      `env:"URLS"             envDefault:"" envSeparator:","`
@@ -158,7 +159,12 @@ func (c *callout) makeRequest(ctx context.Context, urlStr string, params map[str
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, resp.StatusCode)
+		msg, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return errors.NewSDKErrorWithStatus(errors.Wrap(errFailedToRead, err), http.StatusInternalServerError)
+		}
+		return errors.NewSDKErrorWithStatus(errors.New(string(msg)), resp.StatusCode)
+
 	}
 
 	return nil
@@ -181,7 +187,7 @@ func (c *callout) Callout(ctx context.Context, op string, pl map[string]interfac
 	// if any request fails, we return the error immediately
 	for _, url := range c.urls {
 		if err := c.makeRequest(ctx, url, pl); err != nil {
-			return errors.Wrap(errLimitExceeded, err)
+			return err
 		}
 	}
 

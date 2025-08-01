@@ -166,12 +166,20 @@ func EncodeResponse(_ context.Context, w http.ResponseWriter, response interface
 
 // EncodeError encodes an error response.
 func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
+	w.Header().Set("Content-Type", ContentType)
+	if sdkErr, ok := err.(errors.SDKError); ok {
+		w.WriteHeader(sdkErr.StatusCode())
+		if err := json.NewEncoder(w).Encode(sdkErr); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
 	var wrapper error
 	if errors.Contains(err, apiutil.ErrValidation) {
 		wrapper, err = errors.Unwrap(err)
 	}
 
-	w.Header().Set("Content-Type", ContentType)
 	switch {
 	case errors.Contains(err, svcerr.ErrAuthorization),
 		errors.Contains(err, svcerr.ErrDomainAuthorization),
