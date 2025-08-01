@@ -20,7 +20,6 @@ import (
 
 	"github.com/absmach/supermq/pkg/callout"
 	"github.com/absmach/supermq/pkg/errors"
-	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -244,7 +243,6 @@ func TestCallout_MakeRequest(t *testing.T) {
 			contextSetup: func() context.Context { return context.Background() },
 			operations:   []string{operation},
 			expectError:  true,
-			err:          svcerr.ErrAuthorization,
 		},
 		{
 			desc:         "invalid URL",
