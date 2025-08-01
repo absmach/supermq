@@ -6,7 +6,6 @@ package sdk
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -72,7 +71,6 @@ func (sdk mgSDK) Invitation(ctx context.Context, userID, domainID, token string)
 func (sdk mgSDK) DomainInvitations(ctx context.Context, pm PageMetadata, token, domainID string) (invitations InvitationPage, err error) {
 	url := domainsEndpoint + "/" + domainID + "/" + invitationsEndpoint
 	url, err = sdk.withQueryParams(sdk.domainsURL, invitationsEndpoint, pm)
-	fmt.Println("URL:", url)
 	if err != nil {
 		return InvitationPage{}, errors.NewSDKError(err)
 	}
