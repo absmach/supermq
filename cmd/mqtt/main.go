@@ -6,6 +6,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -52,6 +53,8 @@ const (
 	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
 	envPrefixDomains  = "SMQ_DOMAINS_GRPC_"
 	wsPathPrefix      = "/mqtt"
+	protocol          = "mqtt"
+	healthPubInterval = 5
 )
 
 type config struct {
@@ -270,6 +273,10 @@ func main() {
 	})
 
 	g.Go(func() error {
+		return publishHealthMessage(ctx, mpub)
+	})
+
+	g.Go(func() error {
 		return stopSignalHandler(ctx, cancel, logger)
 	})
 
@@ -343,6 +350,35 @@ func healthcheck(cfg config) func() error {
 			return errors.New(string(body))
 		}
 		return nil
+	}
+}
+
+func publishHealthMessage(ctx context.Context, pub messaging.Publisher) error {
+	ticker := time.NewTicker(healthPubInterval * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			pd := messaging.HealthInfo{
+				Status:    messaging.StatusOK,
+				Protocol:  protocol,
+				Timestamp: time.Now().UTC(),
+			}
+			pdBytes, err := json.Marshal(pd)
+			if err != nil {
+				return err
+			}
+			msg := messaging.Message{
+				Payload: pdBytes,
+			}
+			if err := pub.Publish(ctx, messaging.HealthTopicPrefix, &msg); err != nil {
+				return err
+			}
+
+		case <-ctx.Done():
+			return nil
+		}
 	}
 }
 

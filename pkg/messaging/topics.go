@@ -183,6 +183,9 @@ func (r *resolver) Resolve(ctx context.Context, domain, channel string) (string,
 }
 
 func (r *resolver) ResolveTopic(ctx context.Context, topic string) (string, error) {
+	if topic == HealthTopicPrefix {
+		return topic, nil
+	}
 	domain, channel, subtopic, err := ParseTopic(topic)
 	if err != nil {
 		return "", errors.Wrap(ErrMalformedTopic, err)
