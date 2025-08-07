@@ -22,18 +22,18 @@ import (
 )
 
 var (
-	errView                    = errors.New("not authorized to view thing")
-	errUpdate                  = errors.New("not authorized to update thing")
-	errUpdateTags              = errors.New("not authorized to update thing tags")
-	errUpdateSecret            = errors.New("not authorized to update thing secret")
-	errEnable                  = errors.New("not authorized to enable thing")
-	errDisable                 = errors.New("not authorized to disable thing")
-	errDelete                  = errors.New("not authorized to delete thing")
-	errSetParentGroup          = errors.New("not authorized to set parent group to thing")
-	errRemoveParentGroup       = errors.New("not authorized to remove parent group from thing")
-	errDomainCreateClients     = errors.New("not authorized to create thing in domain")
-	errGroupSetChildClients    = errors.New("not authorized to set child thing for group")
-	errGroupRemoveChildClients = errors.New("not authorized to remove child thing for group")
+	errView                    = errors.New("not authorized to view client")
+	errUpdate                  = errors.New("not authorized to update client")
+	errUpdateTags              = errors.New("not authorized to update client tags")
+	errUpdateSecret            = errors.New("not authorized to update client secret")
+	errEnable                  = errors.New("not authorized to enable client")
+	errDisable                 = errors.New("not authorized to disable client")
+	errDelete                  = errors.New("not authorized to delete client")
+	errSetParentGroup          = errors.New("not authorized to set parent group to client")
+	errRemoveParentGroup       = errors.New("not authorized to remove parent group from client")
+	errDomainCreateClients     = errors.New("not authorized to create client in domain")
+	errGroupSetChildClients    = errors.New("not authorized to set child client for group")
+	errGroupRemoveChildClients = errors.New("not authorized to remove child client for group")
 )
 
 var _ clients.Service = (*authorizationMiddleware)(nil)
@@ -54,12 +54,12 @@ func AuthorizationMiddleware(
 	svc clients.Service,
 	authz smqauthz.Authorization,
 	repo clients.Repository,
-	thingsOpPerm, rolesOpPerm map[svcutil.Operation]svcutil.Permission,
+	clientsOpPerm, rolesOpPerm map[svcutil.Operation]svcutil.Permission,
 	extOpPerm map[svcutil.ExternalOperation]svcutil.Permission,
 	callout callout.Callout,
 ) (clients.Service, error) {
 	opp := clients.NewOperationPerm()
-	if err := opp.AddOperationPermissionMap(thingsOpPerm); err != nil {
+	if err := opp.AddOperationPermissionMap(clientsOpPerm); err != nil {
 		return nil, err
 	}
 	if err := opp.Validate(); err != nil {

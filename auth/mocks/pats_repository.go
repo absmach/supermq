@@ -715,7 +715,7 @@ func (_c *PATSRepository_RetrieveScope_Call) RunAndReturn(run func(ctx context.C
 }
 
 // RetrieveSecretAndRevokeStatus provides a mock function for the type PATSRepository
-func (_mock *PATSRepository) RetrieveSecretAndRevokeStatus(ctx context.Context, userID string, patID string) (string, bool, bool, error) {
+func (_mock *PATSRepository) RetrieveSecretAndRevokeStatus(ctx context.Context, userID string, patID string) (string, bool, bool, auth.Role, error) {
 	ret := _mock.Called(ctx, userID, patID)
 
 	if len(ret) == 0 {
@@ -725,8 +725,9 @@ func (_mock *PATSRepository) RetrieveSecretAndRevokeStatus(ctx context.Context, 
 	var r0 string
 	var r1 bool
 	var r2 bool
-	var r3 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) (string, bool, bool, error)); ok {
+	var r3 auth.Role
+	var r4 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) (string, bool, bool, auth.Role, error)); ok {
 		return returnFunc(ctx, userID, patID)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) string); ok {
@@ -744,12 +745,17 @@ func (_mock *PATSRepository) RetrieveSecretAndRevokeStatus(ctx context.Context, 
 	} else {
 		r2 = ret.Get(2).(bool)
 	}
-	if returnFunc, ok := ret.Get(3).(func(context.Context, string, string) error); ok {
+	if returnFunc, ok := ret.Get(3).(func(context.Context, string, string) auth.Role); ok {
 		r3 = returnFunc(ctx, userID, patID)
 	} else {
-		r3 = ret.Error(3)
+		r3 = ret.Get(3).(auth.Role)
 	}
-	return r0, r1, r2, r3
+	if returnFunc, ok := ret.Get(4).(func(context.Context, string, string) error); ok {
+		r4 = returnFunc(ctx, userID, patID)
+	} else {
+		r4 = ret.Error(4)
+	}
+	return r0, r1, r2, r3, r4
 }
 
 // PATSRepository_RetrieveSecretAndRevokeStatus_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RetrieveSecretAndRevokeStatus'
@@ -788,12 +794,12 @@ func (_c *PATSRepository_RetrieveSecretAndRevokeStatus_Call) Run(run func(ctx co
 	return _c
 }
 
-func (_c *PATSRepository_RetrieveSecretAndRevokeStatus_Call) Return(s string, b bool, b1 bool, err error) *PATSRepository_RetrieveSecretAndRevokeStatus_Call {
-	_c.Call.Return(s, b, b1, err)
+func (_c *PATSRepository_RetrieveSecretAndRevokeStatus_Call) Return(s string, b bool, b1 bool, role auth.Role, err error) *PATSRepository_RetrieveSecretAndRevokeStatus_Call {
+	_c.Call.Return(s, b, b1, role, err)
 	return _c
 }
 
-func (_c *PATSRepository_RetrieveSecretAndRevokeStatus_Call) RunAndReturn(run func(ctx context.Context, userID string, patID string) (string, bool, bool, error)) *PATSRepository_RetrieveSecretAndRevokeStatus_Call {
+func (_c *PATSRepository_RetrieveSecretAndRevokeStatus_Call) RunAndReturn(run func(ctx context.Context, userID string, patID string) (string, bool, bool, auth.Role, error)) *PATSRepository_RetrieveSecretAndRevokeStatus_Call {
 	_c.Call.Return(run)
 	return _c
 }

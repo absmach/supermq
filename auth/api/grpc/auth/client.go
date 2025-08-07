@@ -97,12 +97,12 @@ func (client authGrpcClient) AuthenticatePAT(ctx context.Context, token *grpcAut
 		return &grpcAuthV1.AuthNRes{}, grpcapi.DecodeError(err)
 	}
 	ir := res.(authenticateRes)
-	return &grpcAuthV1.AuthNRes{Id: ir.id, UserId: ir.userID}, nil
+	return &grpcAuthV1.AuthNRes{Id: ir.id, UserId: ir.userID, UserRole: uint32(ir.userRole)}, nil
 }
 
 func decodeIdentifyPATResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(*grpcAuthV1.AuthNRes)
-	return authenticateRes{id: res.GetId(), userID: res.GetUserId()}, nil
+	return authenticateRes{id: res.GetId(), userID: res.GetUserId(), userRole: auth.Role(res.UserRole)}, nil
 }
 
 func (client authGrpcClient) Authorize(ctx context.Context, req *grpcAuthV1.AuthZReq, _ ...grpc.CallOption) (r *grpcAuthV1.AuthZRes, err error) {

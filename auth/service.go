@@ -479,10 +479,15 @@ func (svc service) CreatePAT(ctx context.Context, token, name, description strin
 		Name:        name,
 		Description: description,
 		Secret:      hash,
+		Role:        key.Role,
 		IssuedAt:    now,
 		ExpiresAt:   now.Add(duration),
 		Status:      ActiveStatus,
 		Revoked:     false,
+	}
+
+	if err := pat.Validate(); err != nil {
+		return PAT{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 
 	if err := svc.pats.Save(ctx, pat); err != nil {
@@ -669,7 +674,7 @@ func (svc service) IdentifyPAT(ctx context.Context, secret string) (PAT, error) 
 	if err != nil {
 		return PAT{}, errors.Wrap(svcerr.ErrAuthentication, errMalformedPAT)
 	}
-	secretHash, revoked, expired, err := svc.pats.RetrieveSecretAndRevokeStatus(ctx, userID.String(), patID.String())
+	secretHash, revoked, expired, role, err := svc.pats.RetrieveSecretAndRevokeStatus(ctx, userID.String(), patID.String())
 	if err != nil {
 		return PAT{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
@@ -682,7 +687,7 @@ func (svc service) IdentifyPAT(ctx context.Context, secret string) (PAT, error) 
 	if err := svc.hasher.Compare(secret, secretHash); err != nil {
 		return PAT{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
-	return PAT{ID: patID.String(), User: userID.String()}, nil
+	return PAT{ID: patID.String(), User: userID.String(), Role: role}, nil
 }
 
 func (svc service) AuthorizePAT(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityID string) error {

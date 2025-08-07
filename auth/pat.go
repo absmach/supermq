@@ -296,6 +296,7 @@ type PAT struct {
 	Name        string    `json:"name,omitempty"`
 	Description string    `json:"description,omitempty"`
 	Secret      string    `json:"secret,omitempty"`
+	Role        Role      `json:"role,omitempty"`
 	IssuedAt    time.Time `json:"issued_at,omitempty"`
 	ExpiresAt   time.Time `json:"expires_at,omitempty"`
 	UpdatedAt   time.Time `json:"updated_at,omitempty"`
@@ -339,6 +340,23 @@ func (pat PAT) MarshalBinary() ([]byte, error) {
 
 func (pat *PAT) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, pat)
+}
+
+// Validate checks if the PAT has valid fields.
+func (pat *PAT) Validate() error {
+	if pat == nil {
+		return errors.New("PAT cannot be nil")
+	}
+	if pat.Name == "" {
+		return errors.New("PAT name cannot be empty")
+	}
+	if pat.User == "" {
+		return errors.New("PAT user cannot be empty")
+	}
+	if !pat.Role.Validate() {
+		return errors.New("invalid PAT role")
+	}
+	return nil
 }
 
 func (pat *PAT) String() string {
@@ -409,7 +427,7 @@ type PATSRepository interface {
 	RetrieveScope(ctx context.Context, pm ScopesPageMeta) (scopes ScopesPage, err error)
 
 	// RetrieveSecretAndRevokeStatus retrieves secret and revoke status of PAT by its unique identifier.
-	RetrieveSecretAndRevokeStatus(ctx context.Context, userID, patID string) (string, bool, bool, error)
+	RetrieveSecretAndRevokeStatus(ctx context.Context, userID, patID string) (string, bool, bool, Role, error)
 
 	// UpdateName updates the name of a PAT.
 	UpdateName(ctx context.Context, userID, patID, name string) (PAT, error)

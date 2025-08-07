@@ -125,6 +125,15 @@ func Migration() *migrate.MemoryMigrationSource {
 					`ALTER TABLE pats ALTER COLUMN last_used_at TYPE TIMESTAMP;`,
 				},
 			},
+			{
+				Id: "auth_7",
+				Up: []string{
+					`ALTER TABLE pats ADD COLUMN role SMALLINT NOT NULL DEFAULT 1 CHECK (role >= 1 AND role <= 2);`,
+				},
+				Down: []string{
+					`ALTER TABLE pats DROP COLUMN IF EXISTS role;`,
+				},
+			},
 		},
 	}
 }

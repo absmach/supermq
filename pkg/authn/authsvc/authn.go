@@ -47,7 +47,7 @@ func (a authentication) Authenticate(ctx context.Context, token string) (authn.S
 			return authn.Session{}, errors.Wrap(errors.ErrAuthentication, err)
 		}
 
-		return authn.Session{Type: authn.PersonalAccessToken, PatID: res.GetId(), UserID: res.GetUserId()}, nil
+		return authn.Session{Type: authn.PersonalAccessToken, PatID: res.GetId(), UserID: res.GetUserId(), Role: authn.Role(res.GetUserRole())}, nil
 	}
 	res, err := a.authSvcClient.Authenticate(ctx, &grpcAuthV1.AuthNReq{Token: token})
 	if err != nil {

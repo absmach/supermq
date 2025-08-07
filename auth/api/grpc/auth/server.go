@@ -87,7 +87,7 @@ func encodeAuthenticateResponse(_ context.Context, grpcRes interface{}) (interfa
 
 func encodeAuthenticatePATResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(authenticateRes)
-	return &grpcAuthV1.AuthNRes{Id: res.id, UserId: res.userID}, nil
+	return &grpcAuthV1.AuthNRes{Id: res.id, UserId: res.userID, UserRole: uint32(res.userRole)}, nil
 }
 
 func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {

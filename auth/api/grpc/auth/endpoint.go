@@ -39,7 +39,7 @@ func authenticatePATEndpoint(svc auth.Service) endpoint.Endpoint {
 			return authenticateRes{}, err
 		}
 
-		return authenticateRes{id: pat.ID, userID: pat.User}, nil
+		return authenticateRes{id: pat.ID, userID: pat.User, userRole: pat.Role}, nil
 	}
 }
 

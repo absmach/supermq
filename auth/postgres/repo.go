@@ -33,10 +33,10 @@ func NewPatRepo(db postgres.Database, cache auth.Cache) auth.PATSRepository {
 func (pr *patRepo) Save(ctx context.Context, pat auth.PAT) error {
 	q := `
 	INSERT INTO pats (
-		id, user_id, name, description, secret, issued_at, expires_at, 
+		id, user_id, name, description, secret, role, issued_at, expires_at, 
 		updated_at, last_used_at, revoked, revoked_at
 	) VALUES (
-		:id, :user_id, :name, :description, :secret, :issued_at, :expires_at,
+		:id, :user_id, :name, :description, :secret, :role, :issued_at, :expires_at,
 		:updated_at, :last_used_at, :revoked, :revoked_at
 	)`
 
@@ -70,7 +70,7 @@ func (pr *patRepo) RetrieveAll(ctx context.Context, userID string, pm auth.PATSP
 
 	q := fmt.Sprintf(`
 		SELECT 
-			p.id, p.user_id, p.name, p.description, p.issued_at, p.expires_at,
+			p.id, p.user_id, p.name, p.description, p.role, p.issued_at, p.expires_at,
 			p.updated_at, p.revoked, p.revoked_at,
 		CASE 
 			WHEN p.revoked = TRUE THEN %d
@@ -151,9 +151,9 @@ func PageQuery(pm auth.PATSPageMeta) (string, error) {
 	return emq, nil
 }
 
-func (pr *patRepo) RetrieveSecretAndRevokeStatus(ctx context.Context, userID, patID string) (string, bool, bool, error) {
+func (pr *patRepo) RetrieveSecretAndRevokeStatus(ctx context.Context, userID, patID string) (string, bool, bool, auth.Role, error) {
 	q := `
-		SELECT p.secret, p.revoked, p.expires_at 
+		SELECT p.secret, p.revoked, p.expires_at, p.role
 		FROM pats p
 		WHERE p.user_id = :user_id AND p.id = :pat_id`
 
@@ -165,24 +165,25 @@ func (pr *patRepo) RetrieveSecretAndRevokeStatus(ctx context.Context, userID, pa
 
 	rows, err := pr.db.NamedQueryContext(ctx, q, dbPage)
 	if err != nil {
-		return "", true, true, postgres.HandleError(repoerr.ErrNotFound, err)
+		return "", true, true, auth.Role(0), postgres.HandleError(repoerr.ErrNotFound, err)
 	}
 	defer rows.Close()
 
 	var secret string
 	var revoked bool
 	var expiresAt time.Time
+	var role auth.Role
 
 	if !rows.Next() {
-		return "", true, true, repoerr.ErrNotFound
+		return "", true, true, auth.Role(0), repoerr.ErrNotFound
 	}
 
-	if err := rows.Scan(&secret, &revoked, &expiresAt); err != nil {
-		return "", true, true, postgres.HandleError(repoerr.ErrNotFound, err)
+	if err := rows.Scan(&secret, &revoked, &expiresAt, &role); err != nil {
+		return "", true, true, auth.Role(0), postgres.HandleError(repoerr.ErrNotFound, err)
 	}
 
 	expired := time.Now().UTC().After(expiresAt)
-	return secret, revoked, expired, nil
+	return secret, revoked, expired, role, nil
 }
 
 func (pr *patRepo) UpdateName(ctx context.Context, userID, patID, name string) (auth.PAT, error) {
@@ -190,7 +191,7 @@ func (pr *patRepo) UpdateName(ctx context.Context, userID, patID, name string) (
 		UPDATE pats p
 		SET name = :name, updated_at = :updated_at
 		WHERE user_id = :user_id AND id = :id
-		RETURNING id, user_id, name, description, secret, issued_at, updated_at, expires_at, revoked, revoked_at, last_used_at`
+		RETURNING id, user_id, name, description, secret, role, issued_at, updated_at, expires_at, revoked, revoked_at, last_used_at`
 
 	upm := dbPagemeta{
 		User: userID,
@@ -225,7 +226,7 @@ func (pr *patRepo) UpdateDescription(ctx context.Context, userID, patID, descrip
 		UPDATE pats 
 		SET description = :description, updated_at = :updated_at
 		WHERE user_id = :user_id AND id = :id
-		RETURNING id, user_id, name, description, secret, issued_at, updated_at, expires_at, revoked, revoked_at, last_used_at`
+		RETURNING id, user_id, name, description, secret, role, issued_at, updated_at, expires_at, revoked, revoked_at, last_used_at`
 
 	upm := dbPagemeta{
 		User: userID,
@@ -260,7 +261,7 @@ func (pr *patRepo) UpdateTokenHash(ctx context.Context, userID, patID, tokenHash
 		UPDATE pats 
 		SET secret = :secret, expires_at = :expires_at, updated_at = :updated_at
 		WHERE user_id = :user_id AND id = :id
-		RETURNING id, user_id, name, description, secret, issued_at, updated_at, expires_at, revoked, revoked_at, last_used_at`
+		RETURNING id, user_id, name, description, secret, role, issued_at, updated_at, expires_at, revoked, revoked_at, last_used_at`
 
 	upm := dbPagemeta{
 		User: userID,
@@ -644,7 +645,7 @@ func (pr *patRepo) retrieveScopeFromDB(ctx context.Context, pm dbPagemeta) ([]au
 func (pr *patRepo) retrievePATFromDB(ctx context.Context, userID, patID string) (auth.PAT, error) {
 	q := fmt.Sprintf(`
 		SELECT 
-		id, user_id, name, description, secret, issued_at, expires_at,
+		id, user_id, name, description, secret, role, issued_at, expires_at,
 		updated_at, last_used_at, revoked, revoked_at,
 		CASE 
 			WHEN revoked = TRUE THEN %d
