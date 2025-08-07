@@ -28,10 +28,12 @@ const (
 	LimitKey  = "limit"
 	OnlyTotal = "only_total"
 
-	NameOrder = "name"
-	IDOrder   = "id"
-	AscDir    = "asc"
-	DescDir   = "desc"
+	NameOrder      = "name"
+	IDOrder        = "id"
+	AscDir         = "asc"
+	DescDir        = "desc"
+	UpdatedAtOrder = "updated_at"
+	CreatedAtOrder = "created_at"
 
 	MetadataKey = "metadata"
 	NameKey     = "name"

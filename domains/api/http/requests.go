@@ -69,6 +69,9 @@ type listDomainsReq struct {
 }
 
 func (req listDomainsReq) validate() error {
+	if req.Order != "" && req.Order != api.NameOrder && req.Order != api.CreatedAtOrder && req.Order != api.UpdatedAtOrder {
+		return apiutil.ErrInvalidOrder
+	}
 	return nil
 }
 

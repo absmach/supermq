@@ -85,6 +85,10 @@ func (req listClientsReq) validate() error {
 		return apiutil.ErrNameSize
 	}
 
+	if req.Order != "" && req.Order != api.NameOrder && req.Order != api.CreatedAtOrder && req.Order != api.UpdatedAtOrder {
+		return apiutil.ErrInvalidOrder
+	}
+
 	return nil
 }
 
