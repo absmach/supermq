@@ -952,7 +952,9 @@ direct_groups_with_subgroup AS (
 		grm.member_id AS member_id,
 		gr.id AS role_id,
 		gr."name" AS role_name,
-		array_agg(DISTINCT all_actions."action") AS actions
+		array_agg(DISTINCT all_actions."action") AS actions,
+		g.path AS g_path,
+		nlevel(g.path) AS g_nlevel
 	FROM
 		groups_role_members grm
 	JOIN
@@ -963,35 +965,43 @@ direct_groups_with_subgroup AS (
 		"groups" g ON g.id = gr.entity_id
 	JOIN
 		groups_role_actions all_actions ON all_actions.role_id = grm.role_id
-	LEFT JOIN "groups" g2
-		ON g2.path <@ g.path AND nlevel(g2.path) = nlevel(g.path) + 1
 	WHERE
 		grm.member_id = '%s'
-		AND g.domain_id = '%s'
+		AND g.domain_id ='%s'
 		AND gra."action" LIKE 'subgroup_%%'
-		AND g2.path IS NULL
 	GROUP BY
 		gr.entity_id, grm.member_id, gr.id, gr."name", g."path", g.id
+),
+direct_leaf_groups_with_subgroup AS (
+	SELECT dgws.*
+	FROM direct_groups_with_subgroup dgws
+	WHERE NOT EXISTS (
+		SELECT 1
+		FROM direct_groups_with_subgroup dgws2
+		WHERE
+			dgws2.path @> dgws.path 
+			AND dgws2.id != dgws.id  
+	)
 ),
 indirect_child_groups AS (
 	SELECT
 		DISTINCT indirect_child_groups.id as child_id,
 		indirect_child_groups.*,
-		dgws.id as access_provider_id,
-		dgws.role_id as access_provider_role_id,
-		dgws.role_name as access_provider_role_name,
-		dgws.actions as access_provider_role_actions
+		dlgws.id as access_provider_id,
+		dlgws.role_id as access_provider_role_id,
+		dlgws.role_name as access_provider_role_name,
+		dlgws.actions as access_provider_role_actions
 	FROM
-		direct_groups_with_subgroup dgws
+		direct_leaf_groups_with_subgroup dlgws
 	JOIN
-		groups indirect_child_groups ON indirect_child_groups.path <@ dgws.path  -- Finds all children of entity_id based on ltree path
+		groups indirect_child_groups ON indirect_child_groups.path <@ dlgws.path  -- Finds all children of entity_id based on ltree path
 	WHERE
 		indirect_child_groups.domain_id = '%s'
 		AND
-		NOT EXISTS (  -- Ensures that the indirect_child_groups.id is not already in the direct_groups_with_subgroup table
+		NOT EXISTS (  -- Ensures that the indirect_child_groups.id is not already in the direct_leaf_groups_with_subgroup table
 			SELECT 1
-			FROM direct_groups_with_subgroup dgws
-			WHERE dgws.id = indirect_child_groups.id
+			FROM direct_leaf_groups_with_subgroup dlgws
+			WHERE dlgws.id = indirect_child_groups.id
 		)
 ),
 direct_indirect_groups as (
