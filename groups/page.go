@@ -11,6 +11,8 @@ type PageMeta struct {
 	OnlyTotal  bool     `json:"only_total"`
 	Name       string   `json:"name,omitempty"`
 	ID         string   `json:"id,omitempty"`
+	Dir        string   `json:"dir,omitempty"`
+	Order      string   `json:"order,omitempty"`
 	Path       string   `json:"path,omitempty"`
 	DomainID   string   `json:"domain_id,omitempty"`
 	Tag        string   `json:"tag,omitempty"`
