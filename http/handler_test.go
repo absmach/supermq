@@ -5,6 +5,7 @@ package http_test
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"strings"
@@ -148,6 +149,16 @@ func TestPublish(t *testing.T) {
 	tokenSession := session.Session{
 		Password: []byte(apiutil.BearerPrefix + validToken),
 	}
+	basicAuthSession := session.Session{
+		Username: validID,
+		Password: []byte(clientKey),
+	}
+	encodedPass := base64.URLEncoding.EncodeToString([]byte(validID + ":" + clientKey))
+
+	encodedPassSession := session.Session{
+		Password: []byte(encodedPass),
+	}
+
 	cases := []struct {
 		desc       string
 		topic      *string
@@ -156,6 +167,7 @@ func TestPublish(t *testing.T) {
 		password   string
 		session    *session.Session
 		status     int
+		authNReq   *grpcClientsV1.AuthnReq
 		authNRes   *grpcClientsV1.AuthnRes
 		authNRes1  smqauthn.Session
 		authNErr   error
@@ -171,6 +183,7 @@ func TestPublish(t *testing.T) {
 			password:  clientKey,
 			session:   &clientKeySession,
 			channelID: chanID,
+			authNReq:  &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey)},
 			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			authNErr:  nil,
 			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: true},
@@ -191,12 +204,39 @@ func TestPublish(t *testing.T) {
 			err:       nil,
 		},
 		{
+			desc:      "publish  with basic auth successfully",
+			topic:     &topic,
+			payload:   &payload,
+			session:   &basicAuthSession,
+			channelID: chanID,
+			authNReq:  &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.BasicAuth, validID, clientKey)},
+			authNRes:  &grpcClientsV1.AuthnRes{Id: validID, Authenticated: true},
+			authNErr:  nil,
+			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: true},
+			authZErr:  nil,
+			err:       nil,
+		},
+		{
+			desc:      "publish  with encoded password successfully",
+			topic:     &topic,
+			payload:   &payload,
+			session:   &encodedPassSession,
+			channelID: chanID,
+			authNReq:  &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.BasicAuth, validID, clientKey)},
+			authNRes:  &grpcClientsV1.AuthnRes{Id: validID, Authenticated: true},
+			authNErr:  nil,
+			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: true},
+			authZErr:  nil,
+			err:       nil,
+		},
+		{
 			desc:      "publish  with key and subtopic successfully",
 			topic:     &subtopic,
 			payload:   &payload,
 			password:  clientKey,
 			session:   &clientKeySession,
 			channelID: chanID,
+			authNReq:  &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey)},
 			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			authNErr:  nil,
 			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: true},
@@ -227,16 +267,18 @@ func TestPublish(t *testing.T) {
 			status:   http.StatusBadRequest,
 			password: clientKey,
 			session:  &clientKeySession,
+			authNReq: &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey)},
 			authNRes: &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			authNErr: nil,
 			err:      errMalformedTopic,
 		},
 		{
-			desc:     "publish with malformwd subtopic",
+			desc:     "publish with malformed subtopic",
 			topic:    &malformedSubtopics,
 			status:   http.StatusBadRequest,
 			password: clientKey,
 			session:  &clientKeySession,
+			authNReq: &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey)},
 			authNRes: &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			authNErr: nil,
 			err:      errMalformedSubtopic,
@@ -260,6 +302,7 @@ func TestPublish(t *testing.T) {
 			session:   &clientKeySession,
 			channelID: chanID,
 			status:    http.StatusUnauthorized,
+			authNReq:  &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey)},
 			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: false},
 			authNErr:  nil,
 			err:       svcerr.ErrAuthentication,
@@ -272,6 +315,7 @@ func TestPublish(t *testing.T) {
 			session:   &clientKeySession,
 			channelID: chanID,
 			status:    http.StatusUnauthorized,
+			authNReq:  &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey)},
 			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: false},
 			authNErr:  svcerr.ErrAuthentication,
 			err:       svcerr.ErrAuthentication,
@@ -295,6 +339,7 @@ func TestPublish(t *testing.T) {
 			password:  clientKey,
 			session:   &clientKeySession,
 			channelID: chanID,
+			authNReq:  &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey)},
 			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			status:    http.StatusUnauthorized,
 			authNErr:  nil,
@@ -309,8 +354,9 @@ func TestPublish(t *testing.T) {
 			password:  clientKey,
 			session:   &clientKeySession,
 			channelID: chanID,
+			authNReq:  &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey)},
 			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
-			status:    http.StatusBadRequest,
+			status:    http.StatusUnauthorized,
 			authNErr:  nil,
 			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: false},
 			authZErr:  svcerr.ErrAuthorization,
@@ -323,6 +369,7 @@ func TestPublish(t *testing.T) {
 			password:   clientKey,
 			session:    &clientKeySession,
 			channelID:  chanID,
+			authNReq:   &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey)},
 			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			authNErr:   nil,
 			authZRes:   &grpcChannelsV1.AuthzRes{Authorized: true},
@@ -341,7 +388,7 @@ func TestPublish(t *testing.T) {
 			if tc.topic != nil {
 				internalTopic = strings.TrimPrefix(strings.ReplaceAll(*tc.topic, "/", "."), ".m.")
 			}
-			clientsCall := clients.On("Authenticate", ctx, &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, tc.password)}).Return(tc.authNRes, tc.authNErr)
+			clientsCall := clients.On("Authenticate", ctx, tc.authNReq).Return(tc.authNRes, tc.authNErr)
 			authCall := authn.On("Authenticate", ctx, mock.Anything).Return(tc.authNRes1, tc.authNErr)
 			channelsCall := channels.On("Authorize", ctx, mock.Anything).Return(tc.authZRes, tc.authZErr)
 			repoCall := publisher.On("Publish", ctx, internalTopic, mock.Anything).Return(tc.publishErr)

@@ -5,6 +5,7 @@ package api_test
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"net"
 	"net/http"
@@ -36,9 +37,10 @@ import (
 )
 
 const (
-	clientKey  = "c02ff576-ccd5-40f6-ba5f-c85377aad529"
-	protocol   = "ws"
-	instanceID = "5de9b29a-feb9-11ed-be56-0242ac120002"
+	clientKey       = "c02ff576-ccd5-40f6-ba5f-c85377aad529"
+	protocol        = "ws"
+	instanceID      = "5de9b29a-feb9-11ed-be56-0242ac120002"
+	clientKeyPrefix = "Client "
 )
 
 var (
@@ -137,6 +139,8 @@ func TestHandshake(t *testing.T) {
 	authn.On("Authenticate", mock.Anything, mock.Anything).Return(smqauthn.Session{}, nil)
 	channels.On("Authorize", mock.Anything, mock.Anything, mock.Anything).Return(&grpcChannelsV1.AuthzRes{Authorized: true}, nil)
 
+	encodedPass := base64.URLEncoding.EncodeToString([]byte(id + ":" + clientKey))
+
 	cases := []struct {
 		desc      string
 		domainID  string
@@ -154,7 +158,7 @@ func TestHandshake(t *testing.T) {
 			chanID:    id,
 			subtopic:  "",
 			header:    true,
-			clientKey: clientKey,
+			clientKey: clientKeyPrefix + clientKey,
 			status:    http.StatusSwitchingProtocols,
 			msg:       msg,
 		},
@@ -164,7 +168,7 @@ func TestHandshake(t *testing.T) {
 			chanID:    id,
 			subtopic:  "",
 			header:    false,
-			clientKey: clientKey,
+			clientKey: encodedPass,
 			status:    http.StatusSwitchingProtocols,
 			msg:       msg,
 		},
@@ -174,7 +178,7 @@ func TestHandshake(t *testing.T) {
 			chanID:    id,
 			subtopic:  "",
 			header:    true,
-			clientKey: clientKey,
+			clientKey: encodedPass,
 			status:    http.StatusSwitchingProtocols,
 			msg:       []byte{},
 		},
@@ -184,7 +188,7 @@ func TestHandshake(t *testing.T) {
 			chanID:    id,
 			subtopic:  "subtopic",
 			header:    true,
-			clientKey: clientKey,
+			clientKey: encodedPass,
 			status:    http.StatusSwitchingProtocols,
 			msg:       msg,
 		},
@@ -194,7 +198,7 @@ func TestHandshake(t *testing.T) {
 			chanID:    id,
 			subtopic:  "subtopic/nested",
 			header:    true,
-			clientKey: clientKey,
+			clientKey: encodedPass,
 			status:    http.StatusSwitchingProtocols,
 			msg:       msg,
 		},
@@ -204,7 +208,7 @@ func TestHandshake(t *testing.T) {
 			chanID:    id,
 			subtopic:  ">",
 			header:    true,
-			clientKey: clientKey,
+			clientKey: encodedPass,
 			status:    http.StatusSwitchingProtocols,
 			msg:       msg,
 		},
@@ -214,7 +218,7 @@ func TestHandshake(t *testing.T) {
 			chanID:    "",
 			subtopic:  "",
 			header:    true,
-			clientKey: clientKey,
+			clientKey: encodedPass,
 			status:    http.StatusUnauthorized,
 			msg:       []byte{},
 		},
@@ -234,7 +238,7 @@ func TestHandshake(t *testing.T) {
 			chanID:    id,
 			subtopic:  "sub/a*b/topic",
 			header:    true,
-			clientKey: clientKey,
+			clientKey: encodedPass,
 			status:    http.StatusUnauthorized,
 			msg:       msg,
 		},
