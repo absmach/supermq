@@ -124,21 +124,24 @@ func TestGetInvitationCmd(t *testing.T) {
 			logType: entityLog,
 		},
 		{
-			desc: "get invitation with user id",
+			desc: "get invitation with domain id",
 			args: []string{
-				user.ID,
 				domain.ID,
 				token,
 			},
 			logType: entityLog,
-			inv:     invitation,
+			page: mgsdk.InvitationPage{
+				Total:       1,
+				Offset:      0,
+				Limit:       10,
+				Invitations: []mgsdk.Invitation{invitation},
+			},
 		},
 		{
 			desc: "get invitation with invalid args",
 			args: []string{
 				all,
 				token,
-				extraArg,
 				extraArg,
 			},
 			logType: usageLog,
@@ -156,7 +159,6 @@ func TestGetInvitationCmd(t *testing.T) {
 		{
 			desc: "get invitation with invalid token",
 			args: []string{
-				user.ID,
 				domain.ID,
 				invalidToken,
 			},
@@ -168,8 +170,7 @@ func TestGetInvitationCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("Invitation", mock.Anything, tc.args[0], tc.args[1], mock.Anything).Return(tc.inv, tc.sdkErr)
-			sdkCall1 := sdkMock.On("Invitations", mock.Anything, mock.Anything, tc.args[1]).Return(tc.page, tc.sdkErr)
+			sdkCall := sdkMock.On("Invitations", mock.Anything, mock.Anything, tc.args[1]).Return(tc.page, tc.sdkErr)
 
 			out := executeCommand(t, rootCmd, append([]string{getCmd}, tc.args...)...)
 
@@ -190,7 +191,6 @@ func TestGetInvitationCmd(t *testing.T) {
 				assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
 			}
 			sdkCall.Unset()
-			sdkCall1.Unset()
 		})
 	}
 }

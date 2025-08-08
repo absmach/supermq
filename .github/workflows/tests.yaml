@@ -206,12 +206,13 @@ jobs:
               - "certs/**"
               - "http/**"
               - "internal/*"
-              - "internal/api/**"
-              - "internal/apiutil/**"
-              - "internal/groups/**"
-              - "invitations/**"
               - "clients/**"
               - "users/**"
+              - "channels/**"
+              - "domains/**"
+              - "groups/**"
+              - "journal/**"
+              - "api/http/**"
 
             pkg-transformers:
               - "pkg/transformers/**"

@@ -28,8 +28,8 @@ tags:
   - name: Roles
     description: All operations involving roles for clients
     externalDocs:
-       description: Find out more about roles
-       url: https://docs.supermq.abstractmachines.fr/
+      description: Find out more about roles
+      url: https://docs.supermq.abstractmachines.fr/
   - name: Health
     description: Health check operations
     externalDocs:
@@ -436,7 +436,7 @@ paths:
         - bearerAuth: []
       responses:
         "201":
-            $ref: "./schemas/roles.yaml#/components/responses/CreateRoleRes"
+          $ref: "./schemas/roles.yaml#/components/responses/CreateRoleRes"
         "400":
           description: Failed due to malformed client's ID.
         "401":
@@ -946,7 +946,7 @@ components:
     ParentGroupReqObj:
       type: object
       properties:
-         parent_group_id:
+        parent_group_id:
           type: string
           format: uuid
           example: bb7edb32-2eac-4aad-aebe-ed96fe073879
@@ -1337,7 +1337,7 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/Client"
-    
+
     ClientPageRes:
       description: Data retrieved.
       content:

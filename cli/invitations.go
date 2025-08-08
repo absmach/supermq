@@ -34,23 +34,22 @@ var cmdInvitations = []cobra.Command{
 		},
 	},
 	{
-		Use:   "get [all | <user_id> <domain_id> ] <user_auth_token>",
+		Use:   "get [all | <domain_id> ] <user_auth_token>",
 		Short: "Get invitations",
 		Long: "Get invitations\n" +
 			"Usage:\n" +
 			"\tsupermq-cli invitations get all <user_auth_token> - lists all invitations\n" +
 			"\tsupermq-cli invitations get all <user_auth_token> --offset <offset> --limit <limit> - lists all invitations with provided offset and limit\n" +
-			"\tsupermq-cli invitations get <user_id> <domain_id> <user_auth_token> - shows invitation by user id and domain id\n",
+			"\tsupermq-cli invitations get <domain_id> <user_auth_token> - shows invitation by domain id\n",
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 2 && len(args) != 3 {
+			if len(args) != 2 {
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
 
 			pageMetadata := smqsdk.PageMetadata{
-				Identity: Identity,
-				Offset:   Offset,
-				Limit:    Limit,
+				Offset: Offset,
+				Limit:  Limit,
 			}
 			if args[0] == all {
 				l, err := sdk.Invitations(cmd.Context(), pageMetadata, args[1])
@@ -61,7 +60,8 @@ var cmdInvitations = []cobra.Command{
 				logJSONCmd(*cmd, l)
 				return
 			}
-			u, err := sdk.Invitation(cmd.Context(), args[0], args[1], args[2])
+			pageMetadata.DomainID = args[0]
+			u, err := sdk.Invitations(cmd.Context(), pageMetadata, args[1])
 			if err != nil {
 				logErrorCmd(*cmd, err)
 				return

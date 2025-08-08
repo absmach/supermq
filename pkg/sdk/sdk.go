@@ -1285,13 +1285,6 @@ type SDK interface {
 	//  fmt.Println(err)
 	SendInvitation(ctx context.Context, invitation Invitation, token string) (err error)
 
-	// Invitation returns an invitation.
-	//
-	// For example:
-	//  invitation, _ := sdk.Invitation("userID", "domainID", "token")
-	//  fmt.Println(invitation)
-	Invitation(ctx context.Context, userID, domainID, token string) (invitation Invitation, err error)
-
 	// Invitations returns a list of invitations.
 	//
 	// For example:

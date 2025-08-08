@@ -54,21 +54,6 @@ func (sdk mgSDK) SendInvitation(ctx context.Context, invitation Invitation, toke
 	return sdkErr
 }
 
-func (sdk mgSDK) Invitation(ctx context.Context, userID, domainID, token string) (invitation Invitation, err error) {
-	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.domainsURL, domainsEndpoint, domainID, invitationsEndpoint, userID)
-
-	_, body, sdkErr := sdk.processRequest(ctx, http.MethodGet, url, token, nil, nil, http.StatusOK)
-	if sdkErr != nil {
-		return Invitation{}, sdkErr
-	}
-
-	if err := json.Unmarshal(body, &invitation); err != nil {
-		return Invitation{}, errors.NewSDKError(err)
-	}
-
-	return invitation, nil
-}
-
 func (sdk mgSDK) DomainInvitations(ctx context.Context, pm PageMetadata, token, domainID string) (invitations InvitationPage, err error) {
 	url := fmt.Sprintf("%s/%s/%s", domainsEndpoint, domainID, invitationsEndpoint)
 	url, err = sdk.withQueryParams(sdk.domainsURL, url, pm)
