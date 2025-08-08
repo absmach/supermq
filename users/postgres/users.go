@@ -117,9 +117,18 @@ func (repo *userRepo) RetrieveAll(ctx context.Context, pm users.Page) (users.Use
 		return users.UsersPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
 
+	orderClause := ""
+	switch pm.Order {
+	case "first_name", "last_name", "username", "email", "created_at", "updated_at":
+		orderClause = fmt.Sprintf("ORDER BY u.%s", pm.Order)
+		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
+			orderClause = fmt.Sprintf("%s %s", orderClause, pm.Dir)
+		}
+	}
+
 	q := fmt.Sprintf(`SELECT u.id, u.tags, u.email, u.metadata, u.status, u.role, u.first_name, u.last_name, u.username,
     u.created_at, u.updated_at, u.profile_picture, COALESCE(u.updated_by, '') AS updated_by
-    FROM users u %s ORDER BY u.created_at LIMIT :limit OFFSET :offset;`, query)
+    FROM users u %s %s LIMIT :limit OFFSET :offset;`, query, orderClause)
 
 	dbPage, err := ToDBUsersPage(pm)
 	if err != nil {
