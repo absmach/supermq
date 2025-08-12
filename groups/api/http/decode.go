@@ -284,6 +284,15 @@ func decodePageMeta(r *http.Request) (groups.PageMeta, error) {
 		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
 
+	order, err := apiutil.ReadStringQuery(r, api.OrderKey, api.DefOrder)
+	if err != nil {
+		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	dir, err := apiutil.ReadStringQuery(r, api.DirKey, api.DescDir)
+	if err != nil {
+		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+
 	ret := groups.PageMeta{
 		Offset:     offset,
 		Limit:      limit,
@@ -297,6 +306,8 @@ func decodePageMeta(r *http.Request) (groups.PageMeta, error) {
 		AccessType: accessType,
 		RootGroup:  rootGroup,
 		OnlyTotal:  ot,
+		Order:      order,
+		Dir:        dir,
 	}
 	return ret, nil
 }
