@@ -16,9 +16,9 @@ import (
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/certs"
 	httpapi "github.com/absmach/supermq/certs/api"
+	"github.com/absmach/supermq/certs/middleware"
 	pki "github.com/absmach/supermq/certs/pki/openbao"
 	"github.com/absmach/supermq/certs/postgres"
-	"github.com/absmach/supermq/certs/tracing"
 	smqlog "github.com/absmach/supermq/logger"
 	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
 	"github.com/absmach/supermq/pkg/grpcclient"
@@ -191,10 +191,10 @@ func newService(db *sqlx.DB, dbConfig pgclient.Config, tracer trace.Tracer, logg
 	sdk := mgsdk.NewSDK(config)
 	repo := postgres.NewRepository(database)
 	svc := certs.New(sdk, repo, pkiAgent)
-	svc = httpapi.LoggingMiddleware(svc, logger)
+	svc = middleware.Logging(svc, logger)
 	counter, latency := prometheus.MakeMetrics(svcName, "api")
-	svc = httpapi.MetricsMiddleware(svc, counter, latency)
-	svc = tracing.New(svc, tracer)
+	svc = middleware.Metrics(svc, counter, latency)
+	svc = middleware.Tracing(svc, tracer)
 
 	return svc
 }

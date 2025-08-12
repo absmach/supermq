@@ -35,8 +35,8 @@ type authorizationMiddleware struct {
 	rmMW.RoleManagerAuthorizationMiddleware
 }
 
-// AuthorizationMiddleware adds authorization to the clients service.
-func AuthorizationMiddleware(entityType string, svc domains.Service, authz smqauthz.Authorization, domainsOpPerm, rolesOpPerm map[svcutil.Operation]svcutil.Permission, callout callout.Callout) (domains.Service, error) {
+// Authorization adds authorization to the clients service.
+func Authorization(entityType string, svc domains.Service, authz smqauthz.Authorization, domainsOpPerm, rolesOpPerm map[svcutil.Operation]svcutil.Permission, callout callout.Callout) (domains.Service, error) {
 	opp := domains.NewOperationPerm()
 	if err := opp.AddOperationPermissionMap(domainsOpPerm); err != nil {
 		return nil, err
