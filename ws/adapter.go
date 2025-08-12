@@ -5,11 +5,12 @@ package ws
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
-	"github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -32,7 +33,7 @@ type Service interface {
 	// the channelID for subscription and domainID specifies the domain for authorization.
 	// Subtopic is optional.
 	// If the subscription is successful, nil is returned otherwise error is returned.
-	Subscribe(ctx context.Context, sessionID, clientKey, domainID, chanID, subtopic string, client *Client) error
+	Subscribe(ctx context.Context, sessionID, clientUsername, clientPassword, domainID, chanID, subtopic string, client *Client) error
 
 	Unsubscribe(ctx context.Context, sessionID, domainID, chanID, subtopic string) error
 }
@@ -54,12 +55,12 @@ func New(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.Cha
 	}
 }
 
-func (svc *adapterService) Subscribe(ctx context.Context, sessionID, clientKey, domainID, channelID, subtopic string, c *Client) error {
-	if channelID == "" || clientKey == "" || domainID == "" {
+func (svc *adapterService) Subscribe(ctx context.Context, sessionID, clientUsername, clientPassword, domainID, channelID, subtopic string, c *Client) error {
+	if channelID == "" || clientPassword == "" || domainID == "" {
 		return svcerr.ErrAuthentication
 	}
 
-	clientID, err := svc.authorize(ctx, clientKey, domainID, channelID, connections.Subscribe)
+	clientID, err := svc.authorize(ctx, clientUsername, clientPassword, channelID, domainID, connections.Subscribe)
 	if err != nil {
 		return svcerr.ErrAuthorization
 	}
@@ -91,31 +92,63 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, sessionID, domainID,
 
 // authorize checks if the clientKey is authorized to access the channel
 // and returns the clientID if it is.
-func (svc *adapterService) authorize(ctx context.Context, clientKey, domainID, chanID string, msgType connections.ConnType) (string, error) {
-	if strings.HasPrefix(clientKey, "Client") {
-		clientKey = extractClientSecret(clientKey)
-	}
-	authnRes, err := svc.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{Token: authn.AuthPack(authn.DomainAuth, domainID, clientKey)})
-	if err != nil {
-		return "", errors.Wrap(svcerr.ErrAuthentication, err)
-	}
-	if !authnRes.GetAuthenticated() {
-		return "", errors.Wrap(svcerr.ErrAuthentication, err)
+func (svc *adapterService) authorize(ctx context.Context, clientUsername, clientPassword, channelID, domainID string, msgType connections.ConnType) (string, error) {
+	var clientID, clientType string
+	var err error
+	switch {
+	case strings.HasPrefix(clientPassword, "Client"):
+		secret := extractClientSecret(clientPassword)
+		fmt.Println("secret", secret)
+		clientID, err = svc.clientAuthenticate(ctx, smqauthn.AuthPack(smqauthn.DomainAuth, domainID, secret))
+		if err != nil {
+			return "", err
+		}
+		clientType = policies.ClientType
+	case clientUsername != "" && clientPassword != "":
+		clientID, err = svc.clientAuthenticate(ctx, smqauthn.AuthPack(smqauthn.BasicAuth, clientUsername, clientPassword))
+		if err != nil {
+			return "", err
+		}
+		clientType = policies.ClientType
+	case clientUsername == "" && clientPassword != "":
+		cid, secret, err := decodeAuth(clientPassword)
+		if err != nil {
+			return "", err
+		}
+		clientID, err = svc.clientAuthenticate(ctx, smqauthn.AuthPack(smqauthn.BasicAuth, cid, secret))
+		if err != nil {
+			return "", err
+		}
+		clientType = policies.ClientType
+	default:
+		return "", svcerr.ErrAuthentication
 	}
 
-	authzReq := &grpcChannelsV1.AuthzReq{
-		ClientType: policies.ClientType,
-		ClientId:   authnRes.GetId(),
-		Type:       uint32(msgType),
-		ChannelId:  chanID,
+	ar := &grpcChannelsV1.AuthzReq{
 		DomainId:   domainID,
+		ClientId:   clientID,
+		ClientType: clientType,
+		ChannelId:  channelID,
+		Type:       uint32(msgType),
 	}
-	authzRes, err := svc.channels.Authorize(ctx, authzReq)
+	res, err := svc.channels.Authorize(ctx, ar)
 	if err != nil {
-		return "", errors.Wrap(svcerr.ErrAuthorization, err)
+		return "", err
 	}
-	if !authzRes.GetAuthorized() {
-		return "", errors.Wrap(svcerr.ErrAuthorization, err)
+	if !res.GetAuthorized() {
+		return "", svcerr.ErrAuthorization
+	}
+
+	return clientID, nil
+}
+
+func (svc *adapterService) clientAuthenticate(ctx context.Context, token string) (string, error) {
+	authnRes, err := svc.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{Token: token})
+	if err != nil {
+		return "", svcerr.ErrAuthentication
+	}
+	if !authnRes.Authenticated {
+		return "", svcerr.ErrAuthentication
 	}
 
 	return authnRes.GetId(), nil
