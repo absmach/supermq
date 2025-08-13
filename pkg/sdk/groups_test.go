@@ -322,12 +322,16 @@ func TestListGroups(t *testing.T) {
 			domainID: domainID,
 			token:    validToken,
 			pageMeta: sdk.PageMetadata{
-				Offset: offset,
-				Limit:  100,
+				Offset:    offset,
+				Limit:     100,
+				Order:     "created_at",
+				Direction: "asc",
 			},
 			svcReq: groups.PageMeta{
 				Offset:  offset,
 				Limit:   100,
+				Order:   "created_at",
+				Dir:     "asc",
 				Actions: []string{},
 			},
 			svcRes: groups.Page{
@@ -381,12 +385,16 @@ func TestListGroups(t *testing.T) {
 			domainID: domainID,
 			token:    validToken,
 			pageMeta: sdk.PageMetadata{
-				Offset: offset,
-				Limit:  0,
+				Offset:    offset,
+				Limit:     0,
+				Order:     "created_at",
+				Direction: "asc",
 			},
 			svcReq: groups.PageMeta{
 				Offset:  offset,
 				Limit:   10,
+				Order:   "created_at",
+				Dir:     "asc",
 				Actions: []string{},
 			},
 			svcRes: groups.Page{
@@ -423,8 +431,10 @@ func TestListGroups(t *testing.T) {
 			domainID: domainID,
 			token:    validToken,
 			pageMeta: sdk.PageMetadata{
-				Offset: 0,
-				Limit:  10,
+				Offset:    0,
+				Limit:     10,
+				Order:     "created_at",
+				Direction: "asc",
 				Metadata: sdk.Metadata{
 					"name": "user_89",
 				},
@@ -432,6 +442,8 @@ func TestListGroups(t *testing.T) {
 			svcReq: groups.PageMeta{
 				Offset: 0,
 				Limit:  10,
+				Order:  "created_at",
+				Dir:    "asc",
 				Metadata: groups.Metadata{
 					"name": "user_89",
 				},
@@ -474,12 +486,16 @@ func TestListGroups(t *testing.T) {
 			domainID: domainID,
 			token:    validToken,
 			pageMeta: sdk.PageMetadata{
-				Offset: offset,
-				Limit:  limit,
+				Offset:    offset,
+				Limit:     limit,
+				Order:     "created_at",
+				Direction: "asc",
 			},
 			svcReq: groups.PageMeta{
 				Offset:  offset,
 				Limit:   limit,
+				Order:   "created_at",
+				Dir:     "asc",
 				Actions: []string{},
 			},
 			svcRes: groups.Page{
