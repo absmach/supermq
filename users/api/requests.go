@@ -103,6 +103,10 @@ func (req listUsersReq) validate() error {
 		return apiutil.ErrInvalidDirection
 	}
 
+	if req.order != "" && (req.order != api.NameOrder && req.order != api.CreatedAtOrder && req.order != api.UpdatedAtOrder) {
+		return apiutil.ErrInvalidOrder
+	}
+
 	return nil
 }
 
