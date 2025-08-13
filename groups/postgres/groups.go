@@ -998,8 +998,8 @@ indirect_child_groups AS (
 		AND
 		NOT EXISTS (  -- Ensures that the indirect_child_groups.id is not already in the direct_groups_with_subgroup table
 			SELECT 1
-			FROM direct_groups_with_subgroup dlgws
-			WHERE dlgws.id = indirect_child_groups.id
+			FROM direct_groups_with_subgroup dgws
+			WHERE dgws.id = indirect_child_groups.id
 		)
 ),
 direct_indirect_groups as (
