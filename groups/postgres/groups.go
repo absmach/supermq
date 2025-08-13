@@ -409,13 +409,6 @@ func (repo groupRepository) RetrieveByIDAndUser(ctx context.Context, domainID, u
 }
 
 func (repo groupRepository) RetrieveAll(ctx context.Context, pm groups.PageMeta) (groups.Page, error) {
-	pgClause := ""
-	if pm.Limit != 0 {
-		pgClause = "LIMIT :limit"
-	}
-	if pm.Offset != 0 {
-		pgClause += " OFFSET :offset"
-	}
 	query := buildQuery(pm)
 
 	orderClause := ""
@@ -428,7 +421,7 @@ func (repo groupRepository) RetrieveAll(ctx context.Context, pm groups.PageMeta)
 	}
 
 	q := fmt.Sprintf(`SELECT DISTINCT g.id, g.domain_id, tags, COALESCE(g.parent_id, '') AS parent_id, g.name, g.description,
-		g.metadata, g.created_at, g.updated_at, g.updated_by, g.status FROM groups g %s %s %s;`, query, orderClause, pgClause)
+		g.metadata, g.created_at, g.updated_at, g.updated_by, g.status FROM groups g %s %s LIMIT :limit OFFSET :offset;`, query, orderClause)
 
 	dbPageMeta, err := toDBGroupPageMeta(pm)
 	if err != nil {
