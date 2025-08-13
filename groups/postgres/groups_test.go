@@ -707,6 +707,8 @@ func TestRetrieveAll(t *testing.T) {
 				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  10,
+					Order:  "created_at",
+					Dir:    "asc",
 				},
 			},
 			response: groups.Page{
@@ -725,6 +727,8 @@ func TestRetrieveAll(t *testing.T) {
 				PageMeta: groups.PageMeta{
 					Offset: 10,
 					Limit:  10,
+					Order:  "created_at",
+					Dir:    "asc",
 				},
 			},
 			response: groups.Page{
@@ -743,6 +747,9 @@ func TestRetrieveAll(t *testing.T) {
 				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  50,
+
+					Order: "created_at",
+					Dir:   "asc",
 				},
 			},
 			response: groups.Page{
@@ -761,6 +768,8 @@ func TestRetrieveAll(t *testing.T) {
 				PageMeta: groups.PageMeta{
 					Offset: 50,
 					Limit:  50,
+					Order:  "created_at",
+					Dir:    "asc",
 				},
 			},
 			response: groups.Page{
@@ -779,6 +788,8 @@ func TestRetrieveAll(t *testing.T) {
 				PageMeta: groups.PageMeta{
 					Offset: 1000,
 					Limit:  50,
+					Order:  "created_at",
+					Dir:    "asc",
 				},
 			},
 			response: groups.Page{
@@ -797,6 +808,8 @@ func TestRetrieveAll(t *testing.T) {
 				PageMeta: groups.PageMeta{
 					Offset: 170,
 					Limit:  50,
+					Order:  "created_at",
+					Dir:    "asc",
 				},
 			},
 			response: groups.Page{
