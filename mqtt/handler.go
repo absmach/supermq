@@ -214,7 +214,7 @@ func (h *handler) Disconnect(ctx context.Context) error {
 	if !ok {
 		return errors.Wrap(ErrFailedDisconnect, ErrClientNotInitialized)
 	}
-	h.logger.Info(fmt.Sprintf(LogInfoDisconnected, s.ID, s.Password))
+	h.logger.Info(fmt.Sprintf(LogInfoDisconnected, s.ID, s.Username))
 
 	return nil
 }

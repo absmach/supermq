@@ -518,16 +518,34 @@ func TestDisconnect(t *testing.T) {
 			topic:   topics,
 			err:     nil,
 		},
+		{
+			desc: "disconnect logs username not password",
+			session: &session.Session{
+				ID:       "testClient",
+				Username: "testUser",
+				Password: []byte("secretPassword123"),
+			},
+			topic:  topics,
+			logMsg: fmt.Sprintf(mqtt.LogInfoDisconnected, "testClient", "testUser"),
+			err:    nil,
+		},
 	}
 
 	for _, tc := range cases {
-		ctx := context.TODO()
-		if tc.session != nil {
-			ctx = session.NewContext(ctx, tc.session)
-		}
-		err := handler.Disconnect(ctx)
-		assert.Contains(t, logBuffer.String(), tc.logMsg)
-		assert.Equal(t, tc.err, err)
+		t.Run(tc.desc, func(t *testing.T) {
+			logBuffer.Reset()
+			ctx := context.TODO()
+			if tc.session != nil {
+				ctx = session.NewContext(ctx, tc.session)
+			}
+			err := handler.Disconnect(ctx)
+			assert.Contains(t, logBuffer.String(), tc.logMsg)
+			assert.Equal(t, tc.err, err)
+
+			if tc.session != nil {
+				assert.NotContains(t, logBuffer.String(), string(tc.session.Password), "password should not be logged")
+			}
+		})
 	}
 }
 
