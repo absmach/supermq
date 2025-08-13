@@ -952,9 +952,7 @@ direct_groups_with_subgroup AS (
 		grm.member_id AS member_id,
 		gr.id AS role_id,
 		gr."name" AS role_name,
-		array_agg(DISTINCT all_actions."action") AS actions,
-		g.path AS g_path,
-		nlevel(g.path) AS g_nlevel
+		array_agg(DISTINCT all_actions."action") AS actions
 	FROM
 		groups_role_members grm
 	JOIN
@@ -967,20 +965,20 @@ direct_groups_with_subgroup AS (
 		groups_role_actions all_actions ON all_actions.role_id = grm.role_id
 	WHERE
 		grm.member_id = '%s'
-		AND g.domain_id ='%s'
+		AND g.domain_id = '%s'
 		AND gra."action" LIKE 'subgroup_%%'
 	GROUP BY
 		gr.entity_id, grm.member_id, gr.id, gr."name", g."path", g.id
 ),
-direct_leaf_groups_with_subgroup AS (
+direct_leaf_groups_with_subgroup  AS (
 	SELECT dgws.*
 	FROM direct_groups_with_subgroup dgws
 	WHERE NOT EXISTS (
 		SELECT 1
 		FROM direct_groups_with_subgroup dgws2
 		WHERE
-			dgws2.path @> dgws.path 
-			AND dgws2.id != dgws.id  
+			dgws2.path @> dgws.path
+			AND dgws2.id != dgws.id
 	)
 ),
 indirect_child_groups AS (
@@ -998,9 +996,9 @@ indirect_child_groups AS (
 	WHERE
 		indirect_child_groups.domain_id = '%s'
 		AND
-		NOT EXISTS (  -- Ensures that the indirect_child_groups.id is not already in the direct_leaf_groups_with_subgroup table
+		NOT EXISTS (  -- Ensures that the indirect_child_groups.id is not already in the direct_groups_with_subgroup table
 			SELECT 1
-			FROM direct_leaf_groups_with_subgroup dlgws
+			FROM direct_groups_with_subgroup dlgws
 			WHERE dlgws.id = indirect_child_groups.id
 		)
 ),
@@ -1117,7 +1115,7 @@ final_groups AS (
 			SELECT 1 FROM direct_indirect_groups dig
 			WHERE dig.id = dg.id
 		)
-	 GROUP BY
+	GROUP BY
 		dg.id, d.id, dr.id
 )
 		`, userID, domainID, userID, domainID, domainID, userID, domainID)
