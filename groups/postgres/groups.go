@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	api "github.com/absmach/supermq/api/http"
 	groups "github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/internal/nullable"
 	"github.com/absmach/supermq/pkg/errors"
@@ -408,11 +409,19 @@ func (repo groupRepository) RetrieveByIDAndUser(ctx context.Context, domainID, u
 }
 
 func (repo groupRepository) RetrieveAll(ctx context.Context, pm groups.PageMeta) (groups.Page, error) {
-	var q string
 	query := buildQuery(pm)
 
-	q = fmt.Sprintf(`SELECT DISTINCT g.id, g.domain_id, tags, COALESCE(g.parent_id, '') AS parent_id, g.name, g.description,
-		g.metadata, g.created_at, g.updated_at, g.updated_by, g.status FROM groups g %s ORDER BY g.created_at LIMIT :limit OFFSET :offset;`, query)
+	orderClause := ""
+	switch pm.Order {
+	case "name", "created_at", "updated_at":
+		orderClause = fmt.Sprintf("ORDER BY g.%s", pm.Order)
+		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
+			orderClause = fmt.Sprintf("%s %s", orderClause, pm.Dir)
+		}
+	}
+
+	q := fmt.Sprintf(`SELECT DISTINCT g.id, g.domain_id, tags, COALESCE(g.parent_id, '') AS parent_id, g.name, g.description,
+		g.metadata, g.created_at, g.updated_at, g.updated_by, g.status FROM groups g %s %s LIMIT :limit OFFSET :offset;`, query, orderClause)
 
 	dbPageMeta, err := toDBGroupPageMeta(pm)
 	if err != nil {

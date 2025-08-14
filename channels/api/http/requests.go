@@ -93,6 +93,18 @@ func (req listChannelsReq) validate() error {
 		return apiutil.ErrNameSize
 	}
 
+	switch req.Order {
+	case "", api.NameOrder, api.CreatedAtOrder, api.UpdatedAtOrder:
+	default:
+		return apiutil.ErrInvalidOrder
+	}
+
+	switch req.Dir {
+	case "", api.DescDir, api.AscDir:
+	default:
+		return apiutil.ErrInvalidDirection
+	}
+
 	return nil
 }
 

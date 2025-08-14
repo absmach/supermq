@@ -66,6 +66,19 @@ func (req listGroupsReq) validate() error {
 	if req.userID != "" && req.groupID != "" {
 		return apiutil.ErrMultipleEntitiesFilter
 	}
+
+	switch req.Order {
+	case "", api.NameOrder, api.CreatedAtOrder, api.UpdatedAtOrder:
+	default:
+		return apiutil.ErrInvalidOrder
+	}
+
+	switch req.Dir {
+	case "", api.DescDir, api.AscDir:
+	default:
+		return apiutil.ErrInvalidDirection
+	}
+
 	return nil
 }
 
