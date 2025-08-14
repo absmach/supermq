@@ -306,7 +306,7 @@ func (svc *service) RejectInvitation(ctx context.Context, session authn.Session,
 
 func (svc *service) DeleteInvitation(ctx context.Context, session authn.Session, inviteeUserID, domainID string) error {
 	if session.UserID == inviteeUserID {
-		if err := svc.repo.DeleteInvitation(ctx, inviteeUserID, domainID); err != nil {
+		if err := svc.repo.DeleteUsersInvitation(ctx, domainID, inviteeUserID); err != nil {
 			return errors.Wrap(svcerr.ErrRemoveEntity, err)
 		}
 		return nil
@@ -325,7 +325,7 @@ func (svc *service) DeleteInvitation(ctx context.Context, session authn.Session,
 		return errors.Wrap(svcerr.ErrRemoveEntity, svcerr.ErrInvitationAlreadyRejected)
 	}
 
-	if err := svc.repo.DeleteInvitation(ctx, inviteeUserID, domainID); err != nil {
+	if err := svc.repo.DeleteUsersInvitation(ctx, domainID, inviteeUserID); err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
@@ -334,11 +334,10 @@ func (svc *service) DeleteInvitation(ctx context.Context, session authn.Session,
 
 // Add addition removal of user from invitations.
 func (svc *service) RemoveEntityMembers(ctx context.Context, session authn.Session, entityID string, members []string) error {
-	for _, member := range members {
-		if err := svc.repo.DeleteInvitation(ctx, member, entityID); err != nil && err != repoerr.ErrNotFound {
-			return err
-		}
+	if err := svc.repo.DeleteUsersInvitation(ctx, entityID, members...); err != nil && err != repoerr.ErrNotFound {
+		return err
 	}
+
 	return svc.ProvisionManageService.RemoveEntityMembers(ctx, session, entityID, members)
 }
 
@@ -358,10 +357,8 @@ func (svc *service) RoleRemoveMembers(ctx context.Context, session authn.Session
 		}
 	}
 
-	for _, memberID := range members {
-		if err := svc.repo.DeleteInvitation(ctx, memberID, entityID); err != nil && err != repoerr.ErrNotFound {
-			return err
-		}
+	if err := svc.repo.DeleteUsersInvitation(ctx, entityID, members...); err != nil && err != repoerr.ErrNotFound {
+		return err
 	}
 
 	return svc.ProvisionManageService.RoleRemoveMembers(ctx, session, entityID, roleID, members)
