@@ -93,11 +93,15 @@ func (req listChannelsReq) validate() error {
 		return apiutil.ErrNameSize
 	}
 
-	if req.Order != "" && (req.Order != api.NameOrder && req.Order != api.CreatedAtOrder && req.Order != api.UpdatedAtOrder) {
+	switch req.Order {
+	case "", api.NameOrder, api.CreatedAtOrder, api.UpdatedAtOrder:
+	default:
 		return apiutil.ErrInvalidOrder
 	}
 
-	if req.Dir != "" && (req.Dir != api.AscDir && req.Dir != api.DescDir) {
+	switch req.Dir {
+	case "", api.DescDir, api.AscDir:
+	default:
 		return apiutil.ErrInvalidDirection
 	}
 
