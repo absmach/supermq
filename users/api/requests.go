@@ -101,7 +101,7 @@ func (req listUsersReq) validate() error {
 	}
 
 	switch req.order {
-	case "", api.NameOrder, api.CreatedAtOrder, api.UpdatedAtOrder:
+	case "", api.CreatedAtOrder, api.UpdatedAtOrder, api.FirstNameKey, api.LastNameKey, api.UsernameKey, api.EmailKey:
 	default:
 		return apiutil.ErrInvalidOrder
 	}
