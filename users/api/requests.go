@@ -99,12 +99,17 @@ func (req listUsersReq) validate() error {
 	if req.limit > maxLimitSize || req.limit < 1 {
 		return apiutil.ErrLimitSize
 	}
-	if req.dir != "" && (req.dir != api.AscDir && req.dir != api.DescDir) {
-		return apiutil.ErrInvalidDirection
+
+	switch req.order {
+	case "", api.NameOrder, api.CreatedAtOrder, api.UpdatedAtOrder:
+	default:
+		return apiutil.ErrInvalidOrder
 	}
 
-	if req.order != "" && (req.order != api.NameOrder && req.order != api.CreatedAtOrder && req.order != api.UpdatedAtOrder) {
-		return apiutil.ErrInvalidOrder
+	switch req.dir {
+	case "", api.DescDir, api.AscDir:
+	default:
+		return apiutil.ErrInvalidDirection
 	}
 
 	return nil
