@@ -743,7 +743,7 @@ func TestListUsers(t *testing.T) {
 				},
 			},
 			token:    validToken,
-			query:    "order=name",
+			query:    "order=username",
 			status:   http.StatusOK,
 			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
 			err:      nil,
