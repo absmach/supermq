@@ -7,18 +7,16 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io"
 	"maps"
 	"net/http"
 	"net/url"
-	"os"
 	"time"
 
 	"github.com/absmach/supermq/pkg/errors"
-	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/pkg/server"
 )
 
 var errFailedToRead = errors.New("failed to read callout response body")
@@ -82,22 +80,12 @@ func newCalloutClient(ctls bool, certPath, keyPath, caPath string, timeout time.
 		InsecureSkipVerify: !ctls,
 	}
 	if certPath != "" || keyPath != "" {
-		clientTLSCert, err := tls.LoadX509KeyPair(certPath, keyPath)
+		clientTLSCert, err := server.LoadX509KeyPair(certPath, keyPath)
 		if err != nil {
 			return nil, err
 		}
-		certPool, err := x509.SystemCertPool()
-		if err != nil {
-			return nil, err
-		}
-		caCert, err := os.ReadFile(caPath)
-		if err != nil {
-			return nil, err
-		}
-		if !certPool.AppendCertsFromPEM(caCert) {
-			return nil, errors.Wrap(errors.New("failed to append CA certificate"), svcerr.ErrCreateEntity)
-		}
-		tlsConfig.RootCAs = certPool
+		caCert, err := server.LoadRootCACerts(caPath)
+		tlsConfig.RootCAs = caCert
 		tlsConfig.Certificates = []tls.Certificate{clientTLSCert}
 	}
 
