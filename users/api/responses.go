@@ -113,7 +113,7 @@ func (res viewUserRes) Empty() bool {
 
 type usersPageRes struct {
 	pageRes
-	Users []viewUserRes `json:"users,omitempty"`
+	Users []viewUserRes `json:"users"`
 }
 
 func (res usersPageRes) Code() int {
