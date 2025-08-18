@@ -106,9 +106,7 @@ func (req listUsersReq) validate() error {
 		return apiutil.ErrInvalidOrder
 	}
 
-	switch req.dir {
-	case "", api.DescDir, api.AscDir:
-	default:
+	if req.dir != "" && (req.dir != api.AscDir && req.dir != api.DescDir) {
 		return apiutil.ErrInvalidDirection
 	}
 
