@@ -75,7 +75,7 @@ const (
 	DefTotal        = uint64(100)
 	DefOffset       = 0
 	DefOrder        = "updated_at"
-	DefDir          = "asc"
+	DefDir          = "desc"
 	DefLimit        = 10
 	DefLevel        = 0
 	DefStartLevel   = 1

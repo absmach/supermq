@@ -1276,10 +1276,25 @@ func PageQuery(pm clients.Page) (string, error) {
 
 func applyOrdering(emq string, pm clients.Page) string {
 	switch pm.Order {
-	case "name", "identity", "created_at", "updated_at":
+	case "name":
 		emq = fmt.Sprintf("%s ORDER BY %s", emq, pm.Order)
 		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
-			emq = fmt.Sprintf("%s %s", emq, pm.Dir)
+			emq = fmt.Sprintf("%s %s, id %s", emq, pm.Dir, pm.Dir)
+		}
+	case "identity":
+		emq = fmt.Sprintf("%s ORDER BY identity", emq)
+		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
+			emq = fmt.Sprintf("%s %s, id %s", emq, pm.Dir, pm.Dir)
+		}
+	case "created_at":
+		emq = fmt.Sprintf("%s ORDER BY created_at", emq)
+		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
+			emq = fmt.Sprintf("%s %s, id %s", emq, pm.Dir, pm.Dir)
+		}
+	case "updated_at":
+		emq = fmt.Sprintf("%s ORDER BY COALESCE(updated_at, created_at)", emq)
+		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
+			emq = fmt.Sprintf("%s %s, id %s", emq, pm.Dir, pm.Dir)
 		}
 	}
 	return emq

@@ -413,10 +413,20 @@ func (repo groupRepository) RetrieveAll(ctx context.Context, pm groups.PageMeta)
 
 	orderClause := ""
 	switch pm.Order {
-	case "name", "created_at", "updated_at":
-		orderClause = fmt.Sprintf("ORDER BY g.%s", pm.Order)
+	case "name":
+		orderClause = "ORDER BY g.name"
 		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
-			orderClause = fmt.Sprintf("%s %s", orderClause, pm.Dir)
+			orderClause = fmt.Sprintf("%s %s, g.id %s", orderClause, pm.Dir, pm.Dir)
+		}
+	case "created_at":
+		orderClause = "ORDER BY g.created_at"
+		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
+			orderClause = fmt.Sprintf("%s %s, g.id %s", orderClause, pm.Dir, pm.Dir)
+		}
+	case "updated_at":
+		orderClause = "ORDER BY COALESCE(g.updated_at, g.created_at)"
+		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
+			orderClause = fmt.Sprintf("%s %s, g.id %s", orderClause, pm.Dir, pm.Dir)
 		}
 	}
 
