@@ -119,10 +119,35 @@ func (repo *userRepo) RetrieveAll(ctx context.Context, pm users.Page) (users.Use
 
 	orderClause := ""
 	switch pm.Order {
-	case "first_name", "last_name", "username", "email", "created_at", "updated_at":
-		orderClause = fmt.Sprintf("ORDER BY u.%s", pm.Order)
+	case "u.first_name":
+		orderClause = "ORDER BY u.first_name"
 		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
-			orderClause = fmt.Sprintf("%s %s", orderClause, pm.Dir)
+			orderClause = fmt.Sprintf("%s %s, u.id %s", orderClause, pm.Dir, pm.Dir)
+		}
+	case "u.last_name":
+		orderClause = "ORDER BY u.last_name"
+		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
+			orderClause = fmt.Sprintf("%s %s, u.id %s", orderClause, pm.Dir, pm.Dir)
+		}
+	case "u.username":
+		orderClause = "ORDER BY u.username"
+		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
+			orderClause = fmt.Sprintf("%s %s, u.id %s", orderClause, pm.Dir, pm.Dir)
+		}
+	case "u.email":
+		orderClause = "ORDER BY u.email"
+		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
+			orderClause = fmt.Sprintf("%s %s, u.id %s", orderClause, pm.Dir, pm.Dir)
+		}
+	case "u.created_at":
+		orderClause = "ORDER BY u.created_at"
+		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
+			orderClause = fmt.Sprintf("%s %s, u.id %s", orderClause, pm.Dir, pm.Dir)
+		}
+	case "u.updated_at":
+		orderClause = "ORDER BY COALESCE(u.updated_at, u.created_at)"
+		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
+			orderClause = fmt.Sprintf("%s %s, u.id %s", orderClause, pm.Dir, pm.Dir)
 		}
 	}
 
