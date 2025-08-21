@@ -133,6 +133,9 @@ func (h *handler) AuthSubscribe(ctx context.Context, topics *[]string) error {
 	}
 
 	for _, topic := range *topics {
+		if topic == messaging.HealthTopicPrefix {
+			continue
+		}
 		domainID, chanID, _, err := h.parser.ParseSubscribeTopic(ctx, topic, false)
 		if err != nil {
 			return err
