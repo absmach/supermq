@@ -363,7 +363,7 @@ func TestListClients(t *testing.T) {
 			svcReq: clients.Page{
 				Actions: []string{},
 				Order:   "updated_at",
-				Dir:     "asc",
+				Dir:     "desc",
 				Offset:  0,
 				Limit:   100,
 			},
@@ -395,7 +395,7 @@ func TestListClients(t *testing.T) {
 			svcReq: clients.Page{
 				Actions: []string{},
 				Order:   "updated_at",
-				Dir:     "asc",
+				Dir:     "desc",
 				Offset:  0,
 				Limit:   100,
 			},
@@ -415,7 +415,7 @@ func TestListClients(t *testing.T) {
 			svcReq: clients.Page{
 				Actions: []string{},
 				Order:   "updated_at",
-				Dir:     "asc",
+				Dir:     "desc",
 			},
 			svcRes:   clients.ClientsPage{},
 			svcErr:   nil,
@@ -434,7 +434,7 @@ func TestListClients(t *testing.T) {
 			svcReq: clients.Page{
 				Actions: []string{},
 				Order:   "updated_at",
-				Dir:     "asc",
+				Dir:     "desc",
 			},
 			svcRes:   clients.ClientsPage{},
 			svcErr:   nil,
@@ -453,7 +453,7 @@ func TestListClients(t *testing.T) {
 			svcReq: clients.Page{
 				Actions: []string{},
 				Order:   "updated_at",
-				Dir:     "asc",
+				Dir:     "desc",
 				Offset:  0,
 				Limit:   100,
 				Status:  clients.DisabledStatus,
@@ -488,7 +488,7 @@ func TestListClients(t *testing.T) {
 			svcReq: clients.Page{
 				Actions: []string{},
 				Order:   "updated_at",
-				Dir:     "asc",
+				Dir:     "desc",
 				Offset:  0,
 				Limit:   100,
 				Tag:     "tag1",
@@ -525,7 +525,7 @@ func TestListClients(t *testing.T) {
 			svcReq: clients.Page{
 				Actions: []string{},
 				Order:   "updated_at",
-				Dir:     "asc",
+				Dir:     "desc",
 			},
 			svcRes:   clients.ClientsPage{},
 			svcErr:   nil,
@@ -543,7 +543,7 @@ func TestListClients(t *testing.T) {
 			svcReq: clients.Page{
 				Actions: []string{},
 				Order:   "updated_at",
-				Dir:     "asc",
+				Dir:     "desc",
 				Offset:  0,
 				Limit:   100,
 			},
