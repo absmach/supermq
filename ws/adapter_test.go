@@ -5,9 +5,9 @@ package ws_test
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log/slog"
-	"strings"
 	"testing"
 
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
@@ -69,6 +69,8 @@ func TestSubscribe(t *testing.T) {
 	svc, pubsub, clients, channels, auth := newService()
 
 	c := ws.NewClient(slog.Default(), nil, sessionID)
+
+	encodedPass := base64.URLEncoding.EncodeToString([]byte(clientID + ":" + clientKey))
 
 	cases := []struct {
 		desc       string

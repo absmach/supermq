@@ -5,6 +5,7 @@ package ws
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -43,6 +44,7 @@ var (
 	errMissingTopicSub          = errors.New("failed to subscribe due to missing topic")
 	errFailedPublish            = errors.New("failed to publish")
 	errFailedPublishToMsgBroker = errors.New("failed to publish to supermq message broker")
+	errInvalidAuthFormat        = errors.New("invalid basic auth format")
 )
 
 // Event implements events.Event interface.
@@ -91,7 +93,7 @@ func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byt
 
 	clientID, err := h.authAccess(ctx, string(s.Password), domainID, channelID, connections.Publish)
 	if err != nil {
-		return err
+		return mgate.NewHTTPProxyError(http.StatusUnauthorized, err)
 	}
 
 	if s.Username == "" {
@@ -210,11 +212,11 @@ func (h *handler) authAccess(ctx context.Context, token, domainID, chanID string
 	}
 
 	ar := &grpcChannelsV1.AuthzReq{
-		Type:       uint32(msgType),
+		DomainId:   domainID,
 		ClientId:   clientID,
 		ClientType: clientType,
-		ChannelId:  chanID,
-		DomainId:   domainID,
+		ChannelId:  channelID,
+		Type:       uint32(msgType),
 	}
 	res, err := h.channels.Authorize(ctx, ar)
 	if err != nil {
@@ -225,4 +227,20 @@ func (h *handler) authAccess(ctx context.Context, token, domainID, chanID string
 	}
 
 	return clientID, nil
+}
+
+// decodeAuth decodes the base64 encoded string in the format "clientID:secret".
+func decodeAuth(s string) (string, string, error) {
+	db, err := base64.URLEncoding.DecodeString(s)
+	if err != nil {
+		return "", "", err
+	}
+	parts := strings.SplitN(string(db), ":", 2)
+	if len(parts) != 2 {
+		return "", "", errInvalidAuthFormat
+	}
+	clientID := parts[0]
+	secret := parts[1]
+
+	return clientID, secret, nil
 }

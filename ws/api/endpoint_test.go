@@ -5,6 +5,7 @@ package api_test
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"net"
 	"net/http"
@@ -138,6 +139,8 @@ func TestHandshake(t *testing.T) {
 	clients.On("Authenticate", mock.Anything, mock.Anything).Return(&grpcClientsV1.AuthnRes{Authenticated: false}, nil)
 	authn.On("Authenticate", mock.Anything, mock.Anything).Return(smqauthn.Session{}, nil)
 	channels.On("Authorize", mock.Anything, mock.Anything, mock.Anything).Return(&grpcChannelsV1.AuthzRes{Authorized: true}, nil)
+
+	encodedPass := base64.URLEncoding.EncodeToString([]byte(id + ":" + clientKey))
 
 	cases := []struct {
 		desc     string
