@@ -522,10 +522,20 @@ func (repo domainRepo) processRows(rows *sqlx.Rows) ([]domains.Domain, error) {
 
 func applyOrdering(emq string, pm domains.Page) string {
 	switch pm.Order {
-	case "name", "created_at", "updated_at":
-		emq = fmt.Sprintf("%s ORDER BY d.%s", emq, pm.Order)
+	case "name":
+		emq = fmt.Sprintf("%s ORDER BY d.name", emq)
 		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
-			emq = fmt.Sprintf("%s %s", emq, pm.Dir)
+			emq = fmt.Sprintf("%s %s, d.id %s", emq, pm.Dir, pm.Dir)
+		}
+	case "created_at":
+		emq = fmt.Sprintf("%s ORDER BY d.created_at", emq)
+		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
+			emq = fmt.Sprintf("%s %s, d.id %s", emq, pm.Dir, pm.Dir)
+		}
+	case "updated_at":
+		emq = fmt.Sprintf("%s ORDER BY COALESCE(d.updated_at, d.created_at)", emq)
+		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
+			emq = fmt.Sprintf("%s %s, d.id %s", emq, pm.Dir, pm.Dir)
 		}
 	}
 	return emq
