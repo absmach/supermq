@@ -288,7 +288,7 @@ func decodePageMeta(r *http.Request) (groups.PageMeta, error) {
 	if err != nil {
 		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	dir, err := apiutil.ReadStringQuery(r, api.DirKey, api.DescDir)
+	dir, err := apiutil.ReadStringQuery(r, api.DirKey, api.DefDir)
 	if err != nil {
 		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
