@@ -24,6 +24,12 @@ jobs:
           go-version: 1.25.x
           cache-dependency-path: "go.sum"
 
+      - name: Set GOBIN
+        run: echo "GOBIN=$HOME/.local/bin" >> $GITHUB_ENV
+
+      - name: Add GOBIN to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
       - name: Check for changes in go.mod
         run: |
           go mod tidy
