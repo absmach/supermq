@@ -90,7 +90,7 @@ func newServer(svc auth.Service) *httptest.Server {
 	return httptest.NewServer(mux)
 }
 
-func toJSON(data interface{}) string {
+func toJSON(data any) string {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return ""

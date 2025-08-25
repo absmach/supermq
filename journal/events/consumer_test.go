@@ -24,10 +24,10 @@ import (
 
 var (
 	operation = "users.create"
-	payload   = map[string]interface{}{
+	payload   = map[string]any{
 		"temperature": rand.Float64(),
 		"humidity":    float64(rand.Intn(1000)),
-		"locations": []interface{}{
+		"locations": []any{
 			strings.Repeat("a", 100),
 			strings.Repeat("a", 100),
 		},
@@ -37,15 +37,15 @@ var (
 )
 
 type testEvent struct {
-	data map[string]interface{}
+	data map[string]any
 	err  error
 }
 
-func (e testEvent) Encode() (map[string]interface{}, error) {
+func (e testEvent) Encode() (map[string]any, error) {
 	return e.data, e.err
 }
 
-func NewTestEvent(data map[string]interface{}, err error) testEvent {
+func NewTestEvent(data map[string]any, err error) testEvent {
 	return testEvent{data: data, err: err}
 }
 
@@ -55,18 +55,18 @@ func TestHandle(t *testing.T) {
 
 	cases := []struct {
 		desc      string
-		event     map[string]interface{}
+		event     map[string]any
 		encodeErr error
 		repoErr   error
 		err       error
 	}{
 		{
 			desc: "success",
-			event: map[string]interface{}{
+			event: map[string]any{
 				"operation":   operation,
 				"occurred_at": float64(time.Now().UnixNano()),
 				"id":          testsutil.GenerateUUID(t),
-				"tags":        []interface{}{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
+				"tags":        []any{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
 				"number":      float64(rand.Intn(1000)),
 				"metadata":    payload,
 			},
@@ -74,11 +74,11 @@ func TestHandle(t *testing.T) {
 		},
 		{
 			desc: "with encode error",
-			event: map[string]interface{}{
+			event: map[string]any{
 				"operation":   operation,
 				"occurred_at": float64(time.Now().UnixNano()),
 				"id":          testsutil.GenerateUUID(t),
-				"tags":        []interface{}{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
+				"tags":        []any{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
 				"number":      float64(rand.Intn(1000)),
 				"metadata":    payload,
 			},
@@ -87,10 +87,10 @@ func TestHandle(t *testing.T) {
 		},
 		{
 			desc: "with missing operation",
-			event: map[string]interface{}{
+			event: map[string]any{
 				"occurred_at": float64(time.Now().UnixNano()),
 				"id":          testsutil.GenerateUUID(t),
-				"tags":        []interface{}{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
+				"tags":        []any{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
 				"number":      float64(rand.Intn(1000)),
 				"metadata":    payload,
 			},
@@ -98,11 +98,11 @@ func TestHandle(t *testing.T) {
 		},
 		{
 			desc: "with empty operation",
-			event: map[string]interface{}{
+			event: map[string]any{
 				"operation":   "",
 				"occurred_at": float64(time.Now().UnixNano()),
 				"id":          testsutil.GenerateUUID(t),
-				"tags":        []interface{}{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
+				"tags":        []any{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
 				"number":      float64(rand.Intn(1000)),
 				"metadata":    payload,
 			},
@@ -110,11 +110,11 @@ func TestHandle(t *testing.T) {
 		},
 		{
 			desc: "with invalid operation",
-			event: map[string]interface{}{
+			event: map[string]any{
 				"operation":   1,
 				"occurred_at": float64(time.Now().UnixNano()),
 				"id":          testsutil.GenerateUUID(t),
-				"tags":        []interface{}{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
+				"tags":        []any{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
 				"number":      float64(rand.Intn(1000)),
 				"metadata":    payload,
 			},
@@ -122,10 +122,10 @@ func TestHandle(t *testing.T) {
 		},
 		{
 			desc: "with missing occurred_at",
-			event: map[string]interface{}{
+			event: map[string]any{
 				"operation": operation,
 				"id":        testsutil.GenerateUUID(t),
-				"tags":      []interface{}{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
+				"tags":      []any{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
 				"number":    float64(rand.Intn(1000)),
 				"metadata":  payload,
 			},
@@ -133,11 +133,11 @@ func TestHandle(t *testing.T) {
 		},
 		{
 			desc: "with empty occurred_at",
-			event: map[string]interface{}{
+			event: map[string]any{
 				"operation":   operation,
 				"occurred_at": float64(0),
 				"id":          testsutil.GenerateUUID(t),
-				"tags":        []interface{}{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
+				"tags":        []any{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
 				"number":      float64(rand.Intn(1000)),
 				"metadata":    payload,
 			},
@@ -145,11 +145,11 @@ func TestHandle(t *testing.T) {
 		},
 		{
 			desc: "with invalid occurred_at",
-			event: map[string]interface{}{
+			event: map[string]any{
 				"operation":   operation,
 				"occurred_at": "invalid",
 				"id":          testsutil.GenerateUUID(t),
-				"tags":        []interface{}{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
+				"tags":        []any{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
 				"number":      float64(rand.Intn(1000)),
 				"metadata":    payload,
 			},
@@ -157,34 +157,34 @@ func TestHandle(t *testing.T) {
 		},
 		{
 			desc: "with missing metadata",
-			event: map[string]interface{}{
+			event: map[string]any{
 				"operation":   operation,
 				"occurred_at": float64(time.Now().UnixNano()),
 				"id":          testsutil.GenerateUUID(t),
-				"tags":        []interface{}{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
+				"tags":        []any{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
 				"number":      float64(rand.Intn(1000)),
 			},
 			err: nil,
 		},
 		{
 			desc: "with empty metadata",
-			event: map[string]interface{}{
+			event: map[string]any{
 				"operation":   operation,
 				"occurred_at": float64(time.Now().UnixNano()),
 				"id":          testsutil.GenerateUUID(t),
-				"tags":        []interface{}{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
+				"tags":        []any{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
 				"number":      float64(rand.Intn(1000)),
-				"metadata":    map[string]interface{}{},
+				"metadata":    map[string]any{},
 			},
 			err: nil,
 		},
 		{
 			desc: "with invalid metadata",
-			event: map[string]interface{}{
+			event: map[string]any{
 				"operation":   operation,
 				"occurred_at": float64(time.Now().UnixNano()),
 				"id":          testsutil.GenerateUUID(t),
-				"tags":        []interface{}{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
+				"tags":        []any{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
 				"number":      float64(rand.Intn(1000)),
 				"metadata":    1,
 			},
@@ -192,7 +192,7 @@ func TestHandle(t *testing.T) {
 		},
 		{
 			desc: "with missing attributes",
-			event: map[string]interface{}{
+			event: map[string]any{
 				"operation":   operation,
 				"occurred_at": float64(time.Now().UnixNano()),
 				"metadata":    payload,
@@ -201,11 +201,11 @@ func TestHandle(t *testing.T) {
 		},
 		{
 			desc: "with empty attributes",
-			event: map[string]interface{}{
+			event: map[string]any{
 				"operation":   operation,
 				"occurred_at": float64(time.Now().UnixNano()),
 				"id":          "",
-				"tags":        []interface{}{},
+				"tags":        []any{},
 				"number":      float64(0),
 				"metadata":    payload,
 			},
@@ -213,20 +213,20 @@ func TestHandle(t *testing.T) {
 		},
 		{
 			desc: "with invalid attributes",
-			event: map[string]interface{}{
+			event: map[string]any{
 				"operation":   operation,
 				"occurred_at": float64(time.Now().UnixNano()),
-				"nested": map[string]interface{}{
+				"nested": map[string]any{
 					"key": float64(rand.Intn(1000)),
-					"nested": map[string]interface{}{
+					"nested": map[string]any{
 						"key": float64(rand.Intn(1000)),
-						"nested": map[string]interface{}{
+						"nested": map[string]any{
 							"key": float64(rand.Intn(1000)),
-							"nested": map[string]interface{}{
+							"nested": map[string]any{
 								"key": float64(rand.Intn(1000)),
-								"nested": map[string]interface{}{
+								"nested": map[string]any{
 									"key": float64(rand.Intn(1000)),
-									"nested": map[string]interface{}{
+									"nested": map[string]any{
 										"key": float64(rand.Intn(1000)),
 									},
 								},
@@ -240,11 +240,11 @@ func TestHandle(t *testing.T) {
 		},
 		{
 			desc: "success",
-			event: map[string]interface{}{
+			event: map[string]any{
 				"operation":   operation,
 				"occurred_at": float64(time.Now().UnixNano()),
 				"id":          testsutil.GenerateUUID(t),
-				"tags":        []interface{}{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
+				"tags":        []any{testsutil.GenerateUUID(t), testsutil.GenerateUUID(t)},
 				"number":      float64(rand.Intn(1000)),
 				"metadata":    payload,
 			},
@@ -258,7 +258,7 @@ func TestHandle(t *testing.T) {
 			data, err := json.Marshal(tc.event)
 			assert.NoError(t, err)
 
-			event := map[string]interface{}{}
+			event := map[string]any{}
 			err = json.Unmarshal(data, &event)
 			assert.NoError(t, err)
 

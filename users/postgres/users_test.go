@@ -168,7 +168,7 @@ func TestUsersSave(t *testing.T) {
 					Username: username,
 					Secret:   password,
 				},
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"key": make(chan int),
 				},
 			},
@@ -325,7 +325,7 @@ func TestRetrieveAll(t *testing.T) {
 			Tags:     []string{"tag1"},
 		}
 		if i%50 == 0 {
-			user.Metadata = map[string]interface{}{
+			user.Metadata = map[string]any{
 				"key": "value",
 			}
 			user.Role = users.AdminRole
@@ -615,7 +615,7 @@ func TestRetrieveAll(t *testing.T) {
 		{
 			desc: "retrieve with metadata",
 			pageMeta: users.Page{
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"key": "value",
 				},
 				Offset: 0,
@@ -636,7 +636,7 @@ func TestRetrieveAll(t *testing.T) {
 		{
 			desc: "retrieve with invalid metadata",
 			pageMeta: users.Page{
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"key": "value1",
 				},
 				Offset: 0,
@@ -1818,7 +1818,7 @@ func TestRetrieveByIDs(t *testing.T) {
 			page: users.Page{
 				Offset: 0,
 				Limit:  10,
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"key": make(chan int),
 				},
 				IDs: getIDs(items[0:20]),

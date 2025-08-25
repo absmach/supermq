@@ -58,8 +58,8 @@ type createGroupEvent struct {
 	requestID string
 }
 
-func (cge createGroupEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (cge createGroupEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":         groupCreate,
 		"id":                cge.ID,
 		"roles_provisioned": cge.rolesProvisioned,
@@ -98,8 +98,8 @@ type updateGroupEvent struct {
 	requestID string
 }
 
-func (uge updateGroupEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (uge updateGroupEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   uge.operation,
 		"updated_at":  uge.UpdatedAt,
 		"updated_by":  uge.UpdatedBy,
@@ -146,8 +146,8 @@ type changeGroupStatusEvent struct {
 	requestID string
 }
 
-func (rge changeGroupStatusEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (rge changeGroupStatusEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   rge.operation,
 		"id":          rge.id,
 		"status":      rge.status,
@@ -167,8 +167,8 @@ type viewGroupEvent struct {
 	requestID string
 }
 
-func (vge viewGroupEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (vge viewGroupEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   groupView,
 		"id":          vge.ID,
 		"domain":      vge.DomainID,
@@ -215,8 +215,8 @@ type listGroupEvent struct {
 	requestID  string
 }
 
-func (lge listGroupEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (lge listGroupEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   groupList,
 		"total":       lge.Total,
 		"offset":      lge.Offset,
@@ -253,8 +253,8 @@ type listUserGroupEvent struct {
 	requestID  string
 }
 
-func (luge listUserGroupEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (luge listUserGroupEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   groupListUserGroups,
 		"user_id":     luge.userID,
 		"domain":      luge.domainID,
@@ -288,8 +288,8 @@ type deleteGroupEvent struct {
 	requestID string
 }
 
-func (rge deleteGroupEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (rge deleteGroupEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   groupRemove,
 		"id":          rge.id,
 		"domain":      rge.DomainID,
@@ -307,8 +307,8 @@ type retrieveGroupHierarchyEvent struct {
 	requestID string
 }
 
-func (vcge retrieveGroupHierarchyEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (vcge retrieveGroupHierarchyEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   groupRetrieveGroupHierarchy,
 		"id":          vcge.id,
 		"level":       vcge.Level,
@@ -330,8 +330,8 @@ type addParentGroupEvent struct {
 	requestID string
 }
 
-func (apge addParentGroupEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (apge addParentGroupEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   groupAddParentGroup,
 		"id":          apge.id,
 		"parent_id":   apge.parentID,
@@ -349,8 +349,8 @@ type removeParentGroupEvent struct {
 	requestID string
 }
 
-func (rpge removeParentGroupEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (rpge removeParentGroupEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   groupRemoveParentGroup,
 		"id":          rpge.id,
 		"domain":      rpge.DomainID,
@@ -367,8 +367,8 @@ type viewParentGroupEvent struct {
 	requestID string
 }
 
-func (vpge viewParentGroupEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (vpge viewParentGroupEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":  groupViewParentGroup,
 		"id":         vpge.id,
 		"domain":     vpge.domainID,
@@ -383,8 +383,8 @@ type addChildrenGroupsEvent struct {
 	requestID string
 }
 
-func (acge addChildrenGroupsEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (acge addChildrenGroupsEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":    groupAddChildrenGroups,
 		"id":           acge.id,
 		"children_ids": acge.childrenIDs,
@@ -403,8 +403,8 @@ type removeChildrenGroupsEvent struct {
 	requestID string
 }
 
-func (rcge removeChildrenGroupsEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (rcge removeChildrenGroupsEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":    groupRemoveChildrenGroups,
 		"id":           rcge.id,
 		"children_ids": rcge.childrenIDs,
@@ -422,8 +422,8 @@ type removeAllChildrenGroupsEvent struct {
 	requestID string
 }
 
-func (racge removeAllChildrenGroupsEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (racge removeAllChildrenGroupsEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   groupRemoveAllChildrenGroups,
 		"id":          racge.id,
 		"domain":      racge.DomainID,
@@ -446,8 +446,8 @@ type listChildrenGroupsEvent struct {
 	requestID  string
 }
 
-func (vcge listChildrenGroupsEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (vcge listChildrenGroupsEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   groupListChildrenGroups,
 		"id":          vcge.id,
 		"start_level": vcge.startLevel,

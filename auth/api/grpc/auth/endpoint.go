@@ -12,7 +12,7 @@ import (
 )
 
 func authenticateEndpoint(svc auth.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(authenticateReq)
 		if err := req.validate(); err != nil {
 			return authenticateRes{}, err
@@ -28,7 +28,7 @@ func authenticateEndpoint(svc auth.Service) endpoint.Endpoint {
 }
 
 func authenticatePATEndpoint(svc auth.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(authenticateReq)
 		if err := req.validate(); err != nil {
 			return authenticateRes{}, err
@@ -44,7 +44,7 @@ func authenticatePATEndpoint(svc auth.Service) endpoint.Endpoint {
 }
 
 func authorizeEndpoint(svc auth.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(authReq)
 
 		if err := req.validate(); err != nil {
@@ -68,7 +68,7 @@ func authorizeEndpoint(svc auth.Service) endpoint.Endpoint {
 }
 
 func authorizePATEndpoint(svc auth.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(authPATReq)
 
 		if err := req.validate(); err != nil {

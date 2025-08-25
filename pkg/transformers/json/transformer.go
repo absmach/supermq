@@ -48,7 +48,7 @@ func New(tfs []TimeField) transformers.Transformer {
 }
 
 // Transform transforms SuperMQ message to a list of JSON messages.
-func (ts *transformerService) Transform(msg *messaging.Message) (interface{}, error) {
+func (ts *transformerService) Transform(msg *messaging.Message) (any, error) {
 	ret := Message{
 		Publisher: msg.GetPublisher(),
 		Created:   msg.GetCreated(),
@@ -67,13 +67,13 @@ func (ts *transformerService) Transform(msg *messaging.Message) (interface{}, er
 	}
 
 	format := subs[len(subs)-1]
-	var payload interface{}
+	var payload any
 	if err := json.Unmarshal(msg.GetPayload(), &payload); err != nil {
 		return nil, errors.Wrap(ErrTransform, err)
 	}
 
 	switch p := payload.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		ret.Payload = p
 
 		// Apply timestamp transformation rules depending on key/unit pairs
@@ -86,11 +86,11 @@ func (ts *transformerService) Transform(msg *messaging.Message) (interface{}, er
 		}
 
 		return Messages{[]Message{ret}, format}, nil
-	case []interface{}:
+	case []any:
 		res := []Message{}
 		// Make an array of messages from the root array.
 		for _, val := range p {
-			v, ok := val.(map[string]interface{})
+			v, ok := val.(map[string]any)
 			if !ok {
 				return nil, errors.Wrap(ErrTransform, errInvalidNestedJSON)
 			}
@@ -117,9 +117,9 @@ func (ts *transformerService) Transform(msg *messaging.Message) (interface{}, er
 // ParseFlat receives flat map that represents complex JSON objects and returns
 // the corresponding complex JSON object with nested maps. It's the opposite
 // of the Flatten function.
-func ParseFlat(flat interface{}) interface{} {
-	msg := make(map[string]interface{})
-	if v, ok := flat.(map[string]interface{}); ok {
+func ParseFlat(flat any) any {
+	msg := make(map[string]any)
+	if v, ok := flat.(map[string]any); ok {
 		for key, value := range v {
 			if value == nil {
 				continue
@@ -133,13 +133,13 @@ func ParseFlat(flat interface{}) interface{} {
 			current := msg
 			for i, k := range subKeys {
 				if _, ok := current[k]; !ok {
-					current[k] = make(map[string]interface{})
+					current[k] = make(map[string]any)
 				}
 				if i == n-1 {
 					current[k] = value
 					break
 				}
-				current = current[k].(map[string]interface{})
+				current = current[k].(map[string]any)
 			}
 		}
 	}
@@ -147,11 +147,11 @@ func ParseFlat(flat interface{}) interface{} {
 }
 
 // Flatten makes nested maps flat using composite keys created by concatenation of the nested keys.
-func Flatten(m map[string]interface{}) (map[string]interface{}, error) {
-	return flatten("", make(map[string]interface{}), m)
+func Flatten(m map[string]any) (map[string]any, error) {
+	return flatten("", make(map[string]any), m)
 }
 
-func flatten(prefix string, m, m1 map[string]interface{}) (map[string]interface{}, error) {
+func flatten(prefix string, m, m1 map[string]any) (map[string]any, error) {
 	for k, v := range m1 {
 		if strings.Contains(k, sep) {
 			return nil, ErrInvalidKey
@@ -162,7 +162,7 @@ func flatten(prefix string, m, m1 map[string]interface{}) (map[string]interface{
 			}
 		}
 		switch val := v.(type) {
-		case map[string]interface{}:
+		case map[string]any:
 			var err error
 			m, err = flatten(prefix+k+sep, m, val)
 			if err != nil {
@@ -175,7 +175,7 @@ func flatten(prefix string, m, m1 map[string]interface{}) (map[string]interface{
 	return m, nil
 }
 
-func (ts *transformerService) transformTimeField(payload map[string]interface{}) (int64, error) {
+func (ts *transformerService) transformTimeField(payload map[string]any) (int64, error) {
 	if len(ts.timeFields) == 0 {
 		return 0, nil
 	}

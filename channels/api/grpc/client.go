@@ -100,7 +100,7 @@ func (client grpcClient) Authorize(ctx context.Context, req *grpcChannelsV1.Auth
 	return &grpcChannelsV1.AuthzRes{Authorized: ar.authorized}, nil
 }
 
-func encodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func encodeAuthorizeRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(authorizeReq)
 
 	return &grpcChannelsV1.AuthzReq{
@@ -112,7 +112,7 @@ func encodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}
 	}, nil
 }
 
-func decodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func decodeAuthorizeResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(*grpcChannelsV1.AuthzRes)
 
 	return authorizeRes{authorized: res.GetAuthorized()}, nil
@@ -129,11 +129,11 @@ func (client grpcClient) RemoveClientConnections(ctx context.Context, req *grpcC
 	return &grpcChannelsV1.RemoveClientConnectionsRes{}, nil
 }
 
-func encodeRemoveClientConnectionsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func encodeRemoveClientConnectionsRequest(_ context.Context, grpcReq any) (any, error) {
 	return grpcReq.(*grpcChannelsV1.RemoveClientConnectionsReq), nil
 }
 
-func decodeRemoveClientConnectionsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func decodeRemoveClientConnectionsResponse(_ context.Context, grpcRes any) (any, error) {
 	return grpcRes.(*grpcChannelsV1.RemoveClientConnectionsRes), nil
 }
 
@@ -148,11 +148,11 @@ func (client grpcClient) UnsetParentGroupFromChannels(ctx context.Context, req *
 	return &grpcChannelsV1.UnsetParentGroupFromChannelsRes{}, nil
 }
 
-func encodeUnsetParentGroupFromChannelsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func encodeUnsetParentGroupFromChannelsRequest(_ context.Context, grpcReq any) (any, error) {
 	return grpcReq.(*grpcChannelsV1.UnsetParentGroupFromChannelsReq), nil
 }
 
-func decodeUnsetParentGroupFromChannelsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func decodeUnsetParentGroupFromChannelsResponse(_ context.Context, grpcRes any) (any, error) {
 	return grpcRes.(*grpcChannelsV1.UnsetParentGroupFromChannelsRes), nil
 }
 
@@ -168,11 +168,11 @@ func (client grpcClient) RetrieveEntity(ctx context.Context, req *grpcCommonV1.R
 	return res.(*grpcCommonV1.RetrieveEntityRes), nil
 }
 
-func encodeRetrieveEntityRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func encodeRetrieveEntityRequest(_ context.Context, grpcReq any) (any, error) {
 	return grpcReq.(*grpcCommonV1.RetrieveEntityReq), nil
 }
 
-func decodeRetrieveEntityResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func decodeRetrieveEntityResponse(_ context.Context, grpcRes any) (any, error) {
 	return grpcRes.(*grpcCommonV1.RetrieveEntityRes), nil
 }
 
@@ -188,11 +188,11 @@ func (client grpcClient) RetrieveIDByRoute(ctx context.Context, req *grpcCommonV
 	return res.(*grpcCommonV1.RetrieveEntityRes), nil
 }
 
-func encodeRetrieveIDByRouteRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func encodeRetrieveIDByRouteRequest(_ context.Context, grpcReq any) (any, error) {
 	return grpcReq.(*grpcCommonV1.RetrieveIDByRouteReq), nil
 }
 
-func decodeRetrieveIDByRouteResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func decodeRetrieveIDByRouteResponse(_ context.Context, grpcRes any) (any, error) {
 	return grpcRes.(*grpcCommonV1.RetrieveEntityRes), nil
 }
 

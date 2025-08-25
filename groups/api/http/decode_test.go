@@ -23,7 +23,7 @@ func TestDecodeListGroupsRequest(t *testing.T) {
 		desc   string
 		url    string
 		header map[string][]string
-		resp   interface{}
+		resp   any
 		err    error
 	}{
 		{
@@ -89,7 +89,7 @@ func TestDecodeRetrieveGroupHierarchy(t *testing.T) {
 		desc   string
 		url    string
 		header map[string][]string
-		resp   interface{}
+		resp   any
 		err    error
 	}{
 		{
@@ -157,7 +157,7 @@ func TestDecodeListChildrenRequest(t *testing.T) {
 		desc   string
 		url    string
 		header map[string][]string
-		resp   interface{}
+		resp   any
 		err    error
 	}{
 		{
@@ -311,7 +311,7 @@ func TestDecodeGroupCreate(t *testing.T) {
 		desc   string
 		body   string
 		header map[string][]string
-		resp   interface{}
+		resp   any
 		err    error
 	}{
 		{
@@ -366,7 +366,7 @@ func TestDecodeGroupUpdate(t *testing.T) {
 		desc   string
 		body   string
 		header map[string][]string
-		resp   interface{}
+		resp   any
 		err    error
 	}{
 		{
@@ -418,7 +418,7 @@ func TestDecodeGroupRequest(t *testing.T) {
 	cases := []struct {
 		desc   string
 		header map[string][]string
-		resp   interface{}
+		resp   any
 		err    error
 	}{
 		{
@@ -450,7 +450,7 @@ func TestDecodeChangeGroupStatus(t *testing.T) {
 	cases := []struct {
 		desc   string
 		header map[string][]string
-		resp   interface{}
+		resp   any
 		err    error
 	}{
 		{

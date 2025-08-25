@@ -36,7 +36,7 @@ var (
 	errUpdatedAt     = errors.New("failed to parse 'updated_at' time")
 )
 
-func ToDomains(data map[string]interface{}) (domains.Domain, error) {
+func ToDomains(data map[string]any) (domains.Domain, error) {
 	var d domains.Domain
 	id, ok := data["id"].(string)
 	if !ok {
@@ -83,7 +83,7 @@ func ToDomains(data map[string]interface{}) (domains.Domain, error) {
 	d.CreatedAt = ct
 
 	// Following fields of groups are allowed to be empty.
-	itags, ok := data["tags"].([]interface{})
+	itags, ok := data["tags"].([]any)
 	if ok {
 		tags, err := rconsumer.ToStrings(itags)
 		if err != nil {
@@ -92,7 +92,7 @@ func ToDomains(data map[string]interface{}) (domains.Domain, error) {
 		d.Tags = tags
 	}
 
-	meta, ok := data["metadata"].(map[string]interface{})
+	meta, ok := data["metadata"].(map[string]any)
 	if ok {
 		d.Metadata = meta
 	}
@@ -114,12 +114,12 @@ func ToDomains(data map[string]interface{}) (domains.Domain, error) {
 	return d, nil
 }
 
-func decodeCreateDomainEvent(data map[string]interface{}) (domains.Domain, []roles.RoleProvision, error) {
+func decodeCreateDomainEvent(data map[string]any) (domains.Domain, []roles.RoleProvision, error) {
 	d, err := ToDomains(data)
 	if err != nil {
 		return domains.Domain{}, []roles.RoleProvision{}, errors.Wrap(errDecodeCreateDomainEvent, err)
 	}
-	irps, ok := data["roles_provisioned"].([]interface{})
+	irps, ok := data["roles_provisioned"].([]any)
 	if !ok {
 		return domains.Domain{}, []roles.RoleProvision{}, errors.Wrap(errDecodeCreateDomainEvent, errors.New("missing or invalid 'roles_provisioned'"))
 	}
@@ -131,7 +131,7 @@ func decodeCreateDomainEvent(data map[string]interface{}) (domains.Domain, []rol
 	return d, rps, nil
 }
 
-func decodeUpdateDomainEvent(data map[string]interface{}) (domains.Domain, error) {
+func decodeUpdateDomainEvent(data map[string]any) (domains.Domain, error) {
 	var d domains.Domain
 
 	id, ok := data["id"].(string)
@@ -150,7 +150,7 @@ func decodeUpdateDomainEvent(data map[string]interface{}) (domains.Domain, error
 		d.Route = route
 	}
 
-	itags, ok := data["tags"].([]interface{})
+	itags, ok := data["tags"].([]any)
 	if ok {
 		tags, err := rconsumer.ToStrings(itags)
 		if err != nil {
@@ -159,7 +159,7 @@ func decodeUpdateDomainEvent(data map[string]interface{}) (domains.Domain, error
 		d.Tags = tags
 	}
 
-	meta, ok := data["metadata"].(map[string]interface{})
+	meta, ok := data["metadata"].(map[string]any)
 	if ok {
 		d.Metadata = meta
 	}
@@ -181,7 +181,7 @@ func decodeUpdateDomainEvent(data map[string]interface{}) (domains.Domain, error
 	return d, nil
 }
 
-func decodeEnableDomainEvent(data map[string]interface{}) (domains.Domain, error) {
+func decodeEnableDomainEvent(data map[string]any) (domains.Domain, error) {
 	var d domains.Domain
 	id, ok := data["id"].(string)
 	if !ok {
@@ -206,7 +206,7 @@ func decodeEnableDomainEvent(data map[string]interface{}) (domains.Domain, error
 	return d, nil
 }
 
-func decodeDisableDomainEvent(data map[string]interface{}) (domains.Domain, error) {
+func decodeDisableDomainEvent(data map[string]any) (domains.Domain, error) {
 	var d domains.Domain
 	id, ok := data["id"].(string)
 	if !ok {
@@ -231,7 +231,7 @@ func decodeDisableDomainEvent(data map[string]interface{}) (domains.Domain, erro
 	return d, nil
 }
 
-func decodeFreezeDomainEvent(data map[string]interface{}) (domains.Domain, error) {
+func decodeFreezeDomainEvent(data map[string]any) (domains.Domain, error) {
 	var d domains.Domain
 	id, ok := data["id"].(string)
 	if !ok {
@@ -256,11 +256,11 @@ func decodeFreezeDomainEvent(data map[string]interface{}) (domains.Domain, error
 	return d, nil
 }
 
-func decodeUserDeleteDomainEvent(_ map[string]interface{}) (domains.Domain, error) {
+func decodeUserDeleteDomainEvent(_ map[string]any) (domains.Domain, error) {
 	return domains.Domain{}, fmt.Errorf("not implemented decode domain user delete event ")
 }
 
-func decodeDeleteDomainEvent(data map[string]interface{}) (domains.Domain, error) {
+func decodeDeleteDomainEvent(data map[string]any) (domains.Domain, error) {
 	var d domains.Domain
 	id, ok := data["id"].(string)
 	if !ok {

@@ -723,7 +723,7 @@ func (am *authorizationMiddleware) extAuthorize(ctx context.Context, extOp svcut
 	return nil
 }
 
-func (am *authorizationMiddleware) callOut(ctx context.Context, session authn.Session, op string, params map[string]interface{}) error {
+func (am *authorizationMiddleware) callOut(ctx context.Context, session authn.Session, op string, params map[string]any) error {
 	pl := map[string]any{
 		"entity_type":  policies.GroupType,
 		"subject_type": policies.UserType,

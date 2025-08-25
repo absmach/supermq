@@ -33,7 +33,7 @@ var (
 // Start method starts consuming messages received from Message broker.
 // This method transforms messages to SenML format before
 // using MessageRepository to store them.
-func Start(ctx context.Context, id string, sub messaging.Subscriber, consumer interface{}, configPath string, logger *slog.Logger) error {
+func Start(ctx context.Context, id string, sub messaging.Subscriber, consumer any, configPath string, logger *slog.Logger) error {
 	cfg, err := loadConfig(configPath)
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Failed to load consumer config: %s", err))
@@ -67,7 +67,7 @@ func Start(ctx context.Context, id string, sub messaging.Subscriber, consumer in
 
 func handleSync(ctx context.Context, t transformers.Transformer, sc BlockingConsumer) handleFunc {
 	return func(msg *messaging.Message) error {
-		m := interface{}(msg)
+		m := any(msg)
 		var err error
 		if t != nil {
 			m, err = t.Transform(msg)
@@ -81,7 +81,7 @@ func handleSync(ctx context.Context, t transformers.Transformer, sc BlockingCons
 
 func handleAsync(ctx context.Context, t transformers.Transformer, ac AsyncConsumer) handleFunc {
 	return func(msg *messaging.Message) error {
-		m := interface{}(msg)
+		m := any(msg)
 		var err error
 		if t != nil {
 			m, err = t.Transform(msg)

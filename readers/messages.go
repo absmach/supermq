@@ -29,7 +29,7 @@ type MessageRepository interface {
 }
 
 // Message represents any message format.
-type Message interface{}
+type Message any
 
 // MessagesPage contains page related metadata as well as list of messages that
 // belong to this page.
@@ -60,7 +60,7 @@ type PageMetadata struct {
 }
 
 // ParseValueComparator convert comparison operator keys into mathematic anotation.
-func ParseValueComparator(query map[string]interface{}) string {
+func ParseValueComparator(query map[string]any) string {
 	comparator := "="
 	val, ok := query["comparator"]
 	if ok {

@@ -81,7 +81,7 @@ func (tr testRequest) make() (*http.Response, error) {
 	return tr.client.Do(req)
 }
 
-func toJSON(data interface{}) string {
+func toJSON(data any) string {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return ""
@@ -169,7 +169,7 @@ func TestCreateClient(t *testing.T) {
 					Identity: "user@example.com",
 					Secret:   "12345678",
 				},
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": make(chan int),
 				},
 			},
@@ -361,7 +361,7 @@ func TestCreateClients(t *testing.T) {
 						Identity: "user@example.com",
 						Secret:   "12345678",
 					},
-					Metadata: map[string]interface{}{
+					Metadata: map[string]any{
 						"test": make(chan int),
 					},
 				},

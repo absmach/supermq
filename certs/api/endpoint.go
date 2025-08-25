@@ -13,7 +13,7 @@ import (
 )
 
 func issueCert(svc certs.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(addCertsReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -38,7 +38,7 @@ func issueCert(svc certs.Service) endpoint.Endpoint {
 }
 
 func listSerials(svc certs.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(listReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -71,7 +71,7 @@ func listSerials(svc certs.Service) endpoint.Endpoint {
 }
 
 func viewCert(svc certs.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(viewReq)
 		if err := req.validate(); err != nil {
 			return certsRes{}, errors.Wrap(apiutil.ErrValidation, err)
@@ -95,7 +95,7 @@ func viewCert(svc certs.Service) endpoint.Endpoint {
 }
 
 func revokeAllCerts(svc certs.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(revokeAllReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -111,7 +111,7 @@ func revokeAllCerts(svc certs.Service) endpoint.Endpoint {
 }
 
 func revokeBySerial(svc certs.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(revokeBySerialReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)

@@ -83,7 +83,7 @@ func MakeHandler(svc certs.Service, authn smqauthn.Authentication, logger *slog.
 	return r
 }
 
-func decodeListCerts(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeListCerts(_ context.Context, r *http.Request) (any, error) {
 	l, err := apiutil.ReadNumQuery[uint64](r, limitKey, defLimit)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -108,7 +108,7 @@ func decodeListCerts(_ context.Context, r *http.Request) (interface{}, error) {
 	return req, nil
 }
 
-func decodeViewCert(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeViewCert(_ context.Context, r *http.Request) (any, error) {
 	req := viewReq{
 		serialID: chi.URLParam(r, "certID"),
 	}
@@ -116,7 +116,7 @@ func decodeViewCert(_ context.Context, r *http.Request) (interface{}, error) {
 	return req, nil
 }
 
-func decodeCerts(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeCerts(_ context.Context, r *http.Request) (any, error) {
 	if r.Header.Get("Content-Type") != contentType {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -132,7 +132,7 @@ func decodeCerts(_ context.Context, r *http.Request) (interface{}, error) {
 	return req, nil
 }
 
-func decodeRevokeAllCerts(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeRevokeAllCerts(_ context.Context, r *http.Request) (any, error) {
 	req := revokeAllReq{
 		token:    apiutil.ExtractBearerToken(r),
 		clientID: chi.URLParam(r, "clientID"),
@@ -142,7 +142,7 @@ func decodeRevokeAllCerts(_ context.Context, r *http.Request) (interface{}, erro
 	return req, nil
 }
 
-func decodeRevokeBySerial(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeRevokeBySerial(_ context.Context, r *http.Request) (any, error) {
 	req := revokeBySerialReq{
 		serialID: chi.URLParam(r, "certID"),
 	}

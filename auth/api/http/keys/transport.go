@@ -50,7 +50,7 @@ func MakeHandler(svc auth.Service, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
 	return mux
 }
 
-func decodeIssue(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeIssue(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, apiutil.ErrUnsupportedContentType
 	}
@@ -63,7 +63,7 @@ func decodeIssue(_ context.Context, r *http.Request) (interface{}, error) {
 	return req, nil
 }
 
-func decodeKeyReq(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeKeyReq(_ context.Context, r *http.Request) (any, error) {
 	req := keyReq{
 		token: apiutil.ExtractBearerToken(r),
 		id:    chi.URLParam(r, "id"),

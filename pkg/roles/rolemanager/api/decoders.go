@@ -23,7 +23,7 @@ func NewDecoder(entityIDTemplate string) Decoder {
 	return Decoder{entityIDTemplate}
 }
 
-func (d Decoder) DecodeCreateRole(_ context.Context, r *http.Request) (interface{}, error) {
+func (d Decoder) DecodeCreateRole(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -37,7 +37,7 @@ func (d Decoder) DecodeCreateRole(_ context.Context, r *http.Request) (interface
 	return req, nil
 }
 
-func (d Decoder) DecodeListRoles(_ context.Context, r *http.Request) (interface{}, error) {
+func (d Decoder) DecodeListRoles(_ context.Context, r *http.Request) (any, error) {
 	o, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -55,7 +55,7 @@ func (d Decoder) DecodeListRoles(_ context.Context, r *http.Request) (interface{
 	return req, nil
 }
 
-func (d Decoder) DecodeListEntityMembers(_ context.Context, r *http.Request) (interface{}, error) {
+func (d Decoder) DecodeListEntityMembers(_ context.Context, r *http.Request) (any, error) {
 	o, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -124,7 +124,7 @@ func (d Decoder) DecodeListEntityMembers(_ context.Context, r *http.Request) (in
 	return req, nil
 }
 
-func (d Decoder) DecodeRemoveEntityMembers(_ context.Context, r *http.Request) (interface{}, error) {
+func (d Decoder) DecodeRemoveEntityMembers(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -140,7 +140,7 @@ func (d Decoder) DecodeRemoveEntityMembers(_ context.Context, r *http.Request) (
 	return req, nil
 }
 
-func (d Decoder) DecodeViewRole(_ context.Context, r *http.Request) (interface{}, error) {
+func (d Decoder) DecodeViewRole(_ context.Context, r *http.Request) (any, error) {
 	req := viewRoleReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, d.entityIDTemplate),
@@ -149,7 +149,7 @@ func (d Decoder) DecodeViewRole(_ context.Context, r *http.Request) (interface{}
 	return req, nil
 }
 
-func (d Decoder) DecodeUpdateRole(_ context.Context, r *http.Request) (interface{}, error) {
+func (d Decoder) DecodeUpdateRole(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -164,7 +164,7 @@ func (d Decoder) DecodeUpdateRole(_ context.Context, r *http.Request) (interface
 	return req, nil
 }
 
-func (d Decoder) DecodeDeleteRole(_ context.Context, r *http.Request) (interface{}, error) {
+func (d Decoder) DecodeDeleteRole(_ context.Context, r *http.Request) (any, error) {
 	req := deleteRoleReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, d.entityIDTemplate),
@@ -173,14 +173,14 @@ func (d Decoder) DecodeDeleteRole(_ context.Context, r *http.Request) (interface
 	return req, nil
 }
 
-func (d Decoder) DecodeListAvailableActions(_ context.Context, r *http.Request) (interface{}, error) {
+func (d Decoder) DecodeListAvailableActions(_ context.Context, r *http.Request) (any, error) {
 	req := listAvailableActionsReq{
 		token: apiutil.ExtractBearerToken(r),
 	}
 	return req, nil
 }
 
-func (d Decoder) DecodeAddRoleActions(_ context.Context, r *http.Request) (interface{}, error) {
+func (d Decoder) DecodeAddRoleActions(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -195,7 +195,7 @@ func (d Decoder) DecodeAddRoleActions(_ context.Context, r *http.Request) (inter
 	return req, nil
 }
 
-func (d Decoder) DecodeListRoleActions(_ context.Context, r *http.Request) (interface{}, error) {
+func (d Decoder) DecodeListRoleActions(_ context.Context, r *http.Request) (any, error) {
 	req := listRoleActionsReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, d.entityIDTemplate),
@@ -204,7 +204,7 @@ func (d Decoder) DecodeListRoleActions(_ context.Context, r *http.Request) (inte
 	return req, nil
 }
 
-func (d Decoder) DecodeDeleteRoleActions(_ context.Context, r *http.Request) (interface{}, error) {
+func (d Decoder) DecodeDeleteRoleActions(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -219,7 +219,7 @@ func (d Decoder) DecodeDeleteRoleActions(_ context.Context, r *http.Request) (in
 	return req, nil
 }
 
-func (d Decoder) DecodeDeleteAllRoleActions(_ context.Context, r *http.Request) (interface{}, error) {
+func (d Decoder) DecodeDeleteAllRoleActions(_ context.Context, r *http.Request) (any, error) {
 	req := deleteAllRoleActionsReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, d.entityIDTemplate),
@@ -228,7 +228,7 @@ func (d Decoder) DecodeDeleteAllRoleActions(_ context.Context, r *http.Request) 
 	return req, nil
 }
 
-func (d Decoder) DecodeAddRoleMembers(_ context.Context, r *http.Request) (interface{}, error) {
+func (d Decoder) DecodeAddRoleMembers(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -243,7 +243,7 @@ func (d Decoder) DecodeAddRoleMembers(_ context.Context, r *http.Request) (inter
 	return req, nil
 }
 
-func (d Decoder) DecodeListRoleMembers(_ context.Context, r *http.Request) (interface{}, error) {
+func (d Decoder) DecodeListRoleMembers(_ context.Context, r *http.Request) (any, error) {
 	o, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -262,7 +262,7 @@ func (d Decoder) DecodeListRoleMembers(_ context.Context, r *http.Request) (inte
 	return req, nil
 }
 
-func (d Decoder) DecodeDeleteRoleMembers(_ context.Context, r *http.Request) (interface{}, error) {
+func (d Decoder) DecodeDeleteRoleMembers(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -277,7 +277,7 @@ func (d Decoder) DecodeDeleteRoleMembers(_ context.Context, r *http.Request) (in
 	return req, nil
 }
 
-func (d Decoder) DecodeDeleteAllRoleMembers(_ context.Context, r *http.Request) (interface{}, error) {
+func (d Decoder) DecodeDeleteAllRoleMembers(_ context.Context, r *http.Request) (any, error) {
 	req := deleteAllRoleMembersReq{
 		token:    apiutil.ExtractBearerToken(r),
 		entityID: chi.URLParam(r, d.entityIDTemplate),

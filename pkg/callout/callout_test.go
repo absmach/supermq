@@ -32,7 +32,7 @@ const (
 	filePermission = 0o644
 )
 
-var pl = map[string]interface{}{
+var pl = map[string]any{
 	"entity_type": entityType,
 	"sender":      userID,
 	"domain":      domainID,
@@ -339,13 +339,13 @@ func TestCallout_Operations(t *testing.T) {
 	cases := []struct {
 		desc         string
 		operations   []string
-		payload      map[string]interface{}
+		payload      map[string]any
 		serverCalled bool
 	}{
 		{
 			desc:       "matching operation is called",
 			operations: []string{operation},
-			payload: map[string]interface{}{
+			payload: map[string]any{
 				"entity_type": entityType,
 				"sender":      userID,
 				"domain":      domainID,
@@ -357,7 +357,7 @@ func TestCallout_Operations(t *testing.T) {
 		{
 			desc:       "non-matching operation is not called",
 			operations: []string{"other_operation"},
-			payload: map[string]interface{}{
+			payload: map[string]any{
 				"entity_type": entityType,
 				"sender":      userID,
 				"domain":      domainID,
@@ -369,7 +369,7 @@ func TestCallout_Operations(t *testing.T) {
 		{
 			desc:       "empty operations list calls always",
 			operations: []string{},
-			payload: map[string]interface{}{
+			payload: map[string]any{
 				"entity_type": entityType,
 				"sender":      userID,
 				"domain":      domainID,

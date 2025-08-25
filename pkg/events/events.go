@@ -20,7 +20,7 @@ const (
 // Event represents an event.
 type Event interface {
 	// Encode encodes event to map.
-	Encode() (map[string]interface{}, error)
+	Encode() (map[string]any, error)
 }
 
 // Publisher specifies events publishing API.
@@ -58,7 +58,7 @@ type Subscriber interface {
 
 // Read reads value from event map.
 // If value is not of type T, returns default value.
-func Read[T any](event map[string]interface{}, key string, def T) T {
+func Read[T any](event map[string]any, key string, def T) T {
 	val, ok := event[key].(T)
 	if !ok {
 		return def
@@ -69,10 +69,10 @@ func Read[T any](event map[string]interface{}, key string, def T) T {
 
 // ReadStringSlice reads string slice from event map.
 // If value is not a string slice, returns empty slice.
-func ReadStringSlice(event map[string]interface{}, key string) []string {
+func ReadStringSlice(event map[string]any, key string) []string {
 	var res []string
 
-	vals, ok := event[key].([]interface{})
+	vals, ok := event[key].([]any)
 	if !ok {
 		return res
 	}

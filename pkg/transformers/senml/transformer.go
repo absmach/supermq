@@ -45,7 +45,7 @@ func New(contentFormat string) transformers.Transformer {
 	}
 }
 
-func (t transformer) Transform(msg *messaging.Message) (interface{}, error) {
+func (t transformer) Transform(msg *messaging.Message) (any, error) {
 	raw, err := senml.Decode(msg.GetPayload(), t.format)
 	if err != nil {
 		return nil, errors.Wrap(errDecode, err)

@@ -168,14 +168,14 @@ func toDBJournal(j journal.Journal) (dbJournal, error) {
 }
 
 func toJournal(dbj dbJournal) (journal.Journal, error) {
-	var attributes map[string]interface{}
+	var attributes map[string]any
 	if dbj.Attributes != nil {
 		if err := json.Unmarshal(dbj.Attributes, &attributes); err != nil {
 			return journal.Journal{}, errors.Wrap(repoerr.ErrMalformedEntity, err)
 		}
 	}
 
-	var metadata map[string]interface{}
+	var metadata map[string]any
 	if dbj.Metadata != nil {
 		if err := json.Unmarshal(dbj.Metadata, &metadata); err != nil {
 			return journal.Journal{}, errors.Wrap(repoerr.ErrMalformedEntity, err)

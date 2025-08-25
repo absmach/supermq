@@ -64,9 +64,9 @@ func Handle(service journal.Service) handleFunc {
 			return nil
 		}
 
-		metadata, ok := data["metadata"].(map[string]interface{})
+		metadata, ok := data["metadata"].(map[string]any)
 		if !ok {
-			metadata = make(map[string]interface{})
+			metadata = make(map[string]any)
 		}
 		delete(data, "metadata")
 

@@ -69,10 +69,10 @@ func (es *subEventStore) Close() error {
 }
 
 type event struct {
-	Data map[string]interface{}
+	Data map[string]any
 }
 
-func (re event) Encode() (map[string]interface{}, error) {
+func (re event) Encode() (map[string]any, error) {
 	return re.Data, nil
 }
 
@@ -83,7 +83,7 @@ type eventHandler struct {
 
 func (eh *eventHandler) Handle(msg *messaging.Message) error {
 	event := event{
-		Data: make(map[string]interface{}),
+		Data: make(map[string]any),
 	}
 
 	if err := json.Unmarshal(msg.GetPayload(), &event.Data); err != nil {

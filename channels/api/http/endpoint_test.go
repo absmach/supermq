@@ -69,7 +69,7 @@ func TestCreateChannelEndpoint(t *testing.T) {
 
 	reqChannel := channels.Channel{
 		Name: valid,
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"name": "test",
 		},
 		Route: valid,
@@ -145,7 +145,7 @@ func TestCreateChannelEndpoint(t *testing.T) {
 			domainID: validID,
 			req: channels.Channel{
 				Name: strings.Repeat("a", 1025),
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"name": "test",
 				},
 			},
@@ -238,7 +238,7 @@ func TestCreateChannelsEndpoint(t *testing.T) {
 	reqChannels := []channels.Channel{
 		{
 			Name: valid,
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"name": "test",
 			},
 			Route: valid,
@@ -304,7 +304,7 @@ func TestCreateChannelsEndpoint(t *testing.T) {
 			req: []channels.Channel{
 				{
 					Name: strings.Repeat("a", 1025),
-					Metadata: map[string]interface{}{
+					Metadata: map[string]any{
 						"name": "test",
 					},
 				},
@@ -824,7 +824,7 @@ func TestUpdateChannelEndpoint(t *testing.T) {
 	updateChannelReq := channels.Channel{
 		ID:   validID,
 		Name: valid,
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"name": "test",
 		},
 	}
@@ -895,7 +895,7 @@ func TestUpdateChannelEndpoint(t *testing.T) {
 			updateReq: channels.Channel{
 				ID:   validID,
 				Name: strings.Repeat("a", 1025),
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"name": "test",
 				},
 			},
@@ -1843,7 +1843,7 @@ func TestConnectEndpoint(t *testing.T) {
 				url:         fmt.Sprintf("%s/%s/channels/connect", gs.URL, tc.domainID),
 				token:       tc.token,
 				contentType: contentType,
-				body: strings.NewReader(toJSON(map[string]interface{}{
+				body: strings.NewReader(toJSON(map[string]any{
 					"channel_ids": tc.channelIDs,
 					"client_ids":  tc.clientIDs,
 					"types":       tc.types,
@@ -1973,7 +1973,7 @@ func TestDisconnectEndpoint(t *testing.T) {
 				url:         fmt.Sprintf("%s/%s/channels/disconnect", gs.URL, tc.domainID),
 				token:       tc.token,
 				contentType: contentType,
-				body: strings.NewReader(toJSON(map[string]interface{}{
+				body: strings.NewReader(toJSON(map[string]any{
 					"channel_ids": tc.channelIDs,
 					"client_ids":  tc.clientIDs,
 					"types":       tc.types,
@@ -2104,7 +2104,7 @@ func (tr testRequest) make() (*http.Response, error) {
 	return tr.client.Do(req)
 }
 
-func toJSON(data interface{}) string {
+func toJSON(data any) string {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return ""

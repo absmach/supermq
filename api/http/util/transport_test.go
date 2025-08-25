@@ -67,14 +67,14 @@ func TestReadMetadataQuery(t *testing.T) {
 		desc string
 		url  string
 		key  string
-		ret  map[string]interface{}
+		ret  map[string]any
 		err  error
 	}{
 		{
 			desc: "valid metadata query",
 			url:  "http://localhost:8080/?key={\"test\":\"test\"}",
 			key:  "key",
-			ret:  map[string]interface{}{"test": "test"},
+			ret:  map[string]any{"test": "test"},
 			err:  nil,
 		},
 		{
@@ -177,7 +177,7 @@ func TestReadNumQuery(t *testing.T) {
 		url     string
 		key     string
 		numType string
-		ret     interface{}
+		ret     any
 		err     error
 	}{
 		{
@@ -316,7 +316,7 @@ func TestReadNumQuery(t *testing.T) {
 			assert.NoError(t, err)
 
 			r := &http.Request{URL: parsedURL}
-			var ret interface{}
+			var ret any
 			switch c.numType {
 			case "int64":
 				ret, err = apiutil.ReadNumQuery[int64](r, c.key, 0)

@@ -251,7 +251,7 @@ func (repo *Repository) AddRoles(ctx context.Context, rps []roles.RoleProvision)
 func (repo *Repository) RemoveRoles(ctx context.Context, roleIDs []string) error {
 	q := fmt.Sprintf("DELETE FROM %s_roles  WHERE id = ANY(:role_ids) ;", repo.tableNamePrefix)
 
-	params := map[string]interface{}{
+	params := map[string]any{
 		"role_ids": roleIDs,
 	}
 	result, err := repo.db.NamedExecContext(ctx, q, params)
@@ -462,7 +462,7 @@ func (repo *Repository) RoleListActions(ctx context.Context, roleID string) ([]s
 func (repo *Repository) RoleCheckActionsExists(ctx context.Context, roleID string, actions []string) (bool, error) {
 	q := fmt.Sprintf(`SELECT COUNT(*) FROM %s_role_actions WHERE role_id = :role_id AND action IN ('%s')`, repo.tableNamePrefix, strings.Join(actions, ","))
 
-	params := map[string]interface{}{
+	params := map[string]any{
 		"role_id": roleID,
 	}
 	var count int
@@ -502,7 +502,7 @@ func (repo *Repository) RoleRemoveActions(ctx context.Context, role roles.Role, 
 
 	q := fmt.Sprintf(`DELETE FROM %s_role_actions WHERE role_id = :role_id AND action = ANY(:actions)`, repo.tableNamePrefix)
 
-	params := map[string]interface{}{
+	params := map[string]any{
 		"role_id": role.ID,
 		"actions": actions,
 	}
@@ -640,7 +640,7 @@ func (repo *Repository) RoleListMembers(ctx context.Context, roleID string, limi
 func (repo *Repository) RoleCheckMembersExists(ctx context.Context, roleID string, members []string) (bool, error) {
 	q := fmt.Sprintf(`SELECT COUNT(*) FROM %s_role_members WHERE role_id = :role_id AND member_id IN ('%s')`, repo.tableNamePrefix, strings.Join(members, ","))
 
-	params := map[string]interface{}{
+	params := map[string]any{
 		"role_id": roleID,
 	}
 	var count int
@@ -679,7 +679,7 @@ func (repo *Repository) RoleRemoveMembers(ctx context.Context, role roles.Role, 
 
 	q := fmt.Sprintf(`DELETE FROM %s_role_members WHERE role_id = :role_id AND member_id = ANY(:member_ids)`, repo.tableNamePrefix)
 
-	params := map[string]interface{}{
+	params := map[string]any{
 		"role_id":    role.ID,
 		"member_ids": members,
 	}
@@ -731,7 +731,7 @@ func (repo *Repository) RoleRemoveAllMembers(ctx context.Context, role roles.Rol
 }
 
 func (repo *Repository) RetrieveEntitiesRolesActionsMembers(ctx context.Context, entityIDs []string) ([]roles.EntityActionRole, []roles.EntityMemberRole, error) {
-	params := map[string]interface{}{
+	params := map[string]any{
 		"entity_ids": entityIDs,
 	}
 

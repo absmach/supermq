@@ -44,7 +44,7 @@ func defaultOptions() options {
 
 // Prefix sets the prefix for the publisher or subscriber.
 func Prefix(prefix string) messaging.Option {
-	return func(val interface{}) error {
+	return func(val any) error {
 		switch v := val.(type) {
 		case *publisher:
 			v.prefix = prefix
@@ -60,7 +60,7 @@ func Prefix(prefix string) messaging.Option {
 
 // JSStreamConfig sets the JetStream for the publisher or subscriber.
 func JSStreamConfig(jsStreamConfig jetstream.StreamConfig) messaging.Option {
-	return func(val interface{}) error {
+	return func(val any) error {
 		switch v := val.(type) {
 		case *publisher:
 			v.jsStreamConfig = jsStreamConfig

@@ -75,22 +75,22 @@ func (s *authGrpcServer) Authorize(ctx context.Context, req *grpcAuthV1.AuthZReq
 	return res.(*grpcAuthV1.AuthZRes), nil
 }
 
-func decodeAuthenticateRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeAuthenticateRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcAuthV1.AuthNReq)
 	return authenticateReq{token: req.GetToken()}, nil
 }
 
-func encodeAuthenticateResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeAuthenticateResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(authenticateRes)
 	return &grpcAuthV1.AuthNRes{Id: res.id, UserId: res.userID, UserRole: uint32(res.userRole)}, nil
 }
 
-func encodeAuthenticatePATResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeAuthenticatePATResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(authenticateRes)
 	return &grpcAuthV1.AuthNRes{Id: res.id, UserId: res.userID, UserRole: uint32(res.userRole)}, nil
 }
 
-func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeAuthorizeRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcAuthV1.AuthZReq)
 	return authReq{
 		Domain:      req.GetDomain(),
@@ -104,12 +104,12 @@ func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}
 	}, nil
 }
 
-func encodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeAuthorizeResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(authorizeRes)
 	return &grpcAuthV1.AuthZRes{Authorized: res.authorized, Id: res.id}, nil
 }
 
-func decodeAuthorizePATRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeAuthorizePATRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcAuthV1.AuthZPatReq)
 	return authPATReq{
 		userID:           req.GetUserId(),

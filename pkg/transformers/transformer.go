@@ -8,7 +8,7 @@ import "github.com/absmach/supermq/pkg/messaging"
 // Transformer specifies API form Message transformer.
 type Transformer interface {
 	// Transform SuperMQ message to any other format.
-	Transform(msg *messaging.Message) (interface{}, error)
+	Transform(msg *messaging.Message) (any, error)
 }
 
 type number interface {

@@ -115,7 +115,7 @@ func TestEncodeResponse(t *testing.T) {
 
 	cases := []struct {
 		desc   string
-		resp   interface{}
+		resp   any
 		header http.Header
 		code   int
 		body   []byte

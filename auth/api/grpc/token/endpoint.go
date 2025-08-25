@@ -11,7 +11,7 @@ import (
 )
 
 func issueEndpoint(svc auth.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(issueReq)
 		if err := req.validate(); err != nil {
 			return issueRes{}, err
@@ -36,7 +36,7 @@ func issueEndpoint(svc auth.Service) endpoint.Endpoint {
 }
 
 func refreshEndpoint(svc auth.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(refreshReq)
 		if err := req.validate(); err != nil {
 			return issueRes{}, err

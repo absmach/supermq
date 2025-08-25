@@ -24,8 +24,8 @@ type publishEvent struct {
 	subtopic  string
 }
 
-func (pe publishEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (pe publishEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":  clientPublish,
 		"domain_id":  pe.domainID,
 		"channel_id": pe.channelID,
@@ -41,8 +41,8 @@ type subscribeEvent struct {
 	topic        string
 }
 
-func (se subscribeEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (se subscribeEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":     se.operation,
 		"subscriber_id": se.subscriberID,
 		"client_id":     se.clientID,

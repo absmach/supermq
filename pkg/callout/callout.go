@@ -48,7 +48,7 @@ type CallOutReq struct {
 
 // Callout send request to an external service.
 type Callout interface {
-	Callout(ctx context.Context, perm string, pl map[string]interface{}) error
+	Callout(ctx context.Context, perm string, pl map[string]any) error
 }
 
 // New creates a new instance of Callout.
@@ -161,7 +161,7 @@ func (c *callout) makeRequest(ctx context.Context, urlStr string, params map[str
 	return nil
 }
 
-func (c *callout) Callout(ctx context.Context, op string, pl map[string]interface{}) error {
+func (c *callout) Callout(ctx context.Context, op string, pl map[string]any) error {
 	if len(c.urls) == 0 {
 		return nil
 	}

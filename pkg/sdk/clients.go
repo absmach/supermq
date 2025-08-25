@@ -33,7 +33,7 @@ type Client struct {
 	DomainID    string                    `json:"domain_id,omitempty"`
 	ParentGroup string                    `json:"parent_group_id,omitempty"`
 	Credentials ClientCredentials         `json:"credentials"`
-	Metadata    map[string]interface{}    `json:"metadata,omitempty"`
+	Metadata    map[string]any            `json:"metadata,omitempty"`
 	CreatedAt   time.Time                 `json:"created_at,omitempty"`
 	UpdatedAt   time.Time                 `json:"updated_at,omitempty"`
 	UpdatedBy   string                    `json:"updated_by,omitempty"`

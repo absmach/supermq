@@ -250,7 +250,7 @@ func setConfigValue(key, value string) error {
 		}
 	}
 
-	configKeyToField := map[string]interface{}{
+	configKeyToField := map[string]any{
 		"clients_url":      &config.Remotes.ClientsURL,
 		"users_url":        &config.Remotes.UsersURL,
 		"http_adapter_url": &config.Remotes.HTTPAdapterURL,

@@ -94,7 +94,7 @@ func (s *Status) UnmarshalJSON(data []byte) error {
 }
 
 // Metadata represents arbitrary JSON.
-type Metadata map[string]interface{}
+type Metadata map[string]any
 
 type DomainReq struct {
 	Name      *string    `json:"name,omitempty"`

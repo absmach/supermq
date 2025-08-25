@@ -500,7 +500,7 @@ func (ram RoleManagerAuthorizationMiddleware) validateMembers(ctx context.Contex
 	}
 }
 
-func (ram RoleManagerAuthorizationMiddleware) callOut(ctx context.Context, session authn.Session, op string, params map[string]interface{}) error {
+func (ram RoleManagerAuthorizationMiddleware) callOut(ctx context.Context, session authn.Session, op string, params map[string]any) error {
 	pl := map[string]any{
 		"entity_type":  ram.entityType,
 		"subject_type": policies.UserType,

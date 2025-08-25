@@ -16,7 +16,7 @@ import (
 )
 
 func CreateRoleEndpoint(svc roles.RoleManager) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(createRoleReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -36,7 +36,7 @@ func CreateRoleEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 }
 
 func ListRolesEndpoint(svc roles.RoleManager) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(listRolesReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -56,7 +56,7 @@ func ListRolesEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 }
 
 func ListEntityMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(listEntityMembersReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -88,7 +88,7 @@ func ListEntityMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 }
 
 func RemoveEntityMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(removeEntityMembersReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -107,7 +107,7 @@ func RemoveEntityMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 }
 
 func ViewRoleEndpoint(svc roles.RoleManager) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(viewRoleReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -127,7 +127,7 @@ func ViewRoleEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 }
 
 func UpdateRoleEndpoint(svc roles.RoleManager) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(updateRoleReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -147,7 +147,7 @@ func UpdateRoleEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 }
 
 func DeleteRoleEndpoint(svc roles.RoleManager) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(deleteRoleReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -166,7 +166,7 @@ func DeleteRoleEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 }
 
 func ListAvailableActionsEndpoint(svc roles.RoleManager) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(listAvailableActionsReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -186,7 +186,7 @@ func ListAvailableActionsEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 }
 
 func AddRoleActionsEndpoint(svc roles.RoleManager) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(addRoleActionsReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -206,7 +206,7 @@ func AddRoleActionsEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 }
 
 func ListRoleActionsEndpoint(svc roles.RoleManager) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(listRoleActionsReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -226,7 +226,7 @@ func ListRoleActionsEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 }
 
 func DeleteRoleActionsEndpoint(svc roles.RoleManager) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(deleteRoleActionsReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -245,7 +245,7 @@ func DeleteRoleActionsEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 }
 
 func DeleteAllRoleActionsEndpoint(svc roles.RoleManager) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(deleteAllRoleActionsReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -264,7 +264,7 @@ func DeleteAllRoleActionsEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 }
 
 func AddRoleMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(addRoleMembersReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -284,7 +284,7 @@ func AddRoleMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 }
 
 func ListRoleMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(listRoleMembersReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -304,7 +304,7 @@ func ListRoleMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 }
 
 func DeleteRoleMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(deleteRoleMembersReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -323,7 +323,7 @@ func DeleteRoleMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 }
 
 func DeleteAllRoleMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(deleteAllRoleMembersReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)

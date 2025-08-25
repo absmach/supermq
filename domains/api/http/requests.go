@@ -12,11 +12,11 @@ import (
 const maxLimitSize = 100
 
 type createDomainReq struct {
-	ID       string                 `json:"id,omitempty"`
-	Name     string                 `json:"name"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
-	Tags     []string               `json:"tags,omitempty"`
-	Route    string                 `json:"route"`
+	ID       string         `json:"id,omitempty"`
+	Name     string         `json:"name"`
+	Metadata map[string]any `json:"metadata,omitempty"`
+	Tags     []string       `json:"tags,omitempty"`
+	Route    string         `json:"route"`
 }
 
 func (req createDomainReq) validate() error {
@@ -51,9 +51,9 @@ func (req retrieveDomainRequest) validate() error {
 
 type updateDomainReq struct {
 	domainID string
-	Name     *string                 `json:"name,omitempty"`
-	Metadata *map[string]interface{} `json:"metadata,omitempty"`
-	Tags     *[]string               `json:"tags,omitempty"`
+	Name     *string         `json:"name,omitempty"`
+	Metadata *map[string]any `json:"metadata,omitempty"`
+	Tags     *[]string       `json:"tags,omitempty"`
 }
 
 func (req updateDomainReq) validate() error {

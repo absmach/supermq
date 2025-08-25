@@ -25,11 +25,11 @@ var (
 	validJournal = journal.Journal{
 		Operation:  "user.create",
 		OccurredAt: time.Now().Add(-time.Hour),
-		Attributes: map[string]interface{}{
+		Attributes: map[string]any{
 			"temperature": rand.Float64(),
 			"humidity":    rand.Float64(),
 		},
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"sensor_id": rand.Intn(1000),
 		},
 	}

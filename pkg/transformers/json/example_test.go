@@ -11,7 +11,7 @@ import (
 )
 
 func ExampleParseFlat() {
-	in := map[string]interface{}{
+	in := map[string]any{
 		"key1":                 "value1",
 		"key2":                 "value2",
 		"key5/nested1/nested2": "value3",
@@ -41,15 +41,15 @@ func ExampleParseFlat() {
 }
 
 func ExampleFlatten() {
-	in := map[string]interface{}{
+	in := map[string]any{
 		"key1": "value1",
 		"key2": "value2",
-		"key5": map[string]interface{}{
-			"nested1": map[string]interface{}{
+		"key5": map[string]any{
+			"nested1": map[string]any{
 				"nested2": "value3",
 				"nested3": "value4",
 			},
-			"nested2": map[string]interface{}{
+			"nested2": map[string]any{
 				"nested4": "value5",
 			},
 		},

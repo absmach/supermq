@@ -59,7 +59,7 @@ func NewEventHandler(entityType string, repo roles.Repository) EventHandler {
 	}
 }
 
-func (es *EventHandler) Handle(ctx context.Context, op interface{}, msg map[string]interface{}) error {
+func (es *EventHandler) Handle(ctx context.Context, op any, msg map[string]any) error {
 	switch op {
 	case es.addRole:
 		return es.AddEntityRoleHandler(ctx, msg)
@@ -87,7 +87,7 @@ func (es *EventHandler) Handle(ctx context.Context, op interface{}, msg map[stri
 	return nil
 }
 
-func (es *EventHandler) AddEntityRoleHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *EventHandler) AddEntityRoleHandler(ctx context.Context, data map[string]any) error {
 	rps, err := ToRoleProvision(data)
 	if err != nil {
 		return fmt.Errorf(errAddEntityRoleEvent, es.entityType, err)
@@ -101,7 +101,7 @@ func (es *EventHandler) AddEntityRoleHandler(ctx context.Context, data map[strin
 	return nil
 }
 
-func (es *EventHandler) UpdateEntityRoleHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *EventHandler) UpdateEntityRoleHandler(ctx context.Context, data map[string]any) error {
 	ro, err := ToRole(data)
 	if err != nil {
 		return fmt.Errorf(errUpdateEntityRoleEvent, es.entityType, err)
@@ -114,7 +114,7 @@ func (es *EventHandler) UpdateEntityRoleHandler(ctx context.Context, data map[st
 	return nil
 }
 
-func (es *EventHandler) RemoveEntityRoleHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *EventHandler) RemoveEntityRoleHandler(ctx context.Context, data map[string]any) error {
 	id, ok := data["role_id"].(string)
 	if !ok {
 		return fmt.Errorf(errRemoveEntityRoleEvent, es.entityType, errRoleID)
@@ -127,12 +127,12 @@ func (es *EventHandler) RemoveEntityRoleHandler(ctx context.Context, data map[st
 	return nil
 }
 
-func (es *EventHandler) AddEntityRoleActionsHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *EventHandler) AddEntityRoleActionsHandler(ctx context.Context, data map[string]any) error {
 	id, ok := data["role_id"].(string)
 	if !ok {
 		return fmt.Errorf(errAddEntityRoleActionsEvent, es.entityType, errRoleID)
 	}
-	iacts, ok := data["actions"].([]interface{})
+	iacts, ok := data["actions"].([]any)
 	if !ok {
 		return fmt.Errorf(errAddEntityRoleActionsEvent, es.entityType, errActions)
 	}
@@ -148,12 +148,12 @@ func (es *EventHandler) AddEntityRoleActionsHandler(ctx context.Context, data ma
 	return nil
 }
 
-func (es *EventHandler) RemoveEntityRoleActionsHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *EventHandler) RemoveEntityRoleActionsHandler(ctx context.Context, data map[string]any) error {
 	id, ok := data["role_id"].(string)
 	if !ok {
 		return fmt.Errorf(errAddEntityRoleActionsEvent, es.entityType, errRoleID)
 	}
-	iacts, ok := data["actions"].([]interface{})
+	iacts, ok := data["actions"].([]any)
 	if !ok {
 		return fmt.Errorf(errAddEntityRoleActionsEvent, es.entityType, errActions)
 	}
@@ -168,7 +168,7 @@ func (es *EventHandler) RemoveEntityRoleActionsHandler(ctx context.Context, data
 	return nil
 }
 
-func (es *EventHandler) RemoveAllEntityRoleActionsHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *EventHandler) RemoveAllEntityRoleActionsHandler(ctx context.Context, data map[string]any) error {
 	id, ok := data["role_id"].(string)
 	if !ok {
 		return fmt.Errorf(errRemoveEntityRoleAllActionsEvent, es.entityType, errRoleID)
@@ -180,7 +180,7 @@ func (es *EventHandler) RemoveAllEntityRoleActionsHandler(ctx context.Context, d
 	return nil
 }
 
-func (es *EventHandler) AddEntityRoleMembersHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *EventHandler) AddEntityRoleMembersHandler(ctx context.Context, data map[string]any) error {
 	id, ok := data["role_id"].(string)
 	if !ok {
 		return fmt.Errorf(errAddEntityRoleMembersEvent, es.entityType, errRoleID)
@@ -189,7 +189,7 @@ func (es *EventHandler) AddEntityRoleMembersHandler(ctx context.Context, data ma
 	if !ok {
 		return fmt.Errorf(errRemoveEntityRoleAllMembersEvent, es.entityType, errEntityID)
 	}
-	imems, ok := data["members"].([]interface{})
+	imems, ok := data["members"].([]any)
 	if !ok {
 		return fmt.Errorf(errAddEntityRoleMembersEvent, es.entityType, errMembers)
 	}
@@ -205,12 +205,12 @@ func (es *EventHandler) AddEntityRoleMembersHandler(ctx context.Context, data ma
 	return nil
 }
 
-func (es *EventHandler) RemoveEntityRoleMembersHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *EventHandler) RemoveEntityRoleMembersHandler(ctx context.Context, data map[string]any) error {
 	id, ok := data["role_id"].(string)
 	if !ok {
 		return fmt.Errorf(errRemoveEntityRoleMembersEvent, es.entityType, errRoleID)
 	}
-	imems, ok := data["members"].([]interface{})
+	imems, ok := data["members"].([]any)
 	if !ok {
 		return fmt.Errorf(errRemoveEntityRoleMembersEvent, es.entityType, errMembers)
 	}
@@ -226,7 +226,7 @@ func (es *EventHandler) RemoveEntityRoleMembersHandler(ctx context.Context, data
 	return nil
 }
 
-func (es *EventHandler) RemoveAllMembersFromEntityRoleHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *EventHandler) RemoveAllMembersFromEntityRoleHandler(ctx context.Context, data map[string]any) error {
 	id, ok := data["role_id"].(string)
 	if !ok {
 		return fmt.Errorf(errRemoveEntityRoleAllMembersEvent, es.entityType, errRoleID)
@@ -238,12 +238,12 @@ func (es *EventHandler) RemoveAllMembersFromEntityRoleHandler(ctx context.Contex
 	return nil
 }
 
-func (es *EventHandler) RemoveEntityMembersHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *EventHandler) RemoveEntityMembersHandler(ctx context.Context, data map[string]any) error {
 	entityID, ok := data["entity_id"].(string)
 	if !ok {
 		return fmt.Errorf(errRemoveEntityRoleAllMembersEvent, es.entityType, errEntityID)
 	}
-	imems, ok := data["members"].([]interface{})
+	imems, ok := data["members"].([]any)
 	if !ok {
 		return fmt.Errorf(errRemoveEntityRoleMembersEvent, es.entityType, errMembers)
 	}
@@ -258,6 +258,6 @@ func (es *EventHandler) RemoveEntityMembersHandler(ctx context.Context, data map
 	return nil
 }
 
-func (es *EventHandler) RemoveMemberFromAllEntityHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *EventHandler) RemoveMemberFromAllEntityHandler(ctx context.Context, data map[string]any) error {
 	return nil
 }

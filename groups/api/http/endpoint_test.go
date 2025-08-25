@@ -72,7 +72,7 @@ func TestCreateGroupEndpoint(t *testing.T) {
 	reqGroup := groups.Group{
 		Name:        valid,
 		Description: desc,
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"name": "test",
 		},
 	}
@@ -144,7 +144,7 @@ func TestCreateGroupEndpoint(t *testing.T) {
 			req: createGroupReq{
 				Group: groups.Group{
 					Description: desc,
-					Metadata: map[string]interface{}{
+					Metadata: map[string]any{
 						"name": "test",
 					},
 				},
@@ -161,7 +161,7 @@ func TestCreateGroupEndpoint(t *testing.T) {
 				Group: groups.Group{
 					Name:        strings.Repeat("a", 1025),
 					Description: desc,
-					Metadata: map[string]interface{}{
+					Metadata: map[string]any{
 						"name": "test",
 					},
 				},
@@ -339,7 +339,7 @@ func TestUpdateGroupEndpoint(t *testing.T) {
 		ID:          validID,
 		Name:        valid,
 		Description: desc,
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"name": "test",
 		},
 	}
@@ -411,7 +411,7 @@ func TestUpdateGroupEndpoint(t *testing.T) {
 				ID:          validID,
 				Name:        strings.Repeat("a", 1025),
 				Description: desc,
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"name": "test",
 				},
 			},
@@ -2193,7 +2193,7 @@ func (tr testRequest) make() (*http.Response, error) {
 	return tr.client.Do(req)
 }
 
-func toJSON(data interface{}) string {
+func toJSON(data any) string {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return ""

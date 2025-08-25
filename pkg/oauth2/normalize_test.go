@@ -74,12 +74,12 @@ func TestNormalizeUser(t *testing.T) {
 func TestNormalizeProfile(t *testing.T) {
 	cases := []struct {
 		desc     string
-		raw      map[string]interface{}
-		expected map[string]interface{}
+		raw      map[string]any
+		expected map[string]any
 	}{
 		{
 			desc: "maps all variants to normalized keys",
-			raw: map[string]interface{}{
+			raw: map[string]any{
 				"id":             "id123",
 				"givenName":      "John",
 				"familyName":     "Smith",
@@ -87,7 +87,7 @@ func TestNormalizeProfile(t *testing.T) {
 				"emailAddress":   "john@smith.com",
 				"profilePicture": "pic.png",
 			},
-			expected: map[string]interface{}{
+			expected: map[string]any{
 				"id":         "id123",
 				"first_name": "John",
 				"last_name":  "Smith",
@@ -98,8 +98,8 @@ func TestNormalizeProfile(t *testing.T) {
 		},
 		{
 			desc:     "missing keys returns empty map",
-			raw:      map[string]interface{}{"foo": "bar"},
-			expected: map[string]interface{}{},
+			raw:      map[string]any{"foo": "bar"},
+			expected: map[string]any{},
 		},
 	}
 

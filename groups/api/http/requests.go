@@ -26,7 +26,7 @@ type updateGroupReq struct {
 	id          string
 	Name        string                 `json:"name,omitempty"`
 	Description nullable.Value[string] `json:"description,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Metadata    map[string]any         `json:"metadata,omitempty"`
 }
 
 func (req updateGroupReq) validate() error {

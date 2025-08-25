@@ -26,22 +26,22 @@ type database struct {
 // Database provides a database interface.
 type Database interface {
 	// NamedQueryContext executes a named query against the database and returns
-	NamedQueryContext(context.Context, string, interface{}) (*sqlx.Rows, error)
+	NamedQueryContext(context.Context, string, any) (*sqlx.Rows, error)
 
 	// NamedExecContext executes a named query against the database and returns
-	NamedExecContext(context.Context, string, interface{}) (sql.Result, error)
+	NamedExecContext(context.Context, string, any) (sql.Result, error)
 
 	// QueryRowxContext queries the database and returns an *sqlx.Row.
-	QueryRowxContext(context.Context, string, ...interface{}) *sqlx.Row
+	QueryRowxContext(context.Context, string, ...any) *sqlx.Row
 
 	// QueryxContext queries the database and returns an *sqlx.Rows and an error.
-	QueryxContext(context.Context, string, ...interface{}) (*sqlx.Rows, error)
+	QueryxContext(context.Context, string, ...any) (*sqlx.Rows, error)
 
 	// QueryContext queries the database and returns an *sql.Rows and an error.
-	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
 
 	// ExecContext executes a query without returning any rows.
-	ExecContext(context.Context, string, ...interface{}) (sql.Result, error)
+	ExecContext(context.Context, string, ...any) (sql.Result, error)
 
 	// BeginTxx begins a transaction and returns an *sqlx.Tx.
 	BeginTxx(ctx context.Context, opts *sql.TxOptions) (*sqlx.Tx, error)
@@ -61,42 +61,42 @@ func NewDatabase(db *sqlx.DB, config Config, tracer trace.Tracer) Database {
 	return database
 }
 
-func (d *database) NamedQueryContext(ctx context.Context, query string, args interface{}) (*sqlx.Rows, error) {
+func (d *database) NamedQueryContext(ctx context.Context, query string, args any) (*sqlx.Rows, error) {
 	ctx, span := d.addSpanTags(ctx, query)
 	defer span.End()
 
 	return d.db.NamedQueryContext(ctx, query, args)
 }
 
-func (d *database) NamedExecContext(ctx context.Context, query string, args interface{}) (sql.Result, error) {
+func (d *database) NamedExecContext(ctx context.Context, query string, args any) (sql.Result, error) {
 	ctx, span := d.addSpanTags(ctx, query)
 	defer span.End()
 
 	return d.db.NamedExecContext(ctx, query, args)
 }
 
-func (d *database) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+func (d *database) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	ctx, span := d.addSpanTags(ctx, query)
 	defer span.End()
 
 	return d.db.ExecContext(ctx, query, args...)
 }
 
-func (d *database) QueryRowxContext(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
+func (d *database) QueryRowxContext(ctx context.Context, query string, args ...any) *sqlx.Row {
 	ctx, span := d.addSpanTags(ctx, query)
 	defer span.End()
 
 	return d.db.QueryRowxContext(ctx, query, args...)
 }
 
-func (d *database) QueryxContext(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error) {
+func (d *database) QueryxContext(ctx context.Context, query string, args ...any) (*sqlx.Rows, error) {
 	ctx, span := d.addSpanTags(ctx, query)
 	defer span.End()
 
 	return d.db.QueryxContext(ctx, query, args...)
 }
 
-func (d database) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+func (d database) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	ctx, span := d.addSpanTags(ctx, query)
 	defer span.End()
 	return d.db.QueryContext(ctx, query, args...)

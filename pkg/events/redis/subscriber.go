@@ -90,16 +90,16 @@ func (es *subEventStore) Close() error {
 }
 
 type redisEvent struct {
-	Data map[string]interface{}
+	Data map[string]any
 }
 
-func (re redisEvent) Encode() (map[string]interface{}, error) {
+func (re redisEvent) Encode() (map[string]any, error) {
 	return re.Data, nil
 }
 
 func (es *subEventStore) handle(ctx context.Context, stream string, msgs []redis.XMessage, h events.EventHandler) {
 	for _, msg := range msgs {
-		var data map[string]interface{}
+		var data map[string]any
 		if err := json.Unmarshal([]byte(msg.Values["data"].(string)), &data); err != nil {
 			es.logger.Warn(fmt.Sprintf("failed to unmarshal redis event: %s", err))
 

@@ -23,18 +23,18 @@ import (
 
 var (
 	operation = "user.create"
-	payload   = map[string]interface{}{
+	payload   = map[string]any{
 		"temperature": rand.Float64(),
 		"humidity":    float64(rand.Intn(1000)),
-		"locations": []interface{}{
+		"locations": []any{
 			strings.Repeat("a", 100),
 			strings.Repeat("a", 100),
 		},
 		"status": "active",
-		"nested": map[string]interface{}{
-			"nested": map[string]interface{}{
-				"nested": map[string]interface{}{
-					"nested": map[string]interface{}{
+		"nested": map[string]any{
+			"nested": map[string]any{
+				"nested": map[string]any{
+					"nested": map[string]any{
 						"key": "value",
 					},
 				},
@@ -47,41 +47,41 @@ var (
 	clientOperation    = "client.create"
 	channelOperation   = "channel.create"
 	groupOperation     = "group.create"
-	clientAttributesV1 = map[string]interface{}{
+	clientAttributesV1 = map[string]any{
 		"id":         entityID,
 		"status":     "enabled",
 		"created_at": time.Now().Add(-time.Hour),
 		"name":       "client",
-		"tags":       []interface{}{"tag1", "tag2"},
+		"tags":       []any{"tag1", "tag2"},
 		"domain":     domain,
 		"metadata":   payload,
 		"identity":   testsutil.GenerateUUID(&testing.T{}),
 	}
-	clientAttributesV2 = map[string]interface{}{
+	clientAttributesV2 = map[string]any{
 		"entity_id": entityID,
 		"metadata":  payload,
 	}
-	userAttributesV1 = map[string]interface{}{
+	userAttributesV1 = map[string]any{
 		"id":         entityID,
 		"status":     "enabled",
 		"created_at": time.Now().Add(-time.Hour),
 		"name":       "user",
-		"tags":       []interface{}{"tag1", "tag2"},
+		"tags":       []any{"tag1", "tag2"},
 		"domain":     domain,
 		"metadata":   payload,
 		"identity":   testsutil.GenerateUUID(&testing.T{}),
 	}
-	userAttributesV2 = map[string]interface{}{
+	userAttributesV2 = map[string]any{
 		"user_id":  entityID,
 		"metadata": payload,
 	}
-	channelAtttributes = map[string]interface{}{
+	channelAtttributes = map[string]any{
 		"id":         entityID,
 		"status":     "enabled",
 		"created_at": time.Now().Add(-time.Hour),
 		"name":       "channel",
 	}
-	groupAttributes = map[string]interface{}{
+	groupAttributes = map[string]any{
 		"id":         entityID,
 		"status":     "enabled",
 		"created_at": time.Now().Add(-time.Hour),
@@ -133,12 +133,12 @@ func TestJournalSave(t *testing.T) {
 				ID:         testsutil.GenerateUUID(t),
 				Operation:  operation,
 				OccurredAt: time.Now(),
-				Attributes: map[string]interface{}{
-					"attributes": map[string]interface{}{
-						"attributes": map[string]interface{}{
-							"attributes": map[string]interface{}{
-								"attributes": map[string]interface{}{
-									"attributes": map[string]interface{}{
+				Attributes: map[string]any{
+					"attributes": map[string]any{
+						"attributes": map[string]any{
+							"attributes": map[string]any{
+								"attributes": map[string]any{
+									"attributes": map[string]any{
 										"data": payload,
 									},
 									"data": payload,
@@ -151,12 +151,12 @@ func TestJournalSave(t *testing.T) {
 					},
 					"data": payload,
 				},
-				Metadata: map[string]interface{}{
-					"metadata": map[string]interface{}{
-						"metadata": map[string]interface{}{
-							"metadata": map[string]interface{}{
-								"metadata": map[string]interface{}{
-									"metadata": map[string]interface{}{
+				Metadata: map[string]any{
+					"metadata": map[string]any{
+						"metadata": map[string]any{
+							"metadata": map[string]any{
+								"metadata": map[string]any{
+									"metadata": map[string]any{
 										"data": payload,
 									},
 									"data": payload,
@@ -230,7 +230,7 @@ func TestJournalSave(t *testing.T) {
 				ID:         testsutil.GenerateUUID(t),
 				Operation:  operation,
 				OccurredAt: time.Now(),
-				Attributes: map[string]interface{}{"invalid": make(chan struct{})},
+				Attributes: map[string]any{"invalid": make(chan struct{})},
 				Metadata:   payload,
 			},
 			err: repoerr.ErrCreateEntity,
@@ -241,7 +241,7 @@ func TestJournalSave(t *testing.T) {
 				ID:         testsutil.GenerateUUID(t),
 				Operation:  operation + ".with.empty.attributes",
 				OccurredAt: time.Now(),
-				Attributes: map[string]interface{}{},
+				Attributes: map[string]any{},
 				Metadata:   payload,
 			},
 			err: nil,
@@ -262,7 +262,7 @@ func TestJournalSave(t *testing.T) {
 				ID:         testsutil.GenerateUUID(t),
 				Operation:  operation,
 				OccurredAt: time.Now(),
-				Metadata:   map[string]interface{}{"invalid": make(chan struct{})},
+				Metadata:   map[string]any{"invalid": make(chan struct{})},
 				Attributes: payload,
 			},
 			err: repoerr.ErrCreateEntity,
@@ -273,7 +273,7 @@ func TestJournalSave(t *testing.T) {
 				ID:         testsutil.GenerateUUID(t),
 				Operation:  operation + ".with.empty.metadata",
 				OccurredAt: time.Now(),
-				Metadata:   map[string]interface{}{},
+				Metadata:   map[string]any{},
 				Attributes: payload,
 			},
 			err: nil,
@@ -740,10 +740,10 @@ func TestJournalRetrieveAll(t *testing.T) {
 			assert.Equal(t, tc.response.Offset, page.Offset)
 			assert.Equal(t, tc.response.Limit, page.Limit)
 			for i := range tc.response.Journals {
-				tc.response.Journals[i].Attributes = map[string]interface{}{}
-				page.Journals[i].Attributes = map[string]interface{}{}
-				tc.response.Journals[i].Metadata = map[string]interface{}{}
-				page.Journals[i].Metadata = map[string]interface{}{}
+				tc.response.Journals[i].Attributes = map[string]any{}
+				page.Journals[i].Attributes = map[string]any{}
+				tc.response.Journals[i].Metadata = map[string]any{}
+				page.Journals[i].Metadata = map[string]any{}
 				tc.response.Journals[i].OccurredAt = validTimeStamp
 				page.Journals[i].OccurredAt = validTimeStamp
 			}

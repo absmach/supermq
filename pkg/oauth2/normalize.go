@@ -21,7 +21,7 @@ type normalizedUser struct {
 }
 
 func NormalizeUser(data []byte, provider string) (users.User, error) {
-	var raw map[string]interface{}
+	var raw map[string]any
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return users.User{}, err
 	}

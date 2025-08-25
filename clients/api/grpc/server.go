@@ -81,14 +81,14 @@ func (s *grpcServer) Authenticate(ctx context.Context, req *grpcClientsV1.AuthnR
 	return res.(*grpcClientsV1.AuthnRes), nil
 }
 
-func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeAuthorizeRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcClientsV1.AuthnReq)
 	return authenticateReq{
 		Token: req.GetToken(),
 	}, nil
 }
 
-func encodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeAuthorizeResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(authenticateRes)
 	return &grpcClientsV1.AuthnRes{Authenticated: res.authenticated, Id: res.id}, nil
 }
@@ -101,14 +101,14 @@ func (s *grpcServer) RetrieveEntity(ctx context.Context, req *grpcCommonV1.Retri
 	return res.(*grpcCommonV1.RetrieveEntityRes), nil
 }
 
-func decodeRetrieveEntityRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeRetrieveEntityRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcCommonV1.RetrieveEntityReq)
 	return retrieveEntityReq{
 		Id: req.GetId(),
 	}, nil
 }
 
-func encodeRetrieveEntityResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeRetrieveEntityResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(retrieveEntityRes)
 
 	return &grpcCommonV1.RetrieveEntityRes{
@@ -129,14 +129,14 @@ func (s *grpcServer) RetrieveEntities(ctx context.Context, req *grpcCommonV1.Ret
 	return res.(*grpcCommonV1.RetrieveEntitiesRes), nil
 }
 
-func decodeRetrieveEntitiesRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeRetrieveEntitiesRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcCommonV1.RetrieveEntitiesReq)
 	return retrieveEntitiesReq{
 		Ids: req.GetIds(),
 	}, nil
 }
 
-func encodeRetrieveEntitiesResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeRetrieveEntitiesResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(retrieveEntitiesRes)
 
 	entities := []*grpcCommonV1.EntityBasic{}
@@ -159,7 +159,7 @@ func (s *grpcServer) AddConnections(ctx context.Context, req *grpcCommonV1.AddCo
 	return res.(*grpcCommonV1.AddConnectionsRes), nil
 }
 
-func decodeAddConnectionsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeAddConnectionsRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcCommonV1.AddConnectionsReq)
 
 	conns := []connection{}
@@ -180,7 +180,7 @@ func decodeAddConnectionsRequest(_ context.Context, grpcReq interface{}) (interf
 	}, nil
 }
 
-func encodeAddConnectionsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeAddConnectionsResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(connectionsRes)
 
 	return &grpcCommonV1.AddConnectionsRes{Ok: res.ok}, nil
@@ -194,7 +194,7 @@ func (s *grpcServer) RemoveConnections(ctx context.Context, req *grpcCommonV1.Re
 	return res.(*grpcCommonV1.RemoveConnectionsRes), nil
 }
 
-func decodeRemoveConnectionsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeRemoveConnectionsRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcCommonV1.RemoveConnectionsReq)
 
 	conns := []connection{}
@@ -215,7 +215,7 @@ func decodeRemoveConnectionsRequest(_ context.Context, grpcReq interface{}) (int
 	}, nil
 }
 
-func encodeRemoveConnectionsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeRemoveConnectionsResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(connectionsRes)
 
 	return &grpcCommonV1.RemoveConnectionsRes{Ok: res.ok}, nil
@@ -229,7 +229,7 @@ func (s *grpcServer) RemoveChannelConnections(ctx context.Context, req *grpcClie
 	return res.(*grpcClientsV1.RemoveChannelConnectionsRes), nil
 }
 
-func decodeRemoveChannelConnectionsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeRemoveChannelConnectionsRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcClientsV1.RemoveChannelConnectionsReq)
 
 	return removeChannelConnectionsReq{
@@ -237,7 +237,7 @@ func decodeRemoveChannelConnectionsRequest(_ context.Context, grpcReq interface{
 	}, nil
 }
 
-func encodeRemoveChannelConnectionsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeRemoveChannelConnectionsResponse(_ context.Context, grpcRes any) (any, error) {
 	_ = grpcRes.(removeChannelConnectionsRes)
 	return &grpcClientsV1.RemoveChannelConnectionsRes{}, nil
 }
@@ -250,7 +250,7 @@ func (s *grpcServer) UnsetParentGroupFromClient(ctx context.Context, req *grpcCl
 	return res.(*grpcClientsV1.UnsetParentGroupFromClientRes), nil
 }
 
-func decodeUnsetParentGroupFromClientRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeUnsetParentGroupFromClientRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcClientsV1.UnsetParentGroupFromClientReq)
 
 	return UnsetParentGroupFromClientReq{
@@ -258,7 +258,7 @@ func decodeUnsetParentGroupFromClientRequest(_ context.Context, grpcReq interfac
 	}, nil
 }
 
-func encodeUnsetParentGroupFromClientResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeUnsetParentGroupFromClientResponse(_ context.Context, grpcRes any) (any, error) {
 	_ = grpcRes.(UnsetParentGroupFromClientRes)
 	return &grpcClientsV1.UnsetParentGroupFromClientRes{}, nil
 }

@@ -41,7 +41,7 @@ var (
 		ID:          testsutil.GenerateUUID(&testing.T{}),
 		Name:        namegen.Generate(),
 		Description: desc,
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"key": "value",
 		},
 		Status: groups.EnabledStatus,
@@ -50,7 +50,7 @@ var (
 		ID:          testsutil.GenerateUUID(&testing.T{}),
 		Name:        namegen.Generate(),
 		Description: desc,
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"key": "value",
 		},
 		Status: groups.EnabledStatus,
@@ -68,7 +68,7 @@ var (
 		ID:          childGroupID,
 		Name:        namegen.Generate(),
 		Description: desc,
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"key": "value",
 		},
 		Status: groups.EnabledStatus,
@@ -79,7 +79,7 @@ var (
 		ID:          parentGroupID,
 		Name:        namegen.Generate(),
 		Description: desc,
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"key": "value",
 		},
 		Status:   groups.EnabledStatus,

@@ -45,7 +45,7 @@ func TestSaveDomain(t *testing.T) {
 				Name:  "test",
 				Route: "test",
 				Tags:  []string{"test"},
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": "test",
 				},
 				CreatedAt: time.Now().UTC().Truncate(time.Millisecond),
@@ -63,7 +63,7 @@ func TestSaveDomain(t *testing.T) {
 				Name:  "test",
 				Route: "test",
 				Tags:  []string{"test"},
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": "test",
 				},
 				CreatedAt: time.Now().UTC().Truncate(time.Millisecond),
@@ -81,7 +81,7 @@ func TestSaveDomain(t *testing.T) {
 				Name:  "test1",
 				Route: "test1",
 				Tags:  []string{"test"},
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": "test",
 				},
 				CreatedAt: time.Now().UTC().Truncate(time.Millisecond),
@@ -99,7 +99,7 @@ func TestSaveDomain(t *testing.T) {
 				Name:  "test1",
 				Route: "",
 				Tags:  []string{"test"},
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": "test",
 				},
 				CreatedAt: time.Now(),
@@ -117,7 +117,7 @@ func TestSaveDomain(t *testing.T) {
 				Name:  "test1",
 				Route: "test1",
 				Tags:  []string{"test"},
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"key": make(chan int),
 				},
 				CreatedAt: time.Now(),
@@ -154,7 +154,7 @@ func TestRetrieveByID(t *testing.T) {
 		Name:  "test",
 		Route: "test",
 		Tags:  []string{"test"},
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"test": "test",
 		},
 		CreatedBy: userID,
@@ -216,7 +216,7 @@ func TestRetrieveByRoute(t *testing.T) {
 		Name:  "test",
 		Route: validRoute,
 		Tags:  []string{"test"},
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"test": "test",
 		},
 		CreatedBy: userID,
@@ -279,7 +279,7 @@ func TestRetrieveAllByIDs(t *testing.T) {
 			Name:  fmt.Sprintf(`"test%d"`, i),
 			Route: fmt.Sprintf(`"test%d"`, i),
 			Tags:  []string{"test"},
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"test": "test",
 			},
 			CreatedBy: userID,
@@ -289,7 +289,7 @@ func TestRetrieveAllByIDs(t *testing.T) {
 		if i%5 == 0 {
 			domain.Status = domains.DisabledStatus
 			domain.Tags = []string{"test", "admin"}
-			domain.Metadata = map[string]interface{}{
+			domain.Metadata = map[string]any{
 				"test1": "test1",
 			}
 		}
@@ -398,7 +398,7 @@ func TestRetrieveAllByIDs(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 				IDs:    []string{items[1].ID, items[2].ID},
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": "test",
 				},
 				Status: domains.EnabledStatus,
@@ -416,7 +416,7 @@ func TestRetrieveAllByIDs(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 				IDs:    []string{items[1].ID, items[2].ID},
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test1": "test1",
 				},
 				Status: domains.EnabledStatus,
@@ -433,7 +433,7 @@ func TestRetrieveAllByIDs(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 				IDs:    []string{items[1].ID, items[2].ID},
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"key": make(chan int),
 				},
 				Status: domains.EnabledStatus,
@@ -521,7 +521,7 @@ func TestUpdate(t *testing.T) {
 		Name:  "test",
 		Route: "test",
 		Tags:  []string{"test"},
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"test": "test",
 		},
 		CreatedBy: userID,
@@ -551,7 +551,7 @@ func TestUpdate(t *testing.T) {
 				Name:  "test1",
 				Route: "test",
 				Tags:  []string{"test"},
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test1": "test1",
 				},
 				CreatedBy: userID,
@@ -575,7 +575,7 @@ func TestUpdate(t *testing.T) {
 				Name:  "test1",
 				Route: "test",
 				Tags:  []string{"test1"},
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test1": "test1",
 				},
 				CreatedBy: userID,
@@ -640,7 +640,7 @@ func TestDelete(t *testing.T) {
 		Name:  "test",
 		Route: "test",
 		Tags:  []string{"test"},
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"test": "test",
 		},
 		CreatedBy: userID,
@@ -696,7 +696,7 @@ func TestListDomains(t *testing.T) {
 			Name:  fmt.Sprintf(`"test%d"`, i),
 			Route: fmt.Sprintf(`"test%d"`, i),
 			Tags:  []string{"test"},
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"test": "test",
 			},
 			CreatedBy: userID,
@@ -706,7 +706,7 @@ func TestListDomains(t *testing.T) {
 		if i%5 == 0 {
 			domain.Status = domains.DisabledStatus
 			domain.Tags = []string{"test", "admin"}
-			domain.Metadata = map[string]interface{}{
+			domain.Metadata = map[string]any{
 				"test1": "test1",
 			}
 		}
@@ -818,7 +818,7 @@ func TestListDomains(t *testing.T) {
 			pm: domains.Page{
 				Offset: 0,
 				Limit:  10,
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test1": "test1",
 				},
 				Status: domains.AllStatus,
@@ -836,7 +836,7 @@ func TestListDomains(t *testing.T) {
 			pm: domains.Page{
 				Offset: 0,
 				Limit:  10,
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"key": make(chan int),
 				},
 				Status: domains.AllStatus,

@@ -19,18 +19,18 @@ import (
 )
 
 var (
-	eventsChan = make(chan map[string]interface{})
+	eventsChan = make(chan map[string]any)
 	logger     = smqlog.NewMock()
 	errFailed  = errors.New("failed")
 	numEvents  = 100
 )
 
 type testEvent struct {
-	Data map[string]interface{}
+	Data map[string]any
 }
 
-func (te testEvent) Encode() (map[string]interface{}, error) {
-	data := make(map[string]interface{})
+func (te testEvent) Encode() (map[string]any, error) {
+	data := make(map[string]any)
 	for k, v := range te.Data {
 		switch v.(type) {
 		case string:
@@ -74,13 +74,13 @@ func TestPublish(t *testing.T) {
 
 	cases := []struct {
 		desc  string
-		event map[string]interface{}
+		event map[string]any
 		err   error
 	}{
 		{
 			desc: "publish event successfully",
 			err:  nil,
-			event: map[string]interface{}{
+			event: map[string]any{
 				"temperature": fmt.Sprintf("%f", rand.Float64()),
 				"humidity":    fmt.Sprintf("%f", rand.Float64()),
 				"sensor_id":   "abc123",
@@ -99,7 +99,7 @@ func TestPublish(t *testing.T) {
 		{
 			desc: "publish event with invalid event location",
 			err:  fmt.Errorf("json: unsupported type: chan int"),
-			event: map[string]interface{}{
+			event: map[string]any{
 				"temperature": fmt.Sprintf("%f", rand.Float64()),
 				"humidity":    fmt.Sprintf("%f", rand.Float64()),
 				"sensor_id":   "abc123",
@@ -113,7 +113,7 @@ func TestPublish(t *testing.T) {
 		{
 			desc: "publish event with nested sting value",
 			err:  nil,
-			event: map[string]interface{}{
+			event: map[string]any{
 				"temperature": fmt.Sprintf("%f", rand.Float64()),
 				"humidity":    fmt.Sprintf("%f", rand.Float64()),
 				"sensor_id":   "abc123",
@@ -275,7 +275,7 @@ func TestUnavailablePublish(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on closing publisher: %s", err))
 
 	// read all the events from the channel and assert that they are 10.
-	var receivedEvents []map[string]interface{}
+	var receivedEvents []map[string]any
 	for i := 0; i < numEvents; i++ {
 		event := <-eventsChan
 		receivedEvents = append(receivedEvents, event)
@@ -285,7 +285,7 @@ func TestUnavailablePublish(t *testing.T) {
 
 func generateRandomEvent() testEvent {
 	return testEvent{
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"temperature": fmt.Sprintf("%f", rand.Float64()),
 			"humidity":    fmt.Sprintf("%f", rand.Float64()),
 			"sensor_id":   fmt.Sprintf("%d", rand.Intn(1000)),

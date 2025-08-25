@@ -88,7 +88,7 @@ func (va *openbaoPKIAgent) Issue(entityId, ttl string, ipAddrs []string) (certs.
 		return certs.Cert{}, err
 	}
 
-	secretValues := map[string]interface{}{
+	secretValues := map[string]any{
 		"common_name":          entityId,
 		"ttl":                  ttl,
 		"exclude_cn_from_sans": true,
@@ -122,7 +122,7 @@ func (va *openbaoPKIAgent) Issue(entityId, ttl string, ipAddrs []string) (certs.
 	if serialNumber, ok := secret.Data["serial_number"].(string); ok {
 		cert.SerialNumber = serialNumber
 	}
-	if caChain, ok := secret.Data["ca_chain"].([]interface{}); ok {
+	if caChain, ok := secret.Data["ca_chain"].([]any); ok {
 		for _, ca := range caChain {
 			if caStr, ok := ca.(string); ok {
 				cert.CAChain = append(cert.CAChain, caStr)
@@ -201,7 +201,7 @@ func (va *openbaoPKIAgent) Revoke(serialNumber string) error {
 		return err
 	}
 
-	secretValues := map[string]interface{}{
+	secretValues := map[string]any{
 		"serial_number": serialNumber,
 	}
 
@@ -289,7 +289,7 @@ func (va *openbaoPKIAgent) LoginAndRenew() error {
 		}
 	}
 
-	authData := map[string]interface{}{
+	authData := map[string]any{
 		"role_id":   va.appRole,
 		"secret_id": va.appSecret,
 	}

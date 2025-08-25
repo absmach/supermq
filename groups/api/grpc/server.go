@@ -44,14 +44,14 @@ func (s *grpcServer) RetrieveEntity(ctx context.Context, req *grpcCommonV1.Retri
 	return res.(*grpcCommonV1.RetrieveEntityRes), nil
 }
 
-func decodeRetrieveEntityRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeRetrieveEntityRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcCommonV1.RetrieveEntityReq)
 	return retrieveEntityReq{
 		Id: req.GetId(),
 	}, nil
 }
 
-func encodeRetrieveEntityResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeRetrieveEntityResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(retrieveEntityRes)
 
 	return &grpcCommonV1.RetrieveEntityRes{

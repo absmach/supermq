@@ -24,8 +24,8 @@ type connectEvent struct {
 	instance     string
 }
 
-func (ce connectEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (ce connectEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":     ce.operation,
 		"client_id":     ce.clientID,
 		"subscriber_id": ce.subscriberID,
@@ -42,8 +42,8 @@ type subscribeEvent struct {
 	subtopic     string
 }
 
-func (se subscribeEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (se subscribeEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":     se.operation,
 		"client_id":     se.clientID,
 		"subscriber_id": se.subscriberID,

@@ -975,7 +975,7 @@ func TestUpdateGroupTags(t *testing.T) {
 			token:    validToken,
 			updateGroupReq: sdk.Group{
 				ID: "test",
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": make(chan int),
 				},
 			},

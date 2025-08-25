@@ -100,7 +100,7 @@ func (es *eventHandler) Handle(ctx context.Context, event events.Event) error {
 	return es.rolesEventHandler.Handle(ctx, op, msg)
 }
 
-func (es *eventHandler) createDomainHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *eventHandler) createDomainHandler(ctx context.Context, data map[string]any) error {
 	d, rps, err := decodeCreateDomainEvent(data)
 	if err != nil {
 		return errors.Wrap(errCreateDomainEvent, err)
@@ -116,7 +116,7 @@ func (es *eventHandler) createDomainHandler(ctx context.Context, data map[string
 	return nil
 }
 
-func (es *eventHandler) updateDomainHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *eventHandler) updateDomainHandler(ctx context.Context, data map[string]any) error {
 	d, err := decodeUpdateDomainEvent(data)
 	if err != nil {
 		return errors.Wrap(errUpdateDomainEvent, err)
@@ -139,7 +139,7 @@ func (es *eventHandler) updateDomainHandler(ctx context.Context, data map[string
 	return nil
 }
 
-func (es *eventHandler) enableDomainHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *eventHandler) enableDomainHandler(ctx context.Context, data map[string]any) error {
 	d, err := decodeEnableDomainEvent(data)
 	if err != nil {
 		return errors.Wrap(errEnableDomainGroupEvent, err)
@@ -153,7 +153,7 @@ func (es *eventHandler) enableDomainHandler(ctx context.Context, data map[string
 	return nil
 }
 
-func (es *eventHandler) disableDomainHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *eventHandler) disableDomainHandler(ctx context.Context, data map[string]any) error {
 	d, err := decodeDisableDomainEvent(data)
 	if err != nil {
 		return errors.Wrap(errDisableDomainGroupEvent, err)
@@ -167,7 +167,7 @@ func (es *eventHandler) disableDomainHandler(ctx context.Context, data map[strin
 	return nil
 }
 
-func (es *eventHandler) freezeDomainHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *eventHandler) freezeDomainHandler(ctx context.Context, data map[string]any) error {
 	d, err := decodeFreezeDomainEvent(data)
 	if err != nil {
 		return errors.Wrap(errFreezeDomainGroupEvent, err)
@@ -181,7 +181,7 @@ func (es *eventHandler) freezeDomainHandler(ctx context.Context, data map[string
 	return nil
 }
 
-func (es *eventHandler) userDeleteDomainHandler(_ context.Context, data map[string]interface{}) error {
+func (es *eventHandler) userDeleteDomainHandler(_ context.Context, data map[string]any) error {
 	_, err := decodeUserDeleteDomainEvent(data)
 	if err != nil {
 		return errors.Wrap(errUserDeleteDomainEvent, err)
@@ -190,7 +190,7 @@ func (es *eventHandler) userDeleteDomainHandler(_ context.Context, data map[stri
 	return fmt.Errorf("not implemented user delete domain handler")
 }
 
-func (es *eventHandler) deleteDomainHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *eventHandler) deleteDomainHandler(ctx context.Context, data map[string]any) error {
 	d, err := decodeDeleteDomainEvent(data)
 	if err != nil {
 		return errors.Wrap(errDeleteDomainEvent, err)

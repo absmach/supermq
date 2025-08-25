@@ -12,7 +12,7 @@ import (
 )
 
 func authorizeEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(authorizeReq)
 		if err := req.validate(); err != nil {
 			return authorizeRes{}, err
@@ -33,7 +33,7 @@ func authorizeEndpoint(svc channels.Service) endpoint.Endpoint {
 }
 
 func removeClientConnectionsEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(removeClientConnectionsReq)
 
 		if err := svc.RemoveClientConnections(ctx, req.clientID); err != nil {
@@ -45,7 +45,7 @@ func removeClientConnectionsEndpoint(svc channels.Service) endpoint.Endpoint {
 }
 
 func unsetParentGroupFromChannelsEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(unsetParentGroupFromChannelsReq)
 
 		if err := svc.UnsetParentGroupFromChannels(ctx, req.parentGroupID); err != nil {
@@ -57,7 +57,7 @@ func unsetParentGroupFromChannelsEndpoint(svc channels.Service) endpoint.Endpoin
 }
 
 func retrieveEntityEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(retrieveEntityReq)
 		channel, err := svc.RetrieveByID(ctx, req.Id)
 		if err != nil {
@@ -69,7 +69,7 @@ func retrieveEntityEndpoint(svc channels.Service) endpoint.Endpoint {
 }
 
 func retrieveIDByRouteEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(retrieveIDByRouteReq)
 		if err := req.validate(); err != nil {
 			return retrieveIDByRouteRes{}, err

@@ -79,12 +79,12 @@ func (e EntityType) Query() string {
 
 // Journal represents an event journal that occurred in the system.
 type Journal struct {
-	ID         string                 `json:"id,omitempty" db:"id"`
-	Domain     string                 `json:"domain,omitempty" db:"domain"`
-	Operation  string                 `json:"operation,omitempty" db:"operation,omitempty"`
-	OccurredAt time.Time              `json:"occurred_at,omitempty" db:"occurred_at,omitempty"`
-	Attributes map[string]interface{} `json:"attributes,omitempty" db:"attributes,omitempty"` // This is extra information about the journal for example client_id, user_id, group_id etc.
-	Metadata   map[string]interface{} `json:"metadata,omitempty" db:"metadata,omitempty"`     // This is decoded metadata from the journal.
+	ID         string         `json:"id,omitempty" db:"id"`
+	Domain     string         `json:"domain,omitempty" db:"domain"`
+	Operation  string         `json:"operation,omitempty" db:"operation,omitempty"`
+	OccurredAt time.Time      `json:"occurred_at,omitempty" db:"occurred_at,omitempty"`
+	Attributes map[string]any `json:"attributes,omitempty" db:"attributes,omitempty"` // This is extra information about the journal for example client_id, user_id, group_id etc.
+	Metadata   map[string]any `json:"metadata,omitempty" db:"metadata,omitempty"`     // This is decoded metadata from the journal.
 }
 
 // JournalsPage represents a page of journals.

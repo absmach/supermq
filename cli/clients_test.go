@@ -292,8 +292,8 @@ func TestUpdateClientCmd(t *testing.T) {
 			},
 			client: smqsdk.Client{
 				Name: "clientName",
-				Metadata: map[string]interface{}{
-					"metadata": map[string]interface{}{
+				Metadata: map[string]any{
+					"metadata": map[string]any{
 						"role": "general",
 					},
 				},

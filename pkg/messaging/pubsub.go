@@ -115,4 +115,4 @@ type PubSub interface {
 // Example:
 //
 //	broker.NewPublisher(ctx, url, broker.Prefix(eventsPrefix), broker.JSStream(js))
-type Option func(vals interface{}) error
+type Option func(vals any) error

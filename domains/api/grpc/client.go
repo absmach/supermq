@@ -72,12 +72,12 @@ func (client domainsGrpcClient) DeleteUserFromDomains(ctx context.Context, in *g
 	return &grpcDomainsV1.DeleteUserRes{Deleted: dpr.deleted}, nil
 }
 
-func decodeDeleteUserResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func decodeDeleteUserResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(*grpcDomainsV1.DeleteUserRes)
 	return deleteUserRes{deleted: res.GetDeleted()}, nil
 }
 
-func encodeDeleteUserRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func encodeDeleteUserRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(deleteUserPoliciesReq)
 	return &grpcDomainsV1.DeleteUserReq{
 		Id: req.ID,
@@ -103,12 +103,12 @@ func (client domainsGrpcClient) RetrieveStatus(ctx context.Context, in *grpcComm
 	}, nil
 }
 
-func decodeRetrieveStatusResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func decodeRetrieveStatusResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(*grpcCommonV1.RetrieveEntityRes)
 	return retrieveStatusRes{status: uint8(res.Entity.GetStatus())}, nil
 }
 
-func encodeRetrieveStatusRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func encodeRetrieveStatusRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(retrieveStatusReq)
 	return &grpcCommonV1.RetrieveEntityReq{
 		Id: req.ID,
@@ -134,12 +134,12 @@ func (client domainsGrpcClient) RetrieveIDByRoute(ctx context.Context, in *grpcC
 	}, nil
 }
 
-func decodeRetrieveIDByRouteResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func decodeRetrieveIDByRouteResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(*grpcCommonV1.RetrieveEntityRes)
 	return retrieveIDByRouteRes{id: res.Entity.GetId()}, nil
 }
 
-func encodeRetrieveIDByRouteRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func encodeRetrieveIDByRouteRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(retrieveIDByRouteReq)
 	return &grpcCommonV1.RetrieveIDByRouteReq{
 		Route: req.Route,

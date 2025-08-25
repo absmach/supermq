@@ -130,7 +130,7 @@ func MakeHandler(svc auth.Service, mux *chi.Mux, logger *slog.Logger) *chi.Mux {
 	return mux
 }
 
-func decodeCreatePATRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeCreatePATRequest(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, apiutil.ErrUnsupportedContentType
 	}
@@ -145,7 +145,7 @@ func decodeCreatePATRequest(_ context.Context, r *http.Request) (interface{}, er
 	return req, nil
 }
 
-func decodeRetrievePATRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeRetrievePATRequest(_ context.Context, r *http.Request) (any, error) {
 	token := apiutil.ExtractBearerToken(r)
 	if strings.HasPrefix(token, patPrefix) {
 		return nil, apiutil.ErrUnsupportedTokenType
@@ -158,7 +158,7 @@ func decodeRetrievePATRequest(_ context.Context, r *http.Request) (interface{}, 
 	return req, nil
 }
 
-func decodeUpdatePATNameRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdatePATNameRequest(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, apiutil.ErrUnsupportedContentType
 	}
@@ -176,7 +176,7 @@ func decodeUpdatePATNameRequest(_ context.Context, r *http.Request) (interface{}
 	return req, nil
 }
 
-func decodeUpdatePATDescriptionRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdatePATDescriptionRequest(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, apiutil.ErrUnsupportedContentType
 	}
@@ -195,7 +195,7 @@ func decodeUpdatePATDescriptionRequest(_ context.Context, r *http.Request) (inte
 	return req, nil
 }
 
-func decodeListPATSRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeListPATSRequest(_ context.Context, r *http.Request) (any, error) {
 	l, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -237,7 +237,7 @@ func decodeListPATSRequest(_ context.Context, r *http.Request) (interface{}, err
 	return req, nil
 }
 
-func decodeDeletePATRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeDeletePATRequest(_ context.Context, r *http.Request) (any, error) {
 	token := apiutil.ExtractBearerToken(r)
 	if strings.HasPrefix(token, patPrefix) {
 		return nil, apiutil.ErrUnsupportedTokenType
@@ -248,7 +248,7 @@ func decodeDeletePATRequest(_ context.Context, r *http.Request) (interface{}, er
 	}, nil
 }
 
-func decodeResetPATSecretRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeResetPATSecretRequest(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, apiutil.ErrUnsupportedContentType
 	}
@@ -267,7 +267,7 @@ func decodeResetPATSecretRequest(_ context.Context, r *http.Request) (interface{
 	return req, nil
 }
 
-func decodeRevokePATSecretRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeRevokePATSecretRequest(_ context.Context, r *http.Request) (any, error) {
 	token := apiutil.ExtractBearerToken(r)
 	if strings.HasPrefix(token, patPrefix) {
 		return nil, apiutil.ErrUnsupportedTokenType
@@ -278,7 +278,7 @@ func decodeRevokePATSecretRequest(_ context.Context, r *http.Request) (interface
 	}, nil
 }
 
-func decodeClearAllPATRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeClearAllPATRequest(_ context.Context, r *http.Request) (any, error) {
 	token := apiutil.ExtractBearerToken(r)
 	if strings.HasPrefix(token, patPrefix) {
 		return nil, apiutil.ErrUnsupportedTokenType
@@ -289,7 +289,7 @@ func decodeClearAllPATRequest(_ context.Context, r *http.Request) (interface{}, 
 	}, nil
 }
 
-func decodeAddScopeRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeAddScopeRequest(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, apiutil.ErrUnsupportedContentType
 	}
@@ -311,7 +311,7 @@ func decodeAddScopeRequest(_ context.Context, r *http.Request) (interface{}, err
 	return req, nil
 }
 
-func decodeListScopeRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeListScopeRequest(_ context.Context, r *http.Request) (any, error) {
 	l, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -333,7 +333,7 @@ func decodeListScopeRequest(_ context.Context, r *http.Request) (interface{}, er
 	return req, nil
 }
 
-func decodeRemoveScopeRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeRemoveScopeRequest(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, apiutil.ErrUnsupportedContentType
 	}
@@ -353,7 +353,7 @@ func decodeRemoveScopeRequest(_ context.Context, r *http.Request) (interface{}, 
 	return req, nil
 }
 
-func decodeClearAllScopeRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeClearAllScopeRequest(_ context.Context, r *http.Request) (any, error) {
 	token := apiutil.ExtractBearerToken(r)
 	if strings.HasPrefix(token, patPrefix) {
 		return nil, apiutil.ErrUnsupportedTokenType

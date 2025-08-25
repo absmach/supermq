@@ -58,8 +58,8 @@ type addRoleEvent struct {
 	requestID string
 }
 
-func (are addRoleEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (are addRoleEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":        are.operationPrefix + AddRole,
 		"id":               are.ID,
 		"name":             are.Name,
@@ -82,8 +82,8 @@ type removeRoleEvent struct {
 	requestID       string
 }
 
-func (rre removeRoleEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (rre removeRoleEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":  rre.operationPrefix + RemoveRole,
 		"entity_id":  rre.entityID,
 		"role_id":    rre.roleID,
@@ -98,8 +98,8 @@ type updateRoleEvent struct {
 	requestID string
 }
 
-func (ure updateRoleEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (ure updateRoleEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":  ure.operationPrefix + UpdateRole,
 		"id":         ure.ID,
 		"name":       ure.Name,
@@ -119,8 +119,8 @@ type retrieveRoleEvent struct {
 	requestID string
 }
 
-func (rre retrieveRoleEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (rre retrieveRoleEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":  rre.operationPrefix + ViewRole,
 		"id":         rre.ID,
 		"name":       rre.Name,
@@ -142,8 +142,8 @@ type retrieveAllRolesEvent struct {
 	requestID       string
 }
 
-func (rare retrieveAllRolesEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (rare retrieveAllRolesEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":  rare.operationPrefix + ViewAllRole,
 		"entity_id":  rare.entityID,
 		"limit":      rare.limit,
@@ -158,8 +158,8 @@ type listAvailableActionsEvent struct {
 	requestID       string
 }
 
-func (laae listAvailableActionsEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (laae listAvailableActionsEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":  laae.operationPrefix + ListAvailableActions,
 		"request_id": laae.requestID,
 	}
@@ -174,8 +174,8 @@ type roleAddActionsEvent struct {
 	requestID       string
 }
 
-func (raae roleAddActionsEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (raae roleAddActionsEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":  raae.operationPrefix + AddRoleActions,
 		"entity_id":  raae.entityID,
 		"role_id":    raae.roleID,
@@ -192,8 +192,8 @@ type roleListActionsEvent struct {
 	requestID       string
 }
 
-func (rlae roleListActionsEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (rlae roleListActionsEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":  rlae.operationPrefix + ListRoleActions,
 		"entity_id":  rlae.entityID,
 		"role_id":    rlae.roleID,
@@ -211,8 +211,8 @@ type roleCheckActionsExistsEvent struct {
 	requestID       string
 }
 
-func (rcaee roleCheckActionsExistsEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (rcaee roleCheckActionsExistsEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":     rcaee.operationPrefix + CheckRoleActions,
 		"entity_id":     rcaee.entityID,
 		"role_id":       rcaee.roleID,
@@ -231,8 +231,8 @@ type roleRemoveActionsEvent struct {
 	requestID       string
 }
 
-func (rrae roleRemoveActionsEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (rrae roleRemoveActionsEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":  rrae.operationPrefix + RemoveRoleActions,
 		"entity_id":  rrae.entityID,
 		"role_id":    rrae.roleID,
@@ -249,8 +249,8 @@ type roleRemoveAllActionsEvent struct {
 	requestID       string
 }
 
-func (rraae roleRemoveAllActionsEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (rraae roleRemoveAllActionsEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":  rraae.operationPrefix + RemoveAllRoleActions,
 		"entity_id":  rraae.entityID,
 		"role_id":    rraae.roleID,
@@ -267,8 +267,8 @@ type roleAddMembersEvent struct {
 	requestID       string
 }
 
-func (rame roleAddMembersEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (rame roleAddMembersEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":  rame.operationPrefix + AddRoleMembers,
 		"entity_id":  rame.entityID,
 		"role_id":    rame.roleID,
@@ -287,8 +287,8 @@ type roleListMembersEvent struct {
 	requestID       string
 }
 
-func (rlme roleListMembersEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (rlme roleListMembersEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":  rlme.operationPrefix + ListRoleMembers,
 		"entity_id":  rlme.entityID,
 		"role_id":    rlme.roleID,
@@ -307,8 +307,8 @@ type roleCheckMembersExistsEvent struct {
 	requestID       string
 }
 
-func (rcmee roleCheckMembersExistsEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (rcmee roleCheckMembersExistsEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":  rcmee.operationPrefix + CheckRoleMembers,
 		"entity_id":  rcmee.entityID,
 		"role_id":    rcmee.roleID,
@@ -326,8 +326,8 @@ type roleRemoveMembersEvent struct {
 	requestID       string
 }
 
-func (rrme roleRemoveMembersEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (rrme roleRemoveMembersEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":  rrme.operationPrefix + RemoveRoleMembers,
 		"entity_id":  rrme.entityID,
 		"role_id":    rrme.roleID,
@@ -344,8 +344,8 @@ type roleRemoveAllMembersEvent struct {
 	requestID       string
 }
 
-func (rrame roleRemoveAllMembersEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (rrame roleRemoveAllMembersEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":  rrame.operationPrefix + RemoveRoleAllMembers,
 		"entity_id":  rrame.entityID,
 		"role_id":    rrame.roleID,
@@ -362,8 +362,8 @@ type listEntityMembersEvent struct {
 	requestID       string
 }
 
-func (leme listEntityMembersEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (leme listEntityMembersEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":  leme.operationPrefix + ListEntityMembers,
 		"entity_id":  leme.entityID,
 		"limit":      leme.limit,
@@ -380,8 +380,8 @@ type removeEntityMembersEvent struct {
 	requestID       string
 }
 
-func (reme removeEntityMembersEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (reme removeEntityMembersEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":  reme.operationPrefix + RemoveEntityMembers,
 		"entity_id":  reme.entityID,
 		"members":    reme.members,
@@ -396,8 +396,8 @@ type removeMemberFromAllRolesEvent struct {
 	requestID       string
 }
 
-func (rmare removeMemberFromAllRolesEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (rmare removeMemberFromAllRolesEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":  rmare.operationPrefix + RemoveMemberFromAllRoles,
 		"member_id":  rmare.memberID,
 		"request_id": rmare.requestID,

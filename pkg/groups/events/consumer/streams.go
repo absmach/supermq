@@ -107,7 +107,7 @@ func (es *eventHandler) Handle(ctx context.Context, event events.Event) error {
 	return es.rolesEventHandler.Handle(ctx, op, msg)
 }
 
-func (es *eventHandler) createGroupHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *eventHandler) createGroupHandler(ctx context.Context, data map[string]any) error {
 	g, rps, err := decodeCreateGroupEvent(data)
 	if err != nil {
 		return errors.Wrap(errCreateGroupEvent, err)
@@ -123,7 +123,7 @@ func (es *eventHandler) createGroupHandler(ctx context.Context, data map[string]
 	return nil
 }
 
-func (es *eventHandler) updateGroupHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *eventHandler) updateGroupHandler(ctx context.Context, data map[string]any) error {
 	g, err := decodeUpdateGroupEvent(data)
 	if err != nil {
 		return errors.Wrap(errUpdateGroupEvent, err)
@@ -136,7 +136,7 @@ func (es *eventHandler) updateGroupHandler(ctx context.Context, data map[string]
 	return nil
 }
 
-func (es *eventHandler) changeStatusGroupHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *eventHandler) changeStatusGroupHandler(ctx context.Context, data map[string]any) error {
 	g, err := decodeChangeStatusGroupEvent(data)
 	if err != nil {
 		return errors.Wrap(errChangeStatusGroupEvent, err)
@@ -149,7 +149,7 @@ func (es *eventHandler) changeStatusGroupHandler(ctx context.Context, data map[s
 	return nil
 }
 
-func (es *eventHandler) removeGroupHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *eventHandler) removeGroupHandler(ctx context.Context, data map[string]any) error {
 	g, err := decodeRemoveGroupEvent(data)
 	if err != nil {
 		return errors.Wrap(errRemoveGroupEvent, err)
@@ -161,7 +161,7 @@ func (es *eventHandler) removeGroupHandler(ctx context.Context, data map[string]
 	return nil
 }
 
-func (es *eventHandler) addParentGroupHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *eventHandler) addParentGroupHandler(ctx context.Context, data map[string]any) error {
 	id, parent, err := decodeAddParentGroupEvent(data)
 	if err != nil {
 		return errors.Wrap(errAddParentGroupEvent, err)
@@ -172,7 +172,7 @@ func (es *eventHandler) addParentGroupHandler(ctx context.Context, data map[stri
 	return nil
 }
 
-func (es *eventHandler) removeParentGroupHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *eventHandler) removeParentGroupHandler(ctx context.Context, data map[string]any) error {
 	id, err := decodeRemoveParentGroupEvent(data)
 	if err != nil {
 		return errors.Wrap(errRemoveParentGroupEvent, err)
@@ -187,7 +187,7 @@ func (es *eventHandler) removeParentGroupHandler(ctx context.Context, data map[s
 	return nil
 }
 
-func (es *eventHandler) addChildrenGroupsHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *eventHandler) addChildrenGroupsHandler(ctx context.Context, data map[string]any) error {
 	id, cids, err := decodeAddChildrenGroupEvent(data)
 	if err != nil {
 		return errors.Wrap(errAddChildrenGroupEvent, err)
@@ -199,7 +199,7 @@ func (es *eventHandler) addChildrenGroupsHandler(ctx context.Context, data map[s
 	return nil
 }
 
-func (es *eventHandler) removeChildrenGroupsHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *eventHandler) removeChildrenGroupsHandler(ctx context.Context, data map[string]any) error {
 	id, cids, err := decodeRemoveChildrenGroupEvent(data)
 	if err != nil {
 		return errors.Wrap(errRemoveChildrenGroupEvent, err)
@@ -211,7 +211,7 @@ func (es *eventHandler) removeChildrenGroupsHandler(ctx context.Context, data ma
 	return nil
 }
 
-func (es *eventHandler) removeAllChildrenGroupsHandler(ctx context.Context, data map[string]interface{}) error {
+func (es *eventHandler) removeAllChildrenGroupsHandler(ctx context.Context, data map[string]any) error {
 	id, err := decodeRemoveAllChildrenGroupEvent(data)
 	if err != nil {
 		return errors.Wrap(errRemoveAllChildrenGroupEvent, err)

@@ -120,7 +120,7 @@ func TestCreateChannel(t *testing.T) {
 			desc: "create channel that can't be marshalled",
 			channelReq: sdk.Channel{
 				Name: "test",
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": make(chan int),
 				},
 			},
@@ -305,7 +305,7 @@ func TestCreateChannels(t *testing.T) {
 					ID:    generateUUID(t),
 					Name:  "channel_1",
 					Route: valid,
-					Metadata: map[string]interface{}{
+					Metadata: map[string]any{
 						"test": make(chan int),
 					},
 				},
@@ -978,7 +978,7 @@ func TestUpdateChannel(t *testing.T) {
 			channelReq: sdk.Channel{
 				ID:   channel.ID,
 				Name: "test",
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": make(chan int),
 				},
 			},
@@ -1147,7 +1147,7 @@ func TestUpdateChannelTags(t *testing.T) {
 			token:    validToken,
 			updateChannelReq: sdk.Channel{
 				ID: "test",
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": make(chan int),
 				},
 			},

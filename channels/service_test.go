@@ -39,7 +39,7 @@ var (
 		ID:    testsutil.GenerateUUID(&testing.T{}),
 		Name:  namegen.Generate(),
 		Route: namegen.Generate(),
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"key": "value",
 		},
 		Tags:   []string{"tag1", "tag2"},
@@ -50,7 +50,7 @@ var (
 		ID:    testsutil.GenerateUUID(&testing.T{}),
 		Name:  namegen.Generate(),
 		Route: namegen.Generate(),
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"key": "value",
 		},
 		Tags:   []string{"tag1", "tag2"},

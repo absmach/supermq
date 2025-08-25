@@ -57,11 +57,11 @@ func (client grpcClient) RetrieveEntity(ctx context.Context, req *grpcCommonV1.R
 	return typedRes, nil
 }
 
-func encodeRetrieveEntityRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func encodeRetrieveEntityRequest(_ context.Context, grpcReq any) (any, error) {
 	return grpcReq, nil
 }
 
-func decodeRetrieveEntityResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func decodeRetrieveEntityResponse(_ context.Context, grpcRes any) (any, error) {
 	return grpcRes, nil
 }
 

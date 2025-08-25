@@ -25,7 +25,7 @@ const (
 	stateKey         = "state"
 )
 
-func decodeCreateDomainRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeCreateDomainRequest(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -37,7 +37,7 @@ func decodeCreateDomainRequest(_ context.Context, r *http.Request) (interface{},
 	return req, nil
 }
 
-func decodeRetrieveDomainRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeRetrieveDomainRequest(_ context.Context, r *http.Request) (any, error) {
 	roles, err := apiutil.ReadBoolQuery(r, api.RolesKey, false)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -49,7 +49,7 @@ func decodeRetrieveDomainRequest(_ context.Context, r *http.Request) (interface{
 	return req, nil
 }
 
-func decodeUpdateDomainRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateDomainRequest(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -65,7 +65,7 @@ func decodeUpdateDomainRequest(_ context.Context, r *http.Request) (interface{},
 	return req, nil
 }
 
-func decodeListDomainRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+func decodeListDomainRequest(ctx context.Context, r *http.Request) (any, error) {
 	page, err := decodePageRequest(ctx, r)
 	if err != nil {
 		return nil, err
@@ -77,21 +77,21 @@ func decodeListDomainRequest(ctx context.Context, r *http.Request) (interface{},
 	return req, nil
 }
 
-func decodeEnableDomainRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeEnableDomainRequest(_ context.Context, r *http.Request) (any, error) {
 	req := enableDomainReq{
 		domainID: chi.URLParam(r, "domainID"),
 	}
 	return req, nil
 }
 
-func decodeDisableDomainRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeDisableDomainRequest(_ context.Context, r *http.Request) (any, error) {
 	req := disableDomainReq{
 		domainID: chi.URLParam(r, "domainID"),
 	}
 	return req, nil
 }
 
-func decodeFreezeDomainRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeFreezeDomainRequest(_ context.Context, r *http.Request) (any, error) {
 	req := freezeDomainReq{
 		domainID: chi.URLParam(r, "domainID"),
 	}
@@ -184,7 +184,7 @@ func decodePageRequest(_ context.Context, r *http.Request) (domains.Page, error)
 	}, nil
 }
 
-func decodeSendInvitationReq(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeSendInvitationReq(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -197,7 +197,7 @@ func decodeSendInvitationReq(_ context.Context, r *http.Request) (interface{}, e
 	return req, nil
 }
 
-func decodeListInvitationsReq(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeListInvitationsReq(_ context.Context, r *http.Request) (any, error) {
 	offset, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -250,7 +250,7 @@ func decodeListInvitationsReq(_ context.Context, r *http.Request) (interface{}, 
 	return req, nil
 }
 
-func decodeAcceptInvitationReq(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeAcceptInvitationReq(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -263,7 +263,7 @@ func decodeAcceptInvitationReq(_ context.Context, r *http.Request) (interface{},
 	return req, nil
 }
 
-func decodeDeleteInvitationReq(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeDeleteInvitationReq(_ context.Context, r *http.Request) (any, error) {
 	req := deleteInvitationReq{
 		userID:   chi.URLParam(r, "userID"),
 		domainID: chi.URLParam(r, "domainID"),

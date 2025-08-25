@@ -31,7 +31,7 @@ const (
 	layout = "2006-01-02T15:04:05.999999Z"
 )
 
-func ToRole(data map[string]interface{}) (roles.Role, error) {
+func ToRole(data map[string]any) (roles.Role, error) {
 	var r roles.Role
 
 	id, ok := data["id"].(string)
@@ -85,7 +85,7 @@ func ToRole(data map[string]interface{}) (roles.Role, error) {
 	return r, nil
 }
 
-func ToStrings(data []interface{}) ([]string, error) {
+func ToStrings(data []any) ([]string, error) {
 	var strs []string
 	for _, i := range data {
 		str, ok := i.(string)
@@ -97,7 +97,7 @@ func ToStrings(data []interface{}) ([]string, error) {
 	return strs, nil
 }
 
-func ToRoleProvision(data map[string]interface{}) (roles.RoleProvision, error) {
+func ToRoleProvision(data map[string]any) (roles.RoleProvision, error) {
 	var rp roles.RoleProvision
 
 	r, err := ToRole(data)
@@ -108,7 +108,7 @@ func ToRoleProvision(data map[string]interface{}) (roles.RoleProvision, error) {
 
 	// Following fields of groups are allowed to be empty.
 
-	opActs, ok := data["optional_actions"].([]interface{})
+	opActs, ok := data["optional_actions"].([]any)
 	if ok {
 		a, err := ToStrings(opActs)
 		if err != nil {
@@ -117,7 +117,7 @@ func ToRoleProvision(data map[string]interface{}) (roles.RoleProvision, error) {
 		rp.OptionalActions = a
 	}
 
-	opMems, ok := data["optional_members"].([]interface{})
+	opMems, ok := data["optional_members"].([]any)
 	if ok {
 		m, err := ToStrings(opMems)
 		if err != nil {
@@ -129,10 +129,10 @@ func ToRoleProvision(data map[string]interface{}) (roles.RoleProvision, error) {
 	return rp, nil
 }
 
-func ToRoleProvisions(data []interface{}) ([]roles.RoleProvision, error) {
+func ToRoleProvisions(data []any) ([]roles.RoleProvision, error) {
 	var rps []roles.RoleProvision
 	for _, d := range data {
-		irp, ok := d.(map[string]interface{})
+		irp, ok := d.(map[string]any)
 		if !ok {
 			return []roles.RoleProvision{}, errInvalidRoleProvision
 		}

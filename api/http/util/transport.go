@@ -39,7 +39,7 @@ func ReadStringQuery(r *http.Request, key, def string) (string, error) {
 }
 
 // ReadMetadataQuery reads the value of json http query parameters for a given key.
-func ReadMetadataQuery(r *http.Request, key string, def map[string]interface{}) (map[string]interface{}, error) {
+func ReadMetadataQuery(r *http.Request, key string, def map[string]any) (map[string]any, error) {
 	vals := r.URL.Query()[key]
 	if len(vals) > 1 {
 		return nil, ErrInvalidQueryParams
@@ -49,7 +49,7 @@ func ReadMetadataQuery(r *http.Request, key string, def map[string]interface{}) 
 		return def, nil
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 	err := json.Unmarshal([]byte(vals[0]), &m)
 	if err != nil {
 		return nil, errors.Wrap(ErrInvalidQueryParams, err)

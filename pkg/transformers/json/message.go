@@ -4,7 +4,7 @@
 package json
 
 // Payload represents JSON Message payload.
-type Payload map[string]interface{}
+type Payload map[string]any
 
 // Message represents a JSON messages.
 type Message struct {

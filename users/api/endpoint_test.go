@@ -100,7 +100,7 @@ func newUsersServer() (*httptest.Server, *mocks.Service, *authnmocks.Authenticat
 	return httptest.NewServer(mux), svc, authn
 }
 
-func toJSON(data interface{}) string {
+func toJSON(data any) string {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return ""
@@ -165,7 +165,7 @@ func TestRegister(t *testing.T) {
 				Credentials: users.Credentials{
 					Secret: "12345678",
 				},
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": make(chan int),
 				},
 			},

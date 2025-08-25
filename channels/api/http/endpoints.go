@@ -16,7 +16,7 @@ import (
 )
 
 func createChannelEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(createChannelReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -40,7 +40,7 @@ func createChannelEndpoint(svc channels.Service) endpoint.Endpoint {
 }
 
 func createChannelsEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(createChannelsReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -71,7 +71,7 @@ func createChannelsEndpoint(svc channels.Service) endpoint.Endpoint {
 }
 
 func viewChannelEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(viewChannelReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -92,7 +92,7 @@ func viewChannelEndpoint(svc channels.Service) endpoint.Endpoint {
 }
 
 func listChannelsEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(listChannelsReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -132,7 +132,7 @@ func listChannelsEndpoint(svc channels.Service) endpoint.Endpoint {
 }
 
 func updateChannelEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(updateChannelReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -158,7 +158,7 @@ func updateChannelEndpoint(svc channels.Service) endpoint.Endpoint {
 }
 
 func updateChannelTagsEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(updateChannelTagsReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -183,7 +183,7 @@ func updateChannelTagsEndpoint(svc channels.Service) endpoint.Endpoint {
 }
 
 func setChannelParentGroupEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(setChannelParentGroupReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -203,7 +203,7 @@ func setChannelParentGroupEndpoint(svc channels.Service) endpoint.Endpoint {
 }
 
 func removeChannelParentGroupEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(removeChannelParentGroupReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -223,7 +223,7 @@ func removeChannelParentGroupEndpoint(svc channels.Service) endpoint.Endpoint {
 }
 
 func enableChannelEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(changeChannelStatusReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -244,7 +244,7 @@ func enableChannelEndpoint(svc channels.Service) endpoint.Endpoint {
 }
 
 func disableChannelEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(changeChannelStatusReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -265,7 +265,7 @@ func disableChannelEndpoint(svc channels.Service) endpoint.Endpoint {
 }
 
 func connectChannelClientEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(connectChannelClientsRequest)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -285,7 +285,7 @@ func connectChannelClientEndpoint(svc channels.Service) endpoint.Endpoint {
 }
 
 func disconnectChannelClientsEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(disconnectChannelClientsRequest)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -305,7 +305,7 @@ func disconnectChannelClientsEndpoint(svc channels.Service) endpoint.Endpoint {
 }
 
 func connectEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(connectRequest)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -325,7 +325,7 @@ func connectEndpoint(svc channels.Service) endpoint.Endpoint {
 }
 
 func disconnectEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(disconnectRequest)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -345,7 +345,7 @@ func disconnectEndpoint(svc channels.Service) endpoint.Endpoint {
 }
 
 func deleteChannelEndpoint(svc channels.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(deleteChannelReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)

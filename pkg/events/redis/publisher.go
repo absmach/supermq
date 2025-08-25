@@ -53,7 +53,7 @@ func (es *pubEventStore) Publish(ctx context.Context, stream string, event event
 		Stream: eventsPrefix + stream,
 		MaxLen: events.MaxEventStreamLen,
 		Approx: true,
-		Values: map[string]interface{}{"data": string(data)},
+		Values: map[string]any{"data": string(data)},
 	}
 
 	switch err := es.checkConnection(ctx); err {

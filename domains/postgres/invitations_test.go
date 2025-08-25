@@ -825,7 +825,7 @@ func saveDomain(t *testing.T, repo domains.Repository) domains.Domain {
 		Name:  "test",
 		Route: "test",
 		Tags:  []string{"test"},
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"test": "test",
 		},
 		CreatedBy: userID,

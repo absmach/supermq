@@ -3,4 +3,4 @@
 
 package sdk
 
-type Metadata map[string]interface{}
+type Metadata map[string]any

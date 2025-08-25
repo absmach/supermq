@@ -36,7 +36,7 @@ var (
 
 const layout = "2006-01-02T15:04:05.999999Z"
 
-func ToGroups(data map[string]interface{}) (groups.Group, error) {
+func ToGroups(data map[string]any) (groups.Group, error) {
 	var g groups.Group
 	id, ok := data["id"].(string)
 	if !ok {
@@ -88,7 +88,7 @@ func ToGroups(data map[string]interface{}) (groups.Group, error) {
 		g.Parent = parent
 	}
 
-	meta, ok := data["metadata"].(map[string]interface{})
+	meta, ok := data["metadata"].(map[string]any)
 	if ok {
 		g.Metadata = meta
 	}
@@ -110,12 +110,12 @@ func ToGroups(data map[string]interface{}) (groups.Group, error) {
 	return g, nil
 }
 
-func decodeCreateGroupEvent(data map[string]interface{}) (groups.Group, []roles.RoleProvision, error) {
+func decodeCreateGroupEvent(data map[string]any) (groups.Group, []roles.RoleProvision, error) {
 	g, err := ToGroups(data)
 	if err != nil {
 		return groups.Group{}, []roles.RoleProvision{}, errors.Wrap(errDecodeCreateGroupEvent, err)
 	}
-	irps, ok := data["roles_provisioned"].([]interface{})
+	irps, ok := data["roles_provisioned"].([]any)
 	if !ok {
 		return groups.Group{}, []roles.RoleProvision{}, errors.Wrap(errDecodeCreateGroupEvent, errors.New("missing or invalid 'roles_provisioned'"))
 	}
@@ -127,7 +127,7 @@ func decodeCreateGroupEvent(data map[string]interface{}) (groups.Group, []roles.
 	return g, rps, nil
 }
 
-func decodeUpdateGroupEvent(data map[string]interface{}) (groups.Group, error) {
+func decodeUpdateGroupEvent(data map[string]any) (groups.Group, error) {
 	g, err := ToGroups(data)
 	if err != nil {
 		return groups.Group{}, errors.Wrap(errDecodeUpdateGroupEvent, err)
@@ -135,7 +135,7 @@ func decodeUpdateGroupEvent(data map[string]interface{}) (groups.Group, error) {
 	return g, nil
 }
 
-func ToGroupStatus(data map[string]interface{}) (groups.Group, error) {
+func ToGroupStatus(data map[string]any) (groups.Group, error) {
 	var g groups.Group
 	id, ok := data["id"].(string)
 	if !ok {
@@ -170,7 +170,7 @@ func ToGroupStatus(data map[string]interface{}) (groups.Group, error) {
 	return g, nil
 }
 
-func decodeChangeStatusGroupEvent(data map[string]interface{}) (groups.Group, error) {
+func decodeChangeStatusGroupEvent(data map[string]any) (groups.Group, error) {
 	g, err := ToGroupStatus(data)
 	if err != nil {
 		return groups.Group{}, errors.Wrap(errDecodeChangeStatusGroupEvent, err)
@@ -178,7 +178,7 @@ func decodeChangeStatusGroupEvent(data map[string]interface{}) (groups.Group, er
 	return g, nil
 }
 
-func decodeRemoveGroupEvent(data map[string]interface{}) (groups.Group, error) {
+func decodeRemoveGroupEvent(data map[string]any) (groups.Group, error) {
 	var g groups.Group
 	id, ok := data["id"].(string)
 	if !ok {
@@ -189,7 +189,7 @@ func decodeRemoveGroupEvent(data map[string]interface{}) (groups.Group, error) {
 	return g, nil
 }
 
-func decodeAddParentGroupEvent(data map[string]interface{}) (id string, parent string, err error) {
+func decodeAddParentGroupEvent(data map[string]any) (id string, parent string, err error) {
 	id, ok := data["id"].(string)
 	if !ok {
 		return "", "", errors.Wrap(errAddParentGroupEvent, errID)
@@ -203,7 +203,7 @@ func decodeAddParentGroupEvent(data map[string]interface{}) (id string, parent s
 	return id, parent, nil
 }
 
-func decodeRemoveParentGroupEvent(data map[string]interface{}) (id string, err error) {
+func decodeRemoveParentGroupEvent(data map[string]any) (id string, err error) {
 	id, ok := data["id"].(string)
 	if !ok {
 		return "", errors.Wrap(errDecodeRemoveParentGroupEvent, errID)
@@ -212,12 +212,12 @@ func decodeRemoveParentGroupEvent(data map[string]interface{}) (id string, err e
 	return id, nil
 }
 
-func decodeAddChildrenGroupEvent(data map[string]interface{}) (id string, childrenIDs []string, err error) {
+func decodeAddChildrenGroupEvent(data map[string]any) (id string, childrenIDs []string, err error) {
 	id, ok := data["id"].(string)
 	if !ok {
 		return "", []string{}, errors.Wrap(errDecodeAddChildrenGroupsEvent, errID)
 	}
-	chIDs, ok := data["children_ids"].([]interface{})
+	chIDs, ok := data["children_ids"].([]any)
 	if !ok {
 		return "", []string{}, errors.Wrap(errDecodeAddChildrenGroupsEvent, errChildrenIDs)
 	}
@@ -228,12 +228,12 @@ func decodeAddChildrenGroupEvent(data map[string]interface{}) (id string, childr
 	return id, cids, nil
 }
 
-func decodeRemoveChildrenGroupEvent(data map[string]interface{}) (id string, childrenIDs []string, err error) {
+func decodeRemoveChildrenGroupEvent(data map[string]any) (id string, childrenIDs []string, err error) {
 	id, ok := data["id"].(string)
 	if !ok {
 		return "", []string{}, errors.Wrap(errDecodeRemoveChildrenGroupsEvent, errID)
 	}
-	chIDs, ok := data["children_ids"].([]interface{})
+	chIDs, ok := data["children_ids"].([]any)
 	if !ok {
 		return "", []string{}, errors.Wrap(errDecodeRemoveChildrenGroupsEvent, errChildrenIDs)
 	}
@@ -244,7 +244,7 @@ func decodeRemoveChildrenGroupEvent(data map[string]interface{}) (id string, chi
 	return id, cids, nil
 }
 
-func decodeRemoveAllChildrenGroupEvent(data map[string]interface{}) (id string, err error) {
+func decodeRemoveAllChildrenGroupEvent(data map[string]any) (id string, err error) {
 	id, ok := data["id"].(string)
 	if !ok {
 		return "", errors.Wrap(errDecodeRemoveChildrenGroupsEvent, errID)

@@ -37,7 +37,7 @@ var (
 		Name:        namegen.Generate(),
 		Tags:        []string{"tag1", "tag2"},
 		Description: desc,
-		Metadata:    map[string]interface{}{"key": "value"},
+		Metadata:    map[string]any{"key": "value"},
 		CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
 		Status:      groups.EnabledStatus,
 	}
@@ -121,7 +121,7 @@ func TestSave(t *testing.T) {
 				Domain:      testsutil.GenerateUUID(t),
 				Name:        namegen.Generate(),
 				Description: desc,
-				Metadata:    map[string]interface{}{"key": "value"},
+				Metadata:    map[string]any{"key": "value"},
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
 			},
@@ -134,7 +134,7 @@ func TestSave(t *testing.T) {
 				Domain:      invalidID,
 				Name:        namegen.Generate(),
 				Description: desc,
-				Metadata:    map[string]interface{}{"key": "value"},
+				Metadata:    map[string]any{"key": "value"},
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
 			},
@@ -147,7 +147,7 @@ func TestSave(t *testing.T) {
 				Parent:      testsutil.GenerateUUID(t),
 				Name:        namegen.Generate(),
 				Description: desc,
-				Metadata:    map[string]interface{}{"key": "value"},
+				Metadata:    map[string]any{"key": "value"},
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
 			},
@@ -160,7 +160,7 @@ func TestSave(t *testing.T) {
 				Domain:      testsutil.GenerateUUID(t),
 				Name:        strings.Repeat("a", 1025),
 				Description: desc,
-				Metadata:    map[string]interface{}{"key": "value"},
+				Metadata:    map[string]any{"key": "value"},
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
 			},
@@ -173,7 +173,7 @@ func TestSave(t *testing.T) {
 				Domain:      testsutil.GenerateUUID(t),
 				Name:        namegen.Generate(),
 				Description: invalidDesc,
-				Metadata:    map[string]interface{}{"key": "value"},
+				Metadata:    map[string]any{"key": "value"},
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
 			},
@@ -186,7 +186,7 @@ func TestSave(t *testing.T) {
 				Domain:      testsutil.GenerateUUID(t),
 				Name:        namegen.Generate(),
 				Description: desc,
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"key": make(chan int),
 				},
 				CreatedAt: validTimestamp,
@@ -201,7 +201,7 @@ func TestSave(t *testing.T) {
 				Name:        namegen.Generate(),
 				Domain:      invalidID,
 				Description: desc,
-				Metadata:    map[string]interface{}{"key": "value"},
+				Metadata:    map[string]any{"key": "value"},
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
 			},
@@ -214,7 +214,7 @@ func TestSave(t *testing.T) {
 				Domain:      validGroup.Domain,
 				Name:        validGroup.Name,
 				Description: desc,
-				Metadata:    map[string]interface{}{"key": "different_value"},
+				Metadata:    map[string]any{"key": "different_value"},
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
 				Path:        duplicateGroupID,
@@ -225,7 +225,7 @@ func TestSave(t *testing.T) {
 				Domain:      validGroup.Domain,
 				Name:        validGroup.Name,
 				Description: desc,
-				Metadata:    map[string]interface{}{"key": "different_value"},
+				Metadata:    map[string]any{"key": "different_value"},
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
 				Path:        duplicateGroupID,
@@ -268,7 +268,7 @@ func TestUpdate(t *testing.T) {
 				ID:          group.ID,
 				Name:        namegen.Generate(),
 				Description: desc,
-				Metadata:    map[string]interface{}{"key": "value"},
+				Metadata:    map[string]any{"key": "value"},
 				UpdatedAt:   validTimestamp,
 				UpdatedBy:   testsutil.GenerateUUID(t),
 			},
@@ -301,7 +301,7 @@ func TestUpdate(t *testing.T) {
 			update: "metadata",
 			group: groups.Group{
 				ID:        group.ID,
-				Metadata:  map[string]interface{}{"key1": "value1"},
+				Metadata:  map[string]any{"key1": "value1"},
 				UpdatedAt: validTimestamp,
 				UpdatedBy: testsutil.GenerateUUID(t),
 			},
@@ -314,7 +314,7 @@ func TestUpdate(t *testing.T) {
 				ID:          testsutil.GenerateUUID(t),
 				Name:        namegen.Generate(),
 				Description: desc,
-				Metadata:    map[string]interface{}{"key": "value"},
+				Metadata:    map[string]any{"key": "value"},
 				UpdatedAt:   validTimestamp,
 				UpdatedBy:   testsutil.GenerateUUID(t),
 			},
@@ -326,7 +326,7 @@ func TestUpdate(t *testing.T) {
 			group: groups.Group{
 				Name:        namegen.Generate(),
 				Description: desc,
-				Metadata:    map[string]interface{}{"key": "value"},
+				Metadata:    map[string]any{"key": "value"},
 				UpdatedAt:   validTimestamp,
 				UpdatedBy:   testsutil.GenerateUUID(t),
 			},
@@ -554,7 +554,7 @@ func TestRetrieveByIDAndUser(t *testing.T) {
 			Domain:      domainID,
 			Name:        name,
 			Description: desc,
-			Metadata:    map[string]interface{}{"name": name},
+			Metadata:    map[string]any{"name": name},
 			CreatedAt:   validTimestamp,
 			Status:      groups.EnabledStatus,
 		}
@@ -683,7 +683,7 @@ func TestRetrieveAll(t *testing.T) {
 			Parent:      parentID,
 			Name:        name,
 			Description: desc,
-			Metadata:    map[string]interface{}{"name": name},
+			Metadata:    map[string]any{"name": name},
 			CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
 			Status:      groups.EnabledStatus,
 		}
@@ -916,7 +916,7 @@ func TestRetrieveAll(t *testing.T) {
 				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  10,
-					Metadata: map[string]interface{}{
+					Metadata: map[string]any{
 						"key": make(chan int),
 					},
 				},
@@ -1008,7 +1008,7 @@ func TestRetrieveByIDs(t *testing.T) {
 			Parent:      parentID,
 			Name:        name,
 			Description: desc,
-			Metadata:    map[string]interface{}{"name": name},
+			Metadata:    map[string]any{"name": name},
 			CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
 			Status:      groups.EnabledStatus,
 		}
@@ -1226,7 +1226,7 @@ func TestRetrieveByIDs(t *testing.T) {
 				PageMeta: groups.PageMeta{
 					Offset: 0,
 					Limit:  10,
-					Metadata: map[string]interface{}{
+					Metadata: map[string]any{
 						"key": make(chan int),
 					},
 				},
@@ -1319,7 +1319,7 @@ func TestAssignParentGroup(t *testing.T) {
 			Domain:      testsutil.GenerateUUID(t),
 			Name:        name,
 			Description: desc,
-			Metadata:    map[string]interface{}{"name": name},
+			Metadata:    map[string]any{"name": name},
 			CreatedAt:   validTimestamp,
 			Status:      groups.EnabledStatus,
 		}
@@ -1394,7 +1394,7 @@ func TestUnassignParentGroup(t *testing.T) {
 			Parent:      parentID,
 			Name:        name,
 			Description: desc,
-			Metadata:    map[string]interface{}{"name": name},
+			Metadata:    map[string]any{"name": name},
 			CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
 			Status:      groups.EnabledStatus,
 		}
@@ -1472,7 +1472,7 @@ func TestUnassignAllChildrenGroups(t *testing.T) {
 			Parent:      parentID,
 			Name:        name,
 			Description: desc,
-			Metadata:    map[string]interface{}{"name": name},
+			Metadata:    map[string]any{"name": name},
 			CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
 			Status:      groups.EnabledStatus,
 		}
@@ -1536,7 +1536,7 @@ func TestRetrieveHierarchy(t *testing.T) {
 			Parent:      parentID,
 			Name:        name,
 			Description: desc,
-			Metadata:    map[string]interface{}{"name": name},
+			Metadata:    map[string]any{"name": name},
 			CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
 			Status:      groups.EnabledStatus,
 		}
@@ -1703,7 +1703,7 @@ func TestRetrieveAllParentGroups(t *testing.T) {
 			Name:        name,
 			Parent:      parentID,
 			Description: desc,
-			Metadata:    map[string]interface{}{"name": name},
+			Metadata:    map[string]any{"name": name},
 			CreatedAt:   validTimestamp,
 			Status:      groups.EnabledStatus,
 		}
@@ -1880,7 +1880,7 @@ func TestRetrieveChildrenGroups(t *testing.T) {
 			Name:        name,
 			Parent:      parentID,
 			Description: desc,
-			Metadata:    map[string]interface{}{"name": name},
+			Metadata:    map[string]any{"name": name},
 			CreatedAt:   validTimestamp,
 			Status:      groups.EnabledStatus,
 		}

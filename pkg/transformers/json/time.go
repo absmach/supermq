@@ -14,7 +14,7 @@ import (
 
 var errUnsupportedFormat = errors.New("unsupported time format")
 
-func parseTimestamp(format string, timestamp interface{}, location string) (time.Time, error) {
+func parseTimestamp(format string, timestamp any, location string) (time.Time, error) {
 	switch format {
 	case "unix", "unix_ms", "unix_us", "unix_ns":
 		return parseUnix(format, timestamp)
@@ -26,7 +26,7 @@ func parseTimestamp(format string, timestamp interface{}, location string) (time
 	}
 }
 
-func parseUnix(format string, timestamp interface{}) (time.Time, error) {
+func parseUnix(format string, timestamp any) (time.Time, error) {
 	integer, fractional, err := parseComponents(timestamp)
 	if err != nil {
 		return time.Unix(0, 0), err
@@ -46,7 +46,7 @@ func parseUnix(format string, timestamp interface{}) (time.Time, error) {
 	}
 }
 
-func parseComponents(timestamp interface{}) (int64, int64, error) {
+func parseComponents(timestamp any) (int64, int64, error) {
 	switch ts := timestamp.(type) {
 	case string:
 		parts := strings.SplitN(ts, ".", 2)
@@ -108,7 +108,7 @@ func parseUnixTimeComponents(first, second string) (int64, int64, error) {
 	return integer, fractional, nil
 }
 
-func parseTime(format string, timestamp interface{}, location string) (time.Time, error) {
+func parseTime(format string, timestamp any, location string) (time.Time, error) {
 	switch ts := timestamp.(type) {
 	case string:
 		loc, err := time.LoadLocation(location)

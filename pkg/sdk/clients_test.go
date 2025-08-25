@@ -159,7 +159,7 @@ func TestCreateClient(t *testing.T) {
 			token:    validToken,
 			createClientReq: sdk.Client{
 				Name: valid,
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					valid: make(chan int),
 				},
 			},
@@ -273,7 +273,7 @@ func TestCreateClients(t *testing.T) {
 			desc:                 "create new clients with a request that can't be marshalled",
 			domainID:             domainID,
 			token:                validToken,
-			createClientsRequest: []sdk.Client{{Name: "test", Metadata: map[string]interface{}{"test": make(chan int)}}},
+			createClientsRequest: []sdk.Client{{Name: "test", Metadata: map[string]any{"test": make(chan int)}}},
 			svcReq:               convertClients(sdkClients...),
 			svcRes:               []clients.Client{},
 			svcErr:               nil,
@@ -517,7 +517,7 @@ func TestListClients(t *testing.T) {
 			pageMeta: sdk.PageMetadata{
 				Offset: 0,
 				Limit:  100,
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": make(chan int),
 				},
 			},
@@ -739,7 +739,7 @@ func TestUpdateClient(t *testing.T) {
 	sdkClient := generateTestClient(t, false)
 	updatedClient := sdkClient
 	updatedClient.Name = "newName"
-	updatedClient.Metadata = map[string]interface{}{
+	updatedClient.Metadata = map[string]any{
 		"newKey": "newValue",
 	}
 	updateClientReq := sdk.Client{
@@ -841,7 +841,7 @@ func TestUpdateClient(t *testing.T) {
 
 			updateClientReq: sdk.Client{
 				ID: valid,
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": make(chan int),
 				},
 			},
@@ -993,7 +993,7 @@ func TestUpdateClientTags(t *testing.T) {
 			token:    validToken,
 			updateClientReq: sdk.Client{
 				ID: valid,
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": make(chan int),
 				},
 			},

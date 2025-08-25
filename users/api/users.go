@@ -196,7 +196,7 @@ func usersHandler(svc users.Service, authn smqauthn.Authentication, tokenClient 
 	return r
 }
 
-func decodeViewUser(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeViewUser(_ context.Context, r *http.Request) (any, error) {
 	req := viewUserReq{
 		id: chi.URLParam(r, "id"),
 	}
@@ -204,11 +204,11 @@ func decodeViewUser(_ context.Context, r *http.Request) (interface{}, error) {
 	return req, nil
 }
 
-func decodeViewProfile(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeViewProfile(_ context.Context, r *http.Request) (any, error) {
 	return nil, nil
 }
 
-func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeListUsers(_ context.Context, r *http.Request) (any, error) {
 	s, err := apiutil.ReadStringQuery(r, api.StatusKey, api.DefUserStatus)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -287,7 +287,7 @@ func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
 	return req, nil
 }
 
-func decodeSearchUsers(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeSearchUsers(_ context.Context, r *http.Request) (any, error) {
 	o, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -342,7 +342,7 @@ func decodeSearchUsers(_ context.Context, r *http.Request) (interface{}, error) 
 	return req, nil
 }
 
-func decodeUpdateUser(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateUser(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -357,7 +357,7 @@ func decodeUpdateUser(_ context.Context, r *http.Request) (interface{}, error) {
 	return req, nil
 }
 
-func decodeUpdateUserTags(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateUserTags(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -372,7 +372,7 @@ func decodeUpdateUserTags(_ context.Context, r *http.Request) (interface{}, erro
 	return req, nil
 }
 
-func decodeUpdateUserEmail(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateUserEmail(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -387,7 +387,7 @@ func decodeUpdateUserEmail(_ context.Context, r *http.Request) (interface{}, err
 	return req, nil
 }
 
-func decodeUpdateUserSecret(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateUserSecret(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -400,7 +400,7 @@ func decodeUpdateUserSecret(_ context.Context, r *http.Request) (interface{}, er
 	return req, nil
 }
 
-func decodeUpdateUsername(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateUsername(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -415,7 +415,7 @@ func decodeUpdateUsername(_ context.Context, r *http.Request) (interface{}, erro
 	return req, nil
 }
 
-func decodeUpdateUserProfilePicture(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateUserProfilePicture(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -431,7 +431,7 @@ func decodeUpdateUserProfilePicture(_ context.Context, r *http.Request) (interfa
 	return req, nil
 }
 
-func decodePasswordResetRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodePasswordResetRequest(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, apiutil.ErrUnsupportedContentType
 	}
@@ -445,7 +445,7 @@ func decodePasswordResetRequest(_ context.Context, r *http.Request) (interface{}
 	return req, nil
 }
 
-func decodePasswordReset(_ context.Context, r *http.Request) (interface{}, error) {
+func decodePasswordReset(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -458,7 +458,7 @@ func decodePasswordReset(_ context.Context, r *http.Request) (interface{}, error
 	return req, nil
 }
 
-func decodeUpdateUserRole(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateUserRole(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -474,7 +474,7 @@ func decodeUpdateUserRole(_ context.Context, r *http.Request) (interface{}, erro
 	return req, err
 }
 
-func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeCredentials(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -487,7 +487,7 @@ func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) 
 	return req, nil
 }
 
-func decodeRefreshToken(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeRefreshToken(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -496,7 +496,7 @@ func decodeRefreshToken(_ context.Context, r *http.Request) (interface{}, error)
 	return req, nil
 }
 
-func decodeCreateUserReq(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeCreateUserReq(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -509,7 +509,7 @@ func decodeCreateUserReq(_ context.Context, r *http.Request) (interface{}, error
 	return req, nil
 }
 
-func decodeChangeUserStatus(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeChangeUserStatus(_ context.Context, r *http.Request) (any, error) {
 	req := changeUserStatusReq{
 		id: chi.URLParam(r, "id"),
 	}

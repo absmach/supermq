@@ -105,11 +105,11 @@ func TestTransformJSON(t *testing.T) {
 				Publisher: msg.Publisher,
 				Protocol:  msg.Protocol,
 				Created:   msg.Created,
-				Payload: map[string]interface{}{
+				Payload: map[string]any{
 					"key1": "val1",
 					"key2": float64(123),
 					"key3": "val3",
-					"key4": map[string]interface{}{
+					"key4": map[string]any{
 						"key5": "val5",
 					},
 				},
@@ -126,12 +126,12 @@ func TestTransformJSON(t *testing.T) {
 				Publisher: msg.Publisher,
 				Protocol:  msg.Protocol,
 				Created:   int64(1638310819000000000),
-				Payload: map[string]interface{}{
+				Payload: map[string]any{
 					"custom_ts_key": "1638310819",
 					"key1":          "val1",
 					"key2":          float64(123),
 					"key3":          "val3",
-					"key4": map[string]interface{}{
+					"key4": map[string]any{
 						"key5": "val5",
 					},
 				},
@@ -148,12 +148,12 @@ func TestTransformJSON(t *testing.T) {
 				Publisher: msg.Publisher,
 				Protocol:  msg.Protocol,
 				Created:   int64(1638310819000000000),
-				Payload: map[string]interface{}{
+				Payload: map[string]any{
 					"custom_ts_micro_key": "1638310819000000",
 					"key1":                "val1",
 					"key2":                float64(123),
 					"key3":                "val3",
-					"key4": map[string]interface{}{
+					"key4": map[string]any{
 						"key5": "val5",
 					},
 				},
@@ -170,11 +170,11 @@ func TestTransformJSON(t *testing.T) {
 				Publisher: msg.Publisher,
 				Protocol:  msg.Protocol,
 				Created:   msg.Created,
-				Payload: map[string]interface{}{
+				Payload: map[string]any{
 					"key1":     "val1",
 					"key2":     float64(123),
 					"keylist3": "val3",
-					"key4": map[string]interface{}{
+					"key4": map[string]any{
 						"key5": "val5",
 					},
 				},
@@ -185,11 +185,11 @@ func TestTransformJSON(t *testing.T) {
 				Publisher: msg.Publisher,
 				Protocol:  msg.Protocol,
 				Created:   msg.Created,
-				Payload: map[string]interface{}{
+				Payload: map[string]any{
 					"key1": "val1",
 					"key2": float64(123),
 					"key3": "val3",
-					"key4": map[string]interface{}{
+					"key4": map[string]any{
 						"key5": "val5",
 					},
 				},
@@ -201,7 +201,7 @@ func TestTransformJSON(t *testing.T) {
 	cases := []struct {
 		desc string
 		msg  *messaging.Message
-		json interface{}
+		json any
 		err  error
 	}{
 		{

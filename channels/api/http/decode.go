@@ -17,7 +17,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func decodeViewChannel(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeViewChannel(_ context.Context, r *http.Request) (any, error) {
 	roles, err := apiutil.ReadBoolQuery(r, api.RolesKey, false)
 	if err != nil {
 		return viewChannelReq{}, errors.Wrap(apiutil.ErrValidation, err)
@@ -31,7 +31,7 @@ func decodeViewChannel(_ context.Context, r *http.Request) (interface{}, error) 
 	return req, nil
 }
 
-func decodeCreateChannelReq(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeCreateChannelReq(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -44,7 +44,7 @@ func decodeCreateChannelReq(_ context.Context, r *http.Request) (interface{}, er
 	return req, nil
 }
 
-func decodeCreateChannelsReq(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeCreateChannelsReq(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -57,7 +57,7 @@ func decodeCreateChannelsReq(_ context.Context, r *http.Request) (interface{}, e
 	return req, nil
 }
 
-func decodeListChannels(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeListChannels(_ context.Context, r *http.Request) (any, error) {
 	name, err := apiutil.ReadStringQuery(r, api.NameKey, "")
 	if err != nil {
 		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
@@ -174,7 +174,7 @@ func decodeListChannels(_ context.Context, r *http.Request) (interface{}, error)
 	return req, nil
 }
 
-func decodeUpdateChannel(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateChannel(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -189,7 +189,7 @@ func decodeUpdateChannel(_ context.Context, r *http.Request) (interface{}, error
 	return req, nil
 }
 
-func decodeUpdateChannelTags(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateChannelTags(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -204,7 +204,7 @@ func decodeUpdateChannelTags(_ context.Context, r *http.Request) (interface{}, e
 	return req, nil
 }
 
-func decodeSetChannelParentGroupStatus(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeSetChannelParentGroupStatus(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -218,7 +218,7 @@ func decodeSetChannelParentGroupStatus(_ context.Context, r *http.Request) (inte
 	return req, nil
 }
 
-func decodeRemoveChannelParentGroupStatus(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeRemoveChannelParentGroupStatus(_ context.Context, r *http.Request) (any, error) {
 	req := removeChannelParentGroupReq{
 		id: chi.URLParam(r, "channelID"),
 	}
@@ -226,7 +226,7 @@ func decodeRemoveChannelParentGroupStatus(_ context.Context, r *http.Request) (i
 	return req, nil
 }
 
-func decodeChangeChannelStatus(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeChangeChannelStatus(_ context.Context, r *http.Request) (any, error) {
 	req := changeChannelStatusReq{
 		id: chi.URLParam(r, "channelID"),
 	}
@@ -234,14 +234,14 @@ func decodeChangeChannelStatus(_ context.Context, r *http.Request) (interface{},
 	return req, nil
 }
 
-func decodeDeleteChannelReq(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeDeleteChannelReq(_ context.Context, r *http.Request) (any, error) {
 	req := deleteChannelReq{
 		id: chi.URLParam(r, "channelID"),
 	}
 	return req, nil
 }
 
-func decodeConnectChannelClientRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeConnectChannelClientRequest(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -255,7 +255,7 @@ func decodeConnectChannelClientRequest(_ context.Context, r *http.Request) (inte
 	return req, nil
 }
 
-func decodeDisconnectChannelClientsRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeDisconnectChannelClientsRequest(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -269,7 +269,7 @@ func decodeDisconnectChannelClientsRequest(_ context.Context, r *http.Request) (
 	return req, nil
 }
 
-func decodeConnectRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeConnectRequest(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -282,7 +282,7 @@ func decodeConnectRequest(_ context.Context, r *http.Request) (interface{}, erro
 	return req, nil
 }
 
-func decodeDisconnectRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeDisconnectRequest(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}

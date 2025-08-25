@@ -349,7 +349,7 @@ func (cr *channelRepository) RetrieveByIDWithRoles(ctx context.Context, id, memb
 	FROM channels c2
 		JOIN final_roles fr ON fr.channel_id = c2.id
 	`
-	parameters := map[string]interface{}{
+	parameters := map[string]any{
 		"id":        id,
 		"member_id": memberID,
 	}
@@ -894,7 +894,7 @@ final_channels AS (
 
 func (cr *channelRepository) Remove(ctx context.Context, ids ...string) error {
 	q := "DELETE FROM channels AS c  WHERE c.id = ANY(:channel_ids) ;"
-	params := map[string]interface{}{
+	params := map[string]any{
 		"channel_ids": ids,
 	}
 	result, err := cr.db.NamedExecContext(ctx, q, params)

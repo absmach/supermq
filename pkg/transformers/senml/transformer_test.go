@@ -54,7 +54,7 @@ func TestTransformJSON(t *testing.T) {
 	cases := []struct {
 		desc string
 		msg  *messaging.Message
-		msgs interface{}
+		msgs any
 		err  error
 	}{
 		{
@@ -126,7 +126,7 @@ func TestTransformCBOR(t *testing.T) {
 	cases := []struct {
 		desc string
 		msg  *messaging.Message
-		msgs interface{}
+		msgs any
 		err  error
 	}{
 		{

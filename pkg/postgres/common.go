@@ -13,10 +13,10 @@ import (
 //
 // For example:
 //
-//	query, param, err := CreateMetadataQuery("", map[string]interface{}{
+//	query, param, err := CreateMetadataQuery("", map[string]any{
 //		"key": "value",
 //	})
-func CreateMetadataQuery(entity string, um map[string]interface{}) (string, []byte, error) {
+func CreateMetadataQuery(entity string, um map[string]any) (string, []byte, error) {
 	if len(um) == 0 {
 		return "", nil, nil
 	}
@@ -35,7 +35,7 @@ func CreateMetadataQuery(entity string, um map[string]interface{}) (string, []by
 // For example:
 //
 //	total, err := Total(ctx, db, "SELECT COUNT(*) FROM table", nil)
-func Total(ctx context.Context, db Database, query string, params interface{}) (uint64, error) {
+func Total(ctx context.Context, db Database, query string, params any) (uint64, error) {
 	rows, err := db.NamedQueryContext(ctx, query, params)
 	if err != nil {
 		return 0, err

@@ -359,7 +359,7 @@ func (repo *clientRepo) RetrieveByIDWithRoles(ctx context.Context, id, memberID 
 	FROM clients c2
 		JOIN final_roles fr ON fr.client_id = c2.id
 	`
-	parameters := map[string]interface{}{
+	parameters := map[string]any{
 		"id":        id,
 		"member_id": memberID,
 	}
@@ -1009,7 +1009,7 @@ func (repo *clientRepo) update(ctx context.Context, client clients.Client, query
 func (repo *clientRepo) Delete(ctx context.Context, clientIDs ...string) error {
 	q := "DELETE FROM clients AS c  WHERE c.id = ANY(:client_ids) ;"
 
-	params := map[string]interface{}{
+	params := map[string]any{
 		"client_ids": clientIDs,
 	}
 	result, err := repo.DB.NamedExecContext(ctx, q, params)

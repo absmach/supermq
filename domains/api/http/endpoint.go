@@ -19,7 +19,7 @@ import (
 const InvitationSent = "invitation sent"
 
 func createDomainEndpoint(svc domains.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(createDomainReq)
 		if err := req.validate(); err != nil {
 			return nil, err
@@ -47,7 +47,7 @@ func createDomainEndpoint(svc domains.Service) endpoint.Endpoint {
 }
 
 func retrieveDomainEndpoint(svc domains.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(retrieveDomainRequest)
 		if err := req.validate(); err != nil {
 			return nil, err
@@ -67,7 +67,7 @@ func retrieveDomainEndpoint(svc domains.Service) endpoint.Endpoint {
 }
 
 func updateDomainEndpoint(svc domains.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(updateDomainReq)
 		if err := req.validate(); err != nil {
 			return nil, err
@@ -97,7 +97,7 @@ func updateDomainEndpoint(svc domains.Service) endpoint.Endpoint {
 }
 
 func listDomainsEndpoint(svc domains.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(listDomainsReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -117,7 +117,7 @@ func listDomainsEndpoint(svc domains.Service) endpoint.Endpoint {
 }
 
 func enableDomainEndpoint(svc domains.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(enableDomainReq)
 		if err := req.validate(); err != nil {
 			return nil, err
@@ -136,7 +136,7 @@ func enableDomainEndpoint(svc domains.Service) endpoint.Endpoint {
 }
 
 func disableDomainEndpoint(svc domains.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(disableDomainReq)
 		if err := req.validate(); err != nil {
 			return nil, err
@@ -155,7 +155,7 @@ func disableDomainEndpoint(svc domains.Service) endpoint.Endpoint {
 }
 
 func freezeDomainEndpoint(svc domains.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(freezeDomainReq)
 		if err := req.validate(); err != nil {
 			return nil, err
@@ -174,7 +174,7 @@ func freezeDomainEndpoint(svc domains.Service) endpoint.Endpoint {
 }
 
 func sendInvitationEndpoint(svc domains.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(sendInvitationReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -202,7 +202,7 @@ func sendInvitationEndpoint(svc domains.Service) endpoint.Endpoint {
 }
 
 func listDomainInvitationsEndpoint(svc domains.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(listInvitationsReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -225,7 +225,7 @@ func listDomainInvitationsEndpoint(svc domains.Service) endpoint.Endpoint {
 }
 
 func listUserInvitationsEndpoint(svc domains.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(listInvitationsReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -248,7 +248,7 @@ func listUserInvitationsEndpoint(svc domains.Service) endpoint.Endpoint {
 }
 
 func acceptInvitationEndpoint(svc domains.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(acceptInvitationReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -268,7 +268,7 @@ func acceptInvitationEndpoint(svc domains.Service) endpoint.Endpoint {
 }
 
 func rejectInvitationEndpoint(svc domains.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(acceptInvitationReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -288,7 +288,7 @@ func rejectInvitationEndpoint(svc domains.Service) endpoint.Endpoint {
 }
 
 func deleteInvitationEndpoint(svc domains.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(deleteInvitationReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)

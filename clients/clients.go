@@ -221,7 +221,7 @@ type Page struct {
 }
 
 // Metadata represents arbitrary JSON.
-type Metadata map[string]interface{}
+type Metadata map[string]any
 
 // Credentials represent client credentials: its
 // "identity" which can be a username, email, generated name;

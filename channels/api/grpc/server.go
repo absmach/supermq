@@ -69,7 +69,7 @@ func (s *grpcServer) Authorize(ctx context.Context, req *grpcChannelsV1.AuthzReq
 	return res.(*grpcChannelsV1.AuthzRes), nil
 }
 
-func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeAuthorizeRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcChannelsV1.AuthzReq)
 
 	connType := connections.ConnType(req.GetType())
@@ -85,7 +85,7 @@ func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}
 	}, nil
 }
 
-func encodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeAuthorizeResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(authorizeRes)
 	return &grpcChannelsV1.AuthzRes{Authorized: res.authorized}, nil
 }
@@ -98,7 +98,7 @@ func (s *grpcServer) RemoveClientConnections(ctx context.Context, req *grpcChann
 	return res.(*grpcChannelsV1.RemoveClientConnectionsRes), nil
 }
 
-func decodeRemoveClientConnectionsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeRemoveClientConnectionsRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcChannelsV1.RemoveClientConnectionsReq)
 
 	return removeClientConnectionsReq{
@@ -106,7 +106,7 @@ func decodeRemoveClientConnectionsRequest(_ context.Context, grpcReq interface{}
 	}, nil
 }
 
-func encodeRemoveClientConnectionsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeRemoveClientConnectionsResponse(_ context.Context, grpcRes any) (any, error) {
 	_ = grpcRes.(removeClientConnectionsRes)
 	return &grpcChannelsV1.RemoveClientConnectionsRes{}, nil
 }
@@ -119,7 +119,7 @@ func (s *grpcServer) UnsetParentGroupFromChannels(ctx context.Context, req *grpc
 	return res.(*grpcChannelsV1.UnsetParentGroupFromChannelsRes), nil
 }
 
-func decodeUnsetParentGroupFromChannelsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeUnsetParentGroupFromChannelsRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcChannelsV1.UnsetParentGroupFromChannelsReq)
 
 	return unsetParentGroupFromChannelsReq{
@@ -127,7 +127,7 @@ func decodeUnsetParentGroupFromChannelsRequest(_ context.Context, grpcReq interf
 	}, nil
 }
 
-func encodeUnsetParentGroupFromChannelsResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeUnsetParentGroupFromChannelsResponse(_ context.Context, grpcRes any) (any, error) {
 	_ = grpcRes.(unsetParentGroupFromChannelsRes)
 	return &grpcChannelsV1.UnsetParentGroupFromChannelsRes{}, nil
 }
@@ -140,14 +140,14 @@ func (s *grpcServer) RetrieveEntity(ctx context.Context, req *grpcCommonV1.Retri
 	return res.(*grpcCommonV1.RetrieveEntityRes), nil
 }
 
-func decodeRetrieveEntityRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeRetrieveEntityRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcCommonV1.RetrieveEntityReq)
 	return retrieveEntityReq{
 		Id: req.GetId(),
 	}, nil
 }
 
-func encodeRetrieveEntityResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeRetrieveEntityResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(retrieveEntityRes)
 
 	return &grpcCommonV1.RetrieveEntityRes{
@@ -160,7 +160,7 @@ func encodeRetrieveEntityResponse(_ context.Context, grpcRes interface{}) (inter
 	}, nil
 }
 
-func decodeRetrieveIDByRouteRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeRetrieveIDByRouteRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcCommonV1.RetrieveIDByRouteReq)
 	return retrieveIDByRouteReq{
 		route:    req.GetRoute(),
@@ -168,7 +168,7 @@ func decodeRetrieveIDByRouteRequest(_ context.Context, grpcReq interface{}) (int
 	}, nil
 }
 
-func encodeRetrieveIDByRouteResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeRetrieveIDByRouteResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(retrieveIDByRouteRes)
 
 	return &grpcCommonV1.RetrieveEntityRes{

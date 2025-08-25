@@ -224,7 +224,7 @@ func TestCreateUser(t *testing.T) {
 				FirstName: createSdkUserReq.FirstName,
 				LastName:  createSdkUserReq.LastName,
 				Email:     createSdkUserReq.Email,
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": make(chan int),
 				},
 			},
@@ -997,7 +997,7 @@ func TestUpdateUser(t *testing.T) {
 			token: validToken,
 			updateUserReq: sdk.User{
 				ID: generateUUID(t),
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": make(chan int),
 				},
 			},
@@ -1158,7 +1158,7 @@ func TestUpdateUserTags(t *testing.T) {
 			token: validToken,
 			updateUserReq: sdk.User{
 				ID: generateUUID(t),
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": make(chan int),
 				},
 			},
@@ -1762,7 +1762,7 @@ func TestUpdateUserRole(t *testing.T) {
 			token: validToken,
 			updateUserReq: sdk.User{
 				ID: generateUUID(t),
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": make(chan int),
 				},
 			},
@@ -2090,7 +2090,7 @@ func TestUpdateProfilePicture(t *testing.T) {
 			token: validToken,
 			updateUserReq: sdk.User{
 				ID: generateUUID(t),
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": make(chan int),
 				},
 			},

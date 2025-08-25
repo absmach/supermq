@@ -16,7 +16,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func DecodeGroupCreate(_ context.Context, r *http.Request) (interface{}, error) {
+func DecodeGroupCreate(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -31,7 +31,7 @@ func DecodeGroupCreate(_ context.Context, r *http.Request) (interface{}, error) 
 	return req, nil
 }
 
-func DecodeListGroupsRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func DecodeListGroupsRequest(_ context.Context, r *http.Request) (any, error) {
 	pm, err := decodePageMeta(r)
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func DecodeListGroupsRequest(_ context.Context, r *http.Request) (interface{}, e
 	return req, nil
 }
 
-func DecodeGroupUpdate(_ context.Context, r *http.Request) (interface{}, error) {
+func DecodeGroupUpdate(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -68,7 +68,7 @@ func DecodeGroupUpdate(_ context.Context, r *http.Request) (interface{}, error) 
 	return req, nil
 }
 
-func decodeUpdateGroupTags(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateGroupTags(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -83,7 +83,7 @@ func decodeUpdateGroupTags(_ context.Context, r *http.Request) (interface{}, err
 	return req, nil
 }
 
-func DecodeGroupRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func DecodeGroupRequest(_ context.Context, r *http.Request) (any, error) {
 	roles, err := apiutil.ReadBoolQuery(r, api.RolesKey, false)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -97,14 +97,14 @@ func DecodeGroupRequest(_ context.Context, r *http.Request) (interface{}, error)
 	return req, nil
 }
 
-func DecodeChangeGroupStatusRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func DecodeChangeGroupStatusRequest(_ context.Context, r *http.Request) (any, error) {
 	req := changeGroupStatusReq{
 		id: chi.URLParam(r, "groupID"),
 	}
 	return req, nil
 }
 
-func decodeRetrieveGroupHierarchy(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeRetrieveGroupHierarchy(_ context.Context, r *http.Request) (any, error) {
 	hm, err := decodeHierarchyPageMeta(r)
 	if err != nil {
 		return nil, err
@@ -117,7 +117,7 @@ func decodeRetrieveGroupHierarchy(_ context.Context, r *http.Request) (interface
 	return req, nil
 }
 
-func decodeAddParentGroupRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeAddParentGroupRequest(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -131,14 +131,14 @@ func decodeAddParentGroupRequest(_ context.Context, r *http.Request) (interface{
 	return req, nil
 }
 
-func decodeRemoveParentGroupRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeRemoveParentGroupRequest(_ context.Context, r *http.Request) (any, error) {
 	req := removeParentGroupReq{
 		id: chi.URLParam(r, "groupID"),
 	}
 	return req, nil
 }
 
-func decodeAddChildrenGroupsRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeAddChildrenGroupsRequest(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -151,7 +151,7 @@ func decodeAddChildrenGroupsRequest(_ context.Context, r *http.Request) (interfa
 	return req, nil
 }
 
-func decodeRemoveChildrenGroupsRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeRemoveChildrenGroupsRequest(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -164,14 +164,14 @@ func decodeRemoveChildrenGroupsRequest(_ context.Context, r *http.Request) (inte
 	return req, nil
 }
 
-func decodeRemoveAllChildrenGroupsRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeRemoveAllChildrenGroupsRequest(_ context.Context, r *http.Request) (any, error) {
 	req := removeAllChildrenGroupsReq{
 		id: chi.URLParam(r, "groupID"),
 	}
 	return req, nil
 }
 
-func decodeListChildrenGroupsRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeListChildrenGroupsRequest(_ context.Context, r *http.Request) (any, error) {
 	pm, err := decodePageMeta(r)
 	if err != nil {
 		return nil, err

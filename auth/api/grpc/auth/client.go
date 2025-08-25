@@ -78,12 +78,12 @@ func (client authGrpcClient) Authenticate(ctx context.Context, token *grpcAuthV1
 	return &grpcAuthV1.AuthNRes{Id: ir.id, UserId: ir.userID, UserRole: uint32(ir.userRole)}, nil
 }
 
-func encodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func encodeIdentifyRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(authenticateReq)
 	return &grpcAuthV1.AuthNReq{Token: req.token}, nil
 }
 
-func decodeIdentifyResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func decodeIdentifyResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(*grpcAuthV1.AuthNRes)
 	return authenticateRes{id: res.GetId(), userID: res.GetUserId(), userRole: auth.Role(res.UserRole)}, nil
 }
@@ -100,7 +100,7 @@ func (client authGrpcClient) AuthenticatePAT(ctx context.Context, token *grpcAut
 	return &grpcAuthV1.AuthNRes{Id: ir.id, UserId: ir.userID, UserRole: uint32(ir.userRole)}, nil
 }
 
-func decodeIdentifyPATResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func decodeIdentifyPATResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(*grpcAuthV1.AuthNRes)
 	return authenticateRes{id: res.GetId(), userID: res.GetUserId(), userRole: auth.Role(res.UserRole)}, nil
 }
@@ -127,12 +127,12 @@ func (client authGrpcClient) Authorize(ctx context.Context, req *grpcAuthV1.Auth
 	return &grpcAuthV1.AuthZRes{Authorized: ar.authorized, Id: ar.id}, nil
 }
 
-func decodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func decodeAuthorizeResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(*grpcAuthV1.AuthZRes)
 	return authorizeRes{authorized: res.Authorized, id: res.Id}, nil
 }
 
-func encodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func encodeAuthorizeRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(authReq)
 	return &grpcAuthV1.AuthZReq{
 		Domain:      req.Domain,
@@ -166,7 +166,7 @@ func (client authGrpcClient) AuthorizePAT(ctx context.Context, req *grpcAuthV1.A
 	return &grpcAuthV1.AuthZRes{Authorized: ar.authorized, Id: ar.id}, nil
 }
 
-func encodeAuthorizePATRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func encodeAuthorizePATRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(authPATReq)
 	return &grpcAuthV1.AuthZPatReq{
 		UserId:           req.userID,

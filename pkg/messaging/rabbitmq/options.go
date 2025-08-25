@@ -31,7 +31,7 @@ func defaultOptions() options {
 
 // Prefix sets the prefix for the publisher.
 func Prefix(prefix string) messaging.Option {
-	return func(val interface{}) error {
+	return func(val any) error {
 		switch v := val.(type) {
 		case *publisher:
 			v.prefix = prefix
@@ -46,7 +46,7 @@ func Prefix(prefix string) messaging.Option {
 
 // Exchange sets the exchange for the publisher or subscriber.
 func Exchange(exchange string) messaging.Option {
-	return func(val interface{}) error {
+	return func(val any) error {
 		switch v := val.(type) {
 		case *publisher:
 			v.exchange = exchange

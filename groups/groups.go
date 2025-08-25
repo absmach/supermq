@@ -19,7 +19,7 @@ const (
 )
 
 // Metadata represents arbitrary JSON.
-type Metadata map[string]interface{}
+type Metadata map[string]any
 
 // Group represents the group of Clients.
 // Indicates a level in tree hierarchy. Root node is level 1.

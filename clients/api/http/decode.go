@@ -18,7 +18,7 @@ import (
 
 const clientID = "clientID"
 
-func decodeViewClient(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeViewClient(_ context.Context, r *http.Request) (any, error) {
 	roles, err := apiutil.ReadBoolQuery(r, api.RolesKey, false)
 	if err != nil {
 		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
@@ -32,7 +32,7 @@ func decodeViewClient(_ context.Context, r *http.Request) (interface{}, error) {
 	return req, nil
 }
 
-func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeListClients(_ context.Context, r *http.Request) (any, error) {
 	name, err := apiutil.ReadStringQuery(r, api.NameKey, "")
 	if err != nil {
 		return listClientsReq{}, errors.Wrap(apiutil.ErrValidation, err)
@@ -161,7 +161,7 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 	return req, nil
 }
 
-func decodeUpdateClient(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateClient(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -176,7 +176,7 @@ func decodeUpdateClient(_ context.Context, r *http.Request) (interface{}, error)
 	return req, nil
 }
 
-func decodeUpdateClientTags(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateClientTags(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -191,7 +191,7 @@ func decodeUpdateClientTags(_ context.Context, r *http.Request) (interface{}, er
 	return req, nil
 }
 
-func decodeUpdateClientCredentials(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateClientCredentials(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -206,7 +206,7 @@ func decodeUpdateClientCredentials(_ context.Context, r *http.Request) (interfac
 	return req, nil
 }
 
-func decodeCreateClientReq(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeCreateClientReq(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -222,7 +222,7 @@ func decodeCreateClientReq(_ context.Context, r *http.Request) (interface{}, err
 	return req, nil
 }
 
-func decodeCreateClientsReq(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeCreateClientsReq(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -235,7 +235,7 @@ func decodeCreateClientsReq(_ context.Context, r *http.Request) (interface{}, er
 	return c, nil
 }
 
-func decodeChangeClientStatus(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeChangeClientStatus(_ context.Context, r *http.Request) (any, error) {
 	req := changeClientStatusReq{
 		id: chi.URLParam(r, clientID),
 	}
@@ -243,7 +243,7 @@ func decodeChangeClientStatus(_ context.Context, r *http.Request) (interface{}, 
 	return req, nil
 }
 
-func decodeSetClientParentGroupStatus(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeSetClientParentGroupStatus(_ context.Context, r *http.Request) (any, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
 	}
@@ -257,7 +257,7 @@ func decodeSetClientParentGroupStatus(_ context.Context, r *http.Request) (inter
 	return req, nil
 }
 
-func decodeRemoveClientParentGroupStatus(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeRemoveClientParentGroupStatus(_ context.Context, r *http.Request) (any, error) {
 	req := removeClientParentGroupReq{
 		id: chi.URLParam(r, clientID),
 	}
@@ -265,7 +265,7 @@ func decodeRemoveClientParentGroupStatus(_ context.Context, r *http.Request) (in
 	return req, nil
 }
 
-func decodeDeleteClientReq(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeDeleteClientReq(_ context.Context, r *http.Request) (any, error) {
 	req := deleteClientReq{
 		id: chi.URLParam(r, clientID),
 	}

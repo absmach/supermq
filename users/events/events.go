@@ -66,8 +66,8 @@ type createUserEvent struct {
 	requestID string
 }
 
-func (uce createUserEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (uce createUserEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   userCreate,
 		"id":          uce.ID,
 		"status":      uce.Status.String(),
@@ -106,8 +106,8 @@ type updateUserEvent struct {
 	requestID string
 }
 
-func (uce updateUserEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (uce updateUserEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   uce.operation,
 		"updated_at":  uce.UpdatedAt,
 		"updated_by":  uce.UpdatedBy,
@@ -153,8 +153,8 @@ type updateUsernameEvent struct {
 	requestID string
 }
 
-func (une updateUsernameEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (une updateUsernameEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   userUpdateUsername,
 		"updated_at":  une.UpdatedAt,
 		"updated_by":  une.UpdatedBy,
@@ -185,8 +185,8 @@ type updateProfilePictureEvent struct {
 	requestID string
 }
 
-func (req updateProfilePictureEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (req updateProfilePictureEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   userUpdateProfilePicture,
 		"updated_at":  req.UpdatedAt,
 		"updated_by":  req.UpdatedBy,
@@ -215,8 +215,8 @@ type changeUserStatusEvent struct {
 	requestID string
 }
 
-func (rce changeUserStatusEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (rce changeUserStatusEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   rce.operation,
 		"id":          rce.id,
 		"status":      rce.status,
@@ -234,8 +234,8 @@ type viewUserEvent struct {
 	requestID string
 }
 
-func (vue viewUserEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (vue viewUserEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   userView,
 		"id":          vue.ID,
 		"token_type":  vue.Type.String(),
@@ -283,8 +283,8 @@ type viewProfileEvent struct {
 	requestID string
 }
 
-func (vpe viewProfileEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (vpe viewProfileEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   profileView,
 		"id":          vpe.ID,
 		"token_type":  vpe.Type.String(),
@@ -329,8 +329,8 @@ type listUserEvent struct {
 	requestID string
 }
 
-func (lue listUserEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (lue listUserEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   userList,
 		"total":       lue.Total,
 		"offset":      lue.Offset,
@@ -382,8 +382,8 @@ type searchUserEvent struct {
 	requestID string
 }
 
-func (sce searchUserEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (sce searchUserEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":  userSearch,
 		"total":      sce.Total,
 		"offset":     sce.Offset,
@@ -414,8 +414,8 @@ type identifyUserEvent struct {
 	requestID string
 }
 
-func (ise identifyUserEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (ise identifyUserEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":  userIdentify,
 		"id":         ise.userID,
 		"request_id": ise.requestID,
@@ -428,8 +428,8 @@ type generateResetTokenEvent struct {
 	requestID string
 }
 
-func (req generateResetTokenEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (req generateResetTokenEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":  generateResetToken,
 		"email":      req.email,
 		"host":       req.host,
@@ -442,8 +442,8 @@ type issueTokenEvent struct {
 	requestID string
 }
 
-func (ite issueTokenEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (ite issueTokenEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":  issueToken,
 		"username":   ite.username,
 		"request_id": ite.requestID,
@@ -454,8 +454,8 @@ type refreshTokenEvent struct {
 	requestID string
 }
 
-func (rte refreshTokenEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (rte refreshTokenEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":  refreshToken,
 		"request_id": rte.requestID,
 	}, nil
@@ -465,8 +465,8 @@ type resetSecretEvent struct {
 	requestID string
 }
 
-func (rse resetSecretEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (rse resetSecretEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":  resetSecret,
 		"request_id": rse.requestID,
 	}, nil
@@ -479,8 +479,8 @@ type sendPasswordResetEvent struct {
 	requestID string
 }
 
-func (req sendPasswordResetEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (req sendPasswordResetEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":  sendPasswordReset,
 		"host":       req.host,
 		"email":      req.email,
@@ -494,8 +494,8 @@ type oauthCallbackEvent struct {
 	requestID string
 }
 
-func (oce oauthCallbackEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (oce oauthCallbackEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":  oauthCallback,
 		"user_id":    oce.userID,
 		"request_id": oce.requestID,
@@ -508,8 +508,8 @@ type deleteUserEvent struct {
 	requestID string
 }
 
-func (dce deleteUserEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (dce deleteUserEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   deleteUser,
 		"id":          dce.id,
 		"token_type":  dce.Type.String(),
@@ -525,8 +525,8 @@ type addUserPolicyEvent struct {
 	requestID string
 }
 
-func (req addUserPolicyEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (req addUserPolicyEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   addClientPolicy,
 		"id":          req.id,
 		"role":        req.role,

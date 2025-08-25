@@ -335,7 +335,7 @@ func (repo groupRepository) RetrieveByIDWithRoles(ctx context.Context, id, membe
 		JOIN final_roles fr ON fr.group_id = g.id
 	`
 
-	parameters := map[string]interface{}{
+	parameters := map[string]any{
 		"id":        id,
 		"member_id": memberID,
 	}
@@ -549,7 +549,7 @@ func (repo groupRepository) RetrieveHierarchy(ctx context.Context, domainID, use
 		ORDER BY path;
 		`, baseQuery, dirQuery)
 
-	parameters := map[string]interface{}{
+	parameters := map[string]any{
 		"id":    groupID,
 		"level": hm.Level,
 	}
@@ -624,7 +624,7 @@ func (repo groupRepository) AssignParentGroup(ctx context.Context, parentGroupID
 			WHERE id = ANY(:children_group_ids)
 			RETURNING id, path;`
 
-	params := map[string]interface{}{
+	params := map[string]any{
 		"parent_id":          pGroup.ID,
 		"children_group_ids": groupIDs,
 	}
@@ -705,7 +705,7 @@ func (repo groupRepository) UnassignParentGroup(ctx context.Context, parentGroup
 			  WHERE id = ANY(:children_group_ids) AND parent_id = :parent_id
 			  RETURNING id, path;`
 
-	parameters := map[string]interface{}{
+	parameters := map[string]any{
 		"parent_id":          pGroup.ID,
 		"children_group_ids": groupIDs,
 	}

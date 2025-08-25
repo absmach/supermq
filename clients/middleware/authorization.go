@@ -564,7 +564,7 @@ func (am *authorizationMiddleware) checkSuperAdmin(ctx context.Context, userID s
 	return nil
 }
 
-func (am *authorizationMiddleware) callOut(ctx context.Context, session authn.Session, op string, params map[string]interface{}) error {
+func (am *authorizationMiddleware) callOut(ctx context.Context, session authn.Session, op string, params map[string]any) error {
 	pl := map[string]any{
 		"entity_type":  policies.ClientType,
 		"subject_type": policies.UserType,

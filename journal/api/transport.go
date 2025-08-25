@@ -74,7 +74,7 @@ func MakeHandler(svc journal.Service, authn smqauthn.Authentication, logger *slo
 	return mux
 }
 
-func decodeRetrieveEntityJournalReq(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeRetrieveEntityJournalReq(_ context.Context, r *http.Request) (any, error) {
 	page, err := decodePageQuery(r)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -94,7 +94,7 @@ func decodeRetrieveEntityJournalReq(_ context.Context, r *http.Request) (interfa
 	return req, nil
 }
 
-func decodeRetrieveUserJournalReq(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeRetrieveUserJournalReq(_ context.Context, r *http.Request) (any, error) {
 	page, err := decodePageQuery(r)
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -170,7 +170,7 @@ func decodePageQuery(r *http.Request) (journal.Page, error) {
 	}, nil
 }
 
-func decodeRetrieveClientTelemetryReq(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeRetrieveClientTelemetryReq(_ context.Context, r *http.Request) (any, error) {
 	req := retrieveClientTelemetryReq{
 		clientID: chi.URLParam(r, "clientID"),
 	}

@@ -38,8 +38,8 @@ func TestJournalsPage_MarshalJSON(t *testing.T) {
 					{
 						Operation:  "123",
 						OccurredAt: occurredAt,
-						Attributes: map[string]interface{}{"123": "123"},
-						Metadata:   map[string]interface{}{"123": "123"},
+						Attributes: map[string]any{"123": "123"},
+						Metadata:   map[string]any{"123": "123"},
 					},
 				},
 			},

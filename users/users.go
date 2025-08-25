@@ -42,7 +42,7 @@ type UsersPage struct {
 }
 
 // Metadata represents arbitrary JSON.
-type Metadata map[string]interface{}
+type Metadata map[string]any
 
 type UserReq struct {
 	FirstName      *string    `json:"first_name,omitempty"`

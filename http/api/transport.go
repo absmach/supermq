@@ -53,7 +53,7 @@ func MakeHandler(logger *slog.Logger, instanceID string) http.Handler {
 	return r
 }
 
-func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeRequest(_ context.Context, r *http.Request) (any, error) {
 	ct := r.Header.Get("Content-Type")
 	if ct != ctSenmlJSON && ct != contentType && ct != ctSenmlCBOR {
 		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)

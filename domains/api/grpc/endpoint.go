@@ -11,7 +11,7 @@ import (
 )
 
 func deleteUserFromDomainsEndpoint(svc domains.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(deleteUserPoliciesReq)
 		if err := req.validate(); err != nil {
 			return deleteUserRes{}, err
@@ -26,7 +26,7 @@ func deleteUserFromDomainsEndpoint(svc domains.Service) endpoint.Endpoint {
 }
 
 func retrieveStatusEndpoint(svc domains.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(retrieveStatusReq)
 		if err := req.validate(); err != nil {
 			return retrieveStatusRes{}, err
@@ -44,7 +44,7 @@ func retrieveStatusEndpoint(svc domains.Service) endpoint.Endpoint {
 }
 
 func retrieveIDByRouteEndpoint(svc domains.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(retrieveIDByRouteReq)
 		if err := req.validate(); err != nil {
 			return retrieveIDByRouteRes{}, err

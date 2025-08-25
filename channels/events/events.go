@@ -48,8 +48,8 @@ type createChannelEvent struct {
 	requestID string
 }
 
-func (cce createChannelEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (cce createChannelEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":         channelCreate,
 		"id":                cce.ID,
 		"roles_provisioned": cce.rolesProvisioned,
@@ -83,8 +83,8 @@ type updateChannelEvent struct {
 	requestID string
 }
 
-func (uce updateChannelEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (uce updateChannelEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   uce.operation,
 		"updated_at":  uce.UpdatedAt,
 		"updated_by":  uce.UpdatedBy,
@@ -130,8 +130,8 @@ type changeChannelStatusEvent struct {
 	requestID string
 }
 
-func (cse changeChannelStatusEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (cse changeChannelStatusEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   cse.operation,
 		"id":          cse.id,
 		"status":      cse.status,
@@ -151,8 +151,8 @@ type viewChannelEvent struct {
 	requestID string
 }
 
-func (vce viewChannelEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (vce viewChannelEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   channelView,
 		"id":          vce.ID,
 		"domain":      vce.DomainID,
@@ -196,8 +196,8 @@ type listChannelEvent struct {
 	requestID string
 }
 
-func (lce listChannelEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (lce listChannelEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   channelList,
 		"total":       lce.Total,
 		"offset":      lce.Offset,
@@ -241,8 +241,8 @@ type listUserChannelsEvent struct {
 	requestID string
 }
 
-func (luce listUserChannelsEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (luce listUserChannelsEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   channelListByUser,
 		"req_user_id": luce.userID,
 		"total":       luce.Total,
@@ -289,8 +289,8 @@ type removeChannelEvent struct {
 	requestID string
 }
 
-func (dce removeChannelEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (dce removeChannelEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   channelRemove,
 		"id":          dce.id,
 		"domain":      dce.DomainID,
@@ -309,8 +309,8 @@ type connectEvent struct {
 	requestID string
 }
 
-func (ce connectEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (ce connectEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   channelConnect,
 		"client_ids":  ce.thIDs,
 		"channel_ids": ce.chIDs,
@@ -331,8 +331,8 @@ type disconnectEvent struct {
 	requestID string
 }
 
-func (de disconnectEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (de disconnectEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   channelDisconnect,
 		"client_ids":  de.thIDs,
 		"channel_ids": de.chIDs,
@@ -352,8 +352,8 @@ type setParentGroupEvent struct {
 	requestID string
 }
 
-func (spge setParentGroupEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (spge setParentGroupEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":       channelSetParent,
 		"id":              spge.id,
 		"parent_group_id": spge.parentGroupID,
@@ -371,8 +371,8 @@ type removeParentGroupEvent struct {
 	requestID string
 }
 
-func (rpge removeParentGroupEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (rpge removeParentGroupEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   channelRemoveParent,
 		"id":          rpge.id,
 		"domain":      rpge.DomainID,

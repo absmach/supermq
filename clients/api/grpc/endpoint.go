@@ -12,7 +12,7 @@ import (
 )
 
 func authenticateEndpoint(svc pClients.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(authenticateReq)
 		id, err := svc.Authenticate(ctx, req.Token)
 		if err != nil {
@@ -26,7 +26,7 @@ func authenticateEndpoint(svc pClients.Service) endpoint.Endpoint {
 }
 
 func retrieveEntityEndpoint(svc pClients.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(retrieveEntityReq)
 		client, err := svc.RetrieveById(ctx, req.Id)
 		if err != nil {
@@ -38,7 +38,7 @@ func retrieveEntityEndpoint(svc pClients.Service) endpoint.Endpoint {
 }
 
 func retrieveEntitiesEndpoint(svc pClients.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(retrieveEntitiesReq)
 		tp, err := svc.RetrieveByIds(ctx, req.Ids)
 		if err != nil {
@@ -58,7 +58,7 @@ func retrieveEntitiesEndpoint(svc pClients.Service) endpoint.Endpoint {
 }
 
 func addConnectionsEndpoint(svc pClients.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(connectionsReq)
 
 		var conns []clients.Connection
@@ -81,7 +81,7 @@ func addConnectionsEndpoint(svc pClients.Service) endpoint.Endpoint {
 }
 
 func removeConnectionsEndpoint(svc pClients.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(connectionsReq)
 
 		var conns []clients.Connection
@@ -103,7 +103,7 @@ func removeConnectionsEndpoint(svc pClients.Service) endpoint.Endpoint {
 }
 
 func removeChannelConnectionsEndpoint(svc pClients.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(removeChannelConnectionsReq)
 
 		if err := svc.RemoveChannelConnections(ctx, req.channelID); err != nil {
@@ -115,7 +115,7 @@ func removeChannelConnectionsEndpoint(svc pClients.Service) endpoint.Endpoint {
 }
 
 func UnsetParentGroupFromClientEndpoint(svc pClients.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(UnsetParentGroupFromClientReq)
 
 		if err := svc.UnsetParentGroupFromClient(ctx, req.parentGroupID); err != nil {

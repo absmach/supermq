@@ -16,7 +16,7 @@ import (
 )
 
 func retrieveJournalsEndpoint(svc journal.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(retrieveJournalsReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -39,7 +39,7 @@ func retrieveJournalsEndpoint(svc journal.Service) endpoint.Endpoint {
 }
 
 func retrieveClientTelemetryEndpoint(svc journal.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(retrieveClientTelemetryReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)

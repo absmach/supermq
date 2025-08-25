@@ -42,14 +42,14 @@ func NewDomainsServer(svc domains.Service) grpcDomainsV1.DomainsServiceServer {
 	}
 }
 
-func decodeDeleteUserRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeDeleteUserRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcDomainsV1.DeleteUserReq)
 	return deleteUserPoliciesReq{
 		ID: req.GetId(),
 	}, nil
 }
 
-func encodeDeleteUserResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeDeleteUserResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(deleteUserRes)
 	return &grpcDomainsV1.DeleteUserRes{Deleted: res.deleted}, nil
 }
@@ -62,7 +62,7 @@ func (s *domainsGrpcServer) DeleteUserFromDomains(ctx context.Context, req *grpc
 	return res.(*grpcDomainsV1.DeleteUserRes), nil
 }
 
-func decodeRetrieveStatusRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeRetrieveStatusRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcCommonV1.RetrieveEntityReq)
 
 	return retrieveStatusReq{
@@ -70,7 +70,7 @@ func decodeRetrieveStatusRequest(_ context.Context, grpcReq interface{}) (interf
 	}, nil
 }
 
-func encodeRetrieveStatusResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeRetrieveStatusResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(retrieveStatusRes)
 
 	return &grpcCommonV1.RetrieveEntityRes{
@@ -89,7 +89,7 @@ func (s *domainsGrpcServer) RetrieveStatus(ctx context.Context, req *grpcCommonV
 	return res.(*grpcCommonV1.RetrieveEntityRes), nil
 }
 
-func decodeRetrieveIDByRouteRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func decodeRetrieveIDByRouteRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcCommonV1.RetrieveIDByRouteReq)
 
 	return retrieveIDByRouteReq{
@@ -97,7 +97,7 @@ func decodeRetrieveIDByRouteRequest(_ context.Context, grpcReq interface{}) (int
 	}, nil
 }
 
-func encodeRetrieveIDByRouteResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeRetrieveIDByRouteResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(retrieveIDByRouteRes)
 
 	return &grpcCommonV1.RetrieveEntityRes{

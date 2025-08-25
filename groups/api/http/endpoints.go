@@ -16,7 +16,7 @@ import (
 )
 
 func CreateGroupEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(createGroupReq)
 		if err := req.validate(); err != nil {
 			return createGroupRes{created: false}, errors.Wrap(apiutil.ErrValidation, err)
@@ -37,7 +37,7 @@ func CreateGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 }
 
 func ViewGroupEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(groupReq)
 		if err := req.validate(); err != nil {
 			return viewGroupRes{}, errors.Wrap(apiutil.ErrValidation, err)
@@ -58,7 +58,7 @@ func ViewGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 }
 
 func UpdateGroupEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(updateGroupReq)
 		if err := req.validate(); err != nil {
 			return updateGroupRes{}, errors.Wrap(apiutil.ErrValidation, err)
@@ -86,7 +86,7 @@ func UpdateGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 }
 
 func updateGroupTagsEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(updateGroupTagsReq)
 		if err := req.validate(); err != nil {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
@@ -111,7 +111,7 @@ func updateGroupTagsEndpoint(svc groups.Service) endpoint.Endpoint {
 }
 
 func EnableGroupEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(changeGroupStatusReq)
 		if err := req.validate(); err != nil {
 			return changeStatusRes{}, errors.Wrap(apiutil.ErrValidation, err)
@@ -131,7 +131,7 @@ func EnableGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 }
 
 func DisableGroupEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(changeGroupStatusReq)
 		if err := req.validate(); err != nil {
 			return changeStatusRes{}, errors.Wrap(apiutil.ErrValidation, err)
@@ -151,7 +151,7 @@ func DisableGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 }
 
 func ListGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(listGroupsReq)
 
 		if err := req.validate(); err != nil {
@@ -192,7 +192,7 @@ func ListGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 }
 
 func DeleteGroupEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(groupReq)
 		if err := req.validate(); err != nil {
 			return deleteGroupRes{}, errors.Wrap(apiutil.ErrValidation, err)
@@ -210,7 +210,7 @@ func DeleteGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 }
 
 func retrieveGroupHierarchyEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(retrieveGroupHierarchyReq)
 		if err := req.validate(); err != nil {
 			return retrieveGroupHierarchyRes{}, errors.Wrap(apiutil.ErrValidation, err)
@@ -238,7 +238,7 @@ func retrieveGroupHierarchyEndpoint(svc groups.Service) endpoint.Endpoint {
 }
 
 func addParentGroupEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(addParentGroupReq)
 		if err := req.validate(); err != nil {
 			return addParentGroupRes{}, errors.Wrap(apiutil.ErrValidation, err)
@@ -257,7 +257,7 @@ func addParentGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 }
 
 func removeParentGroupEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(removeParentGroupReq)
 		if err := req.validate(); err != nil {
 			return removeParentGroupRes{}, errors.Wrap(apiutil.ErrValidation, err)
@@ -276,7 +276,7 @@ func removeParentGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 }
 
 func addChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(addChildrenGroupsReq)
 		if err := req.validate(); err != nil {
 			return addChildrenGroupsRes{}, errors.Wrap(apiutil.ErrValidation, err)
@@ -295,7 +295,7 @@ func addChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 }
 
 func removeChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(removeChildrenGroupsReq)
 		if err := req.validate(); err != nil {
 			return removeChildrenGroupsRes{}, errors.Wrap(apiutil.ErrValidation, err)
@@ -314,7 +314,7 @@ func removeChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 }
 
 func removeAllChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(removeAllChildrenGroupsReq)
 		if err := req.validate(); err != nil {
 			return removeAllChildrenGroupsRes{}, errors.Wrap(apiutil.ErrValidation, err)
@@ -333,7 +333,7 @@ func removeAllChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 }
 
 func listChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request any) (any, error) {
 		req := request.(listChildrenGroupsReq)
 		if err := req.validate(); err != nil {
 			return listChildrenGroupsRes{}, errors.Wrap(apiutil.ErrValidation, err)

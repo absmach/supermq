@@ -14,7 +14,7 @@ import (
 )
 
 // Metadata represents arbitrary JSON.
-type Metadata map[string]interface{}
+type Metadata map[string]any
 
 // Channel represents a SuperMQ "communication topic". This topic
 // contains the clients that can exchange messages between each other.

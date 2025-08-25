@@ -54,8 +54,8 @@ type createDomainEvent struct {
 	requestID string
 }
 
-func (cde createDomainEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (cde createDomainEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":         domainCreate,
 		"id":                cde.ID,
 		"route":             cde.Route,
@@ -88,8 +88,8 @@ type retrieveDomainEvent struct {
 	requestID string
 }
 
-func (rde retrieveDomainEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (rde retrieveDomainEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   domainRetrieve,
 		"id":          rde.ID,
 		"route":       rde.Route,
@@ -127,8 +127,8 @@ type retrieveDomainStatusEvent struct {
 	requestID string
 }
 
-func (rdse retrieveDomainStatusEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (rdse retrieveDomainStatusEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   domainRetrieve,
 		"id":          rdse.id,
 		"status":      rdse.status.String(),
@@ -147,8 +147,8 @@ type updateDomainEvent struct {
 	requestID string
 }
 
-func (ude updateDomainEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (ude updateDomainEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   domainUpdate,
 		"id":          ude.domain.ID,
 		"route":       ude.domain.Route,
@@ -184,8 +184,8 @@ type enableDomainEvent struct {
 	requestID string
 }
 
-func (cdse enableDomainEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (cdse enableDomainEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   domainEnable,
 		"id":          cdse.domainID,
 		"updated_at":  cdse.updatedAt,
@@ -205,8 +205,8 @@ type disableDomainEvent struct {
 	requestID string
 }
 
-func (cdse disableDomainEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (cdse disableDomainEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   domainDisable,
 		"id":          cdse.domainID,
 		"updated_at":  cdse.updatedAt,
@@ -226,8 +226,8 @@ type freezeDomainEvent struct {
 	requestID string
 }
 
-func (cdse freezeDomainEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (cdse freezeDomainEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   domainFreeze,
 		"id":          cdse.domainID,
 		"updated_at":  cdse.updatedAt,
@@ -248,8 +248,8 @@ type listDomainsEvent struct {
 	requestID  string
 }
 
-func (lde listDomainsEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (lde listDomainsEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   domainList,
 		"total":       lde.total,
 		"offset":      lde.Offset,
@@ -308,8 +308,8 @@ type sendInvitationEvent struct {
 	session    authn.Session
 }
 
-func (sie sendInvitationEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (sie sendInvitationEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":       invitationSend,
 		"invitee_user_id": sie.invitation.InviteeUserID,
 		"domain_id":       sie.invitation.DomainID,
@@ -327,8 +327,8 @@ type listInvitationsEvent struct {
 	session authn.Session
 }
 
-func (lie listInvitationsEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (lie listInvitationsEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":  invitationList,
 		"offset":     lie.Offset,
 		"limit":      lie.Limit,
@@ -360,8 +360,8 @@ type listDomainInvitationsEvent struct {
 	session authn.Session
 }
 
-func (lie listDomainInvitationsEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (lie listDomainInvitationsEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   invitationListDomain,
 		"offset":      lie.Offset,
 		"limit":       lie.Limit,
@@ -391,8 +391,8 @@ type acceptInvitationEvent struct {
 	session  authn.Session
 }
 
-func (aie acceptInvitationEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (aie acceptInvitationEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":       invitationAccept,
 		"domain_id":       aie.domainID,
 		"invitee_user_id": aie.session.UserID,
@@ -408,8 +408,8 @@ type rejectInvitationEvent struct {
 	session  authn.Session
 }
 
-func (rie rejectInvitationEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (rie rejectInvitationEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":       invitationReject,
 		"domain_id":       rie.domainID,
 		"invitee_user_id": rie.session.UserID,
@@ -426,8 +426,8 @@ type deleteInvitationEvent struct {
 	session       authn.Session
 }
 
-func (die deleteInvitationEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (die deleteInvitationEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":       invitationDelete,
 		"invitee_user_id": die.inviteeUserID,
 		"domain_id":       die.domainID,

@@ -40,7 +40,7 @@ var (
 		ID:        testsutil.GenerateUUID(&testing.T{}),
 		Domain:    testsutil.GenerateUUID(&testing.T{}),
 		Name:      namegen.Generate(),
-		Metadata:  map[string]interface{}{"key": "value"},
+		Metadata:  map[string]any{"key": "value"},
 		CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
 		Status:    clients.EnabledStatus,
 	}
@@ -311,7 +311,7 @@ func TestClientsSave(t *testing.T) {
 						Identity: fmt.Sprintf("%s@example.com", namegen.Generate()),
 						Secret:   testsutil.GenerateUUID(t),
 					},
-					Metadata: map[string]interface{}{
+					Metadata: map[string]any{
 						"key": make(chan int),
 					},
 				},
@@ -325,7 +325,7 @@ func TestClientsSave(t *testing.T) {
 					ID:        duplicateClientID,
 					Domain:    validClient.Domain,
 					Name:      validClient.Name,
-					Metadata:  map[string]interface{}{"key": "different_value"},
+					Metadata:  map[string]any{"key": "different_value"},
 					CreatedAt: validTimestamp,
 					Status:    clients.EnabledStatus,
 				},
@@ -519,7 +519,7 @@ func TestUpdate(t *testing.T) {
 			client: clients.Client{
 				ID:        validClient.ID,
 				Name:      namegen.Generate(),
-				Metadata:  map[string]interface{}{"key": "value"},
+				Metadata:  map[string]any{"key": "value"},
 				UpdatedAt: validTimestamp,
 				UpdatedBy: testsutil.GenerateUUID(t),
 			},
@@ -541,7 +541,7 @@ func TestUpdate(t *testing.T) {
 			update: "metadata",
 			client: clients.Client{
 				ID:        validClient.ID,
-				Metadata:  map[string]interface{}{"key1": "value1"},
+				Metadata:  map[string]any{"key1": "value1"},
 				UpdatedAt: validTimestamp,
 				UpdatedBy: testsutil.GenerateUUID(t),
 			},
@@ -553,7 +553,7 @@ func TestUpdate(t *testing.T) {
 			client: clients.Client{
 				ID:        testsutil.GenerateUUID(t),
 				Name:      namegen.Generate(),
-				Metadata:  map[string]interface{}{"key": "value"},
+				Metadata:  map[string]any{"key": "value"},
 				UpdatedAt: validTimestamp,
 				UpdatedBy: testsutil.GenerateUUID(t),
 			},
@@ -564,7 +564,7 @@ func TestUpdate(t *testing.T) {
 			update: "all",
 			client: clients.Client{
 				Name:      namegen.Generate(),
-				Metadata:  map[string]interface{}{"key": "value"},
+				Metadata:  map[string]any{"key": "value"},
 				UpdatedAt: validTimestamp,
 				UpdatedBy: testsutil.GenerateUUID(t),
 			},
@@ -1734,7 +1734,7 @@ func TestRetrieveByIDs(t *testing.T) {
 				Secret:   testsutil.GenerateUUID(t),
 			},
 			Tags:      namegen.GenerateMultiple(5),
-			Metadata:  map[string]interface{}{"name": name},
+			Metadata:  map[string]any{"name": name},
 			CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
 			Status:    clients.EnabledStatus,
 		}
@@ -2364,7 +2364,7 @@ func TestRetrieveParentGroupClients(t *testing.T) {
 			Domain:      testsutil.GenerateUUID(t),
 			ParentGroup: parentID,
 			Name:        name,
-			Metadata:    map[string]interface{}{"name": name},
+			Metadata:    map[string]any{"name": name},
 			CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
 			Status:      clients.EnabledStatus,
 		}
@@ -2431,7 +2431,7 @@ func TestUnsetParentGroupFromClients(t *testing.T) {
 			Domain:      testsutil.GenerateUUID(t),
 			ParentGroup: parentID,
 			Name:        name,
-			Metadata:    map[string]interface{}{"name": name},
+			Metadata:    map[string]any{"name": name},
 			CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
 			Status:      clients.EnabledStatus,
 		}

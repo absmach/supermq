@@ -84,7 +84,7 @@ func (tr testRequest) make() (*http.Response, error) {
 	return tr.client.Do(req)
 }
 
-func toJSON(data interface{}) string {
+func toJSON(data any) string {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return ""
@@ -200,7 +200,7 @@ func TestCreateDomain(t *testing.T) {
 			desc: "register a  new domain that cant be marshalled",
 			domain: domains.Domain{
 				Name: "test",
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"test": make(chan int),
 				},
 				Tags:  []string{"tag1", "tag2"},

@@ -63,7 +63,7 @@ func (client tokenGrpcClient) Issue(ctx context.Context, req *grpcTokenV1.IssueR
 	return res.(*grpcTokenV1.Token), nil
 }
 
-func encodeIssueRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func encodeIssueRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(issueReq)
 	return &grpcTokenV1.IssueReq{
 		UserId:   req.userID,
@@ -72,7 +72,7 @@ func encodeIssueRequest(_ context.Context, grpcReq interface{}) (interface{}, er
 	}, nil
 }
 
-func decodeIssueResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func decodeIssueResponse(_ context.Context, grpcRes any) (any, error) {
 	return grpcRes, nil
 }
 
@@ -87,11 +87,11 @@ func (client tokenGrpcClient) Refresh(ctx context.Context, req *grpcTokenV1.Refr
 	return res.(*grpcTokenV1.Token), nil
 }
 
-func encodeRefreshRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+func encodeRefreshRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(refreshReq)
 	return &grpcTokenV1.RefreshReq{RefreshToken: req.refreshToken}, nil
 }
 
-func decodeRefreshResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func decodeRefreshResponse(_ context.Context, grpcRes any) (any, error) {
 	return grpcRes, nil
 }

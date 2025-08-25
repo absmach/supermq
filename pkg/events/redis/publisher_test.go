@@ -20,19 +20,19 @@ import (
 var (
 	stream     = "tests.events"
 	consumer   = "test-consumer"
-	eventsChan = make(chan map[string]interface{})
+	eventsChan = make(chan map[string]any)
 	logger     = smqlog.NewMock()
 	errFailed  = errors.New("failed")
 	numEvents  = 100
 )
 
 type testEvent struct {
-	Data map[string]interface{}
+	Data map[string]any
 }
 
-func (te testEvent) Encode() (map[string]interface{}, error) {
+func (te testEvent) Encode() (map[string]any, error) {
 	if te.Data == nil {
-		return map[string]interface{}{}, nil
+		return map[string]any{}, nil
 	}
 
 	return te.Data, nil
@@ -66,13 +66,13 @@ func TestPublish(t *testing.T) {
 
 	cases := []struct {
 		desc  string
-		event map[string]interface{}
+		event map[string]any
 		err   error
 	}{
 		{
 			desc: "publish event successfully",
 			err:  nil,
-			event: map[string]interface{}{
+			event: map[string]any{
 				"temperature": float64(rand.Float64()),
 				"humidity":    float64(rand.Float64()),
 				"sensor_id":   "abc123",
@@ -91,7 +91,7 @@ func TestPublish(t *testing.T) {
 		{
 			desc: "publish event with invalid event location",
 			err:  fmt.Errorf("json: unsupported type: chan int"),
-			event: map[string]interface{}{
+			event: map[string]any{
 				"temperature": float64(rand.Float64()),
 				"humidity":    float64(rand.Float64()),
 				"sensor_id":   "abc123",
@@ -105,7 +105,7 @@ func TestPublish(t *testing.T) {
 		{
 			desc: "publish event with nested sting value",
 			err:  nil,
-			event: map[string]interface{}{
+			event: map[string]any{
 				"temperature": float64(rand.Float64()),
 				"humidity":    float64(rand.Float64()),
 				"sensor_id":   "abc123",
@@ -271,7 +271,7 @@ func TestUnavailablePublish(t *testing.T) {
 	err = publisher.Close()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error on closing publisher: %s", err))
 
-	var receivedEvents []map[string]interface{}
+	var receivedEvents []map[string]any
 	for i := 0; i < numEvents; i++ {
 		event := <-eventsChan
 		receivedEvents = append(receivedEvents, event)
@@ -281,7 +281,7 @@ func TestUnavailablePublish(t *testing.T) {
 
 func generateRandomEvent() testEvent {
 	return testEvent{
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"temperature": fmt.Sprintf("%f", rand.Float64()),
 			"humidity":    fmt.Sprintf("%f", rand.Float64()),
 			"sensor_id":   fmt.Sprintf("%d", rand.Intn(1000)),

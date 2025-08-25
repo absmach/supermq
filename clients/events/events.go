@@ -53,8 +53,8 @@ type createClientEvent struct {
 	requestID string
 }
 
-func (cce createClientEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (cce createClientEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":         clientCreate,
 		"id":                cce.ID,
 		"roles_provisioned": cce.rolesProvisioned,
@@ -90,8 +90,8 @@ type updateClientEvent struct {
 	requestID string
 }
 
-func (uce updateClientEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (uce updateClientEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   uce.operation,
 		"updated_at":  uce.UpdatedAt,
 		"updated_by":  uce.UpdatedBy,
@@ -136,8 +136,8 @@ type changeClientStatusEvent struct {
 	requestID string
 }
 
-func (cse changeClientStatusEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (cse changeClientStatusEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   cse.operation,
 		"id":          cse.id,
 		"status":      cse.status,
@@ -157,8 +157,8 @@ type viewClientEvent struct {
 	requestID string
 }
 
-func (vce viewClientEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (vce viewClientEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   clientView,
 		"id":          vce.ID,
 		"domain":      vce.DomainID,
@@ -202,8 +202,8 @@ type viewClientPermsEvent struct {
 	requestID string
 }
 
-func (vcpe viewClientPermsEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (vcpe viewClientPermsEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   clientViewPerms,
 		"permissions": vcpe.permissions,
 		"domain":      vcpe.DomainID,
@@ -221,8 +221,8 @@ type listClientEvent struct {
 	requestID string
 }
 
-func (lce listClientEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (lce listClientEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   clientList,
 		"total":       lce.Total,
 		"offset":      lce.Offset,
@@ -268,8 +268,8 @@ type listUserClientEvent struct {
 	requestID string
 }
 
-func (lce listUserClientEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (lce listUserClientEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   clientList,
 		"req_user_id": lce.userID,
 		"total":       lce.Total,
@@ -317,8 +317,8 @@ type listClientByGroupEvent struct {
 	requestID string
 }
 
-func (lcge listClientByGroupEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (lcge listClientByGroupEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   clientListByGroup,
 		"total":       lcge.Total,
 		"offset":      lcge.Offset,
@@ -362,8 +362,8 @@ type identifyClientEvent struct {
 	requestID string
 }
 
-func (ice identifyClientEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (ice identifyClientEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   clientIdentify,
 		"id":          ice.clientID,
 		"domain":      ice.DomainID,
@@ -382,8 +382,8 @@ type authorizeClientEvent struct {
 	requestID string
 }
 
-func (ice authorizeClientEvent) Encode() (map[string]interface{}, error) {
-	val := map[string]interface{}{
+func (ice authorizeClientEvent) Encode() (map[string]any, error) {
+	val := map[string]any{
 		"operation":   clientAuthorize,
 		"id":          ice.clientID,
 		"domain":      ice.DomainID,
@@ -412,8 +412,8 @@ type shareClientEvent struct {
 	requestID string
 }
 
-func (sce shareClientEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (sce shareClientEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   clientPrefix + sce.action,
 		"id":          sce.id,
 		"relation":    sce.relation,
@@ -432,8 +432,8 @@ type removeClientEvent struct {
 	requestID string
 }
 
-func (dce removeClientEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (dce removeClientEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   clientRemove,
 		"id":          dce.id,
 		"domain":      dce.DomainID,
@@ -451,8 +451,8 @@ type setParentGroupEvent struct {
 	requestID string
 }
 
-func (spge setParentGroupEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (spge setParentGroupEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":       clientSetParent,
 		"id":              spge.id,
 		"parent_group_id": spge.parentGroupID,
@@ -470,8 +470,8 @@ type removeParentGroupEvent struct {
 	requestID string
 }
 
-func (rpge removeParentGroupEvent) Encode() (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (rpge removeParentGroupEvent) Encode() (map[string]any, error) {
+	return map[string]any{
 		"operation":   clientRemoveParent,
 		"id":          rpge.id,
 		"domain":      rpge.DomainID,

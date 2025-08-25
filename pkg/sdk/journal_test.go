@@ -283,7 +283,7 @@ func TestRetrieveJournal(t *testing.T) {
 			pageMeta: sdk.PageMetadata{
 				Offset: 0,
 				Limit:  10,
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"key": make(chan int),
 				},
 			},
@@ -317,7 +317,7 @@ func TestRetrieveJournal(t *testing.T) {
 					Operation:  "create",
 					OccurredAt: time.Now(),
 					Attributes: validMetadata,
-					Metadata: map[string]interface{}{
+					Metadata: map[string]any{
 						"key": make(chan int),
 					},
 				}},
