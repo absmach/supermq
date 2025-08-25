@@ -989,9 +989,7 @@ components:
           example: 10
           description: Maximum number of items to return in one page.
       required:
-        - domains
         - total
-        - offset
     DomainUpdate:
       type: object
       properties:

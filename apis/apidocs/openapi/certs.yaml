@@ -306,7 +306,7 @@ components:
           parameters:
             clientID: $response.body#/client_id
         delete:
-          operationId: revokeCert
+          operationId: revokeCertBySerial
           parameters:
             certID: $response.body#/serial
     CertsPageRes:

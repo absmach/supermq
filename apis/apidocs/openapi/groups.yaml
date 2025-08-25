@@ -1196,9 +1196,7 @@ components:
           example: 10
           description: Maximum number of items to return in one page.
       required:
-        - groups
         - total
-        - offset
 
     GroupsHierarchyPage:
       type: object

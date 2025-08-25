@@ -1089,9 +1089,7 @@ components:
           example: 10
           description: Maximum number of items to return in one page.
       required:
-        - clients
         - total
-        - offset
 
     ClientUpdate:
       type: object

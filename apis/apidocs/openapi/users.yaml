@@ -818,6 +818,7 @@ components:
           description: Total number of items.
         offset:
           type: integer
+          example: 1
           description: Number of items to skip during retrieval.
         limit:
           type: integer
@@ -826,7 +827,7 @@ components:
       required:
         - users
         - total
-        - offset
+        - limit
 
     UserUpdate:
       type: object
