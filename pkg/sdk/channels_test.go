@@ -397,7 +397,7 @@ func TestListChannels(t *testing.T) {
 			channelsPageMeta: channels.Page{
 				Actions: []string{},
 				Order:   "updated_at",
-				Dir:     "asc",
+				Dir:     "desc",
 				Offset:  offset,
 				Limit:   limit,
 			},
@@ -424,7 +424,7 @@ func TestListChannels(t *testing.T) {
 			channelsPageMeta: channels.Page{
 				Actions: []string{},
 				Order:   "updated_at",
-				Dir:     "asc",
+				Dir:     "desc",
 				Offset:  offset,
 				Limit:   limit,
 			},
@@ -442,7 +442,7 @@ func TestListChannels(t *testing.T) {
 			channelsPageMeta: channels.Page{
 				Actions: []string{},
 				Order:   "updated_at",
-				Dir:     "asc",
+				Dir:     "desc",
 			},
 			svcRes:   channels.ChannelsPage{},
 			svcErr:   nil,
@@ -458,7 +458,7 @@ func TestListChannels(t *testing.T) {
 			channelsPageMeta: channels.Page{
 				Actions: []string{},
 				Order:   "updated_at",
-				Dir:     "asc",
+				Dir:     "desc",
 				Offset:  offset,
 				Limit:   10,
 			},
@@ -486,7 +486,7 @@ func TestListChannels(t *testing.T) {
 			channelsPageMeta: channels.Page{
 				Actions: []string{},
 				Order:   "updated_at",
-				Dir:     "asc",
+				Dir:     "desc",
 			},
 			svcRes:   channels.ChannelsPage{},
 			svcErr:   nil,
@@ -503,7 +503,7 @@ func TestListChannels(t *testing.T) {
 			channelsPageMeta: channels.Page{
 				Actions: []string{},
 				Order:   "updated_at",
-				Dir:     "asc",
+				Dir:     "desc",
 				Offset:  offset,
 				Limit:   1,
 			},
@@ -532,7 +532,7 @@ func TestListChannels(t *testing.T) {
 			channelsPageMeta: channels.Page{
 				Actions:  []string{},
 				Order:    "updated_at",
-				Dir:      "asc",
+				Dir:      "desc",
 				Offset:   offset,
 				Limit:    10,
 				Metadata: channels.Metadata{"name": "client_89"},
@@ -564,7 +564,7 @@ func TestListChannels(t *testing.T) {
 			channelsPageMeta: channels.Page{
 				Actions: []string{},
 				Order:   "updated_at",
-				Dir:     "asc",
+				Dir:     "desc",
 			},
 			svcRes:   channels.ChannelsPage{},
 			svcErr:   nil,
@@ -580,7 +580,7 @@ func TestListChannels(t *testing.T) {
 			channelsPageMeta: channels.Page{
 				Actions: []string{},
 				Order:   "updated_at",
-				Dir:     "asc",
+				Dir:     "desc",
 				Offset:  0,
 				Limit:   10,
 			},
