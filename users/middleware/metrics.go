@@ -148,12 +148,12 @@ func (ms *metricsMiddleware) UpdateProfilePicture(ctx context.Context, session a
 }
 
 // GenerateResetToken instruments GenerateResetToken method with metrics.
-func (ms *metricsMiddleware) GenerateResetToken(ctx context.Context, email, host string) error {
+func (ms *metricsMiddleware) GenerateResetToken(ctx context.Context, email string) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "generate_reset_token").Add(1)
 		ms.latency.With("method", "generate_reset_token").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.GenerateResetToken(ctx, email, host)
+	return ms.svc.GenerateResetToken(ctx, email)
 }
 
 // ResetSecret instruments ResetSecret method with metrics.
@@ -166,12 +166,12 @@ func (ms *metricsMiddleware) ResetSecret(ctx context.Context, session authn.Sess
 }
 
 // SendPasswordReset instruments SendPasswordReset method with metrics.
-func (ms *metricsMiddleware) SendPasswordReset(ctx context.Context, host, email, user, token string) error {
+func (ms *metricsMiddleware) SendPasswordReset(ctx context.Context, email, user, token string) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "send_password_reset").Add(1)
 		ms.latency.With("method", "send_password_reset").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.SendPasswordReset(ctx, host, email, user, token)
+	return ms.svc.SendPasswordReset(ctx, email, user, token)
 }
 
 // UpdateRole instruments UpdateRole method with metrics.

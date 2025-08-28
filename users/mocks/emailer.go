@@ -39,16 +39,16 @@ func (_m *Emailer) EXPECT() *Emailer_Expecter {
 }
 
 // SendPasswordReset provides a mock function for the type Emailer
-func (_mock *Emailer) SendPasswordReset(To []string, host string, user string, token string) error {
-	ret := _mock.Called(To, host, user, token)
+func (_mock *Emailer) SendPasswordReset(To []string, user string, token string) error {
+	ret := _mock.Called(To, user, token)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SendPasswordReset")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func([]string, string, string, string) error); ok {
-		r0 = returnFunc(To, host, user, token)
+	if returnFunc, ok := ret.Get(0).(func([]string, string, string) error); ok {
+		r0 = returnFunc(To, user, token)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -62,14 +62,13 @@ type Emailer_SendPasswordReset_Call struct {
 
 // SendPasswordReset is a helper method to define mock.On call
 //   - To []string
-//   - host string
 //   - user string
 //   - token string
-func (_e *Emailer_Expecter) SendPasswordReset(To interface{}, host interface{}, user interface{}, token interface{}) *Emailer_SendPasswordReset_Call {
-	return &Emailer_SendPasswordReset_Call{Call: _e.mock.On("SendPasswordReset", To, host, user, token)}
+func (_e *Emailer_Expecter) SendPasswordReset(To interface{}, user interface{}, token interface{}) *Emailer_SendPasswordReset_Call {
+	return &Emailer_SendPasswordReset_Call{Call: _e.mock.On("SendPasswordReset", To, user, token)}
 }
 
-func (_c *Emailer_SendPasswordReset_Call) Run(run func(To []string, host string, user string, token string)) *Emailer_SendPasswordReset_Call {
+func (_c *Emailer_SendPasswordReset_Call) Run(run func(To []string, user string, token string)) *Emailer_SendPasswordReset_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 []string
 		if args[0] != nil {
@@ -83,15 +82,10 @@ func (_c *Emailer_SendPasswordReset_Call) Run(run func(To []string, host string,
 		if args[2] != nil {
 			arg2 = args[2].(string)
 		}
-		var arg3 string
-		if args[3] != nil {
-			arg3 = args[3].(string)
-		}
 		run(
 			arg0,
 			arg1,
 			arg2,
-			arg3,
 		)
 	})
 	return _c
@@ -102,7 +96,7 @@ func (_c *Emailer_SendPasswordReset_Call) Return(err error) *Emailer_SendPasswor
 	return _c
 }
 
-func (_c *Emailer_SendPasswordReset_Call) RunAndReturn(run func(To []string, host string, user string, token string) error) *Emailer_SendPasswordReset_Call {
+func (_c *Emailer_SendPasswordReset_Call) RunAndReturn(run func(To []string, user string, token string) error) *Emailer_SendPasswordReset_Call {
 	_c.Call.Return(run)
 	return _c
 }
