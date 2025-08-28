@@ -587,7 +587,6 @@ func TestPasswResetReqValidate(t *testing.T) {
 			desc: "valid request",
 			req: passResetReq{
 				Email: "example@example.com",
-				Host:  "example.com",
 			},
 			err: nil,
 		},
@@ -595,17 +594,8 @@ func TestPasswResetReqValidate(t *testing.T) {
 			desc: "empty email",
 			req: passResetReq{
 				Email: "",
-				Host:  "example.com",
 			},
 			err: apiutil.ErrMissingEmail,
-		},
-		{
-			desc: "empty host",
-			req: passResetReq{
-				Email: "example@example.com",
-				Host:  "",
-			},
-			err: apiutil.ErrMissingHost,
 		},
 	}
 	for _, c := range cases {
