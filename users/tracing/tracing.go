@@ -146,14 +146,13 @@ func (tm *tracingMiddleware) UpdateProfilePicture(ctx context.Context, session a
 }
 
 // GenerateResetToken traces the "GenerateResetToken" operation of the wrapped users.Service.
-func (tm *tracingMiddleware) GenerateResetToken(ctx context.Context, email, host string) error {
+func (tm *tracingMiddleware) GenerateResetToken(ctx context.Context, email string) error {
 	ctx, span := tracing.StartSpan(ctx, tm.tracer, "svc_generate_reset_token", trace.WithAttributes(
 		attribute.String("email", email),
-		attribute.String("host", host),
 	))
 	defer span.End()
 
-	return tm.svc.GenerateResetToken(ctx, email, host)
+	return tm.svc.GenerateResetToken(ctx, email)
 }
 
 // ResetSecret traces the "ResetSecret" operation of the wrapped users.Service.
@@ -165,14 +164,14 @@ func (tm *tracingMiddleware) ResetSecret(ctx context.Context, session authn.Sess
 }
 
 // SendPasswordReset traces the "SendPasswordReset" operation of the wrapped users.Service.
-func (tm *tracingMiddleware) SendPasswordReset(ctx context.Context, host, email, user, token string) error {
+func (tm *tracingMiddleware) SendPasswordReset(ctx context.Context, email, user, token string) error {
 	ctx, span := tracing.StartSpan(ctx, tm.tracer, "svc_send_password_reset", trace.WithAttributes(
 		attribute.String("email", email),
 		attribute.String("user", user),
 	))
 	defer span.End()
 
-	return tm.svc.SendPasswordReset(ctx, host, email, user, token)
+	return tm.svc.SendPasswordReset(ctx, email, user, token)
 }
 
 // ViewProfile traces the "ViewProfile" operation of the wrapped users.Service.

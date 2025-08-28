@@ -42,6 +42,7 @@ type Config struct {
 	FromAddress string `env:"SMQ_EMAIL_FROM_ADDRESS" envDefault:""`
 	FromName    string `env:"SMQ_EMAIL_FROM_NAME"    envDefault:""`
 	Template    string `env:"SMQ_EMAIL_TEMPLATE"     envDefault:"email.tmpl"`
+	HostURL     string `env:"SMQ_EMAIL_HOST_URL"     envDefault:"http://localhost:8080"`
 }
 
 // Agent for mailing.

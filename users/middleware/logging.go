@@ -316,12 +316,11 @@ func (lm *loggingMiddleware) UpdateProfilePicture(ctx context.Context, session a
 
 // GenerateResetToken logs the generate_reset_token request. It logs the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) GenerateResetToken(ctx context.Context, email, host string) (err error) {
+func (lm *loggingMiddleware) GenerateResetToken(ctx context.Context, email string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.String("request_id", middleware.GetReqID(ctx)),
-			slog.String("host", host),
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
@@ -330,7 +329,7 @@ func (lm *loggingMiddleware) GenerateResetToken(ctx context.Context, email, host
 		}
 		lm.logger.Info("Generate reset token completed successfully", args...)
 	}(time.Now())
-	return lm.svc.GenerateResetToken(ctx, email, host)
+	return lm.svc.GenerateResetToken(ctx, email)
 }
 
 // ResetSecret logs the reset_secret request. It logs the time it took to complete the request.
@@ -353,12 +352,11 @@ func (lm *loggingMiddleware) ResetSecret(ctx context.Context, session authn.Sess
 
 // SendPasswordReset logs the send_password_reset request. It logs the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) SendPasswordReset(ctx context.Context, host, email, user, token string) (err error) {
+func (lm *loggingMiddleware) SendPasswordReset(ctx context.Context, email, user, token string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.String("request_id", middleware.GetReqID(ctx)),
-			slog.String("host", host),
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
@@ -367,7 +365,7 @@ func (lm *loggingMiddleware) SendPasswordReset(ctx context.Context, host, email,
 		}
 		lm.logger.Info("Send password reset completed successfully", args...)
 	}(time.Now())
-	return lm.svc.SendPasswordReset(ctx, host, email, user, token)
+	return lm.svc.SendPasswordReset(ctx, email, user, token)
 }
 
 // UpdateRole logs the update_user_role request. It logs the user id and the time it took to complete the request.
