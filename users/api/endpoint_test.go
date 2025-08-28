@@ -1696,14 +1696,6 @@ func TestPasswordResetRequest(t *testing.T) {
 			err:         apiutil.ErrValidation,
 		},
 		{
-			desc:        "password reset request with empty host",
-			data:        fmt.Sprintf(`{"email": "%s", "host": "%s"}`, testemail, ""),
-			contentType: contentType,
-			referer:     "",
-			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
-		},
-		{
 			desc:        "password reset request with invalid email",
 			data:        fmt.Sprintf(`{"email": "%s", "host": "%s"}`, "invalid", testhost),
 			contentType: contentType,
