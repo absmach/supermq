@@ -923,6 +923,63 @@ func (_c *Service_SendPasswordReset_Call) RunAndReturn(run func(ctx context.Cont
 	return _c
 }
 
+// SendVerification provides a mock function for the type Service
+func (_mock *Service) SendVerification(ctx context.Context, session authn.Session) error {
+	ret := _mock.Called(ctx, session)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SendVerification")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, authn.Session) error); ok {
+		r0 = returnFunc(ctx, session)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Service_SendVerification_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SendVerification'
+type Service_SendVerification_Call struct {
+	*mock.Call
+}
+
+// SendVerification is a helper method to define mock.On call
+//   - ctx context.Context
+//   - session authn.Session
+func (_e *Service_Expecter) SendVerification(ctx interface{}, session interface{}) *Service_SendVerification_Call {
+	return &Service_SendVerification_Call{Call: _e.mock.On("SendVerification", ctx, session)}
+}
+
+func (_c *Service_SendVerification_Call) Run(run func(ctx context.Context, session authn.Session)) *Service_SendVerification_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 authn.Session
+		if args[1] != nil {
+			arg1 = args[1].(authn.Session)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Service_SendVerification_Call) Return(err error) *Service_SendVerification_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Service_SendVerification_Call) RunAndReturn(run func(ctx context.Context, session authn.Session) error) *Service_SendVerification_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Update provides a mock function for the type Service
 func (_mock *Service) Update(ctx context.Context, session authn.Session, id string, user users.UserReq) (users.User, error) {
 	ret := _mock.Called(ctx, session, id, user)
@@ -1459,6 +1516,72 @@ func (_c *Service_UpdateUsername_Call) Return(user users.User, err error) *Servi
 }
 
 func (_c *Service_UpdateUsername_Call) RunAndReturn(run func(ctx context.Context, session authn.Session, id string, username string) (users.User, error)) *Service_UpdateUsername_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// VerifyEmail provides a mock function for the type Service
+func (_mock *Service) VerifyEmail(ctx context.Context, verificationToken string) (users.User, error) {
+	ret := _mock.Called(ctx, verificationToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for VerifyEmail")
+	}
+
+	var r0 users.User
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (users.User, error)); ok {
+		return returnFunc(ctx, verificationToken)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) users.User); ok {
+		r0 = returnFunc(ctx, verificationToken)
+	} else {
+		r0 = ret.Get(0).(users.User)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = returnFunc(ctx, verificationToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Service_VerifyEmail_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'VerifyEmail'
+type Service_VerifyEmail_Call struct {
+	*mock.Call
+}
+
+// VerifyEmail is a helper method to define mock.On call
+//   - ctx context.Context
+//   - verificationToken string
+func (_e *Service_Expecter) VerifyEmail(ctx interface{}, verificationToken interface{}) *Service_VerifyEmail_Call {
+	return &Service_VerifyEmail_Call{Call: _e.mock.On("VerifyEmail", ctx, verificationToken)}
+}
+
+func (_c *Service_VerifyEmail_Call) Run(run func(ctx context.Context, verificationToken string)) *Service_VerifyEmail_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Service_VerifyEmail_Call) Return(user users.User, err error) *Service_VerifyEmail_Call {
+	_c.Call.Return(user, err)
+	return _c
+}
+
+func (_c *Service_VerifyEmail_Call) RunAndReturn(run func(ctx context.Context, verificationToken string) (users.User, error)) *Service_VerifyEmail_Call {
 	_c.Call.Return(run)
 	return _c
 }
