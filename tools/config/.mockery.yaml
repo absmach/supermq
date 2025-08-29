@@ -114,6 +114,7 @@ packages:
   github.com/absmach/supermq/pkg/authn:
     interfaces:
       Authentication:
+      Authn:
   github.com/absmach/supermq/pkg/authz:
     interfaces:
       Authorization:

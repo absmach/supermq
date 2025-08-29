@@ -178,6 +178,20 @@ type SDK interface {
 	//  fmt.Println(user)
 	CreateUser(ctx context.Context, user User, token string) (User, errors.SDKError)
 
+	// SendVerification sends a verification email to the user.
+	//
+	// example:
+	//  err := sdk.SendVerification("token")
+	//  fmt.Println(err)
+	SendVerification(ctx context.Context, token string) errors.SDKError
+
+	// VerifyEmail verifies the user's email address using the provided token.
+	//
+	// example:
+	//  user, err := sdk.VerifyEmail("verificationToken")
+	//  fmt.Println(user)
+	VerifyEmail(ctx context.Context, verificationToken string) (User, errors.SDKError)
+
 	// User returns user object by id.
 	//
 	// example:

@@ -16,6 +16,8 @@ const MailSent = "Email with reset link is sent"
 
 var (
 	_ supermq.Response = (*tokenRes)(nil)
+	_ supermq.Response = (*sendVerificationRes)(nil)
+	_ supermq.Response = (*verifyEmailRes)(nil)
 	_ supermq.Response = (*viewUserRes)(nil)
 	_ supermq.Response = (*createUserRes)(nil)
 	_ supermq.Response = (*changeUserStatusRes)(nil)
@@ -77,6 +79,37 @@ func (res tokenRes) Headers() map[string]string {
 
 func (res tokenRes) Empty() bool {
 	return res.AccessToken == "" || res.RefreshToken == ""
+}
+
+type sendVerificationRes struct {
+}
+
+func (res sendVerificationRes) Code() int {
+	return http.StatusOK
+}
+
+func (res sendVerificationRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res sendVerificationRes) Empty() bool {
+	return false
+}
+
+type verifyEmailRes struct {
+	users.User `json:",inline"`
+}
+
+func (res verifyEmailRes) Code() int {
+	return http.StatusOK
+}
+
+func (res verifyEmailRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res verifyEmailRes) Empty() bool {
+	return false
 }
 
 type updateUserRes struct {

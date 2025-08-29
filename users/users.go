@@ -29,6 +29,8 @@ type User struct {
 	CreatedAt      time.Time   `json:"created_at,omitempty"`
 	UpdatedAt      time.Time   `json:"updated_at,omitempty"`
 	UpdatedBy      string      `json:"updated_by,omitempty"`
+	Verified       bool        `json:"verified"`
+	VerifiedAt     time.Time   `json:"verified_at,omitempty"`
 }
 
 type Credentials struct {
@@ -143,6 +145,7 @@ type Page struct {
 	FirstName  string   `json:"first_name,omitempty"`
 	LastName   string   `json:"last_name,omitempty"`
 	Email      string   `json:"email,omitempty"`
+	Verified   bool     `json:"Verified,omitempty"`
 }
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -151,6 +154,10 @@ type Service interface {
 	// Register creates new user. In case of the failed registration, a
 	// non-nil error value is returned.
 	Register(ctx context.Context, session authn.Session, user User, selfRegister bool) (User, error)
+
+	SendVerification(ctx context.Context, session authn.Session) error
+
+	VerifyEmail(ctx context.Context, verificationToken string) (User, error)
 
 	// View retrieves user info for a given user ID and an authorized token.
 	View(ctx context.Context, session authn.Session, id string) (User, error)

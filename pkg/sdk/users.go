@@ -15,13 +15,16 @@ import (
 )
 
 const (
-	usersEndpoint         = "users"
-	enableEndpoint        = "enable"
-	disableEndpoint       = "disable"
-	issueTokenEndpoint    = "tokens/issue"
-	refreshTokenEndpoint  = "tokens/refresh"
-	membersEndpoint       = "members"
-	PasswordResetEndpoint = "password"
+	usersEndpoint            = "users"
+	enableEndpoint           = "enable"
+	disableEndpoint          = "disable"
+	issueTokenEndpoint       = "tokens/issue"
+	refreshTokenEndpoint     = "tokens/refresh"
+	membersEndpoint          = "members"
+	PasswordResetEndpoint    = "password"
+	sendVerificationEndpoint = "send-verification"
+	verifyEmailEndpoint      = "verify-email"
+	tokenQueryParamKey       = "token"
 )
 
 // User represents supermq user its credentials.
@@ -54,6 +57,30 @@ func (sdk mgSDK) CreateUser(ctx context.Context, user User, token string) (User,
 	}
 
 	user = User{}
+	if err := json.Unmarshal(body, &user); err != nil {
+		return User{}, errors.NewSDKError(err)
+	}
+
+	return user, nil
+}
+
+func (sdk mgSDK) SendVerification(ctx context.Context, token string) errors.SDKError {
+	url := fmt.Sprintf("%s/%s/%s", sdk.usersURL, usersEndpoint, sendVerificationEndpoint)
+
+	_, _, sdkErr := sdk.processRequest(ctx, http.MethodPost, url, token, nil, nil, http.StatusOK)
+
+	return sdkErr
+}
+
+func (sdk mgSDK) VerifyEmail(ctx context.Context, verificationToken string) (User, errors.SDKError) {
+	url := fmt.Sprintf("%s/%s/%s?%s=%s", sdk.usersURL, usersEndpoint, verifyEmailEndpoint, tokenQueryParamKey, verificationToken)
+
+	_, body, sdkErr := sdk.processRequest(ctx, http.MethodGet, url, "", nil, nil, http.StatusOK)
+	if sdkErr != nil {
+		return User{}, sdkErr
+	}
+
+	user := User{}
 	if err := json.Unmarshal(body, &user); err != nil {
 		return User{}, errors.NewSDKError(err)
 	}

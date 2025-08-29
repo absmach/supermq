@@ -26,11 +26,15 @@ type authorizationMiddleware struct {
 
 // AuthorizationMiddleware adds authorization to the clients service.
 func AuthorizationMiddleware(svc users.Service, authz smqauthz.Authorization, selfRegister bool) users.Service {
-	return &authorizationMiddleware{
-		svc:          svc,
-		authz:        authz,
-		selfRegister: selfRegister,
-	}
+	return &authorizationMiddleware{svc: svc, authz: authz, selfRegister: selfRegister}
+}
+
+func (am *authorizationMiddleware) SendVerification(ctx context.Context, session authn.Session) error {
+	return am.svc.SendVerification(ctx, session)
+}
+
+func (am *authorizationMiddleware) VerifyEmail(ctx context.Context, verificationToken string) (users.User, error) {
+	return am.svc.VerifyEmail(ctx, verificationToken)
 }
 
 func (am *authorizationMiddleware) Register(ctx context.Context, session authn.Session, user users.User, selfRegister bool) (users.User, error) {

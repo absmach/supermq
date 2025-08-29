@@ -50,6 +50,43 @@ func (lm *loggingMiddleware) Register(ctx context.Context, session authn.Session
 	return lm.svc.Register(ctx, session, user, selfRegister)
 }
 
+// SendVerification logs the send_verification request. It logs the time it took to complete the request.
+// If the request fails, it logs the error.
+func (lm *loggingMiddleware) SendVerification(ctx context.Context, session authn.Session) (err error) {
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.String("request_id", middleware.GetReqID(ctx)),
+		}
+		if err != nil {
+			args = append(args, slog.String("error", err.Error()))
+			lm.logger.Warn("Send verification failed", args...)
+			return
+		}
+		lm.logger.Info("Send verification completed successfully", args...)
+	}(time.Now())
+	return lm.svc.SendVerification(ctx, session)
+}
+
+// VerifyEmail logs the verify_email request. It logs the time it took to complete the request.
+// If the request fails, it logs the error.
+func (lm *loggingMiddleware) VerifyEmail(ctx context.Context, verificationToken string) (user users.User, err error) {
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.String("user_id", user.ID),
+			slog.String("request_id", middleware.GetReqID(ctx)),
+		}
+		if err != nil {
+			args = append(args, slog.String("error", err.Error()))
+			lm.logger.Warn("Verify email failed", args...)
+			return
+		}
+		lm.logger.Info("Verify email completed successfully", args...)
+	}(time.Now())
+	return lm.svc.VerifyEmail(ctx, verificationToken)
+}
+
 // IssueToken logs the issue_token request. It logs the username type and the time it took to complete the request.
 // If the request fails, it logs the error.
 func (lm *loggingMiddleware) IssueToken(ctx context.Context, username, secret string) (t *grpcTokenV1.Token, err error) {

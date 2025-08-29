@@ -14,6 +14,8 @@ import (
 const (
 	userPrefix               = "user."
 	userCreate               = userPrefix + "create"
+	userSendVerification     = userPrefix + "send_verification"
+	userVerifyEmail          = userPrefix + "verify_email"
 	userUpdate               = userPrefix + "update"
 	userUpdateRole           = userPrefix + "update_role"
 	userUpdateTags           = userPrefix + "update_tags"
@@ -41,6 +43,8 @@ const (
 
 var (
 	_ events.Event = (*createUserEvent)(nil)
+	_ events.Event = (*sendVerificationEvent)(nil)
+	_ events.Event = (*verifyEmailEvent)(nil)
 	_ events.Event = (*updateUserEvent)(nil)
 	_ events.Event = (*updateProfilePictureEvent)(nil)
 	_ events.Event = (*updateUsernameEvent)(nil)
@@ -97,6 +101,37 @@ func (uce createUserEvent) Encode() (map[string]any, error) {
 	}
 
 	return val, nil
+}
+
+type sendVerificationEvent struct {
+	authn.Session
+	requestID string
+}
+
+func (sve sendVerificationEvent) Encode() (map[string]any, error) {
+	return map[string]any{
+		"operation":  userSendVerification,
+		"user_id":    sve.UserID,
+		"token_type": sve.Type.String(),
+		"request_id": sve.requestID,
+	}, nil
+}
+
+type verifyEmailEvent struct {
+	requestID string
+	email     string
+	userID    string
+	verified  bool
+}
+
+func (vee verifyEmailEvent) Encode() (map[string]any, error) {
+	return map[string]any{
+		"operation":  userVerifyEmail,
+		"request_id": vee.requestID,
+		"email":      vee.email,
+		"user_id":    vee.userID,
+		"verified":   vee.verified,
+	}, nil
 }
 
 type updateUserEvent struct {

@@ -34,6 +34,21 @@ func (tm *tracingMiddleware) Register(ctx context.Context, session authn.Session
 	return tm.svc.Register(ctx, session, user, selfRegister)
 }
 
+// SendVerification traces the "SendVerification" operation of the wrapped users.Service.
+func (tm *tracingMiddleware) SendVerification(ctx context.Context, session authn.Session) error {
+	ctx, span := tracing.StartSpan(ctx, tm.tracer, "svc_send_verification")
+	defer span.End()
+
+	return tm.svc.SendVerification(ctx, session)
+}
+
+// VerifyEmail traces the "VerifyEmail" operation of the wrapped users.Service.
+func (tm *tracingMiddleware) VerifyEmail(ctx context.Context, verificationToken string) (users.User, error) {
+	ctx, span := tracing.StartSpan(ctx, tm.tracer, "svc_verify_email")
+	defer span.End()
+	return tm.svc.VerifyEmail(ctx, verificationToken)
+}
+
 // IssueToken traces the "IssueToken" operation of the wrapped users.Service.
 func (tm *tracingMiddleware) IssueToken(ctx context.Context, username, secret string) (*grpcTokenV1.Token, error) {
 	ctx, span := tracing.StartSpan(ctx, tm.tracer, "svc_issue_token", trace.WithAttributes(attribute.String("username", username)))
