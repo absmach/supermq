@@ -93,4 +93,13 @@ var (
 
 	// ErrSuperAdminAction indicates that the user is not a super admin.
 	ErrSuperAdminAction = errors.New("not authorized to perform admin action")
+
+	// ErrUserAlreadyVerified indicates user is already verified.
+	ErrUserAlreadyVerified = errors.New("user already verified")
+
+	// ErrInvalidVerificationToken indicates user is already verified.
+	ErrInvalidVerificationToken = errors.New("invalid verification token")
+
+	// ErrVerificationTokenExpired indicates verification token is expired.
+	ErrVerificationTokenExpired = errors.New("verification token expired")
 )

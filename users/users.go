@@ -31,6 +31,17 @@ type User struct {
 	UpdatedBy      string      `json:"updated_by,omitempty"`
 	Verified       bool        `json:"verified"`
 	VerifiedAt     time.Time   `json:"verified_at,omitempty"`
+
+	// VerificationToken is sent to the user's email and should not be exposed via API.
+	VerificationToken          string    `json:"-"`
+	VerificationTokenExpiresAt time.Time `json:"-"`
+}
+
+func (u *User) IsVerificationTokenExpired() bool {
+	if u.VerificationTokenExpiresAt.IsZero() {
+		return true
+	}
+	return time.Now().After(u.VerificationTokenExpiresAt)
 }
 
 type Credentials struct {
@@ -51,9 +62,7 @@ type UserReq struct {
 	LastName       *string    `json:"last_name,omitempty"`
 	Metadata       *Metadata  `json:"metadata,omitempty"`
 	Tags           *[]string  `json:"tags,omitempty"`
-	Role           *Role      `json:"role,omitempty"`
 	ProfilePicture *string    `json:"profile_picture,omitempty"`
-	Email          *string    `json:"email,omitempty"`
 	UpdatedBy      *string    `json:"updated_by,omitempty"`
 	UpdatedAt      *time.Time `json:"updated_at,omitempty"`
 }
@@ -83,6 +92,12 @@ type Repository interface {
 	// RetrieveByUsername retrieves user by its unique credentials.
 	RetrieveByUsername(ctx context.Context, username string) (User, error)
 
+	// RetrieveVerificationToken retrieves verification token of given user id.
+	RetrieveVerificationToken(ctx context.Context, id string) (User, error)
+
+	// UpdateToUserVerificationDetails update given user id verification details.
+	UpdateToUserVerificationDetails(ctx context.Context, user User) (User, error)
+
 	// Update updates the user name and metadata.
 	Update(ctx context.Context, id string, user UserReq) (User, error)
 
@@ -91,6 +106,10 @@ type Repository interface {
 
 	// UpdateSecret updates secret for user with given email.
 	UpdateSecret(ctx context.Context, user User) (User, error)
+
+	UpdateEmail(ctx context.Context, user User) (User, error)
+
+	UpdateRole(ctx context.Context, user User) (User, error)
 
 	// ChangeStatus changes user status to enabled or disabled
 	ChangeStatus(ctx context.Context, user User) (User, error)

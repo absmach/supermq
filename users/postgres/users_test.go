@@ -1048,6 +1048,147 @@ func TestSearch(t *testing.T) {
 	}
 }
 
+func TestUpdateRole(t *testing.T) {
+	t.Cleanup(func() {
+		_, err := db.Exec("DELETE FROM users")
+		require.Nil(t, err, fmt.Sprintf("clean users unexpected error: %s", err))
+	})
+	repo := cpostgres.NewRepository(database)
+	user1 := generateUser(t, users.EnabledStatus, repo)
+	user2 := generateUser(t, users.DisabledStatus, repo)
+	adminRole := users.AdminRole
+	userRole := users.UserRole
+
+	cases := []struct {
+		desc    string
+		update  string
+		userID  string
+		userReq users.User
+		err     error
+	}{
+		{
+			desc: "update role of user to admin",
+			userReq: users.User{
+				ID:   user1.ID,
+				Role: adminRole,
+			},
+			err: nil,
+		},
+		{
+			desc: "update role of admin to user",
+			userReq: users.User{
+				ID:   user1.ID,
+				Role: userRole,
+			},
+			err: nil,
+		},
+		{
+			desc: "update role for disabled user",
+			userReq: users.User{
+				ID:   user2.ID,
+				Role: adminRole,
+			},
+			err: repoerr.ErrNotFound,
+		},
+		{
+			desc: "update role for invalid user",
+			userReq: users.User{
+				ID:   testsutil.GenerateUUID(t),
+				Role: adminRole,
+			},
+			err: repoerr.ErrNotFound,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.desc, func(t *testing.T) {
+			updatedAt := time.Now().UTC().Truncate(time.Millisecond)
+			updatedBy := testsutil.GenerateUUID(t)
+			c.userReq.UpdatedAt = updatedAt
+			c.userReq.UpdatedBy = updatedBy
+			expected, err := repo.UpdateRole(context.Background(), c.userReq)
+			assert.True(t, errors.Contains(err, c.err), fmt.Sprintf("expected %s to contain %s\n", err, c.err))
+			if err == nil {
+				assert.Equal(t, c.userReq.Role, expected.Role)
+				assert.Equal(t, c.userReq.UpdatedAt, expected.UpdatedAt)
+				assert.Equal(t, c.userReq.UpdatedBy, expected.UpdatedBy)
+			}
+		})
+	}
+}
+
+func TestUpdateEmail(t *testing.T) {
+	t.Cleanup(func() {
+		_, err := db.Exec("DELETE FROM users")
+		require.Nil(t, err, fmt.Sprintf("clean users unexpected error: %s", err))
+	})
+	repo := cpostgres.NewRepository(database)
+
+	user1 := generateUser(t, users.EnabledStatus, repo)
+	user2 := generateUser(t, users.DisabledStatus, repo)
+	user3 := generateUser(t, users.EnabledStatus, repo)
+
+	updatedEmail := namesgen.Generate() + emailSuffix
+	emptyName := ""
+
+	cases := []struct {
+		desc    string
+		update  string
+		userReq users.User
+		err     error
+	}{
+		{
+			desc: "update email for enabled user",
+			userReq: users.User{
+				ID:    user1.ID,
+				Email: updatedEmail,
+			},
+
+			err: nil,
+		},
+		{
+			desc: "update empty email for enabled user",
+			userReq: users.User{
+				ID:    user3.ID,
+				Email: emptyName,
+			},
+			err: nil,
+		},
+		{
+			desc: "update email for disabled user",
+			userReq: users.User{
+				ID:    user2.ID,
+				Email: updatedEmail,
+			},
+			err: repoerr.ErrNotFound,
+		},
+		{
+			desc: "update email for invalid user",
+			userReq: users.User{
+				ID:    testsutil.GenerateUUID(t),
+				Email: updatedEmail,
+			},
+			err: repoerr.ErrNotFound,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.desc, func(t *testing.T) {
+			updatedAt := time.Now().UTC().Truncate(time.Millisecond)
+			updatedBy := testsutil.GenerateUUID(t)
+			c.userReq.UpdatedAt = updatedAt
+			c.userReq.UpdatedBy = updatedBy
+			expected, err := repo.UpdateEmail(context.Background(), c.userReq)
+			assert.True(t, errors.Contains(err, c.err), fmt.Sprintf("expected %s to contain %s\n", err, c.err))
+			if err == nil {
+				assert.Equal(t, c.userReq.Email, expected.Email)
+				assert.Equal(t, c.userReq.UpdatedAt, expected.UpdatedAt)
+				assert.Equal(t, c.userReq.UpdatedBy, expected.UpdatedBy)
+			}
+		})
+	}
+}
+
 func TestUpdate(t *testing.T) {
 	t.Cleanup(func() {
 		_, err := db.Exec("DELETE FROM users")
@@ -1065,11 +1206,8 @@ func TestUpdate(t *testing.T) {
 	updatedFirstName := namesgen.Generate()
 	updateTags := namesgen.GenerateMultiple(5)
 	updatedProfilePicture := namesgen.Generate()
-	adminRole := users.AdminRole
-	updatedEmail := namesgen.Generate() + emailSuffix
 	emptyName := ""
 	emptyTags := []string{}
-	allRole := users.AllRole
 
 	cases := []struct {
 		desc    string
@@ -1283,78 +1421,6 @@ func TestUpdate(t *testing.T) {
 			userID: testsutil.GenerateUUID(t),
 			userReq: users.UserReq{
 				ProfilePicture: &updatedProfilePicture,
-			},
-			err: repoerr.ErrNotFound,
-		},
-		{
-			desc:   "update role for enabled user",
-			userID: user1.ID,
-			userReq: users.UserReq{
-				Role: &adminRole,
-			},
-			userRes: users.User{
-				Role: adminRole,
-			},
-			err: nil,
-		},
-		{
-			desc:   "update all role for enabled user",
-			userID: user3.ID,
-			userReq: users.UserReq{
-				Role: &allRole,
-			},
-			userRes: user3,
-			err:     nil,
-		},
-		{
-			desc:   "update role for disabled user",
-			userID: user2.ID,
-			userReq: users.UserReq{
-				Role: &adminRole,
-			},
-			err: repoerr.ErrNotFound,
-		},
-		{
-			desc:   "update role for invalid user",
-			userID: testsutil.GenerateUUID(t),
-			userReq: users.UserReq{
-				Role: &adminRole,
-			},
-			err: repoerr.ErrNotFound,
-		},
-		{
-			desc:   "update email for enabled user",
-			userID: user1.ID,
-			userReq: users.UserReq{
-				Email: &updatedEmail,
-			},
-			userRes: users.User{
-				Email: updatedEmail,
-			},
-			err: nil,
-		},
-		{
-			desc:   "update empty email for enabled user",
-			userID: user3.ID,
-			userReq: users.UserReq{
-				Email: &emptyName,
-			},
-			userRes: user3,
-			err:     nil,
-		},
-		{
-			desc:   "update email for disabled user",
-			userID: user2.ID,
-			userReq: users.UserReq{
-				Email: &updatedEmail,
-			},
-			err: repoerr.ErrNotFound,
-		},
-		{
-			desc:   "update email for invalid user",
-			userID: testsutil.GenerateUUID(t),
-			userReq: users.UserReq{
-				Email: &updatedEmail,
 			},
 			err: repoerr.ErrNotFound,
 		},

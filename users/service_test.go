@@ -776,13 +776,13 @@ func TestUpdateRole(t *testing.T) {
 		repoCall := cRepo.On("CheckSuperAdmin", context.Background(), mock.Anything).Return(tc.checkSuperAdminErr)
 		policyCall := policies.On("AddPolicy", context.Background(), mock.Anything).Return(tc.addPolicyErr)
 		policyCall1 := policies.On("DeletePolicyFilter", context.Background(), mock.Anything).Return(tc.deletePolicyErr)
-		repoCall1 := cRepo.On("Update", context.Background(), mock.Anything, mock.Anything).Return(tc.updateRoleResponse, tc.updateRoleErr)
+		repoCall1 := cRepo.On("UpdateRole", context.Background(), mock.Anything).Return(tc.updateRoleResponse, tc.updateRoleErr)
 
 		updatedUser, err := svc.UpdateRole(context.Background(), tc.session, tc.user)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.updateRoleResponse, updatedUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateRoleResponse, updatedUser))
 		if tc.err == nil {
-			ok := repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything, mock.Anything)
+			ok := repoCall1.Parent.AssertCalled(t, "UpdateRole", context.Background(), mock.Anything, mock.Anything)
 			assert.True(t, ok, fmt.Sprintf("Update was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
@@ -970,12 +970,12 @@ func TestUpdateEmail(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := cRepo.On("CheckSuperAdmin", context.Background(), mock.Anything).Return(tc.checkSuperAdminErr)
-		repoCall1 := cRepo.On("Update", context.Background(), mock.Anything, mock.Anything).Return(tc.updateEmailResponse, tc.updateEmailErr)
+		repoCall1 := cRepo.On("UpdateEmail", context.Background(), mock.Anything).Return(tc.updateEmailResponse, tc.updateEmailErr)
 		updatedUser, err := svc.UpdateEmail(context.Background(), authn.Session{DomainUserID: tc.reqUserID, UserID: validID, DomainID: validID}, tc.id, tc.email)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.updateEmailResponse, updatedUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateEmailResponse, updatedUser))
 		if tc.err == nil {
-			ok := repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything, mock.Anything)
+			ok := repoCall1.Parent.AssertCalled(t, "UpdateEmail", context.Background(), mock.Anything, mock.Anything)
 			assert.True(t, ok, fmt.Sprintf("Update was not called on %s", tc.desc))
 		}
 		repoCall.Unset()

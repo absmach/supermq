@@ -33,7 +33,7 @@ func NewRepository(db postgres.Database) users.Repository {
 func (repo *userRepo) Save(ctx context.Context, c users.User) (users.User, error) {
 	q := `INSERT INTO users (id, tags, email, secret, metadata, created_at, status, role, first_name, last_name, username, profile_picture)
         VALUES (:id, :tags, :email, :secret, :metadata, :created_at, :status, :role, :first_name, :last_name, :username, :profile_picture)
-        RETURNING id, tags, email, metadata, created_at, status, role, first_name, last_name, username, profile_picture`
+        RETURNING id, tags, email, metadata, created_at, status, role, first_name, last_name, username, profile_picture, verified, verified_at`
 
 	dbu, err := toDBUser(c)
 	if err != nil {
@@ -81,7 +81,7 @@ func (repo *userRepo) CheckSuperAdmin(ctx context.Context, adminID string) error
 }
 
 func (repo *userRepo) RetrieveByID(ctx context.Context, id string) (users.User, error) {
-	q := `SELECT id, tags, email, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, username, profile_picture
+	q := `SELECT id, tags, email, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, username, profile_picture, verified, verified_at
         FROM users WHERE id = :id`
 
 	dbu := DBUser{
@@ -127,7 +127,7 @@ func (repo *userRepo) RetrieveAll(ctx context.Context, pm users.Page) (users.Use
 	}
 
 	q := fmt.Sprintf(`SELECT u.id, u.tags, u.email, u.metadata, u.status, u.role, u.first_name, u.last_name, u.username,
-    u.created_at, u.updated_at, u.profile_picture, COALESCE(u.updated_by, '') AS updated_by, u.verified, COALESCE(u.verified_at, '') AS verified_at
+    u.created_at, u.updated_at, u.profile_picture, COALESCE(u.updated_by, '') AS updated_by, u.verified, u.verified_at
     FROM users u %s %s LIMIT :limit OFFSET :offset;`, query, orderClause)
 
 	dbPage, err := ToDBUsersPage(pm)
@@ -177,38 +177,55 @@ func (repo *userRepo) RetrieveAll(ctx context.Context, pm users.Page) (users.Use
 	return page, nil
 }
 
+func (repo *userRepo) RetrieveVerificationToken(ctx context.Context, id string) (users.User, error) {
+	q := `SELECT id, email, status, first_name, last_name, username, role, verified, verified_at, verification_token, verification_token_expires_at
+			FROM users WHERE id = :id`
+	dbu := DBUser{
+		ID: id,
+	}
+
+	rows, err := repo.Repository.DB.NamedQueryContext(ctx, q, dbu)
+	if err != nil {
+		return users.User{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+	}
+	defer rows.Close()
+
+	dbu = DBUser{}
+	if !rows.Next() {
+		return users.User{}, repoerr.ErrNotFound
+
+	}
+
+	if err = rows.StructScan(&dbu); err != nil {
+		return users.User{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+	}
+
+	user, err := ToUser(dbu)
+	if err != nil {
+		return users.User{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
+	}
+
+	return user, nil
+}
+
 func (repo *userRepo) UpdateUsername(ctx context.Context, user users.User) (users.User, error) {
 	q := `UPDATE users SET username = :username, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
-		RETURNING id, tags, metadata, status, created_at, updated_at, updated_by, first_name, last_name, username, email`
+		RETURNING id, tags, metadata, status, created_at, updated_at, updated_by, first_name, last_name, username, email, role, verified, verified_at`
 
-	dbu, err := toDBUser(user)
-	if err != nil {
-		return users.User{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
-	}
+	return repo.update(ctx, user, q)
+}
 
-	row, err := repo.Repository.DB.NamedQueryContext(ctx, q, dbu)
-	if err != nil {
-		return users.User{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
-	}
+func (repo *userRepo) UpdateToUserVerificationDetails(ctx context.Context, user users.User) (users.User, error) {
+	q := `UPDATE users SET
+				verified = :verified, verified_at = :verified_at, updated_at = :updated_at,
+				verification_token = :verification_token, verification_token_expires_at = :verification_token_expires_at
+		WHERE
+			id = :id
+		RETURNING
+			id, tags, email, metadata, status, created_at, updated_at, updated_by, first_name, last_name, username, role, verified, verified_at`
 
-	defer row.Close()
-
-	dbu = DBUser{
-		ID:        user.ID,
-		Username:  stringToNullString(user.Credentials.Username),
-		UpdatedAt: sql.NullTime{Time: time.Now().UTC(), Valid: true},
-	}
-
-	if ok := row.Next(); !ok {
-		return users.User{}, errors.Wrap(repoerr.ErrNotFound, row.Err())
-	}
-
-	if err := row.StructScan(&dbu); err != nil {
-		return users.User{}, err
-	}
-
-	return ToUser(dbu)
+	return repo.update(ctx, user, q)
 }
 
 func (repo *userRepo) Update(ctx context.Context, id string, ur users.UserReq) (users.User, error) {
@@ -231,17 +248,9 @@ func (repo *userRepo) Update(ctx context.Context, id string, ur users.UserReq) (
 		query = append(query, "tags = :tags")
 		u.Tags = *ur.Tags
 	}
-	if ur.Role != nil && *ur.Role != users.AllRole {
-		query = append(query, "role = :role")
-		u.Role = *ur.Role
-	}
 	if ur.ProfilePicture != nil {
 		query = append(query, "profile_picture = :profile_picture")
 		u.ProfilePicture = *ur.ProfilePicture
-	}
-	if ur.Email != nil && *ur.Email != "" {
-		query = append(query, "email = :email")
-		u.Email = *ur.Email
 	}
 	u.UpdatedAt = time.Now().UTC()
 	if ur.UpdatedAt != nil {
@@ -259,7 +268,7 @@ func (repo *userRepo) Update(ctx context.Context, id string, ur users.UserReq) (
 
 	q := fmt.Sprintf(`UPDATE users SET %s
         WHERE id = :id AND status = :status
-        RETURNING id, tags, metadata, status, created_at, updated_at, updated_by, last_name, first_name, username, profile_picture, email, role`, upq)
+        RETURNING id, tags, metadata, status, created_at, updated_at, updated_by, last_name, first_name, username, profile_picture, email, role, verified, verified_at`, upq)
 
 	u.Status = users.EnabledStatus
 	return repo.update(ctx, u, q)
@@ -278,21 +287,37 @@ func (repo *userRepo) update(ctx context.Context, user users.User, query string)
 	defer row.Close()
 
 	dbu = DBUser{}
-	if row.Next() {
-		if err := row.StructScan(&dbu); err != nil {
-			return users.User{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
-		}
-
-		return ToUser(dbu)
+	if !row.Next() {
+		return users.User{}, repoerr.ErrNotFound
 	}
 
-	return users.User{}, repoerr.ErrNotFound
+	if err := row.StructScan(&dbu); err != nil {
+		return users.User{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
+	}
+
+	return ToUser(dbu)
+}
+
+func (repo *userRepo) UpdateEmail(ctx context.Context, user users.User) (users.User, error) {
+	q := `UPDATE users SET email = :email, updated_at = :updated_at, updated_by = :updated_by
+        WHERE id = :id AND status = :status
+        RETURNING id, tags, email, metadata, status, created_at, updated_at, updated_by, first_name, last_name, username, role, verified, verified_at`
+	user.Status = users.EnabledStatus
+	return repo.update(ctx, user, q)
+}
+
+func (repo *userRepo) UpdateRole(ctx context.Context, user users.User) (users.User, error) {
+	q := `UPDATE users SET role = :role, updated_at = :updated_at, updated_by = :updated_by
+        WHERE id = :id AND status = :status
+        RETURNING id, tags, email, metadata, status, created_at, updated_at, updated_by, first_name, last_name, username, role, verified, verified_at`
+	user.Status = users.EnabledStatus
+	return repo.update(ctx, user, q)
 }
 
 func (repo *userRepo) UpdateSecret(ctx context.Context, user users.User) (users.User, error) {
 	q := `UPDATE users SET secret = :secret, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
-        RETURNING id, tags, email, metadata, status, created_at, updated_at, updated_by, first_name, last_name, username`
+        RETURNING id, tags, email, metadata, status, created_at, updated_at, updated_by, first_name, last_name, username, role, verified, verified_at`
 	user.Status = users.EnabledStatus
 	return repo.update(ctx, user, q)
 }
@@ -300,7 +325,7 @@ func (repo *userRepo) UpdateSecret(ctx context.Context, user users.User) (users.
 func (repo *userRepo) ChangeStatus(ctx context.Context, user users.User) (users.User, error) {
 	q := `UPDATE users SET status = :status, updated_at = :updated_at, updated_by = :updated_by
 		WHERE id = :id
-        RETURNING id, tags, email, metadata, status, created_at, updated_at, updated_by, first_name, last_name, username`
+        RETURNING id, tags, email, metadata, status, created_at, updated_at, updated_by, first_name, last_name, username, role, verified, verified_at`
 
 	return repo.update(ctx, user, q)
 }
@@ -320,7 +345,6 @@ func (repo *userRepo) Delete(ctx context.Context, id string) error {
 }
 
 func (repo *userRepo) SearchUsers(ctx context.Context, pm users.Page) (users.UsersPage, error) {
-	pm.Verified = true
 	query, err := PageQuery(pm)
 	if err != nil {
 		return users.UsersPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
@@ -435,7 +459,7 @@ func (repo *userRepo) RetrieveAllByIDs(ctx context.Context, pm users.Page) (user
 }
 
 func (repo *userRepo) RetrieveByEmail(ctx context.Context, email string) (users.User, error) {
-	q := `SELECT id, tags, email, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, username
+	q := `SELECT id, tags, email, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, username, verified, verified_at
         FROM users WHERE email = :email AND status = :status`
 
 	dbu := DBUser{
@@ -462,7 +486,7 @@ func (repo *userRepo) RetrieveByEmail(ctx context.Context, email string) (users.
 }
 
 func (repo *userRepo) RetrieveByUsername(ctx context.Context, username string) (users.User, error) {
-	q := `SELECT id, tags, email, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, username
+	q := `SELECT id, tags, email, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, username, verified, verified_at
 		FROM users WHERE username = :username AND status = :status`
 
 	dbu := DBUser{
@@ -489,24 +513,26 @@ func (repo *userRepo) RetrieveByUsername(ctx context.Context, username string) (
 }
 
 type DBUser struct {
-	ID             string           `db:"id"`
-	Domain         string           `db:"domain_id"`
-	Secret         string           `db:"secret"`
-	Metadata       []byte           `db:"metadata,omitempty"`
-	Tags           pgtype.TextArray `db:"tags,omitempty"` // Tags
-	CreatedAt      time.Time        `db:"created_at,omitempty"`
-	UpdatedAt      sql.NullTime     `db:"updated_at,omitempty"`
-	UpdatedBy      *string          `db:"updated_by,omitempty"`
-	Groups         []groups.Group   `db:"groups,omitempty"`
-	Status         users.Status     `db:"status,omitempty"`
-	Role           *users.Role      `db:"role,omitempty"`
-	Username       sql.NullString   `db:"username, omitempty"`
-	FirstName      sql.NullString   `db:"first_name, omitempty"`
-	LastName       sql.NullString   `db:"last_name, omitempty"`
-	ProfilePicture sql.NullString   `db:"profile_picture, omitempty"`
-	Email          string           `db:"email,omitempty"`
-	Verified       bool             `db:"verified"`
-	VerifiedAt     sql.NullTime     `db:"verified,omitempty"`
+	ID                         string           `db:"id"`
+	Domain                     string           `db:"domain_id"`
+	Secret                     string           `db:"secret"`
+	Metadata                   []byte           `db:"metadata,omitempty"`
+	Tags                       pgtype.TextArray `db:"tags,omitempty"` // Tags
+	CreatedAt                  time.Time        `db:"created_at,omitempty"`
+	UpdatedAt                  sql.NullTime     `db:"updated_at,omitempty"`
+	UpdatedBy                  *string          `db:"updated_by,omitempty"`
+	Groups                     []groups.Group   `db:"groups,omitempty"`
+	Status                     users.Status     `db:"status,omitempty"`
+	Role                       *users.Role      `db:"role,omitempty"`
+	Username                   sql.NullString   `db:"username, omitempty"`
+	FirstName                  sql.NullString   `db:"first_name, omitempty"`
+	LastName                   sql.NullString   `db:"last_name, omitempty"`
+	ProfilePicture             sql.NullString   `db:"profile_picture, omitempty"`
+	Email                      string           `db:"email,omitempty"`
+	Verified                   bool             `db:"verified"`
+	VerifiedAt                 sql.NullTime     `db:"verified_at,omitempty"`
+	VerificationToken          sql.NullString   `db:"verification_token,omitempty"`
+	VerificationTokenExpiresAt sql.NullTime     `db:"verification_token_expires_at,omitempty"`
 }
 
 func toDBUser(u users.User) (DBUser, error) {
@@ -535,22 +561,30 @@ func toDBUser(u users.User) (DBUser, error) {
 		verifiedAt = sql.NullTime{Time: u.VerifiedAt, Valid: true}
 	}
 
+	var verificationTokenExpiresAt sql.NullTime
+	if u.VerificationTokenExpiresAt != (time.Time{}) {
+		verificationTokenExpiresAt = sql.NullTime{Time: u.VerificationTokenExpiresAt, Valid: true}
+	}
+
 	return DBUser{
-		ID:             u.ID,
-		Tags:           tags,
-		Secret:         u.Credentials.Secret,
-		Metadata:       data,
-		CreatedAt:      u.CreatedAt,
-		UpdatedAt:      updatedAt,
-		UpdatedBy:      updatedBy,
-		Status:         u.Status,
-		Role:           &u.Role,
-		LastName:       stringToNullString(u.LastName),
-		FirstName:      stringToNullString(u.FirstName),
-		Username:       stringToNullString(u.Credentials.Username),
-		ProfilePicture: stringToNullString(u.ProfilePicture),
-		Email:          u.Email,
-		VerifiedAt:     verifiedAt,
+		ID:                         u.ID,
+		Tags:                       tags,
+		Secret:                     u.Credentials.Secret,
+		Metadata:                   data,
+		CreatedAt:                  u.CreatedAt,
+		UpdatedAt:                  updatedAt,
+		UpdatedBy:                  updatedBy,
+		Status:                     u.Status,
+		Role:                       &u.Role,
+		LastName:                   stringToNullString(u.LastName),
+		FirstName:                  stringToNullString(u.FirstName),
+		Username:                   stringToNullString(u.Credentials.Username),
+		ProfilePicture:             stringToNullString(u.ProfilePicture),
+		Email:                      u.Email,
+		Verified:                   u.Verified,
+		VerifiedAt:                 verifiedAt,
+		VerificationToken:          stringToNullString(u.VerificationToken),
+		VerificationTokenExpiresAt: verificationTokenExpiresAt,
 	}, nil
 }
 
@@ -578,6 +612,11 @@ func ToUser(dbu DBUser) (users.User, error) {
 		verifiedAt = dbu.UpdatedAt.Time.UTC()
 	}
 
+	var verificationTokenExpiresAt time.Time
+	if dbu.VerificationTokenExpiresAt.Valid {
+		verificationTokenExpiresAt = dbu.VerificationTokenExpiresAt.Time.UTC()
+	}
+
 	user := users.User{
 		ID:        dbu.ID,
 		FirstName: nullStringString(dbu.FirstName),
@@ -586,16 +625,18 @@ func ToUser(dbu DBUser) (users.User, error) {
 			Username: nullStringString(dbu.Username),
 			Secret:   dbu.Secret,
 		},
-		Email:          dbu.Email,
-		Metadata:       metadata,
-		CreatedAt:      dbu.CreatedAt.UTC(),
-		UpdatedAt:      updatedAt,
-		UpdatedBy:      updatedBy,
-		Status:         dbu.Status,
-		Tags:           tags,
-		ProfilePicture: nullStringString(dbu.ProfilePicture),
-		Verified:       dbu.Verified,
-		VerifiedAt:     verifiedAt,
+		Email:                      dbu.Email,
+		Metadata:                   metadata,
+		CreatedAt:                  dbu.CreatedAt.UTC(),
+		UpdatedAt:                  updatedAt,
+		UpdatedBy:                  updatedBy,
+		Status:                     dbu.Status,
+		Tags:                       tags,
+		ProfilePicture:             nullStringString(dbu.ProfilePicture),
+		Verified:                   dbu.Verified,
+		VerifiedAt:                 verifiedAt,
+		VerificationToken:          nullStringString(dbu.VerificationToken),
+		VerificationTokenExpiresAt: verificationTokenExpiresAt,
 	}
 	if dbu.Role != nil {
 		user.Role = *dbu.Role
@@ -650,10 +691,6 @@ func PageQuery(pm users.Page) (string, error) {
 	}
 
 	var query []string
-	if pm.Verified {
-		query = append(query, "verified = true")
-
-	}
 	if pm.FirstName != "" {
 		query = append(query, "first_name ILIKE '%' || :first_name || '%'")
 	}

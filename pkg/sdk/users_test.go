@@ -37,14 +37,14 @@ var (
 	domainID = "c717fa97-ffd9-40cb-8cf9-7c2859059395"
 )
 
-func setupUsers() (*httptest.Server, *umocks.Service, *authnmocks.Authentication) {
+func setupUsers() (*httptest.Server, *umocks.Service, *authnmocks.Authn) {
 	usvc := new(umocks.Service)
 	logger := smqlog.NewMock()
 	mux := chi.NewRouter()
 	idp := uuid.NewMock()
 	provider := new(oauth2mocks.Provider)
 	provider.On("Name").Return("test")
-	authn := new(authnmocks.Authentication)
+	authn := authnmocks.NewAuthn(&testing.T{})
 	token := new(authmocks.TokenServiceClient)
 	httpapi.MakeHandler(usvc, authn, token, true, mux, logger, "", passRegex, idp, provider)
 
