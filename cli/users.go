@@ -10,420 +10,465 @@ import (
 	"strconv"
 
 	smqsdk "github.com/absmach/supermq/pkg/sdk"
-	"github.com/absmach/supermq/users"
+	smqusers "github.com/absmach/supermq/users"
 	"github.com/spf13/cobra"
 )
 
-var cmdUsers = []cobra.Command{
-	{
-		Use:   "create <first_name> <last_name> <email> <username> <password> <user_auth_token>",
-		Short: "Create user",
-		Long: "Create user with provided firstname, lastname, email, username and password. Token is optional\n" +
-			"For example:\n" +
-			"\tsupermq-cli users create jane doe janedoe@example.com jane_doe 12345678 $USER_AUTH_TOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) < 5 || len(args) > 6 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			if len(args) == 5 {
-				args = append(args, "")
-			}
+const (
+	token                = "token"
+	refreshtoken         = "refreshtoken"
+	profile              = "profile"
+	resetpasswordrequest = "resetpasswordrequest"
+	resetpassword        = "resetpassword"
+	password             = "password"
+	search               = "search"
+	username             = "username"
+	email                = "email"
+	role                 = "role"
 
-			user := smqsdk.User{
-				FirstName: args[0],
-				LastName:  args[1],
-				Email:     args[2],
-				Credentials: smqsdk.Credentials{
-					Username: args[3],
-					Secret:   args[4],
-				},
-				Status: users.EnabledStatus.String(),
-			}
-			user, err := sdk.CreateUser(cmd.Context(), user, args[5])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
+	// Usage strings for user operations.
+	usageUserCreate           = "cli users create <first_name> <last_name> <email> <username> <password> [user_auth_token]"
+	usageUserGet              = "cli users <user_id|all> get <user_auth_token>"
+	usageUserToken            = "cli users token <username> <password>"
+	usageUserRefreshToken     = "cli users refreshtoken <token>"
+	usageUserUpdate           = "cli users <user_id> update <JSON_string> <user_auth_token>"
+	usageUserUpdateTags       = "cli users <user_id> update tags <tags> <user_auth_token>"
+	usageUserUpdateUsername   = "cli users <user_id> update username <username> <user_auth_token>"
+	usageUserUpdateEmail      = "cli users <user_id> update email <email> <user_auth_token>"
+	usageUserUpdateRole       = "cli users <user_id> update role <role> <user_auth_token>"
+	usageUserProfile          = "cli users profile <user_auth_token>"
+	usageUserResetPasswordReq = "cli users resetpasswordrequest <email>"
+	usageUserResetPassword    = "cli users resetpassword <password> <confpass> <password_request_token>"
+	usageUserPassword         = "cli users password <old_password> <password> <user_auth_token>"
+	usageUserEnable           = "cli users <user_id> enable <user_auth_token>"
+	usageUserDisable          = "cli users <user_id> disable <user_auth_token>"
+	usageUserDelete           = "cli users <user_id> delete <user_auth_token>"
+	usageUserSearch           = "cli users search <query> <user_auth_token>"
+)
 
-			logJSONCmd(*cmd, user)
-		},
-	},
-	{
-		Use:   "get [all | <user_id> ] <user_auth_token>",
-		Short: "Get users",
-		Long: "Get all users or get user by id. Users can be filtered by name or metadata or status\n" +
-			"Usage:\n" +
-			"\tsupermq-cli users get all <user_auth_token> - lists all users\n" +
-			"\tsupermq-cli users get all <user_auth_token> --offset <offset> --limit <limit> - lists all users with provided offset and limit\n" +
-			"\tsupermq-cli users get <user_id> <user_auth_token> - shows user with provided <user_id>\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 2 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			metadata, err := convertMetadata(Metadata)
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			pageMetadata := smqsdk.PageMetadata{
-				Username: Username,
-				Identity: Identity,
-				Offset:   Offset,
-				Limit:    Limit,
-				Metadata: metadata,
-				Status:   Status,
-			}
-			if args[0] == all {
-				l, err := sdk.Users(cmd.Context(), pageMetadata, args[1])
-				if err != nil {
-					logErrorCmd(*cmd, err)
-					return
-				}
-				logJSONCmd(*cmd, l)
-				return
-			}
-			u, err := sdk.User(cmd.Context(), args[0], args[1])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
+func NewUsersCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "users <user_id_or_all> <operation> [args...]",
+		Short: "Users management",
+		Long: `Format: <user_id|all> <operation> [additional_args...]
 
-			logJSONCmd(*cmd, u)
-		},
-	},
-	{
-		Use:   "token <username> <password>",
-		Short: "Get token",
-		Long: "Generate a new token with username and password\n" +
-			"For example:\n" +
-			"\tsupermq-cli users token jane.doe 12345678\n",
+Examples:
+  users all get <user_auth_token>                                       					# Get all entities
+  users <user_id> get <user_auth_token>                                 					# Get specific entity
+  users <user_id> update <JSON_string> <user_auth_token>                					# Update entity
+  users <user_id> update tags <tags> <user_auth_token>                  					# Update entity tags
+  users <user_id> update username <username> <user_auth_token>          					# Update username
+  users <user_id> update email <email> <user_auth_token>                					# Update email
+  users <user_id> enable <user_auth_token>                              					# Enable entity
+  users <user_id> disable <user_auth_token>                             					# Disable entity
+  users <user_id> delete <user_auth_token>                              					# Delete entity
+  users create <first_name> <last_name> <email> <username> <password> [user_auth_token]  	# Create entity
+  users token <username> <password>                                     					# Get token
+  users profile <user_auth_token>                                       					# Get entity profile
+  users search <query> <user_auth_token>                                					# Search entities`,
+
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 2 {
+			if len(args) < 2 {
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
 
-			loginReq := smqsdk.Login{
-				Username: args[0],
-				Password: args[1],
-			}
-
-			token, err := sdk.CreateToken(cmd.Context(), loginReq)
-			if err != nil {
-				logErrorCmd(*cmd, err)
+			switch args[0] {
+			case create:
+				handleUserCreate(cmd, args[1:])
+				return
+			case token:
+				handleUserToken(cmd, args[1], args[2:])
+				return
+			case refreshtoken:
+				handleUserRefreshToken(cmd, args[1], args[2:])
+				return
+			case profile:
+				handleUserProfile(cmd, args[1], args[2:])
+				return
+			case resetpasswordrequest:
+				handleUserResetPasswordRequest(cmd, args[1], args[2:])
+				return
+			case resetpassword:
+				handleUserResetPassword(cmd, args[1], args[2:])
+				return
+			case password:
+				handleUserPassword(cmd, args[1], args[2:])
+				return
+			case search:
+				handleUserSearch(cmd, args[1], args[2:])
 				return
 			}
 
-			logJSONCmd(*cmd, token)
+			userParams := args[0]
+			operation := args[1]
+			opArgs := args[2:]
+
+			switch operation {
+			case get:
+				handleUserGet(cmd, userParams, opArgs)
+			case update:
+				handleUserUpdate(cmd, userParams, opArgs)
+			case enable:
+				handleUserEnable(cmd, userParams, opArgs)
+			case disable:
+				handleUserDisable(cmd, userParams, opArgs)
+			case delete:
+				handleUserDelete(cmd, userParams, opArgs)
+			default:
+				logErrorCmd(*cmd, fmt.Errorf("unknown operation: %s", operation))
+			}
 		},
-	},
+	}
 
-	{
-		Use:   "refreshtoken <token>",
-		Short: "Get token",
-		Long: "Generate new token from refresh token\n" +
-			"For example:\n" +
-			"\tsupermq-cli users refreshtoken <refresh_token>\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 1 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			token, err := sdk.RefreshToken(cmd.Context(), args[0])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, token)
-		},
-	},
-	{
-		Use:   "update [<user_id> <JSON_string> | tags <user_id> <tags> | username <user_id> <username> | email <user_id> <email>] <user_auth_token>",
-		Short: "Update user",
-		Long: "Updates either user name and metadata or user tags or user email\n" +
-			"Usage:\n" +
-			"\tsupermq-cli users update <user_id> '{\"first_name\":\"new first_name\", \"metadata\":{\"key\": \"value\"}}' $USERTOKEN - updates user first and lastname and metadata\n" +
-			"\tsupermq-cli users update tags <user_id> '[\"tag1\", \"tag2\"]' $USERTOKEN - updates user tags\n" +
-			"\tsupermq-cli users update username <user_id> newusername $USERTOKEN - updates user name\n" +
-			"\tsupermq-cli users update email <user_id> newemail@example.com $USERTOKEN - updates user email\n",
-
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 4 && len(args) != 3 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			var user smqsdk.User
-			if args[0] == "tags" {
-				if err := json.Unmarshal([]byte(args[2]), &user.Tags); err != nil {
-					logErrorCmd(*cmd, err)
-					return
-				}
-				user.ID = args[1]
-				user, err := sdk.UpdateUserTags(cmd.Context(), user, args[3])
-				if err != nil {
-					logErrorCmd(*cmd, err)
-					return
-				}
-
-				logJSONCmd(*cmd, user)
-				return
-			}
-
-			if args[0] == "email" {
-				user.ID = args[1]
-				user.Email = args[2]
-				user, err := sdk.UpdateUserEmail(cmd.Context(), user, args[3])
-				if err != nil {
-					logErrorCmd(*cmd, err)
-					return
-				}
-				logJSONCmd(*cmd, user)
-				return
-			}
-
-			if args[0] == "username" {
-				user.ID = args[1]
-				user.Credentials.Username = args[2]
-				user, err := sdk.UpdateUsername(cmd.Context(), user, args[3])
-				if err != nil {
-					logErrorCmd(*cmd, err)
-					return
-				}
-
-				logJSONCmd(*cmd, user)
-				return
-
-			}
-
-			if args[0] == "role" {
-				user.ID = args[1]
-				user.Role = args[2]
-				user, err := sdk.UpdateUserRole(cmd.Context(), user, args[3])
-				if err != nil {
-					logErrorCmd(*cmd, err)
-					return
-				}
-
-				logJSONCmd(*cmd, user)
-				return
-
-			}
-
-			if err := json.Unmarshal([]byte(args[1]), &user); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			user.ID = args[0]
-			user, err := sdk.UpdateUser(cmd.Context(), user, args[2])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, user)
-		},
-	},
-	{
-		Use:   "profile <user_auth_token>",
-		Short: "Get user profile",
-		Long: "Get user profile\n" +
-			"Usage:\n" +
-			"\tsupermq-cli users profile $USERTOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 1 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			user, err := sdk.UserProfile(cmd.Context(), args[0])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, user)
-		},
-	},
-	{
-		Use:   "resetpasswordrequest <email>",
-		Short: "Send reset password request",
-		Long: "Send reset password request\n" +
-			"Usage:\n" +
-			"\tsupermq-cli users resetpasswordrequest example@mail.com\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 1 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			if err := sdk.ResetPasswordRequest(cmd.Context(), args[0]); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logOKCmd(*cmd)
-		},
-	},
-	{
-		Use:   "resetpassword <password> <confpass> <password_request_token>",
-		Short: "Reset password",
-		Long: "Reset password\n" +
-			"Usage:\n" +
-			"\tsupermq-cli users resetpassword 12345678 12345678 $REQUESTTOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			if err := sdk.ResetPassword(cmd.Context(), args[0], args[1], args[2]); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logOKCmd(*cmd)
-		},
-	},
-	{
-		Use:   "password <old_password> <password> <user_auth_token>",
-		Short: "Update password",
-		Long: "Update password\n" +
-			"Usage:\n" +
-			"\tsupermq-cli users password old_password new_password $USERTOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			user, err := sdk.UpdatePassword(cmd.Context(), args[0], args[1], args[2])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, user)
-		},
-	},
-	{
-		Use:   "enable <user_id> <user_auth_token>",
-		Short: "Change user status to enabled",
-		Long: "Change user status to enabled\n" +
-			"Usage:\n" +
-			"\tsupermq-cli users enable <user_id> <user_auth_token>\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 2 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			user, err := sdk.EnableUser(cmd.Context(), args[0], args[1])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, user)
-		},
-	},
-	{
-		Use:   "disable <user_id> <user_auth_token>",
-		Short: "Change user status to disabled",
-		Long: "Change user status to disabled\n" +
-			"Usage:\n" +
-			"\tsupermq-cli users disable <user_id> <user_auth_token>\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 2 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			user, err := sdk.DisableUser(cmd.Context(), args[0], args[1])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, user)
-		},
-	},
-	{
-		Use:   "delete <user_id> <user_auth_token>",
-		Short: "Delete user",
-		Long: "Delete user by id\n" +
-			"Usage:\n" +
-			"\tsupermq-cli users delete <user_id> $USERTOKEN - delete user with <user_id>\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 2 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			if err := sdk.DeleteUser(cmd.Context(), args[0], args[1]); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			logOKCmd(*cmd)
-		},
-	},
-	{
-		Use:   "search <query> <user_auth_token>",
-		Short: "Search users",
-		Long: "Search users by query\n" +
-			"Usage:\n" +
-			"\tsupermq-cli users search <query> <user_auth_token>\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 2 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			values, err := url.ParseQuery(args[0])
-			if err != nil {
-				logErrorCmd(*cmd, fmt.Errorf("failed to parse query: %s", err))
-			}
-
-			pm := smqsdk.PageMetadata{
-				Offset: Offset,
-				Limit:  Limit,
-				Name:   values.Get("name"),
-				ID:     values.Get("id"),
-			}
-
-			if off, err := strconv.Atoi(values.Get("offset")); err == nil {
-				pm.Offset = uint64(off)
-			}
-
-			if lim, err := strconv.Atoi(values.Get("limit")); err == nil {
-				pm.Limit = uint64(lim)
-			}
-
-			users, err := sdk.SearchUsers(cmd.Context(), pm, args[1])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, users)
-		},
-	},
+	return cmd
 }
 
-// NewUsersCmd returns users command.
-func NewUsersCmd() *cobra.Command {
-	cmd := cobra.Command{
-		Use:   "users [create | get | update | token | password | enable | disable | delete | channels | clients | groups | search]",
-		Short: "Users management",
-		Long:  `Users management: create accounts and tokens"`,
+func handleUserCreate(cmd *cobra.Command, args []string) {
+	if len(args) < 5 || len(args) > 6 {
+		logUsageCmd(*cmd, usageUserCreate)
+		return
+	}
+	if len(args) == 5 {
+		args = append(args, "")
 	}
 
-	for i := range cmdUsers {
-		cmd.AddCommand(&cmdUsers[i])
+	user := smqsdk.User{
+		FirstName: args[0],
+		LastName:  args[1],
+		Email:     args[2],
+		Credentials: smqsdk.Credentials{
+			Username: args[3],
+			Secret:   args[4],
+		},
+		Status: smqusers.EnabledStatus.String(),
+	}
+	user, err := sdk.CreateUser(cmd.Context(), user, args[5])
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
 	}
 
-	return &cmd
+	logJSONCmd(*cmd, user)
+}
+
+func handleUserGet(cmd *cobra.Command, userParams string, args []string) {
+	if len(args) != 1 {
+		logUsageCmd(*cmd, usageUserGet)
+		return
+	}
+
+	if userParams == all {
+		metadata, err := convertMetadata(Metadata)
+		if err != nil {
+			logErrorCmd(*cmd, err)
+			return
+		}
+
+		pageMetadata := smqsdk.PageMetadata{
+			Username: Username,
+			Identity: Identity,
+			Offset:   Offset,
+			Limit:    Limit,
+			Metadata: metadata,
+			Status:   Status,
+		}
+
+		l, err := sdk.Users(cmd.Context(), pageMetadata, args[0])
+		if err != nil {
+			logErrorCmd(*cmd, err)
+			return
+		}
+		logJSONCmd(*cmd, l)
+		return
+	}
+
+	u, err := sdk.User(cmd.Context(), userParams, args[0])
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, u)
+}
+
+func handleUserUpdate(cmd *cobra.Command, userID string, args []string) {
+	if len(args) < 2 || len(args) > 3 {
+		if len(args) >= 1 {
+			switch args[0] {
+			case tags:
+				logUsageCmd(*cmd, usageUserUpdateTags)
+				return
+			case username:
+				logUsageCmd(*cmd, usageUserUpdateUsername)
+				return
+			case email:
+				logUsageCmd(*cmd, usageUserUpdateEmail)
+				return
+			case role:
+				logUsageCmd(*cmd, usageUserUpdateRole)
+				return
+			}
+		}
+		logUsageCmd(*cmd, usageUserUpdate)
+		return
+	}
+
+	var user smqsdk.User
+	if args[0] == "tags" {
+		if len(args) != 3 {
+			logUsageCmd(*cmd, usageUserUpdateTags)
+			return
+		}
+		if err := json.Unmarshal([]byte(args[1]), &user.Tags); err != nil {
+			logErrorCmd(*cmd, err)
+			return
+		}
+		user.ID = userID
+		user, err := sdk.UpdateUserTags(cmd.Context(), user, args[2])
+		if err != nil {
+			logErrorCmd(*cmd, err)
+			return
+		}
+		logJSONCmd(*cmd, user)
+		return
+	}
+
+	if args[0] == "email" {
+		if len(args) != 3 {
+			logUsageCmd(*cmd, usageUserUpdateEmail)
+			return
+		}
+		user.ID = userID
+		user.Email = args[1]
+		user, err := sdk.UpdateUserEmail(cmd.Context(), user, args[2])
+		if err != nil {
+			logErrorCmd(*cmd, err)
+			return
+		}
+		logJSONCmd(*cmd, user)
+		return
+	}
+
+	if args[0] == "username" {
+		if len(args) != 3 {
+			logUsageCmd(*cmd, usageUserUpdateUsername)
+			return
+		}
+		user.ID = userID
+		user.Credentials.Username = args[1]
+		user, err := sdk.UpdateUsername(cmd.Context(), user, args[2])
+		if err != nil {
+			logErrorCmd(*cmd, err)
+			return
+		}
+		logJSONCmd(*cmd, user)
+		return
+	}
+
+	if args[0] == "role" {
+		if len(args) != 3 {
+			logUsageCmd(*cmd, usageUserUpdateRole)
+			return
+		}
+		user.ID = userID
+		user.Role = args[1]
+		user, err := sdk.UpdateUserRole(cmd.Context(), user, args[2])
+		if err != nil {
+			logErrorCmd(*cmd, err)
+			return
+		}
+		logJSONCmd(*cmd, user)
+		return
+	}
+
+	if len(args) != 2 {
+		logUsageCmd(*cmd, usageUserUpdate)
+		return
+	}
+
+	if err := json.Unmarshal([]byte(args[0]), &user); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+	user.ID = userID
+	user, err := sdk.UpdateUser(cmd.Context(), user, args[1])
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, user)
+}
+
+func handleUserEnable(cmd *cobra.Command, userID string, args []string) {
+	if len(args) != 1 {
+		logUsageCmd(*cmd, usageUserEnable)
+		return
+	}
+
+	user, err := sdk.EnableUser(cmd.Context(), userID, args[0])
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, user)
+}
+
+func handleUserDisable(cmd *cobra.Command, userID string, args []string) {
+	if len(args) != 1 {
+		logUsageCmd(*cmd, usageUserDisable)
+		return
+	}
+
+	user, err := sdk.DisableUser(cmd.Context(), userID, args[0])
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, user)
+}
+
+func handleUserDelete(cmd *cobra.Command, userID string, args []string) {
+	if len(args) != 1 {
+		logUsageCmd(*cmd, usageUserDelete)
+		return
+	}
+
+	if err := sdk.DeleteUser(cmd.Context(), userID, args[0]); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+	logOKCmd(*cmd)
+}
+
+func handleUserToken(cmd *cobra.Command, username string, args []string) {
+	if len(args) != 1 {
+		logUsageCmd(*cmd, usageUserToken)
+		return
+	}
+
+	loginReq := smqsdk.Login{
+		Username: username,
+		Password: args[0],
+	}
+
+	token, err := sdk.CreateToken(cmd.Context(), loginReq)
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, token)
+}
+
+func handleUserRefreshToken(cmd *cobra.Command, refreshToken string, args []string) {
+	if len(args) != 0 {
+		logUsageCmd(*cmd, usageUserRefreshToken)
+		return
+	}
+
+	token, err := sdk.RefreshToken(cmd.Context(), refreshToken)
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, token)
+}
+
+func handleUserProfile(cmd *cobra.Command, token string, args []string) {
+	if len(args) != 0 {
+		logUsageCmd(*cmd, usageUserProfile)
+		return
+	}
+
+	user, err := sdk.UserProfile(cmd.Context(), token)
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, user)
+}
+
+func handleUserResetPasswordRequest(cmd *cobra.Command, email string, args []string) {
+	if len(args) != 0 {
+		logUsageCmd(*cmd, usageUserResetPasswordReq)
+		return
+	}
+
+	if err := sdk.ResetPasswordRequest(cmd.Context(), email); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logOKCmd(*cmd)
+}
+
+func handleUserResetPassword(cmd *cobra.Command, password string, args []string) {
+	if len(args) != 2 {
+		logUsageCmd(*cmd, usageUserResetPassword)
+		return
+	}
+
+	if err := sdk.ResetPassword(cmd.Context(), password, args[0], args[1]); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logOKCmd(*cmd)
+}
+
+func handleUserPassword(cmd *cobra.Command, oldPassword string, args []string) {
+	if len(args) != 2 {
+		logUsageCmd(*cmd, usageUserPassword)
+		return
+	}
+
+	user, err := sdk.UpdatePassword(cmd.Context(), oldPassword, args[0], args[1])
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, user)
+}
+
+func handleUserSearch(cmd *cobra.Command, query string, args []string) {
+	if len(args) != 1 {
+		logUsageCmd(*cmd, usageUserSearch)
+		return
+	}
+
+	values, err := url.ParseQuery(query)
+	if err != nil {
+		logErrorCmd(*cmd, fmt.Errorf("failed to parse query: %s", err))
+		return
+	}
+
+	pm := smqsdk.PageMetadata{
+		Offset: Offset,
+		Limit:  Limit,
+		Name:   values.Get("name"),
+		ID:     values.Get("id"),
+	}
+
+	if off, err := strconv.Atoi(values.Get("offset")); err == nil {
+		pm.Offset = uint64(off)
+	}
+
+	if lim, err := strconv.Atoi(values.Get("limit")); err == nil {
+		pm.Limit = uint64(lim)
+	}
+
+	users, err := sdk.SearchUsers(cmd.Context(), pm, args[0])
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, users)
 }

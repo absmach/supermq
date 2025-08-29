@@ -5,200 +5,220 @@ package cli
 
 import (
 	"encoding/json"
+	"fmt"
 
 	smqsdk "github.com/absmach/supermq/pkg/sdk"
 	"github.com/spf13/cobra"
 )
 
-const all = "all"
+const (
+	all     = "all"
+	create  = "create"
+	get     = "get"
+	update  = "update"
+	delete  = "delete"
+	enable  = "enable"
+	disable = "disable"
+	users   = "users"
 
-var cmdChannels = []cobra.Command{
-	{
-		Use:   "create <JSON_channel> <domain_id> <user_auth_token>",
-		Short: "Create channel",
-		Long:  `Creates new channel and generates it's UUID`,
+	usageCreate  = "cli channels <channel_id> create <JSON_channel> <domain_id> <user_auth_token>"
+	usageGet     = "cli channels <channel_id|all> get <domain_id> <user_auth_token>"
+	usageUpdate  = "cli channels <channel_id> update <JSON_string> <domain_id> <user_auth_token>"
+	usageDelete  = "cli channels <channel_id> delete <domain_id> <user_auth_token>"
+	usageEnable  = "cli channels <channel_id> enable <domain_id> <user_auth_token>"
+	usageDisable = "cli channels <channel_id> disable <domain_id> <user_auth_token>"
+	usageUsers   = "cli channels <channel_id> users <domain_id> <user_auth_token>"
+)
+
+func NewChannelsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "channels <channel_id_or_all> <operation> [args...]",
+		Short: "Channels management",
+		Long: `Format: <channel_id|all> <operation> [additional_args...]
+
+Examples:
+  channels all get <domain_id> <user_auth_token>                   				# Get all entities
+  channels <channel_id> get <domain_id> <user_auth_token>          				# Get specific entity
+  channels <channel_id> create <JSON_channel> <domain_id> <user_auth_token> 	# Create entity
+  channels <channel_id> update <JSON_string> <domain_id> <user_auth_token>  	# Update entity
+  channels <channel_id> delete <domain_id> <user_auth_token>      				# Delete entity
+  channels <channel_id> enable <domain_id> <user_auth_token>      				# Enable entity
+  channels <channel_id> disable <domain_id> <user_auth_token>     				# Disable entity
+  channels <channel_id> users <domain_id> <user_auth_token>       				# List entity users`,
+
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
+			if len(args) < 2 {
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
+			channelParams := args[0]
+			operation := args[1]
+			opArgs := args[2:]
 
-			var channel smqsdk.Channel
-			if err := json.Unmarshal([]byte(args[0]), &channel); err != nil {
-				logErrorCmd(*cmd, err)
-				return
+			switch operation {
+			case create:
+				handleCreate(cmd, channelParams, opArgs)
+			case get:
+				handleGet(cmd, channelParams, opArgs)
+			case update:
+				handleUpdate(cmd, channelParams, opArgs)
+			case delete:
+				handleDelete(cmd, channelParams, opArgs)
+			case enable:
+				handleEnable(cmd, channelParams, opArgs)
+			case disable:
+				handleDisable(cmd, channelParams, opArgs)
+			case users:
+				handleUsers(cmd, channelParams, opArgs)
+			default:
+				logErrorCmd(*cmd, fmt.Errorf("unknown operation: %s", operation))
 			}
-
-			channel, err := sdk.CreateChannel(cmd.Context(), channel, args[1], args[2])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, channel)
 		},
-	},
-	{
-		Use:   "get [all | <channel_id>] <domain_id> <user_auth_token>",
-		Short: "Get channel",
-		Long: `Get all channels or get channel by id. Channels can be filtered by name or metadata.
-		all - lists all channels
-		<channel_id> - shows client with provided <channel_id>`,
+	}
 
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			metadata, err := convertMetadata(Metadata)
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			pageMetadata := smqsdk.PageMetadata{
-				Name:     "",
-				Offset:   Offset,
-				Limit:    Limit,
-				Metadata: metadata,
-			}
-
-			if args[0] == all {
-				l, err := sdk.Channels(cmd.Context(), pageMetadata, args[1], args[2])
-				if err != nil {
-					logErrorCmd(*cmd, err)
-					return
-				}
-
-				logJSONCmd(*cmd, l)
-				return
-			}
-			c, err := sdk.Channel(cmd.Context(), args[0], args[1], args[2])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, c)
-		},
-	},
-	{
-		Use:   "delete <channel_id> <domain_id> <user_auth_token>",
-		Short: "Delete channel",
-		Long: "Delete channel by id.\n" +
-			"Usage:\n" +
-			"\tsupermq-cli channels delete <channel_id> $DOMAINID $USERTOKEN - delete the given channel ID\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			if err := sdk.DeleteChannel(cmd.Context(), args[0], args[1], args[2]); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			logOKCmd(*cmd)
-		},
-	},
-	{
-		Use:   "update <channel_id> <JSON_string> <domain_id> <user_auth_token>",
-		Short: "Update channel",
-		Long:  `Updates channel record`,
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 4 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			var channel smqsdk.Channel
-			if err := json.Unmarshal([]byte(args[1]), &channel); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			channel.ID = args[0]
-			channel, err := sdk.UpdateChannel(cmd.Context(), channel, args[2], args[3])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, channel)
-		},
-	},
-	{
-		Use:   "enable <channel_id> <domain_id> <user_auth_token>",
-		Short: "Change channel status to enabled",
-		Long:  `Change channel status to enabled`,
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			channel, err := sdk.EnableChannel(cmd.Context(), args[0], args[1], args[2])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, channel)
-		},
-	},
-	{
-		Use:   "disable <channel_id> <domain_id> <user_auth_token>",
-		Short: "Change channel status to disabled",
-		Long:  `Change channel status to disabled`,
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			channel, err := sdk.DisableChannel(cmd.Context(), args[0], args[1], args[2])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, channel)
-		},
-	},
-	{
-		Use:   "users <channel_id> <domain_id> <user_auth_token>",
-		Short: "List users",
-		Long: "List users of a channel\n" +
-			"Usage:\n" +
-			"\tsupermq-cli channels users <channel_id> $DOMAINID $USERTOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			pm := smqsdk.PageMetadata{
-				Offset: Offset,
-				Limit:  Limit,
-			}
-			ul, err := sdk.ListChannelMembers(cmd.Context(), args[0], args[1], pm, args[2])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, ul)
-		},
-	},
+	return cmd
 }
 
-// NewChannelsCmd returns channels command.
-func NewChannelsCmd() *cobra.Command {
-	cmd := cobra.Command{
-		Use:   "channels [create | get | update | delete | connections | not-connected | assign | unassign | users | groups]",
-		Short: "Channels management",
-		Long:  `Channels management: create, get, update or delete Channel and get list of Clients connected or not connected to a Channel`,
+func handleCreate(cmd *cobra.Command, channelID string, args []string) {
+	if len(args) != 2 {
+		logUsageCmd(*cmd, usageCreate)
+		return
 	}
 
-	for i := range cmdChannels {
-		cmd.AddCommand(&cmdChannels[i])
+	var channel smqsdk.Channel
+	if err := json.Unmarshal([]byte(channelID), &channel); err != nil {
+		logErrorCmd(*cmd, err)
+		return
 	}
 
-	return &cmd
+	channel, err := sdk.CreateChannel(cmd.Context(), channel, args[0], args[1])
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, channel)
+}
+
+func handleGet(cmd *cobra.Command, channelID string, args []string) {
+	if len(args) != 2 {
+		logUsageCmd(*cmd, usageGet)
+		return
+	}
+
+	if channelID == all {
+		metadata, err := convertMetadata(Metadata)
+		if err != nil {
+			logErrorCmd(*cmd, err)
+			return
+		}
+
+		pageMetadata := smqsdk.PageMetadata{
+			Name:     "",
+			Offset:   Offset,
+			Limit:    Limit,
+			Metadata: metadata,
+		}
+
+		l, err := sdk.Channels(cmd.Context(), pageMetadata, args[0], args[1])
+		if err != nil {
+			logErrorCmd(*cmd, err)
+			return
+		}
+
+		logJSONCmd(*cmd, l)
+		return
+	}
+
+	c, err := sdk.Channel(cmd.Context(), channelID, args[0], args[1])
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, c)
+}
+
+func handleUpdate(cmd *cobra.Command, channelID string, args []string) {
+	if len(args) != 3 {
+		logUsageCmd(*cmd, usageUpdate)
+		return
+	}
+
+	var channel smqsdk.Channel
+	if err := json.Unmarshal([]byte(args[0]), &channel); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	channel.ID = channelID
+	channel, err := sdk.UpdateChannel(cmd.Context(), channel, args[1], args[2])
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, channel)
+}
+
+func handleDelete(cmd *cobra.Command, channelID string, args []string) {
+	if len(args) != 2 {
+		logUsageCmd(*cmd, usageDelete)
+		return
+	}
+
+	if err := sdk.DeleteChannel(cmd.Context(), channelID, args[0], args[1]); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+	logOKCmd(*cmd)
+}
+
+func handleEnable(cmd *cobra.Command, channelID string, args []string) {
+	if len(args) != 2 {
+		logUsageCmd(*cmd, usageEnable)
+		return
+	}
+
+	channel, err := sdk.EnableChannel(cmd.Context(), channelID, args[0], args[1])
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, channel)
+}
+
+func handleDisable(cmd *cobra.Command, channelID string, args []string) {
+	if len(args) != 2 {
+		logUsageCmd(*cmd, usageDisable)
+		return
+	}
+
+	channel, err := sdk.DisableChannel(cmd.Context(), channelID, args[0], args[1])
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, channel)
+}
+
+func handleUsers(cmd *cobra.Command, channelID string, args []string) {
+	if len(args) != 2 {
+		logUsageCmd(*cmd, usageUsers)
+		return
+	}
+
+	pm := smqsdk.PageMetadata{
+		Offset: Offset,
+		Limit:  Limit,
+	}
+	ul, err := sdk.ListChannelMembers(cmd.Context(), channelID, args[0], pm, args[1])
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, ul)
 }

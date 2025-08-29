@@ -58,11 +58,12 @@ func TestCreateUsersCmd(t *testing.T) {
 		{
 			desc: "create user successfully with token",
 			args: []string{
+				createCmd,
 				user.FirstName,
 				user.LastName,
 				user.Email,
-				user.Credentials.Secret,
 				user.Credentials.Username,
+				user.Credentials.Secret,
 				validToken,
 			},
 			user:    user,
@@ -71,11 +72,12 @@ func TestCreateUsersCmd(t *testing.T) {
 		{
 			desc: "create user successfully without token",
 			args: []string{
+				createCmd,
 				user.FirstName,
 				user.LastName,
 				user.Email,
-				user.Credentials.Secret,
 				user.Credentials.Username,
+				user.Credentials.Secret,
 			},
 			user:    user,
 			logType: entityLog,
@@ -83,11 +85,12 @@ func TestCreateUsersCmd(t *testing.T) {
 		{
 			desc: "failed to create user",
 			args: []string{
+				createCmd,
 				user.FirstName,
 				user.LastName,
 				user.Email,
-				user.Credentials.Secret,
 				user.Credentials.Username,
+				user.Credentials.Secret,
 				validToken,
 			},
 			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrCreateEntity, http.StatusUnprocessableEntity),
@@ -95,27 +98,46 @@ func TestCreateUsersCmd(t *testing.T) {
 			logType:       errLog,
 		},
 		{
-			desc:    "create user with invalid args",
-			args:    []string{user.FirstName, user.Credentials.Username},
-			logType: usageLog,
+			desc: "create user with invalid args",
+			args: []string{
+				createCmd,
+				user.FirstName,
+				user.Credentials.Username,
+			},
+			errLogMessage: rootCmd.Use,
+			logType:       usageLog,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			sdkCall := sdkMock.On("CreateUser", mock.Anything, mock.Anything, mock.Anything).Return(tc.user, tc.sdkErr)
-			if len(tc.args) == 4 {
+			if len(tc.args) == 6 {
 				sdkUser := mgsdk.User{
-					FirstName: tc.args[0],
-					LastName:  tc.args[1],
-					Email:     tc.args[2],
+					FirstName: tc.args[1],
+					LastName:  tc.args[2],
+					Email:     tc.args[3],
 					Credentials: mgsdk.Credentials{
-						Secret: tc.args[3],
+						Username: tc.args[4],
+						Secret:   tc.args[5],
 					},
+					Status: users.EnabledStatus.String(),
 				}
-				sdkCall = sdkMock.On("CreateUser", mock.Anything, mock.Anything, sdkUser).Return(tc.user, tc.sdkErr)
+				sdkCall = sdkMock.On("CreateUser", mock.Anything, sdkUser, "").Return(tc.user, tc.sdkErr)
+			} else if len(tc.args) == 7 {
+				sdkUser := mgsdk.User{
+					FirstName: tc.args[1],
+					LastName:  tc.args[2],
+					Email:     tc.args[3],
+					Credentials: mgsdk.Credentials{
+						Username: tc.args[4],
+						Secret:   tc.args[5],
+					},
+					Status: users.EnabledStatus.String(),
+				}
+				sdkCall = sdkMock.On("CreateUser", mock.Anything, sdkUser, tc.args[6]).Return(tc.user, tc.sdkErr)
 			}
-			out := executeCommand(t, rootCmd, append([]string{createCmd}, tc.args...)...)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case entityLog:
@@ -157,6 +179,7 @@ func TestGetUsersCmd(t *testing.T) {
 			desc: "get users successfully",
 			args: []string{
 				all,
+				getCmd,
 				validToken,
 			},
 			sdkErr: nil,
@@ -169,6 +192,7 @@ func TestGetUsersCmd(t *testing.T) {
 			desc: "get user successfully with id",
 			args: []string{
 				userID,
+				getCmd,
 				validToken,
 			},
 			sdkErr:  nil,
@@ -179,6 +203,7 @@ func TestGetUsersCmd(t *testing.T) {
 			desc: "get user with invalid id",
 			args: []string{
 				invalidID,
+				getCmd,
 				validToken,
 			},
 			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
@@ -190,6 +215,7 @@ func TestGetUsersCmd(t *testing.T) {
 			desc: "get users successfully with offset and limit",
 			args: []string{
 				all,
+				getCmd,
 				validToken,
 				"--offset=2",
 				"--limit=5",
@@ -204,6 +230,7 @@ func TestGetUsersCmd(t *testing.T) {
 			desc: "get users with invalid token",
 			args: []string{
 				all,
+				getCmd,
 				invalidToken,
 			},
 			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
@@ -215,20 +242,18 @@ func TestGetUsersCmd(t *testing.T) {
 			desc: "get users with invalid args",
 			args: []string{
 				all,
-				invalidToken,
-				all,
-				invalidToken,
-				all,
-				invalidToken,
-				all,
-				invalidToken,
+				getCmd,
+				validToken,
+				extraArg,
 			},
-			logType: usageLog,
+			errLogMessage: rootCmd.Use,
+			logType:       usageLog,
 		},
 		{
 			desc: "get user with failed get operation",
 			args: []string{
 				userID,
+				getCmd,
 				validToken,
 			},
 			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusInternalServerError),
@@ -241,9 +266,9 @@ func TestGetUsersCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			sdkCall := sdkMock.On("Users", mock.Anything, mock.Anything, mock.Anything).Return(tc.page, tc.sdkErr)
-			sdkCall1 := sdkMock.On("User", mock.Anything, tc.args[0], tc.args[1]).Return(tc.user, tc.sdkErr)
+			sdkCall1 := sdkMock.On("User", mock.Anything, tc.args[0], tc.args[2]).Return(tc.user, tc.sdkErr)
 
-			out = executeCommand(t, rootCmd, append([]string{getCmd}, tc.args...)...)
+			out = executeCommand(t, rootCmd, tc.args...)
 
 			if tc.logType == entityLog {
 				switch {
@@ -306,6 +331,7 @@ func TestIssueTokenCmd(t *testing.T) {
 		{
 			desc: "issue token successfully",
 			args: []string{
+				tokCmd,
 				user.Email,
 				user.Credentials.Secret,
 			},
@@ -316,6 +342,7 @@ func TestIssueTokenCmd(t *testing.T) {
 		{
 			desc: "issue token with failed authentication",
 			args: []string{
+				tokCmd,
 				user.Email,
 				invalidPassword,
 			},
@@ -327,23 +354,25 @@ func TestIssueTokenCmd(t *testing.T) {
 		{
 			desc: "issue token with invalid args",
 			args: []string{
+				tokCmd,
 				user.Email,
 				user.Credentials.Secret,
 				extraArg,
 			},
-			logType: usageLog,
+			errLogMessage: rootCmd.Use,
+			logType:       usageLog,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			lg := mgsdk.Login{
-				Username: tc.args[0],
-				Password: tc.args[1],
+				Username: tc.args[1],
+				Password: tc.args[2],
 			}
 			sdkCall := sdkMock.On("CreateToken", mock.Anything, lg).Return(tc.token, tc.sdkErr)
 
-			out := executeCommand(t, rootCmd, append([]string{tokCmd}, tc.args...)...)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case entityLog:
@@ -385,6 +414,7 @@ func TestRefreshIssueTokenCmd(t *testing.T) {
 		{
 			desc: "issue refresh token successfully without domain id",
 			args: []string{
+				refTokCmd,
 				"token",
 			},
 			sdkErr:  nil,
@@ -394,14 +424,17 @@ func TestRefreshIssueTokenCmd(t *testing.T) {
 		{
 			desc: "issue refresh token with invalid args",
 			args: []string{
+				refTokCmd,
 				"token",
 				extraArg,
 			},
-			logType: usageLog,
+			errLogMessage: rootCmd.Use,
+			logType:       usageLog,
 		},
 		{
 			desc: "issue refresh token with invalid Username",
 			args: []string{
+				refTokCmd,
 				"invalidToken",
 			},
 			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
@@ -415,7 +448,7 @@ func TestRefreshIssueTokenCmd(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			sdkCall := sdkMock.On("RefreshToken", mock.Anything, mock.Anything).Return(tc.token, tc.sdkErr)
 
-			out := executeCommand(t, rootCmd, append([]string{refTokCmd}, tc.args...)...)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case entityLog:
@@ -462,8 +495,9 @@ func TestUpdateUserCmd(t *testing.T) {
 		{
 			desc: "update user tags successfully",
 			args: []string{
-				tagUpdateType,
 				userID,
+				updateCmd,
+				tagUpdateType,
 				newTagsJSON,
 				validToken,
 			},
@@ -474,8 +508,9 @@ func TestUpdateUserCmd(t *testing.T) {
 		{
 			desc: "update user tags with invalid json",
 			args: []string{
-				tagUpdateType,
 				userID,
+				updateCmd,
+				tagUpdateType,
 				"[\"tag1\", \"tag2\"",
 				validToken,
 			},
@@ -486,8 +521,9 @@ func TestUpdateUserCmd(t *testing.T) {
 		{
 			desc: "update user tags with invalid token",
 			args: []string{
-				tagUpdateType,
 				userID,
+				updateCmd,
+				tagUpdateType,
 				newTagsJSON,
 				invalidToken,
 			},
@@ -498,8 +534,9 @@ func TestUpdateUserCmd(t *testing.T) {
 		{
 			desc: "update user email successfully",
 			args: []string{
-				emailUpdateType,
 				userID,
+				updateCmd,
+				emailUpdateType,
 				newEmail,
 				validToken,
 			},
@@ -509,8 +546,9 @@ func TestUpdateUserCmd(t *testing.T) {
 		{
 			desc: "update user email with invalid token",
 			args: []string{
-				emailUpdateType,
 				userID,
+				updateCmd,
+				emailUpdateType,
 				newEmail,
 				invalidToken,
 			},
@@ -522,6 +560,7 @@ func TestUpdateUserCmd(t *testing.T) {
 			desc: "update user successfully",
 			args: []string{
 				userID,
+				updateCmd,
 				newNameMetadataJSON,
 				validToken,
 			},
@@ -532,6 +571,7 @@ func TestUpdateUserCmd(t *testing.T) {
 			desc: "update user with invalid token",
 			args: []string{
 				userID,
+				updateCmd,
 				newNameMetadataJSON,
 				invalidToken,
 			},
@@ -543,6 +583,7 @@ func TestUpdateUserCmd(t *testing.T) {
 			desc: "update user with invalid json",
 			args: []string{
 				userID,
+				updateCmd,
 				"{\"name\":\"new name\", \"metadata\":{\"key\": \"value\"}",
 				validToken,
 			},
@@ -553,8 +594,9 @@ func TestUpdateUserCmd(t *testing.T) {
 		{
 			desc: "update user role successfully",
 			args: []string{
-				roleUpdateType,
 				userID,
+				updateCmd,
+				roleUpdateType,
 				newRole,
 				validToken,
 			},
@@ -564,8 +606,9 @@ func TestUpdateUserCmd(t *testing.T) {
 		{
 			desc: "update user role with invalid token",
 			args: []string{
-				roleUpdateType,
 				userID,
+				updateCmd,
+				roleUpdateType,
 				newRole,
 				invalidToken,
 			},
@@ -576,13 +619,15 @@ func TestUpdateUserCmd(t *testing.T) {
 		{
 			desc: "update user with invalid args",
 			args: []string{
-				roleUpdateType,
 				userID,
+				updateCmd,
+				roleUpdateType,
 				newRole,
 				validToken,
 				extraArg,
 			},
-			logType: usageLog,
+			errLogMessage: rootCmd.Use,
+			logType:       usageLog,
 		},
 	}
 
@@ -593,31 +638,31 @@ func TestUpdateUserCmd(t *testing.T) {
 			sdkCall2 := sdkMock.On("UpdateUserIdentity", mock.Anything, mock.Anything, mock.Anything).Return(tc.user, tc.sdkErr)
 			sdkCall3 := sdkMock.On("UpdateUserRole", mock.Anything, mock.Anything, mock.Anything).Return(tc.user, tc.sdkErr)
 			switch {
-			case tc.args[0] == tagUpdateType:
+			case tc.args[2] == tagUpdateType:
 				var u mgsdk.User
 				u.Tags = []string{"tag1", "tag2"}
-				u.ID = tc.args[1]
+				u.ID = tc.args[0]
 
-				sdkCall1 = sdkMock.On("UpdateUserTags", mock.Anything, u, tc.args[3]).Return(tc.user, tc.sdkErr)
-			case tc.args[0] == emailUpdateType:
+				sdkCall1 = sdkMock.On("UpdateUserTags", mock.Anything, u, tc.args[4]).Return(tc.user, tc.sdkErr)
+			case tc.args[2] == emailUpdateType:
 				var u mgsdk.User
-				u.Email = tc.args[2]
-				u.ID = tc.args[1]
+				u.Email = tc.args[3]
+				u.ID = tc.args[0]
 
-				sdkCall2 = sdkMock.On("UpdateUserEmail", mock.Anything, u, tc.args[3]).Return(tc.user, tc.sdkErr)
-			case tc.args[0] == roleUpdateType && len(tc.args) == 4:
+				sdkCall2 = sdkMock.On("UpdateUserEmail", mock.Anything, u, tc.args[4]).Return(tc.user, tc.sdkErr)
+			case tc.args[2] == roleUpdateType && len(tc.args) >= 5:
 				sdkCall3 = sdkMock.On("UpdateUserRole", mock.Anything, mgsdk.User{
-					Role: tc.args[2],
-				}, tc.args[3]).Return(tc.user, tc.sdkErr)
-			case tc.args[0] == userID:
+					Role: tc.args[3],
+				}, tc.args[4]).Return(tc.user, tc.sdkErr)
+			case len(tc.args) == 4: // Basic user update
 				sdkCall = sdkMock.On("UpdateUser", mock.Anything, mgsdk.User{
 					FirstName: "new name",
 					Metadata: mgsdk.Metadata{
 						"key": "value",
 					},
-				}, tc.args[2]).Return(tc.user, tc.sdkErr)
+				}, tc.args[3]).Return(tc.user, tc.sdkErr)
 			}
-			out := executeCommand(t, rootCmd, append([]string{updCmd}, tc.args...)...)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case entityLog:
@@ -657,6 +702,7 @@ func TestGetUserProfileCmd(t *testing.T) {
 		{
 			desc: "get user profile successfully",
 			args: []string{
+				profCmd,
 				validToken,
 			},
 			sdkErr:  nil,
@@ -665,14 +711,17 @@ func TestGetUserProfileCmd(t *testing.T) {
 		{
 			desc: "get user profile with invalid args",
 			args: []string{
+				profCmd,
 				validToken,
 				extraArg,
 			},
-			logType: usageLog,
+			errLogMessage: rootCmd.Use,
+			logType:       usageLog,
 		},
 		{
 			desc: "get user profile with invalid token",
 			args: []string{
+				profCmd,
 				invalidToken,
 			},
 			logType:       errLog,
@@ -683,8 +732,8 @@ func TestGetUserProfileCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("UserProfile", mock.Anything, tc.args[0]).Return(tc.user, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{profCmd}, tc.args...)...)
+			sdkCall := sdkMock.On("UserProfile", mock.Anything, tc.args[1]).Return(tc.user, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case errLog:
@@ -718,6 +767,7 @@ func TestResetPasswordRequestCmd(t *testing.T) {
 		{
 			desc: "request password reset successfully",
 			args: []string{
+				resPassReqCmd,
 				exampleEmail,
 			},
 			sdkErr:  nil,
@@ -726,14 +776,17 @@ func TestResetPasswordRequestCmd(t *testing.T) {
 		{
 			desc: "request password reset with invalid args",
 			args: []string{
+				resPassReqCmd,
 				exampleEmail,
 				extraArg,
 			},
-			logType: usageLog,
+			errLogMessage: rootCmd.Use,
+			logType:       usageLog,
 		},
 		{
 			desc: "failed request password reset",
 			args: []string{
+				resPassReqCmd,
 				exampleEmail,
 			},
 			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrUpdateEntity, http.StatusUnprocessableEntity),
@@ -744,8 +797,8 @@ func TestResetPasswordRequestCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("ResetPasswordRequest", mock.Anything, tc.args[0]).Return(tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{resPassReqCmd}, tc.args...)...)
+			sdkCall := sdkMock.On("ResetPasswordRequest", mock.Anything, tc.args[1]).Return(tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case errLog:
@@ -777,6 +830,7 @@ func TestResetPasswordCmd(t *testing.T) {
 		{
 			desc: "reset password successfully",
 			args: []string{
+				resPassCmd,
 				newPassword,
 				newPassword,
 				validToken,
@@ -787,16 +841,19 @@ func TestResetPasswordCmd(t *testing.T) {
 		{
 			desc: "reset password with invalid args",
 			args: []string{
+				resPassCmd,
 				newPassword,
 				newPassword,
 				validToken,
 				extraArg,
 			},
-			logType: usageLog,
+			errLogMessage: rootCmd.Use,
+			logType:       usageLog,
 		},
 		{
 			desc: "reset password with invalid token",
 			args: []string{
+				resPassCmd,
 				newPassword,
 				newPassword,
 				invalidToken,
@@ -809,8 +866,8 @@ func TestResetPasswordCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("ResetPassword", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{resPassCmd}, tc.args...)...)
+			sdkCall := sdkMock.On("ResetPassword", mock.Anything, tc.args[1], tc.args[2], tc.args[3]).Return(tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case errLog:
@@ -846,6 +903,7 @@ func TestUpdatePasswordCmd(t *testing.T) {
 		{
 			desc: "update password successfully",
 			args: []string{
+				passCmd,
 				oldPassword,
 				newPassword,
 				validToken,
@@ -857,18 +915,21 @@ func TestUpdatePasswordCmd(t *testing.T) {
 		{
 			desc: "reset password with invalid args",
 			args: []string{
+				passCmd,
 				oldPassword,
 				newPassword,
 				validToken,
 				extraArg,
 			},
-			sdkErr:  nil,
-			logType: usageLog,
-			user:    user,
+			errLogMessage: rootCmd.Use,
+			sdkErr:        nil,
+			logType:       usageLog,
+			user:          user,
 		},
 		{
 			desc: "update password with invalid token",
 			args: []string{
+				passCmd,
 				oldPassword,
 				newPassword,
 				invalidToken,
@@ -881,8 +942,8 @@ func TestUpdatePasswordCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("UpdatePassword", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.user, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{passCmd}, tc.args...)...)
+			sdkCall := sdkMock.On("UpdatePassword", mock.Anything, tc.args[1], tc.args[2], tc.args[3]).Return(tc.user, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case errLog:
@@ -919,6 +980,7 @@ func TestEnableUserCmd(t *testing.T) {
 			desc: "enable user successfully",
 			args: []string{
 				user.ID,
+				enableCmd,
 				validToken,
 			},
 			sdkErr:  nil,
@@ -929,15 +991,18 @@ func TestEnableUserCmd(t *testing.T) {
 			desc: "enable user with invalid args",
 			args: []string{
 				user.ID,
+				enableCmd,
 				validToken,
 				extraArg,
 			},
-			logType: usageLog,
+			errLogMessage: rootCmd.Use,
+			logType:       usageLog,
 		},
 		{
 			desc: "enable user with invalid token",
 			args: []string{
 				user.ID,
+				enableCmd,
 				invalidToken,
 			},
 			logType:       errLog,
@@ -948,8 +1013,8 @@ func TestEnableUserCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("EnableUser", mock.Anything, tc.args[0], tc.args[1]).Return(tc.user, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{enableCmd}, tc.args...)...)
+			sdkCall := sdkMock.On("EnableUser", mock.Anything, tc.args[0], tc.args[2]).Return(tc.user, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case errLog:
@@ -987,6 +1052,7 @@ func TestDisableUserCmd(t *testing.T) {
 			desc: "disable user successfully",
 			args: []string{
 				user.ID,
+				disableCmd,
 				validToken,
 			},
 			sdkErr:  nil,
@@ -997,15 +1063,18 @@ func TestDisableUserCmd(t *testing.T) {
 			desc: "disable user with invalid args",
 			args: []string{
 				user.ID,
+				disableCmd,
 				validToken,
 				extraArg,
 			},
-			logType: usageLog,
+			errLogMessage: rootCmd.Use,
+			logType:       usageLog,
 		},
 		{
 			desc: "disable user with invalid token",
 			args: []string{
 				user.ID,
+				disableCmd,
 				invalidToken,
 			},
 			logType:       errLog,
@@ -1016,8 +1085,8 @@ func TestDisableUserCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("DisableUser", mock.Anything, tc.args[0], tc.args[1]).Return(tc.user, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{disableCmd}, tc.args...)...)
+			sdkCall := sdkMock.On("DisableUser", mock.Anything, tc.args[0], tc.args[2]).Return(tc.user, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case errLog:
@@ -1054,6 +1123,7 @@ func TestDeleteUserCmd(t *testing.T) {
 			desc: "delete user successfully",
 			args: []string{
 				user.ID,
+				delCmd,
 				validToken,
 			},
 			logType: okLog,
@@ -1062,15 +1132,18 @@ func TestDeleteUserCmd(t *testing.T) {
 			desc: "delete user with invalid args",
 			args: []string{
 				user.ID,
+				delCmd,
 				validToken,
 				extraArg,
 			},
-			logType: usageLog,
+			errLogMessage: rootCmd.Use,
+			logType:       usageLog,
 		},
 		{
 			desc: "delete user with invalid token",
 			args: []string{
 				user.ID,
+				delCmd,
 				invalidToken,
 			},
 			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
@@ -1081,6 +1154,7 @@ func TestDeleteUserCmd(t *testing.T) {
 			desc: "delete user with invalid user ID",
 			args: []string{
 				invalidID,
+				delCmd,
 				validToken,
 			},
 			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
@@ -1091,6 +1165,7 @@ func TestDeleteUserCmd(t *testing.T) {
 			desc: "delete user with failed to delete",
 			args: []string{
 				user.ID,
+				delCmd,
 				validToken,
 			},
 			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrUpdateEntity, http.StatusUnprocessableEntity),
@@ -1101,16 +1176,18 @@ func TestDeleteUserCmd(t *testing.T) {
 			desc: "delete user with invalid args",
 			args: []string{
 				user.ID,
+				delCmd,
 				extraArg,
 			},
-			logType: usageLog,
+			errLogMessage: rootCmd.Use,
+			logType:       usageLog,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			sdkCall := sdkMock.On("DeleteUser", mock.Anything, mock.Anything, mock.Anything).Return(tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{delCmd}, tc.args...)...)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case okLog:

@@ -5,513 +5,582 @@ package cli
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/absmach/supermq/groups"
 	smqsdk "github.com/absmach/supermq/pkg/sdk"
 	"github.com/spf13/cobra"
 )
 
-const tags = "tags"
+const (
+	tags             = "tags"
+	add              = "add"
+	list             = "list"
+	availableActions = "available-actions"
 
-var cmdGroups = []cobra.Command{
-	{
-		Use:   "create <JSON_group> <domain_id> <user_auth_token>",
-		Short: "Create group",
-		Long: "Creates new group\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups create '{\"name\":\"new group\", \"description\":\"new group description\", \"metadata\":{\"key\": \"value\"}}' $DOMAINID $USERTOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			var group smqsdk.Group
-			if err := json.Unmarshal([]byte(args[0]), &group); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			group.Status = groups.EnabledStatus.String()
-			group, err := sdk.CreateGroup(cmd.Context(), group, args[1], args[2])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			logJSONCmd(*cmd, group)
-		},
-	},
-	{
-		Use:   "update [<JSON_group> <domain_id> | tags <group_id> <tags> ] <user_auth_token>",
-		Short: "Update group",
-		Long: "Updates group\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups update '{\"id\":\"<group_id>\", \"name\":\"new group\", \"description\":\"new group description\", \"metadata\":{\"key\": \"value\"}}' $DOMAINID $USERTOKEN\n" +
-			"\tsupermq-cli groups update tags <group_id> '{\"tag1\":\"value1\", \"tag2\":\"value2\"}' $DOMAINID $USERTOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 && len(args) != 5 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
+	// Usage strings for group operations.
+	usageGroupCreate     = "cli groups <JSON_group> create <domain_id> <user_auth_token>"
+	usageGroupGet        = "cli groups <group_id|all> get <domain_id> <user_auth_token>"
+	usageGroupUpdate     = "cli groups <group_id> update <JSON_string> <domain_id> <user_auth_token>"
+	usageGroupUpdateTags = "cli groups <group_id> update tags <tags> <domain_id> <user_auth_token>"
+	usageGroupDelete     = "cli groups <group_id> delete <domain_id> <user_auth_token>"
+	usageGroupEnable     = "cli groups <group_id> enable <domain_id> <user_auth_token>"
+	usageGroupDisable    = "cli groups <group_id> disable <domain_id> <user_auth_token>"
 
-			var group smqsdk.Group
-			if args[0] == tags {
-				if err := json.Unmarshal([]byte(args[2]), &group.Tags); err != nil {
-					logErrorCmd(*cmd, err)
-					return
-				}
-				group.ID = args[1]
-				group, err := sdk.UpdateGroupTags(cmd.Context(), group, args[3], args[4])
-				if err != nil {
-					logErrorCmd(*cmd, err)
-					return
-				}
+	// Usage strings for group roles operations.
+	usageGroupRolesCreate = "cli groups <group_id> roles create <JSON_role> <domain_id> <user_auth_token>"
+	usageGroupRolesGet    = "cli groups <group_id> roles get <role_id|all> <domain_id> <user_auth_token>"
+	usageGroupRolesUpdate = "cli groups <group_id> roles update <role_id> <new_name> <domain_id> <user_auth_token>"
+	usageGroupRolesDelete = "cli groups <group_id> roles delete <role_id> <domain_id> <user_auth_token>"
 
-				logJSONCmd(*cmd, group)
-				return
-			}
+	// Usage strings for group role actions operations.
+	usageGroupRoleActionsAdd       = "cli groups <group_id> roles actions add <role_id> <JSON_actions> <domain_id> <user_auth_token>"
+	usageGroupRoleActionsList      = "cli groups <group_id> roles actions list <role_id> <domain_id> <user_auth_token>"
+	usageGroupRoleActionsDelete    = "cli groups <group_id> roles actions delete <role_id> <JSON_actions|all> <domain_id> <user_auth_token>"
+	usageGroupRoleActionsAvailable = "cli groups roles actions available-actions <domain_id> <user_auth_token>"
 
-			if err := json.Unmarshal([]byte(args[0]), &group); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
+	// Usage strings for group role members operations.
+	usageGroupRoleMembersAdd    = "cli groups <group_id> roles members add <role_id> <JSON_members> <domain_id> <user_auth_token>"
+	usageGroupRoleMembersList   = "cli groups <group_id> roles members list <role_id> <domain_id> <user_auth_token>"
+	usageGroupRoleMembersDelete = "cli groups <group_id> roles members delete <role_id> <JSON_members|all> <domain_id> <user_auth_token>"
+)
 
-			group, err := sdk.UpdateGroup(cmd.Context(), group, args[1], args[2])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, group)
-		},
-	},
-	{
-		Use:   "delete <group_id> <domain_id> <user_auth_token>",
-		Short: "Delete group",
-		Long: "Delete group by id.\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups delete <group_id> $DOMAINID $USERTOKEN - delete the given group ID\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			if err := sdk.DeleteGroup(cmd.Context(), args[0], args[1], args[2]); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			logOKCmd(*cmd)
-		},
-	},
-	{
-		Use:   "enable <group_id> <domain_id> <user_auth_token>",
-		Short: "Change group status to enabled",
-		Long: "Change group status to enabled\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups enable <group_id> $DOMAINID $USERTOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			group, err := sdk.EnableGroup(cmd.Context(), args[0], args[1], args[2])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, group)
-		},
-	},
-	{
-		Use:   "disable <group_id> <domain_id> <user_auth_token>",
-		Short: "Change group status to disabled",
-		Long: "Change group status to disabled\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups disable <group_id> $DOMAINID $USERTOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			group, err := sdk.DisableGroup(cmd.Context(), args[0], args[1], args[2])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, group)
-		},
-	},
-}
-
-var cmdGroupsRoles = []cobra.Command{
-	{
-		Use:   "create <JSON_role> <group_id> <domain_id> <user_auth_token>",
-		Short: "Create group role",
-		Long: "Create role\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups roles create <JSON_role> <group_id> <domain_id> <user_auth_token>\n" +
-			"For example:\n" +
-			"\tsupermq-cli groups roles create '{\"role_name\":\"admin\",\"optional_actions\":[\"read\",\"update\"]}' 4ef09eff-d500-4d56-b04f-d23a512d6f2a 39f97daf-d6b6-40f4-b229-2697be8006ef $USER_AUTH_TOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 4 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			var roleReq smqsdk.RoleReq
-			if err := json.Unmarshal([]byte(args[0]), &roleReq); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			r, err := sdk.CreateGroupRole(cmd.Context(), args[1], args[2], roleReq, args[3])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			logJSONCmd(*cmd, r)
-		},
-	},
-
-	{
-		Use:   "get [all | <role_id>] <group_id>, <domain_id> <user_auth_token>",
-		Short: "Get group roles",
-		Long: "Get group roles\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups roles get all <group_id> <domain_id> <user_auth_token> - lists all roles\n" +
-			"\tsupermq-cli groups roles get all <group_id> <domain_id> <user_auth_token> --offset <offset> --limit <limit> - lists all roles with provided offset and limit\n" +
-			"\tsupermq-cli groups roles get <role_id> <group_id> <domain_id> <user_auth_token> - shows role by role id and domain id\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 4 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			pageMetadata := smqsdk.PageMetadata{
-				Offset: Offset,
-				Limit:  Limit,
-			}
-			if args[0] == all {
-				rs, err := sdk.GroupRoles(cmd.Context(), args[1], args[2], pageMetadata, args[3])
-				if err != nil {
-					logErrorCmd(*cmd, err)
-					return
-				}
-				logJSONCmd(*cmd, rs)
-				return
-			}
-			r, err := sdk.GroupRole(cmd.Context(), args[1], args[0], args[2], args[3])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			logJSONCmd(*cmd, r)
-		},
-	},
-
-	{
-		Use:   "update <new_name> <role_id> <group_id> <domain_id> <user_auth_token>",
-		Short: "Update group role name",
-		Long: "Update group role name\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups roles update <new_name> <role_id> <group_id> <domain_id> <user_auth_token>\n" +
-			"For example:\n" +
-			"\tsupermq-cli groups roles update new_name 39f97daf-d6b6-40f4-b229-2697be8006ef 4ef09eff-d500-4d56-b04f-d23a512d6f2a 4ef09eff-d500-4d56-b04f-d23a512d6f2a $USER_AUTH_TOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 5 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			r, err := sdk.UpdateGroupRole(cmd.Context(), args[2], args[1], args[0], args[3], args[4])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			logJSONCmd(*cmd, r)
-		},
-	},
-
-	{
-		Use:   "delete <role_id> <group_id> <domain_id> <user_auth_token>",
-		Short: "Delete group role",
-		Long: "Delete group role\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups roles delete <role_id> <group_id> <domain_id> <user_auth_token>\n" +
-			"For example:\n" +
-			"\tsupermq-cli groups roles delete 39f97daf-d6b6-40f4-b229-2697be8006ef 4ef09eff-d500-4d56-b04f-d23a512d6f2a 4ef09eff-d500-4d56-b04f-d23a512d6f2a $USER_AUTH_TOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 4 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			if err := sdk.DeleteGroupRole(cmd.Context(), args[1], args[0], args[2], args[3]); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			logOKCmd(*cmd)
-		},
-	},
-}
-
-var cmdGroupsActions = []cobra.Command{
-	{
-		Use:   "add <JSON_actions> <role_id> <group_id> <domain_id> <user_auth_token>",
-		Short: "Add actions to role",
-		Long: "Add actions to role\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups roles actions add <JSON_actions> <role_id> <group_id> <domain_id> <user_auth_token>\n" +
-			"For example:\n" +
-			"\tsupermq-cli groups roles actions add '{\"actions\":[\"read\",\"write\"]}' 39f97daf-d6b6-40f4-b229-2697be8006ef 4ef09eff-d500-4d56-b04f-d23a512d6f2a 4ef09eff-d500-4d56-b04f-d23a512d6f2a $USER_AUTH_TOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 5 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			actions := struct {
-				Actions []string `json:"actions"`
-			}{}
-			if err := json.Unmarshal([]byte(args[0]), &actions); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			acts, err := sdk.AddGroupRoleActions(cmd.Context(), args[2], args[1], args[3], actions.Actions, args[4])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			logJSONCmd(*cmd, acts)
-		},
-	},
-
-	{
-		Use:   "list <role_id> <group_id> <domain_id> <user_auth_token>",
-		Short: "List actions of role",
-		Long: "List actions of role\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups roles actions list <role_id> <group_id> <domain_id> <user_auth_token>\n" +
-			"For example:\n" +
-			"\tsupermq-cli groups roles actions list 39f97daf-d6b6-40f4-b229-2697be8006ef 4ef09eff-d500-4d56-b04f-d23a512d6f2a 4ef09eff-d500-4d56-b04f-d23a512d6f2a $USER_AUTH_TOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 4 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-
-			l, err := sdk.GroupRoleActions(cmd.Context(), args[1], args[0], args[2], args[3])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			logJSONCmd(*cmd, l)
-		},
-	},
-
-	{
-		Use:   "delete [all | <JSON_actions>] <role_id> <group_id> <domain_id> <user_auth_token>",
-		Short: "Delete actions from role",
-		Long: "Delete actions from role\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups roles actions delete <JSON_actions> <role_id> <group_id> <domain_id> <user_auth_token>\n" +
-			"\tsupermq-cli groups roles actions delete all <role_id> <group_id> <domain_id> <user_auth_token>\n" +
-			"For example:\n" +
-			"\tsupermq-cli groups roles actions delete '{\"actions\":[\"read\",\"write\"]}' 39f97daf-d6b6-40f4-b229-2697be8006ef 4ef09eff-d500-4d56-b04f-d23a512d6f2a 4ef09eff-d500-4d56-b04f-d23a512d6f2a $USER_AUTH_TOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 5 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			if args[0] == all {
-				if err := sdk.RemoveAllGroupRoleActions(cmd.Context(), args[2], args[1], args[3], args[4]); err != nil {
-					logErrorCmd(*cmd, err)
-					return
-				}
-				logOKCmd(*cmd)
-				return
-			}
-			actions := struct {
-				Actions []string `json:"actions"`
-			}{}
-			if err := json.Unmarshal([]byte(args[0]), &actions); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			if err := sdk.RemoveGroupRoleActions(cmd.Context(), args[2], args[1], args[3], actions.Actions, args[4]); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			logOKCmd(*cmd)
-		},
-	},
-
-	{
-		Use:   "available-actions <domain_id> <user_auth_token>",
-		Short: "List available actions",
-		Long: "List available actions\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups roles actions available-actions <domain_id> <user_auth_token>\n" +
-			"For example:\n" +
-			"\tsupermq-cli groups roles actions available-actions 39f97daf-d6b6-40f4-b229-2697be8006ef $USER_AUTH_TOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 2 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			acts, err := sdk.AvailableGroupRoleActions(cmd.Context(), args[0], args[1])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			logJSONCmd(*cmd, acts)
-		},
-	},
-}
-
-var cmdGroupMembers = []cobra.Command{
-	{
-		Use:   "add <JSON_members> <role_id> <group_id> <domain_id> <user_auth_token>",
-		Short: "Add members to role",
-		Long: "Add members to role\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups roles members add <JSON_members> <role_id> <group_id> <domain_id> <user_auth_token>\n" +
-			"For example:\n" +
-			"\tsupermq-cli groups roles members add '{\"members\":[\"5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb\", \"5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb\"]}' 39f97daf-d6b6-40f4-b229-2697be8006ef 4ef09eff-d500-4d56-b04f-d23a512d6f2a 4ef09eff-d500-4d56-b04f-d23a512d6f2a $USER_AUTH_TOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 5 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			members := struct {
-				Members []string `json:"members"`
-			}{}
-			if err := json.Unmarshal([]byte(args[0]), &members); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			memb, err := sdk.AddGroupRoleMembers(cmd.Context(), args[2], args[1], args[3], members.Members, args[4])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			logJSONCmd(*cmd, memb)
-		},
-	},
-
-	{
-		Use:   "list <role_id> <group_id> <domain_id> <user_auth_token>",
-		Short: "List members of role",
-		Long: "List members of role\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups roles members list <role_id> <domain_id> <user_auth_token>\n" +
-			"For example:\n" +
-			"\tsupermq-cli groups roles members list 39f97daf-d6b6-40f4-b229-2697be8006ef 4ef09eff-d500-4d56-b04f-d23a512d6f2a 4ef09eff-d500-4d56-b04f-d23a512d6f2a $USER_AUTH_TOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 4 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			pageMetadata := smqsdk.PageMetadata{
-				Offset: Offset,
-				Limit:  Limit,
-			}
-
-			l, err := sdk.GroupRoleMembers(cmd.Context(), args[1], args[0], args[2], pageMetadata, args[3])
-			if err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			logJSONCmd(*cmd, l)
-		},
-	},
-
-	{
-		Use:   "delete [all | <JSON_members>] <role_id> <group_id> <domain_id> <user_auth_token>",
-		Short: "Delete members from role",
-		Long: "Delete members from role\n" +
-			"Usage:\n" +
-			"\tsupermq-cli groups roles members delete <JSON_members> <role_id> <group_id> <domain_id> <user_auth_token>\n" +
-			"\tsupermq-cli groups roles members delete all <role_id> <group_id> <domain_id> <user_auth_token>\n" +
-			"For example:\n" +
-			"\tsupermq-cli groups roles members delete all 39f97daf-d6b6-40f4-b229-2697be8006ef 4ef09eff-d500-4d56-b04f-d23a512d6f2a 4ef09eff-d500-4d56-b04f-d23a512d6f2a $USER_AUTH_TOKEN\n" +
-			"\tsupermq-cli groups roles members delete '{\"members\":[\"5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb\", \"5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb\"]}' 39f97daf-d6b6-40f4-b229-2697be8006ef 4ef09eff-d500-4d56-b04f-d23a512d6f2a 4ef09eff-d500-4d56-b04f-d23a512d6f2a $USER_AUTH_TOKEN\n",
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 5 {
-				logUsageCmd(*cmd, cmd.Use)
-				return
-			}
-			if args[0] == all {
-				if err := sdk.RemoveAllGroupRoleMembers(cmd.Context(), args[2], args[1], args[3], args[4]); err != nil {
-					logErrorCmd(*cmd, err)
-					return
-				}
-				logOKCmd(*cmd)
-				return
-			}
-
-			members := struct {
-				Members []string `json:"members"`
-			}{}
-			if err := json.Unmarshal([]byte(args[0]), &members); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-
-			if err := sdk.RemoveGroupRoleMembers(cmd.Context(), args[2], args[1], args[3], members.Members, args[4]); err != nil {
-				logErrorCmd(*cmd, err)
-				return
-			}
-			logOKCmd(*cmd)
-		},
-	},
-}
-
-// NewGroupsCmd returns users command.
 func NewGroupsCmd() *cobra.Command {
-	actionsCmd := cobra.Command{
-		Use:   "actions [add | list | delete | available-actions]",
-		Short: "Actions management",
-		Long:  "Actions management: add, list, delete actions and list available actions",
-	}
-	for i := range cmdGroupsActions {
-		actionsCmd.AddCommand(&cmdGroupsActions[i])
-	}
-
-	membersCmd := cobra.Command{
-		Use:   "members [add | list | delete]",
-		Short: "Members management",
-		Long:  "Members management: add, list, delete members",
-	}
-	for i := range cmdGroupMembers {
-		membersCmd.AddCommand(&cmdGroupMembers[i])
-	}
-
-	rolesCmd := cobra.Command{
-		Use:   "roles [create | get | update | delete | actions | members]",
-		Short: "Roles management",
-		Long:  "Roles management: create, update, retrieve roles and assign/unassign members to roles",
-	}
-
-	rolesCmd.AddCommand(&actionsCmd)
-	rolesCmd.AddCommand(&membersCmd)
-
-	for i := range cmdGroupsRoles {
-		rolesCmd.AddCommand(&cmdGroupsRoles[i])
-	}
-
-	cmd := cobra.Command{
-		Use:   "groups [create | get | update | delete | assign | unassign | users | channels ]",
+	cmd := &cobra.Command{
+		Use:   "groups <group_id_or_all> <operation> [args...]",
 		Short: "Groups management",
-		Long:  `Groups management: create, update, delete group and assign and unassign member to groups"`,
+		Long: `Format: <group_id|all> <operation> [additional_args...]
+
+Examples:
+  groups all get <domain_id> <user_auth_token>                          # Get all entities
+  groups <group_id> get <domain_id> <user_auth_token>                   # Get specific entity
+  groups <JSON_group> create <domain_id> <user_auth_token>              # Create entity
+  groups <group_id> update <JSON_string> <domain_id> <user_auth_token>  # Update entity
+  groups <group_id> update tags <tags> <domain_id> <user_auth_token>    # Update entity tags
+  groups <group_id> delete <domain_id> <user_auth_token>                # Delete entity
+  groups <group_id> enable <domain_id> <user_auth_token>                # Enable entity
+  groups <group_id> disable <domain_id> <user_auth_token>               # Disable entity`,
+
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) < 2 {
+				logUsageCmd(*cmd, cmd.Use)
+				return
+			}
+
+			groupParams := args[0]
+			operation := args[1]
+			opArgs := args[2:]
+
+			switch operation {
+			case create:
+				handleGroupCreate(cmd, groupParams, opArgs)
+			case get:
+				handleGroupGet(cmd, groupParams, opArgs)
+			case update:
+				handleGroupUpdate(cmd, groupParams, opArgs)
+			case delete:
+				handleGroupDelete(cmd, groupParams, opArgs)
+			case enable:
+				handleGroupEnable(cmd, groupParams, opArgs)
+			case disable:
+				handleGroupDisable(cmd, groupParams, opArgs)
+			case roles:
+				handleGroupRoles(cmd, groupParams, opArgs)
+			default:
+				logErrorCmd(*cmd, fmt.Errorf("unknown operation: %s", operation))
+			}
+		},
 	}
 
-	cmd.AddCommand(&rolesCmd)
+	return cmd
+}
 
-	for i := range cmdGroups {
-		cmd.AddCommand(&cmdGroups[i])
+func handleGroupCreate(cmd *cobra.Command, groupJSON string, args []string) {
+	if len(args) != 2 {
+		logUsageCmd(*cmd, usageGroupCreate)
+		return
 	}
 
-	return &cmd
+	var group smqsdk.Group
+	if err := json.Unmarshal([]byte(groupJSON), &group); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+	group.Status = groups.EnabledStatus.String()
+	group, err := sdk.CreateGroup(cmd.Context(), group, args[0], args[1])
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+	logJSONCmd(*cmd, group)
+}
+
+func handleGroupGet(cmd *cobra.Command, groupParams string, args []string) {
+	if len(args) != 2 {
+		logUsageCmd(*cmd, usageGroupGet)
+		return
+	}
+
+	if groupParams == all {
+		metadata, err := convertMetadata(Metadata)
+		if err != nil {
+			logErrorCmd(*cmd, err)
+			return
+		}
+
+		pageMetadata := smqsdk.PageMetadata{
+			Name:     Name,
+			Offset:   Offset,
+			Limit:    Limit,
+			Metadata: metadata,
+		}
+
+		l, err := sdk.Groups(cmd.Context(), pageMetadata, args[0], args[1])
+		if err != nil {
+			logErrorCmd(*cmd, err)
+			return
+		}
+		logJSONCmd(*cmd, l)
+		return
+	}
+
+	g, err := sdk.Group(cmd.Context(), groupParams, args[0], args[1])
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, g)
+}
+
+func handleGroupUpdate(cmd *cobra.Command, groupID string, args []string) {
+	if len(args) < 3 || len(args) > 4 {
+		if args[0] == tags {
+			logUsageCmd(*cmd, usageGroupUpdateTags)
+			return
+		}
+		logUsageCmd(*cmd, usageGroupUpdate)
+		return
+	}
+
+	if len(args) == 4 && args[0] == tags {
+		var group smqsdk.Group
+		if err := json.Unmarshal([]byte(args[1]), &group.Tags); err != nil {
+			logErrorCmd(*cmd, err)
+			return
+		}
+		group.ID = groupID
+		group, err := sdk.UpdateGroupTags(cmd.Context(), group, args[2], args[3])
+		if err != nil {
+			logErrorCmd(*cmd, err)
+			return
+		}
+		logJSONCmd(*cmd, group)
+		return
+	}
+
+	if len(args) != 3 {
+		logUsageCmd(*cmd, usageGroupUpdate)
+		return
+	}
+
+	var group smqsdk.Group
+	if err := json.Unmarshal([]byte(args[0]), &group); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	group.ID = groupID
+	group, err := sdk.UpdateGroup(cmd.Context(), group, args[1], args[2])
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, group)
+}
+
+func handleGroupDelete(cmd *cobra.Command, groupID string, args []string) {
+	if len(args) != 2 {
+		logUsageCmd(*cmd, usageGroupDelete)
+		return
+	}
+
+	if err := sdk.DeleteGroup(cmd.Context(), groupID, args[0], args[1]); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+	logOKCmd(*cmd)
+}
+
+func handleGroupEnable(cmd *cobra.Command, groupID string, args []string) {
+	if len(args) != 2 {
+		logUsageCmd(*cmd, usageGroupEnable)
+		return
+	}
+
+	group, err := sdk.EnableGroup(cmd.Context(), groupID, args[0], args[1])
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, group)
+}
+
+func handleGroupDisable(cmd *cobra.Command, groupID string, args []string) {
+	if len(args) != 2 {
+		logUsageCmd(*cmd, usageGroupDisable)
+		return
+	}
+
+	group, err := sdk.DisableGroup(cmd.Context(), groupID, args[0], args[1])
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, group)
+}
+
+func handleGroupRoles(cmd *cobra.Command, groupID string, args []string) {
+	if len(args) < 1 {
+		logUsageCmd(*cmd, "cli groups <group_id> roles <operation> [args...]")
+		return
+	}
+
+	operation := args[0]
+	opArgs := args[1:]
+
+	switch operation {
+	case create:
+		handleGroupRoleCreate(cmd, groupID, opArgs)
+	case get:
+		handleGroupRoleGet(cmd, groupID, opArgs)
+	case update:
+		handleGroupRoleUpdate(cmd, groupID, opArgs)
+	case delete:
+		handleGroupRoleDelete(cmd, groupID, opArgs)
+	case actions:
+		handleGroupRoleActions(cmd, groupID, opArgs)
+	case members:
+		handleGroupRoleMembers(cmd, groupID, opArgs)
+	default:
+		logErrorCmd(*cmd, fmt.Errorf("unknown roles operation: %s", operation))
+	}
+}
+
+func handleGroupRoleCreate(cmd *cobra.Command, groupID string, args []string) {
+	if len(args) != 3 {
+		logUsageCmd(*cmd, usageGroupRolesCreate)
+		return
+	}
+
+	var roleReq smqsdk.RoleReq
+	if err := json.Unmarshal([]byte(args[0]), &roleReq); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	r, err := sdk.CreateGroupRole(cmd.Context(), groupID, args[1], roleReq, args[2])
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, r)
+}
+
+func handleGroupRoleGet(cmd *cobra.Command, groupID string, args []string) {
+	if len(args) != 3 {
+		logUsageCmd(*cmd, usageGroupRolesGet)
+		return
+	}
+
+	roleID := args[0]
+	domainID := args[1]
+	token := args[2]
+
+	if roleID == all {
+		pageMetadata := smqsdk.PageMetadata{
+			Offset: Offset,
+			Limit:  Limit,
+		}
+		rs, err := sdk.GroupRoles(cmd.Context(), groupID, domainID, pageMetadata, token)
+		if err != nil {
+			logErrorCmd(*cmd, err)
+			return
+		}
+		logJSONCmd(*cmd, rs)
+		return
+	}
+
+	r, err := sdk.GroupRole(cmd.Context(), groupID, roleID, domainID, token)
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+	logJSONCmd(*cmd, r)
+}
+
+func handleGroupRoleUpdate(cmd *cobra.Command, groupID string, args []string) {
+	if len(args) != 4 {
+		logUsageCmd(*cmd, usageGroupRolesUpdate)
+		return
+	}
+
+	roleID := args[0]
+	newName := args[1]
+	domainID := args[2]
+	token := args[3]
+
+	r, err := sdk.UpdateGroupRole(cmd.Context(), groupID, roleID, newName, domainID, token)
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+	logJSONCmd(*cmd, r)
+}
+
+func handleGroupRoleDelete(cmd *cobra.Command, groupID string, args []string) {
+	if len(args) != 3 {
+		logUsageCmd(*cmd, usageGroupRolesDelete)
+		return
+	}
+
+	roleID := args[0]
+	domainID := args[1]
+	token := args[2]
+
+	if err := sdk.DeleteGroupRole(cmd.Context(), groupID, roleID, domainID, token); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+	logOKCmd(*cmd)
+}
+
+func handleGroupRoleActions(cmd *cobra.Command, groupID string, args []string) {
+	if len(args) < 1 {
+		logUsageCmd(*cmd, "cli groups <group_id> roles actions <operation> [args...]")
+		return
+	}
+
+	operation := args[0]
+	opArgs := args[1:]
+
+	switch operation {
+	case add:
+		handleGroupRoleActionsAdd(cmd, groupID, opArgs)
+	case list:
+		handleGroupRoleActionsList(cmd, groupID, opArgs)
+	case delete:
+		handleGroupRoleActionsDelete(cmd, groupID, opArgs)
+	case availableActions:
+		handleGroupRoleActionsAvailable(cmd, opArgs)
+	default:
+		logErrorCmd(*cmd, fmt.Errorf("unknown actions operation: %s", operation))
+	}
+}
+
+func handleGroupRoleActionsAdd(cmd *cobra.Command, groupID string, args []string) {
+	if len(args) != 4 {
+		logUsageCmd(*cmd, usageGroupRoleActionsAdd)
+		return
+	}
+
+	roleID := args[0]
+	actionsJSON := args[1]
+	domainID := args[2]
+	token := args[3]
+
+	actions := struct {
+		Actions []string `json:"actions"`
+	}{}
+	if err := json.Unmarshal([]byte(actionsJSON), &actions); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	acts, err := sdk.AddGroupRoleActions(cmd.Context(), groupID, roleID, domainID, actions.Actions, token)
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+	logJSONCmd(*cmd, acts)
+}
+
+func handleGroupRoleActionsList(cmd *cobra.Command, groupID string, args []string) {
+	if len(args) != 3 {
+		logUsageCmd(*cmd, usageGroupRoleActionsList)
+		return
+	}
+
+	roleID := args[0]
+	domainID := args[1]
+	token := args[2]
+
+	l, err := sdk.GroupRoleActions(cmd.Context(), groupID, roleID, domainID, token)
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+	logJSONCmd(*cmd, l)
+}
+
+func handleGroupRoleActionsDelete(cmd *cobra.Command, groupID string, args []string) {
+	if len(args) != 4 {
+		logUsageCmd(*cmd, usageGroupRoleActionsDelete)
+		return
+	}
+
+	roleID := args[0]
+	actionsJSON := args[1]
+	domainID := args[2]
+	token := args[3]
+
+	if actionsJSON == all {
+		if err := sdk.RemoveAllGroupRoleActions(cmd.Context(), groupID, roleID, domainID, token); err != nil {
+			logErrorCmd(*cmd, err)
+			return
+		}
+		logOKCmd(*cmd)
+		return
+	}
+
+	actions := struct {
+		Actions []string `json:"actions"`
+	}{}
+	if err := json.Unmarshal([]byte(actionsJSON), &actions); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	if err := sdk.RemoveGroupRoleActions(cmd.Context(), groupID, roleID, domainID, actions.Actions, token); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+	logOKCmd(*cmd)
+}
+
+func handleGroupRoleActionsAvailable(cmd *cobra.Command, args []string) {
+	if len(args) != 2 {
+		logUsageCmd(*cmd, usageGroupRoleActionsAvailable)
+		return
+	}
+
+	domainID := args[0]
+	token := args[1]
+
+	acts, err := sdk.AvailableGroupRoleActions(cmd.Context(), domainID, token)
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+	logJSONCmd(*cmd, acts)
+}
+
+func handleGroupRoleMembers(cmd *cobra.Command, groupID string, args []string) {
+	if len(args) < 1 {
+		logUsageCmd(*cmd, "cli groups <group_id> roles members <operation> [args...]")
+		return
+	}
+
+	operation := args[0]
+	opArgs := args[1:]
+
+	switch operation {
+	case add:
+		handleGroupRoleMembersAdd(cmd, groupID, opArgs)
+	case list:
+		handleGroupRoleMembersList(cmd, groupID, opArgs)
+	case delete:
+		handleGroupRoleMembersDelete(cmd, groupID, opArgs)
+	default:
+		logErrorCmd(*cmd, fmt.Errorf("unknown members operation: %s", operation))
+	}
+}
+
+func handleGroupRoleMembersAdd(cmd *cobra.Command, groupID string, args []string) {
+	if len(args) != 4 {
+		logUsageCmd(*cmd, usageGroupRoleMembersAdd)
+		return
+	}
+
+	roleID := args[0]
+	membersJSON := args[1]
+	domainID := args[2]
+	token := args[3]
+
+	members := struct {
+		Members []string `json:"members"`
+	}{}
+	if err := json.Unmarshal([]byte(membersJSON), &members); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	memb, err := sdk.AddGroupRoleMembers(cmd.Context(), groupID, roleID, domainID, members.Members, token)
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+	logJSONCmd(*cmd, memb)
+}
+
+func handleGroupRoleMembersList(cmd *cobra.Command, groupID string, args []string) {
+	if len(args) != 3 {
+		logUsageCmd(*cmd, usageGroupRoleMembersList)
+		return
+	}
+
+	roleID := args[0]
+	domainID := args[1]
+	token := args[2]
+
+	pageMetadata := smqsdk.PageMetadata{
+		Offset: Offset,
+		Limit:  Limit,
+	}
+
+	l, err := sdk.GroupRoleMembers(cmd.Context(), groupID, roleID, domainID, pageMetadata, token)
+	if err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+	logJSONCmd(*cmd, l)
+}
+
+func handleGroupRoleMembersDelete(cmd *cobra.Command, groupID string, args []string) {
+	if len(args) != 4 {
+		logUsageCmd(*cmd, usageGroupRoleMembersDelete)
+		return
+	}
+
+	roleID := args[0]
+	membersJSON := args[1]
+	domainID := args[2]
+	token := args[3]
+
+	if membersJSON == all {
+		if err := sdk.RemoveAllGroupRoleMembers(cmd.Context(), groupID, roleID, domainID, token); err != nil {
+			logErrorCmd(*cmd, err)
+			return
+		}
+		logOKCmd(*cmd)
+		return
+	}
+
+	members := struct {
+		Members []string `json:"members"`
+	}{}
+	if err := json.Unmarshal([]byte(membersJSON), &members); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	if err := sdk.RemoveGroupRoleMembers(cmd.Context(), groupID, roleID, domainID, members.Members, token); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+	logOKCmd(*cmd)
 }

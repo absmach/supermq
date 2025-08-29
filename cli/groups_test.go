@@ -50,6 +50,7 @@ func TestCreateGroupCmd(t *testing.T) {
 			desc: "create group successfully",
 			args: []string{
 				groupJson,
+				createCmd,
 				domainID,
 				token,
 			},
@@ -60,6 +61,7 @@ func TestCreateGroupCmd(t *testing.T) {
 			desc: "create group with invalid args",
 			args: []string{
 				groupJson,
+				createCmd,
 				domainID,
 				token,
 				extraArg,
@@ -70,6 +72,7 @@ func TestCreateGroupCmd(t *testing.T) {
 			desc: "create group with invalid json",
 			args: []string{
 				"{\"name\":\"testgroup\", \"metadata\":{\"key1\":\"value1\"}",
+				createCmd,
 				domainID,
 				token,
 			},
@@ -81,6 +84,7 @@ func TestCreateGroupCmd(t *testing.T) {
 			desc: "create group with invalid token",
 			args: []string{
 				groupJson,
+				createCmd,
 				domainID,
 				invalidToken,
 			},
@@ -92,6 +96,7 @@ func TestCreateGroupCmd(t *testing.T) {
 			desc: "create group with invalid domain",
 			args: []string{
 				groupJson,
+				createCmd,
 				domainID,
 				token,
 			},
@@ -103,8 +108,8 @@ func TestCreateGroupCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("CreateGroup", mock.Anything, mock.Anything, tc.args[1], tc.args[2]).Return(tc.group, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{createCmd}, tc.args...)...)
+			sdkCall := sdkMock.On("CreateGroup", mock.Anything, mock.Anything, tc.args[2], tc.args[3]).Return(tc.group, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case entityLog:
@@ -138,6 +143,7 @@ func TestDeletegroupCmd(t *testing.T) {
 			desc: "delete group successfully",
 			args: []string{
 				group.ID,
+				delCmd,
 				domainID,
 				token,
 			},
@@ -147,6 +153,7 @@ func TestDeletegroupCmd(t *testing.T) {
 			desc: "delete group with invalid args",
 			args: []string{
 				group.ID,
+				delCmd,
 				domainID,
 				token,
 				extraArg,
@@ -157,6 +164,7 @@ func TestDeletegroupCmd(t *testing.T) {
 			desc: "delete group with invalid id",
 			args: []string{
 				invalidID,
+				delCmd,
 				domainID,
 				token,
 			},
@@ -168,6 +176,7 @@ func TestDeletegroupCmd(t *testing.T) {
 			desc: "delete group with invalid token",
 			args: []string{
 				group.ID,
+				delCmd,
 				domainID,
 				invalidToken,
 			},
@@ -179,8 +188,8 @@ func TestDeletegroupCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("DeleteGroup", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{delCmd}, tc.args...)...)
+			sdkCall := sdkMock.On("DeleteGroup", mock.Anything, tc.args[0], tc.args[2], tc.args[3]).Return(tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case okLog:
@@ -215,6 +224,8 @@ func TestUpdategroupCmd(t *testing.T) {
 		{
 			desc: "update group successfully",
 			args: []string{
+				group.ID,
+				updateCmd,
 				newGroupJson,
 				domainID,
 				token,
@@ -228,6 +239,8 @@ func TestUpdategroupCmd(t *testing.T) {
 		{
 			desc: "update group with invalid args",
 			args: []string{
+				group.ID,
+				updateCmd,
 				newGroupJson,
 				domainID,
 				token,
@@ -238,6 +251,8 @@ func TestUpdategroupCmd(t *testing.T) {
 		{
 			desc: "update group with invalid group id",
 			args: []string{
+				invalidID,
+				updateCmd,
 				fmt.Sprintf("{\"id\":\"%s\",\"name\" : \"group1\"}", invalidID),
 				domainID,
 				token,
@@ -249,6 +264,8 @@ func TestUpdategroupCmd(t *testing.T) {
 		{
 			desc: "update group with invalid json syntax",
 			args: []string{
+				group.ID,
+				updateCmd,
 				fmt.Sprintf("{\"id\":\"%s\",\"name\" : \"group1\"", group.ID),
 				domainID,
 				token,
@@ -260,8 +277,9 @@ func TestUpdategroupCmd(t *testing.T) {
 		{
 			desc: "update group tags successfully",
 			args: []string{
-				tagUpdateType,
 				group.ID,
+				updateCmd,
+				tagUpdateType,
 				newTagsJson,
 				domainID,
 				token,
@@ -278,8 +296,9 @@ func TestUpdategroupCmd(t *testing.T) {
 		{
 			desc: "update group with invalid tags",
 			args: []string{
-				tagUpdateType,
 				group.ID,
+				updateCmd,
+				tagUpdateType,
 				"[\"tag1\", \"tag2\"",
 				domainID,
 				token,
@@ -291,8 +310,9 @@ func TestUpdategroupCmd(t *testing.T) {
 		{
 			desc: "update group tags with invalid group id",
 			args: []string{
-				tagUpdateType,
 				invalidID,
+				updateCmd,
+				tagUpdateType,
 				newTagsJson,
 				domainID,
 				token,
@@ -305,9 +325,9 @@ func TestUpdategroupCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			var ch smqsdk.Group
-			sdkCall := sdkMock.On("UpdateGroup", mock.Anything, mock.Anything, tc.args[1], tc.args[2]).Return(tc.group, tc.sdkErr)
+			sdkCall := sdkMock.On("UpdateGroup", mock.Anything, mock.Anything, tc.args[3], tc.args[4]).Return(tc.group, tc.sdkErr)
 			sdkCall1 := sdkMock.On("UpdateGroupTags", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.group, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{updCmd}, tc.args...)...)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case entityLog:
@@ -344,6 +364,7 @@ func TestEnablegroupCmd(t *testing.T) {
 			desc: "enable group successfully",
 			args: []string{
 				group.ID,
+				enableCmd,
 				domainID,
 				validToken,
 			},
@@ -354,6 +375,7 @@ func TestEnablegroupCmd(t *testing.T) {
 			desc: "delete group with invalid token",
 			args: []string{
 				group.ID,
+				enableCmd,
 				domainID,
 				invalidToken,
 			},
@@ -365,6 +387,7 @@ func TestEnablegroupCmd(t *testing.T) {
 			desc: "delete group with invalid group ID",
 			args: []string{
 				invalidID,
+				enableCmd,
 				domainID,
 				token,
 			},
@@ -376,6 +399,7 @@ func TestEnablegroupCmd(t *testing.T) {
 			desc: "enable group with invalid args",
 			args: []string{
 				group.ID,
+				enableCmd,
 				domainID,
 				validToken,
 				extraArg,
@@ -386,8 +410,8 @@ func TestEnablegroupCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("EnableGroup", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.group, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{enableCmd}, tc.args...)...)
+			sdkCall := sdkMock.On("EnableGroup", mock.Anything, tc.args[0], tc.args[2], tc.args[3]).Return(tc.group, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case errLog:
@@ -425,6 +449,7 @@ func TestDisablegroupCmd(t *testing.T) {
 			desc: "disable group successfully",
 			args: []string{
 				group.ID,
+				disableCmd,
 				domainID,
 				validToken,
 			},
@@ -435,6 +460,7 @@ func TestDisablegroupCmd(t *testing.T) {
 			desc: "disable group with invalid token",
 			args: []string{
 				group.ID,
+				disableCmd,
 				domainID,
 				invalidToken,
 			},
@@ -446,6 +472,7 @@ func TestDisablegroupCmd(t *testing.T) {
 			desc: "disable group with invalid id",
 			args: []string{
 				invalidID,
+				disableCmd,
 				domainID,
 				token,
 			},
@@ -457,6 +484,7 @@ func TestDisablegroupCmd(t *testing.T) {
 			desc: "disable group with invalid args",
 			args: []string{
 				group.ID,
+				disableCmd,
 				domainID,
 				validToken,
 				extraArg,
@@ -467,8 +495,8 @@ func TestDisablegroupCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("DisableGroup", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.group, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{disableCmd}, tc.args...)...)
+			sdkCall := sdkMock.On("DisableGroup", mock.Anything, tc.args[0], tc.args[2], tc.args[3]).Return(tc.group, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case errLog:
@@ -510,8 +538,10 @@ func TestCreateGroupRoleCmd(t *testing.T) {
 		{
 			desc: "create group role successfully",
 			args: []string{
-				`{"role_name":"admin","optional_actions":["read","update"]}`,
 				group.ID,
+				rolesCmd,
+				createCmd,
+				`{"role_name":"admin","optional_actions":["read","update"]}`,
 				domainID,
 				token,
 			},
@@ -525,8 +555,10 @@ func TestCreateGroupRoleCmd(t *testing.T) {
 		{
 			desc: "create group role with invalid JSON",
 			args: []string{
-				`{"role_name":"admin","optional_actions":["read","update"}`,
 				group.ID,
+				rolesCmd,
+				createCmd,
+				`{"role_name":"admin","optional_actions":["read","update"}`,
 				domainID,
 				token,
 			},
@@ -538,8 +570,8 @@ func TestCreateGroupRoleCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("CreateGroupRole", mock.Anything, tc.args[1], tc.args[2], roleReq, tc.args[3]).Return(tc.role, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{"roles", "create"}, tc.args...)...)
+			sdkCall := sdkMock.On("CreateGroupRole", mock.Anything, tc.args[0], tc.args[4], roleReq, tc.args[5]).Return(tc.role, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case entityLog:
@@ -585,8 +617,10 @@ func TestGetGroupRolesCmd(t *testing.T) {
 		{
 			desc: "get all group roles successfully",
 			args: []string{
-				all,
 				group.ID,
+				rolesCmd,
+				getCmd,
+				all,
 				domainID,
 				token,
 			},
@@ -596,8 +630,10 @@ func TestGetGroupRolesCmd(t *testing.T) {
 		{
 			desc: "get group roles with invalid token",
 			args: []string{
-				all,
 				group.ID,
+				rolesCmd,
+				getCmd,
+				all,
 				domainID,
 				invalidToken,
 			},
@@ -609,11 +645,11 @@ func TestGetGroupRolesCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("GroupRoles", mock.Anything, tc.args[1], tc.args[2], mock.Anything, tc.args[3]).Return(tc.roles, tc.sdkErr)
-			if tc.args[0] != all {
-				sdkCall = sdkMock.On("GroupRole", mock.Anything, tc.args[1], tc.args[0], tc.args[2], tc.args[3]).Return(role, tc.sdkErr)
+			sdkCall := sdkMock.On("GroupRoles", mock.Anything, tc.args[0], tc.args[4], mock.Anything, tc.args[5]).Return(tc.roles, tc.sdkErr)
+			if tc.args[3] != all {
+				sdkCall = sdkMock.On("GroupRole", mock.Anything, tc.args[0], tc.args[3], tc.args[4], tc.args[5]).Return(role, tc.sdkErr)
 			}
-			out := executeCommand(t, rootCmd, append([]string{"roles", "get"}, tc.args...)...)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case entityLog:
@@ -653,9 +689,11 @@ func TestUpdateGroupRoleCmd(t *testing.T) {
 		{
 			desc: "update group role name successfully",
 			args: []string{
-				"new_name",
-				role.ID,
 				group.ID,
+				rolesCmd,
+				updateCmd,
+				role.ID,
+				"new_name",
 				domainID,
 				token,
 			},
@@ -665,9 +703,11 @@ func TestUpdateGroupRoleCmd(t *testing.T) {
 		{
 			desc: "update group role name with invalid token",
 			args: []string{
-				"new_name",
-				role.ID,
 				group.ID,
+				rolesCmd,
+				updateCmd,
+				role.ID,
+				"new_name",
 				domainID,
 				invalidToken,
 			},
@@ -679,8 +719,8 @@ func TestUpdateGroupRoleCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("UpdateGroupRole", mock.Anything, tc.args[2], tc.args[1], tc.args[0], tc.args[3], tc.args[4]).Return(tc.role, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{"roles", "update"}, tc.args...)...)
+			sdkCall := sdkMock.On("UpdateGroupRole", mock.Anything, tc.args[0], tc.args[3], tc.args[4], tc.args[5], tc.args[6]).Return(tc.role, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case entityLog:
@@ -713,8 +753,10 @@ func TestDeleteGroupRoleCmd(t *testing.T) {
 		{
 			desc: "delete group role successfully",
 			args: []string{
-				roleID,
 				group.ID,
+				rolesCmd,
+				delCmd,
+				roleID,
 				domainID,
 				token,
 			},
@@ -723,8 +765,10 @@ func TestDeleteGroupRoleCmd(t *testing.T) {
 		{
 			desc: "delete group role with invalid token",
 			args: []string{
-				roleID,
 				group.ID,
+				rolesCmd,
+				delCmd,
+				roleID,
 				domainID,
 				invalidToken,
 			},
@@ -736,8 +780,8 @@ func TestDeleteGroupRoleCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("DeleteGroupRole", mock.Anything, tc.args[1], tc.args[0], tc.args[2], tc.args[3]).Return(tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{"roles", "delete"}, tc.args...)...)
+			sdkCall := sdkMock.On("DeleteGroupRole", mock.Anything, tc.args[0], tc.args[3], tc.args[4], tc.args[5]).Return(tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case okLog:
@@ -774,9 +818,12 @@ func TestAddGroupRoleActionsCmd(t *testing.T) {
 		{
 			desc: "add actions to role successfully",
 			args: []string{
-				`{"actions":["read","write"]}`,
-				roleID,
 				group.ID,
+				rolesCmd,
+				actionsCmd,
+				addCmd,
+				roleID,
+				`{"actions":["read","write"]}`,
 				domainID,
 				token,
 			},
@@ -786,9 +833,12 @@ func TestAddGroupRoleActionsCmd(t *testing.T) {
 		{
 			desc: "add actions to role with invalid JSON",
 			args: []string{
-				`{"actions":["read","write"}`,
-				roleID,
 				group.ID,
+				rolesCmd,
+				actionsCmd,
+				addCmd,
+				roleID,
+				`{"actions":["read","write"}`,
 				domainID,
 				token,
 			},
@@ -800,8 +850,8 @@ func TestAddGroupRoleActionsCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("AddGroupRoleActions", mock.Anything, tc.args[2], tc.args[1], tc.args[3], tc.actions, tc.args[4]).Return(tc.actions, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{"roles", "actions", "add"}, tc.args...)...)
+			sdkCall := sdkMock.On("AddGroupRoleActions", mock.Anything, tc.args[0], tc.args[4], tc.args[6], tc.actions, tc.args[7]).Return(tc.actions, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case entityLog:
@@ -837,8 +887,11 @@ func TestListGroupRoleActionsCmd(t *testing.T) {
 		{
 			desc: "list actions of role successfully",
 			args: []string{
-				roleID,
 				group.ID,
+				rolesCmd,
+				actionsCmd,
+				listCmd,
+				roleID,
 				domainID,
 				token,
 			},
@@ -848,8 +901,11 @@ func TestListGroupRoleActionsCmd(t *testing.T) {
 		{
 			desc: "list actions of role with invalid token",
 			args: []string{
-				roleID,
 				group.ID,
+				rolesCmd,
+				actionsCmd,
+				listCmd,
+				roleID,
 				domainID,
 				invalidToken,
 			},
@@ -861,8 +917,8 @@ func TestListGroupRoleActionsCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("GroupRoleActions", mock.Anything, tc.args[1], tc.args[0], tc.args[2], tc.args[3]).Return(tc.actions, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{"roles", "actions", "list"}, tc.args...)...)
+			sdkCall := sdkMock.On("GroupRoleActions", mock.Anything, tc.args[0], tc.args[4], tc.args[5], tc.args[6]).Return(tc.actions, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case entityLog:
@@ -901,9 +957,12 @@ func TestDeleteGroupRoleActionsCmd(t *testing.T) {
 		{
 			desc: "delete actions from role successfully",
 			args: []string{
-				`{"actions":["read","write"]}`,
-				roleID,
 				group.ID,
+				rolesCmd,
+				actionsCmd,
+				delCmd,
+				roleID,
+				`{"actions":["read","write"]}`,
 				domainID,
 				token,
 			},
@@ -912,9 +971,12 @@ func TestDeleteGroupRoleActionsCmd(t *testing.T) {
 		{
 			desc: "delete all actions from role successfully",
 			args: []string{
-				all,
-				roleID,
 				group.ID,
+				rolesCmd,
+				actionsCmd,
+				delCmd,
+				roleID,
+				all,
 				domainID,
 				token,
 			},
@@ -923,9 +985,12 @@ func TestDeleteGroupRoleActionsCmd(t *testing.T) {
 		{
 			desc: "delete actions from role with invalid JSON",
 			args: []string{
-				`{"actions":["read","write"}`,
-				roleID,
 				group.ID,
+				rolesCmd,
+				actionsCmd,
+				delCmd,
+				roleID,
+				`{"actions":["read","write"}`,
 				domainID,
 				token,
 			},
@@ -938,12 +1003,12 @@ func TestDeleteGroupRoleActionsCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			var sdkCall *mock.Call
-			if tc.args[0] == all {
-				sdkCall = sdkMock.On("RemoveAllGroupRoleActions", mock.Anything, tc.args[2], tc.args[1], tc.args[3], tc.args[4]).Return(tc.sdkErr)
+			if tc.args[5] == all {
+				sdkCall = sdkMock.On("RemoveAllGroupRoleActions", mock.Anything, tc.args[0], tc.args[4], tc.args[6], tc.args[7]).Return(tc.sdkErr)
 			} else {
-				sdkCall = sdkMock.On("RemoveGroupRoleActions", mock.Anything, tc.args[2], tc.args[1], tc.args[3], actions.Actions, tc.args[4]).Return(tc.sdkErr)
+				sdkCall = sdkMock.On("RemoveGroupRoleActions", mock.Anything, tc.args[0], tc.args[4], tc.args[6], actions.Actions, tc.args[7]).Return(tc.sdkErr)
 			}
-			out := executeCommand(t, rootCmd, append([]string{"roles", "actions", "delete"}, tc.args...)...)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case okLog:
@@ -976,6 +1041,10 @@ func TestAvailableGroupRoleActionsCmd(t *testing.T) {
 		{
 			desc: "list available actions successfully",
 			args: []string{
+				group.ID,
+				rolesCmd,
+				actionsCmd,
+				availableActionsCmd,
 				domainID,
 				token,
 			},
@@ -985,6 +1054,10 @@ func TestAvailableGroupRoleActionsCmd(t *testing.T) {
 		{
 			desc: "list available actions with invalid token",
 			args: []string{
+				group.ID,
+				rolesCmd,
+				actionsCmd,
+				availableActionsCmd,
 				domainID,
 				invalidToken,
 			},
@@ -996,8 +1069,8 @@ func TestAvailableGroupRoleActionsCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("AvailableGroupRoleActions", mock.Anything, tc.args[0], tc.args[1]).Return(tc.actions, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{"roles", "actions", "available-actions"}, tc.args...)...)
+			sdkCall := sdkMock.On("AvailableGroupRoleActions", mock.Anything, tc.args[4], tc.args[5]).Return(tc.actions, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case entityLog:
@@ -1037,9 +1110,12 @@ func TestAddGroupRoleMembersCmd(t *testing.T) {
 		{
 			desc: "add members to role successfully",
 			args: []string{
-				`{"members":["5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb", "5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb"]}`,
-				roleID,
 				group.ID,
+				rolesCmd,
+				membersCmd,
+				addCmd,
+				roleID,
+				`{"members":["5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb", "5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb"]}`,
 				domainID,
 				token,
 			},
@@ -1049,9 +1125,12 @@ func TestAddGroupRoleMembersCmd(t *testing.T) {
 		{
 			desc: "add members to role with invalid JSON",
 			args: []string{
-				`{"members":["5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb", "5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb"}`,
-				roleID,
 				group.ID,
+				rolesCmd,
+				membersCmd,
+				addCmd,
+				roleID,
+				`{"members":["5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb", "5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb"}`,
 				domainID,
 				token,
 			},
@@ -1063,8 +1142,8 @@ func TestAddGroupRoleMembersCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("AddGroupRoleMembers", mock.Anything, tc.args[2], tc.args[1], tc.args[3], tc.members, tc.args[4]).Return(tc.members, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{"roles", "members", "add"}, tc.args...)...)
+			sdkCall := sdkMock.On("AddGroupRoleMembers", mock.Anything, tc.args[0], tc.args[4], tc.args[6], tc.members, tc.args[7]).Return(tc.members, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case entityLog:
@@ -1107,8 +1186,11 @@ func TestListGroupRoleMembersCmd(t *testing.T) {
 		{
 			desc: "list members of role successfully",
 			args: []string{
-				roleID,
 				group.ID,
+				rolesCmd,
+				membersCmd,
+				listCmd,
+				roleID,
 				domainID,
 				token,
 			},
@@ -1118,8 +1200,11 @@ func TestListGroupRoleMembersCmd(t *testing.T) {
 		{
 			desc: "list members of role with invalid token",
 			args: []string{
-				roleID,
 				group.ID,
+				rolesCmd,
+				membersCmd,
+				listCmd,
+				roleID,
 				domainID,
 				invalidToken,
 			},
@@ -1131,8 +1216,8 @@ func TestListGroupRoleMembersCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("GroupRoleMembers", mock.Anything, tc.args[1], tc.args[0], tc.args[2], mock.Anything, tc.args[3]).Return(tc.members, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{"roles", "members", "list"}, tc.args...)...)
+			sdkCall := sdkMock.On("GroupRoleMembers", mock.Anything, tc.args[0], tc.args[4], tc.args[5], mock.Anything, tc.args[6]).Return(tc.members, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case entityLog:
@@ -1171,9 +1256,12 @@ func TestDeleteGroupRoleMembersCmd(t *testing.T) {
 		{
 			desc: "delete members from role successfully",
 			args: []string{
-				`{"members":["5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb", "5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb"]}`,
-				roleID,
 				group.ID,
+				rolesCmd,
+				membersCmd,
+				delCmd,
+				roleID,
+				`{"members":["5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb", "5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb"]}`,
 				domainID,
 				token,
 			},
@@ -1182,9 +1270,12 @@ func TestDeleteGroupRoleMembersCmd(t *testing.T) {
 		{
 			desc: "delete all members from role successfully",
 			args: []string{
-				all,
-				roleID,
 				group.ID,
+				rolesCmd,
+				membersCmd,
+				delCmd,
+				roleID,
+				all,
 				domainID,
 				token,
 			},
@@ -1193,9 +1284,12 @@ func TestDeleteGroupRoleMembersCmd(t *testing.T) {
 		{
 			desc: "delete members from role with invalid JSON",
 			args: []string{
-				`{"members":["5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb", "5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb"}`,
-				roleID,
 				group.ID,
+				rolesCmd,
+				membersCmd,
+				delCmd,
+				roleID,
+				`{"members":["5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb", "5dc1ce4b-7cc9-4f12-98a6-9d74cc4980bb"}`,
 				domainID,
 				token,
 			},
@@ -1208,12 +1302,12 @@ func TestDeleteGroupRoleMembersCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			var sdkCall *mock.Call
-			if tc.args[0] == all {
-				sdkCall = sdkMock.On("RemoveAllGroupRoleMembers", mock.Anything, tc.args[2], tc.args[1], tc.args[3], tc.args[4]).Return(tc.sdkErr)
+			if tc.args[5] == all {
+				sdkCall = sdkMock.On("RemoveAllGroupRoleMembers", mock.Anything, tc.args[0], tc.args[4], tc.args[6], tc.args[7]).Return(tc.sdkErr)
 			} else {
-				sdkCall = sdkMock.On("RemoveGroupRoleMembers", mock.Anything, tc.args[2], tc.args[1], tc.args[3], members.Members, tc.args[4]).Return(tc.sdkErr)
+				sdkCall = sdkMock.On("RemoveGroupRoleMembers", mock.Anything, tc.args[0], tc.args[4], tc.args[6], members.Members, tc.args[7]).Return(tc.sdkErr)
 			}
-			out := executeCommand(t, rootCmd, append([]string{"roles", "members", "delete"}, tc.args...)...)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case okLog:

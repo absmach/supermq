@@ -45,6 +45,7 @@ func TestCreateChannelCmd(t *testing.T) {
 			desc: "create channel successfully",
 			args: []string{
 				channelJson,
+				createCmd,
 				domainID,
 				token,
 			},
@@ -55,6 +56,7 @@ func TestCreateChannelCmd(t *testing.T) {
 			desc: "create channel with invalid args",
 			args: []string{
 				channelJson,
+				createCmd,
 				domainID,
 				token,
 				extraArg,
@@ -65,6 +67,7 @@ func TestCreateChannelCmd(t *testing.T) {
 			desc: "create channel with invalid json",
 			args: []string{
 				"{\"name\":\"testchannel\", \"metadata\":{\"key1\":\"value1\"}",
+				createCmd,
 				domainID,
 				token,
 			},
@@ -76,6 +79,7 @@ func TestCreateChannelCmd(t *testing.T) {
 			desc: "create channel with invalid token",
 			args: []string{
 				channelJson,
+				createCmd,
 				domainID,
 				invalidToken,
 			},
@@ -87,8 +91,8 @@ func TestCreateChannelCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("CreateChannel", mock.Anything, mock.Anything, tc.args[1], tc.args[2]).Return(tc.channel, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{createCmd}, tc.args...)...)
+			sdkCall := sdkMock.On("CreateChannel", mock.Anything, mock.Anything, tc.args[2], tc.args[3]).Return(tc.channel, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case entityLog:
@@ -127,6 +131,7 @@ func TestGetChannelsCmd(t *testing.T) {
 			desc: "get all channels successfully",
 			args: []string{
 				all,
+				getCmd,
 				domainID,
 				token,
 			},
@@ -139,6 +144,7 @@ func TestGetChannelsCmd(t *testing.T) {
 			desc: "get channel with id",
 			args: []string{
 				channel.ID,
+				getCmd,
 				domainID,
 				token,
 			},
@@ -149,6 +155,7 @@ func TestGetChannelsCmd(t *testing.T) {
 			desc: "get channels with invalid args",
 			args: []string{
 				all,
+				getCmd,
 				domainID,
 				token,
 				extraArg,
@@ -159,6 +166,7 @@ func TestGetChannelsCmd(t *testing.T) {
 			desc: "get all channels with invalid token",
 			args: []string{
 				all,
+				getCmd,
 				domainID,
 				invalidToken,
 			},
@@ -170,6 +178,7 @@ func TestGetChannelsCmd(t *testing.T) {
 			desc: "get channel with invalid id",
 			args: []string{
 				invalidID,
+				getCmd,
 				domainID,
 				token,
 			},
@@ -181,14 +190,14 @@ func TestGetChannelsCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("Channel", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.channel, tc.sdkErr)
-			sdkCall1 := sdkMock.On("Channels", mock.Anything, mock.Anything, tc.args[1], tc.args[2]).Return(tc.page, tc.sdkErr)
+			sdkCall := sdkMock.On("Channel", mock.Anything, tc.args[0], tc.args[2], tc.args[3]).Return(tc.channel, tc.sdkErr)
+			sdkCall1 := sdkMock.On("Channels", mock.Anything, mock.Anything, tc.args[2], tc.args[3]).Return(tc.page, tc.sdkErr)
 
-			out := executeCommand(t, rootCmd, append([]string{getCmd}, tc.args...)...)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case entityLog:
-				if tc.args[1] == all {
+				if tc.args[0] == all {
 					err := json.Unmarshal([]byte(out), &page)
 					assert.Nil(t, err)
 					assert.Equal(t, tc.page, page, fmt.Sprintf("%v unexpected response, expected: %v, got: %v", tc.desc, tc.page, page))
@@ -225,6 +234,7 @@ func TestDeleteChannelCmd(t *testing.T) {
 			desc: "delete channel successfully",
 			args: []string{
 				channel.ID,
+				delCmd,
 				domainID,
 				token,
 			},
@@ -234,6 +244,7 @@ func TestDeleteChannelCmd(t *testing.T) {
 			desc: "delete channel with invalid args",
 			args: []string{
 				channel.ID,
+				delCmd,
 				domainID,
 				token,
 				extraArg,
@@ -244,6 +255,7 @@ func TestDeleteChannelCmd(t *testing.T) {
 			desc: "delete channel with invalid channel id",
 			args: []string{
 				invalidID,
+				delCmd,
 				domainID,
 				token,
 			},
@@ -255,6 +267,7 @@ func TestDeleteChannelCmd(t *testing.T) {
 			desc: "delete channel with invalid token",
 			args: []string{
 				channel.ID,
+				delCmd,
 				domainID,
 				invalidToken,
 			},
@@ -266,8 +279,8 @@ func TestDeleteChannelCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("DeleteChannel", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{delCmd}, tc.args...)...)
+			sdkCall := sdkMock.On("DeleteChannel", mock.Anything, tc.args[0], tc.args[2], tc.args[3]).Return(tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case okLog:
@@ -301,6 +314,7 @@ func TestUpdateChannelCmd(t *testing.T) {
 			desc: "update channel successfully",
 			args: []string{
 				channel.ID,
+				updateCmd,
 				newChannelJson,
 				domainID,
 				token,
@@ -315,6 +329,7 @@ func TestUpdateChannelCmd(t *testing.T) {
 			desc: "update channel with invalid args",
 			args: []string{
 				channel.ID,
+				updateCmd,
 				newChannelJson,
 				domainID,
 				token,
@@ -326,6 +341,7 @@ func TestUpdateChannelCmd(t *testing.T) {
 			desc: "update channel with invalid channel id",
 			args: []string{
 				invalidID,
+				updateCmd,
 				newChannelJson,
 				domainID,
 				token,
@@ -338,6 +354,7 @@ func TestUpdateChannelCmd(t *testing.T) {
 			desc: "update channel with invalid json syntax",
 			args: []string{
 				channel.ID,
+				updateCmd,
 				"{\"name\" : \"channel1\"",
 				domainID,
 				token,
@@ -350,8 +367,8 @@ func TestUpdateChannelCmd(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			var ch mgsdk.Channel
-			sdkCall := sdkMock.On("UpdateChannel", mock.Anything, mock.Anything, tc.args[2], tc.args[3]).Return(tc.channel, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{updCmd}, tc.args...)...)
+			sdkCall := sdkMock.On("UpdateChannel", mock.Anything, mock.Anything, tc.args[3], tc.args[4]).Return(tc.channel, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case entityLog:
@@ -387,6 +404,7 @@ func TestEnableChannelCmd(t *testing.T) {
 			desc: "enable channel successfully",
 			args: []string{
 				channel.ID,
+				enableCmd,
 				domainID,
 				validToken,
 			},
@@ -397,6 +415,7 @@ func TestEnableChannelCmd(t *testing.T) {
 			desc: "delete channel with invalid token",
 			args: []string{
 				channel.ID,
+				enableCmd,
 				domainID,
 				invalidToken,
 			},
@@ -408,6 +427,7 @@ func TestEnableChannelCmd(t *testing.T) {
 			desc: "delete channel with invalid channel ID",
 			args: []string{
 				invalidID,
+				enableCmd,
 				domainID,
 				token,
 			},
@@ -419,6 +439,7 @@ func TestEnableChannelCmd(t *testing.T) {
 			desc: "enable channel with invalid args",
 			args: []string{
 				channel.ID,
+				enableCmd,
 				domainID,
 				validToken,
 				extraArg,
@@ -429,8 +450,8 @@ func TestEnableChannelCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("EnableChannel", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.channel, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{enableCmd}, tc.args...)...)
+			sdkCall := sdkMock.On("EnableChannel", mock.Anything, tc.args[0], tc.args[2], tc.args[3]).Return(tc.channel, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case errLog:
@@ -468,6 +489,7 @@ func TestDisableChannelCmd(t *testing.T) {
 			desc: "disable channel successfully",
 			args: []string{
 				channel.ID,
+				disableCmd,
 				domainID,
 				validToken,
 			},
@@ -478,6 +500,7 @@ func TestDisableChannelCmd(t *testing.T) {
 			desc: "disable channel with invalid token",
 			args: []string{
 				channel.ID,
+				disableCmd,
 				domainID,
 				invalidToken,
 			},
@@ -489,6 +512,7 @@ func TestDisableChannelCmd(t *testing.T) {
 			desc: "disable channel with invalid id",
 			args: []string{
 				invalidID,
+				disableCmd,
 				domainID,
 				token,
 			},
@@ -500,6 +524,7 @@ func TestDisableChannelCmd(t *testing.T) {
 			desc: "disable client with invalid args",
 			args: []string{
 				channel.ID,
+				disableCmd,
 				domainID,
 				validToken,
 				extraArg,
@@ -510,8 +535,8 @@ func TestDisableChannelCmd(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			sdkCall := sdkMock.On("DisableChannel", mock.Anything, tc.args[0], tc.args[1], tc.args[2]).Return(tc.channel, tc.sdkErr)
-			out := executeCommand(t, rootCmd, append([]string{disableCmd}, tc.args...)...)
+			sdkCall := sdkMock.On("DisableChannel", mock.Anything, tc.args[0], tc.args[2], tc.args[3]).Return(tc.channel, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
 
 			switch tc.logType {
 			case errLog:
@@ -524,6 +549,101 @@ func TestDisableChannelCmd(t *testing.T) {
 					t.Fatalf("json.Unmarshal failed: %v", err)
 				}
 				assert.Equal(t, tc.channel, ch, fmt.Sprintf("%s unexpected response: expected: %v, got: %v", tc.desc, tc.channel, ch))
+			}
+
+			sdkCall.Unset()
+		})
+	}
+}
+
+func TestChannelUsersCmd(t *testing.T) {
+	sdkMock := new(sdkmocks.SDK)
+	cli.SetSDK(sdkMock)
+	channelsCmd := cli.NewChannelsCmd()
+	rootCmd := setFlags(channelsCmd)
+
+	var mp mgsdk.EntityMembersPage
+
+	memberRole := mgsdk.MemberRoles{
+		MemberID: testsutil.GenerateUUID(t),
+		Roles:    []mgsdk.MemberRole{},
+	}
+
+	cases := []struct {
+		desc          string
+		args          []string
+		sdkErr        errors.SDKError
+		errLogMessage string
+		usersPage     mgsdk.EntityMembersPage
+		logType       outputLog
+	}{
+		{
+			desc: "list channel users successfully",
+			args: []string{
+				channel.ID,
+				usersCmd,
+				domainID,
+				validToken,
+			},
+			usersPage: mgsdk.EntityMembersPage{
+				Members: []mgsdk.MemberRoles{memberRole},
+			},
+			logType: entityLog,
+		},
+		{
+			desc: "list channel users with invalid token",
+			args: []string{
+				channel.ID,
+				usersCmd,
+				domainID,
+				invalidToken,
+			},
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden)),
+			logType:       errLog,
+		},
+		{
+			desc: "list channel users with invalid channel id",
+			args: []string{
+				invalidID,
+				usersCmd,
+				domainID,
+				token,
+			},
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden)),
+			logType:       errLog,
+		},
+		{
+			desc: "list channel users with invalid args",
+			args: []string{
+				channel.ID,
+				usersCmd,
+				domainID,
+				validToken,
+				extraArg,
+			},
+			errLogMessage: rootCmd.Use,
+			logType:       usageLog,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			sdkCall := sdkMock.On("ListChannelMembers", mock.Anything, tc.args[0], tc.args[2], mock.Anything, tc.args[3]).Return(tc.usersPage, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
+
+			switch tc.logType {
+			case errLog:
+				assert.Equal(t, tc.errLogMessage, out, fmt.Sprintf("%s unexpected error response: expected %s got errLogMessage:%s", tc.desc, tc.errLogMessage, out))
+			case usageLog:
+				assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+			case entityLog:
+				err := json.Unmarshal([]byte(out), &mp)
+				if err != nil {
+					t.Fatalf("json.Unmarshal failed: %v", err)
+				}
+				assert.Equal(t, tc.usersPage, mp, fmt.Sprintf("%s unexpected response: expected: %v, got: %v", tc.desc, tc.usersPage, mp))
 			}
 
 			sdkCall.Unset()
