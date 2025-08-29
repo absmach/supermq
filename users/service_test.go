@@ -1532,7 +1532,6 @@ func TestGenerateResetToken(t *testing.T) {
 	cases := []struct {
 		desc                    string
 		email                   string
-		host                    string
 		retrieveByEmailResponse users.User
 		issueResponse           *grpcTokenV1.Token
 		retrieveByEmailErr      error
@@ -1542,7 +1541,6 @@ func TestGenerateResetToken(t *testing.T) {
 		{
 			desc:                    "generate reset token for existing user",
 			email:                   "existingemail@example.com",
-			host:                    "examplehost",
 			retrieveByEmailResponse: user,
 			issueResponse:           &grpcTokenV1.Token{AccessToken: validToken, RefreshToken: &validToken, AccessType: "3"},
 			err:                     nil,
@@ -1550,7 +1548,6 @@ func TestGenerateResetToken(t *testing.T) {
 		{
 			desc:  "generate reset token for user with non-existing user",
 			email: "example@example.com",
-			host:  "examplehost",
 			retrieveByEmailResponse: users.User{
 				ID:    testsutil.GenerateUUID(t),
 				Email: "",
@@ -1561,7 +1558,6 @@ func TestGenerateResetToken(t *testing.T) {
 		{
 			desc:                    "generate reset token with failed to issue token",
 			email:                   "existingemail@example.com",
-			host:                    "examplehost",
 			retrieveByEmailResponse: user,
 			issueResponse:           &grpcTokenV1.Token{},
 			issueErr:                svcerr.ErrAuthorization,
@@ -1573,8 +1569,8 @@ func TestGenerateResetToken(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			repoCall := cRepo.On("RetrieveByEmail", context.Background(), tc.email).Return(tc.retrieveByEmailResponse, tc.retrieveByEmailErr)
 			authCall := auth.On("Issue", context.Background(), mock.Anything).Return(tc.issueResponse, tc.issueErr)
-			svcCall := e.On("SendPasswordReset", []string{tc.email}, tc.host, user.Credentials.Username, validToken).Return(tc.err)
-			err := svc.GenerateResetToken(context.Background(), tc.email, tc.host)
+			svcCall := e.On("SendPasswordReset", []string{tc.email}, user.Credentials.Username, validToken).Return(tc.err)
+			err := svc.GenerateResetToken(context.Background(), tc.email)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 			repoCall.Parent.AssertCalled(t, "RetrieveByEmail", context.Background(), tc.email)
 			repoCall.Unset()

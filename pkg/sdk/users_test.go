@@ -1409,12 +1409,12 @@ func TestResetPasswordRequest(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			svcCall := svc.On("GenerateResetToken", mock.Anything, tc.email, defHost).Return(tc.svcErr)
-			svcCall1 := svc.On("SendPasswordReset", mock.Anything, mock.Anything, tc.email, user.Credentials.Username, tc.issueRes.AccessToken).Return(nil)
+			svcCall := svc.On("GenerateResetToken", mock.Anything, tc.email).Return(tc.svcErr)
+			svcCall1 := svc.On("SendPasswordReset", mock.Anything, tc.email, user.Credentials.Username, tc.issueRes.AccessToken).Return(nil)
 			err := mgsdk.ResetPasswordRequest(context.Background(), tc.email)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "GenerateResetToken", mock.Anything, tc.email, defHost)
+				ok := svcCall.Parent.AssertCalled(t, "GenerateResetToken", mock.Anything, tc.email)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()

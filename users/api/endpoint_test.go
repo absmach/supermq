@@ -1696,14 +1696,6 @@ func TestPasswordResetRequest(t *testing.T) {
 			err:         apiutil.ErrValidation,
 		},
 		{
-			desc:        "password reset request with empty host",
-			data:        fmt.Sprintf(`{"email": "%s", "host": "%s"}`, testemail, ""),
-			contentType: contentType,
-			referer:     "",
-			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
-		},
-		{
 			desc:        "password reset request with invalid email",
 			data:        fmt.Sprintf(`{"email": "%s", "host": "%s"}`, "invalid", testhost),
 			contentType: contentType,
@@ -1749,8 +1741,8 @@ func TestPasswordResetRequest(t *testing.T) {
 				referer:     tc.referer,
 				body:        strings.NewReader(tc.data),
 			}
-			svcCall := svc.On("GenerateResetToken", mock.Anything, mock.Anything, mock.Anything).Return(tc.generateErr)
-			svcCall1 := svc.On("SendPasswordReset", mock.Anything, mock.Anything, mock.Anything, mock.Anything, validToken).Return(tc.err)
+			svcCall := svc.On("GenerateResetToken", mock.Anything, mock.Anything).Return(tc.generateErr)
+			svcCall1 := svc.On("SendPasswordReset", mock.Anything, mock.Anything, mock.Anything, validToken).Return(tc.err)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 			assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))

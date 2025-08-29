@@ -304,15 +304,14 @@ func (es *eventStore) Identify(ctx context.Context, session authn.Session) (stri
 	return userID, nil
 }
 
-func (es *eventStore) GenerateResetToken(ctx context.Context, email, host string) error {
-	err := es.svc.GenerateResetToken(ctx, email, host)
+func (es *eventStore) GenerateResetToken(ctx context.Context, email string) error {
+	err := es.svc.GenerateResetToken(ctx, email)
 	if err != nil {
 		return err
 	}
 
 	event := generateResetTokenEvent{
 		email:     email,
-		host:      host,
 		requestID: middleware.GetReqID(ctx),
 	}
 
@@ -366,13 +365,12 @@ func (es *eventStore) ResetSecret(ctx context.Context, session authn.Session, se
 	return es.Publish(ctx, resetSecretStream, event)
 }
 
-func (es *eventStore) SendPasswordReset(ctx context.Context, host, email, user, token string) error {
-	if err := es.svc.SendPasswordReset(ctx, host, email, user, token); err != nil {
+func (es *eventStore) SendPasswordReset(ctx context.Context, email, user, token string) error {
+	if err := es.svc.SendPasswordReset(ctx, email, user, token); err != nil {
 		return err
 	}
 
 	event := sendPasswordResetEvent{
-		host:      host,
 		email:     email,
 		user:      user,
 		requestID: middleware.GetReqID(ctx),
