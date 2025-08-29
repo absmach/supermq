@@ -43,6 +43,41 @@ func registrationEndpoint(svc users.Service, selfRegister bool) endpoint.Endpoin
 	}
 }
 
+func sendVerificationEndpoint(svc users.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request any) (any, error) {
+		req := request.(sendVerificationReq)
+		if err := req.validate(); err != nil {
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
+		}
+
+		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		if !ok {
+			return nil, svcerr.ErrAuthentication
+		}
+
+		if err := svc.SendVerification(ctx, session); err != nil {
+			return sendVerificationRes{}, err
+		}
+
+		return sendVerificationRes{}, nil
+	}
+}
+
+func verifyEmailEndpoint(svc users.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request any) (any, error) {
+		req := request.(verifyEmailReq)
+		if err := req.validate(); err != nil {
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
+		}
+
+		if _, err := svc.VerifyEmail(ctx, req.token); err != nil {
+			return verifyEmailRes{}, err
+		}
+
+		return verifyEmailRes{}, nil
+	}
+}
+
 func viewEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(viewUserReq)

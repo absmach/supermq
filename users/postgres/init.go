@@ -14,7 +14,7 @@ func Migration() *migrate.MemoryMigrationSource {
 		Migrations: []*migrate.Migration{
 			{
 				Id: "clients_01",
-				// VARCHAR(36) for colums with IDs as UUIDS have a maximum of 36 characters
+				// VARCHAR(36) for column with IDs as UUIDS have a maximum of 36 characters
 				// STATUS 0 to imply enabled and 1 to imply disabled
 				// Role 0 to imply user role and 1 to imply admin role
 				Up: []string{
@@ -50,8 +50,8 @@ func Migration() *migrate.MemoryMigrationSource {
 				Up: []string{
 					`ALTER TABLE clients
                         ADD COLUMN username VARCHAR(254) UNIQUE,
-                        ADD COLUMN first_name VARCHAR(254) NOT NULL DEFAULT '', 
-                        ADD COLUMN last_name VARCHAR(254) NOT NULL DEFAULT '', 
+                        ADD COLUMN first_name VARCHAR(254) NOT NULL DEFAULT '',
+                        ADD COLUMN last_name VARCHAR(254) NOT NULL DEFAULT '',
                         ADD COLUMN profile_picture TEXT`,
 					`ALTER TABLE clients RENAME COLUMN identity TO email`,
 					`ALTER TABLE clients DROP COLUMN name`,
@@ -95,6 +95,24 @@ func Migration() *migrate.MemoryMigrationSource {
 				Down: []string{
 					`ALTER TABLE users ALTER COLUMN created_at TYPE TIMESTAMP;`,
 					`ALTER TABLE users ALTER COLUMN updated_at TYPE TIMESTAMP;`,
+				},
+			},
+			{
+				Id: "clients_07",
+				Up: []string{
+					`ALTER TABLE users
+						ADD COLUMN verified BOOLEAN DEFAULT FALSE,
+						ADD COLUMN verified_at TIMESTAMP,
+						ADD COLUMN verification_token VARCHAR(255),
+						ADD COLUMN verification_token_expires_at TIMESTAMP,
+						ADD COLUMN verified_at TIMESTAMP;`,
+				},
+				Down: []string{
+					`ALTER TABLE users
+						DROP COLUMN verified BOOLEAN DEFAULT FALSE,
+						DROP COLUMN verified_at TIMESTAMP,
+						DROP COLUMN verification_token VARCHAR(255),
+						DROP COLUMN verification_token_expires_at TIMESTAMP;`,
 				},
 			},
 		},

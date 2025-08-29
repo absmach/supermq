@@ -44,6 +44,7 @@ type Session struct {
 	DomainID     string
 	DomainUserID string
 	SuperAdmin   bool
+	Verified     bool
 	Role         Role
 }
 

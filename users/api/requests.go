@@ -4,7 +4,6 @@
 package api
 
 import (
-	"net/mail"
 	"net/url"
 
 	api "github.com/absmach/supermq/api/http"
@@ -39,15 +38,16 @@ func (req createUserReq) validate() error {
 		return err
 	}
 	// Username must not be a valid email format due to username/email login.
-	if _, err := mail.ParseAddress(req.User.Credentials.Username); err == nil {
+	if err := api.ValidateEmail(req.User.Email); err == nil {
 		return apiutil.ErrInvalidUsername
 	}
+
 	if req.User.Email == "" {
 		return apiutil.ErrMissingEmail
 	}
 	// Email must be in a valid format.
-	if _, err := mail.ParseAddress(req.User.Email); err != nil {
-		return apiutil.ErrInvalidEmail
+	if err := api.ValidateEmail(req.User.Email); err != nil {
+		return err
 	}
 	if req.User.Credentials.Secret == "" {
 		return apiutil.ErrMissingPass
@@ -65,6 +65,24 @@ func (req createUserReq) validate() error {
 	}
 
 	return req.User.Validate()
+}
+
+type sendVerificationReq struct{}
+
+func (req sendVerificationReq) validate() error {
+	return nil
+}
+
+type verifyEmailReq struct {
+	token string
+}
+
+func (req verifyEmailReq) validate() error {
+	if req.token == "" {
+		return apiutil.ErrInvalidEmailVerificationToken
+	}
+
+	return nil
 }
 
 type viewUserReq struct {
@@ -183,8 +201,8 @@ func (req updateEmailReq) validate() error {
 	if req.id == "" {
 		return apiutil.ErrMissingID
 	}
-	if _, err := mail.ParseAddress(req.Email); err != nil {
-		return apiutil.ErrInvalidEmail
+	if err := api.ValidateEmail(req.Email); err != nil {
+		return err
 	}
 
 	return nil

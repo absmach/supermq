@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/mail"
 	"regexp"
 	"strings"
 
@@ -107,6 +108,13 @@ func ValidateUUID(extID string) (err error) {
 		return apiutil.ErrInvalidIDFormat
 	}
 
+	return nil
+}
+
+func ValidateEmail(email string) (err error) {
+	if _, err := mail.ParseAddress(email); err != nil {
+		return apiutil.ErrInvalidEmail
+	}
 	return nil
 }
 

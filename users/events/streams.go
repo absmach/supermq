@@ -17,6 +17,8 @@ import (
 const (
 	supermqPrefix           = "supermq."
 	createStream            = supermqPrefix + userCreate
+	sendVerificationStream  = supermqPrefix + userSendVerification
+	verifyEmailStream       = supermqPrefix + userVerifyEmail
 	updateStream            = supermqPrefix + userUpdate
 	updateRoleStream        = supermqPrefix + userUpdateRole
 	updateTagsStream        = supermqPrefix + userUpdateTags
@@ -79,6 +81,38 @@ func (es *eventStore) Register(ctx context.Context, session authn.Session, user 
 		return user, err
 	}
 
+	return user, nil
+}
+
+func (es *eventStore) SendVerification(ctx context.Context, session authn.Session) error {
+	err := es.svc.SendVerification(ctx, session)
+	if err != nil {
+		return err
+	}
+
+	event := sendVerificationEvent{
+		session,
+		middleware.GetReqID(ctx),
+	}
+
+	return es.Publish(ctx, sendVerificationStream, event)
+}
+
+func (es *eventStore) VerifyEmail(ctx context.Context, verificationToken string) (users.User, error) {
+	user, err := es.svc.VerifyEmail(ctx, verificationToken)
+	if err != nil {
+		return user, err
+	}
+
+	event := verifyEmailEvent{
+		email:     user.Email,
+		userID:    user.ID,
+		verified:  user.Verified,
+		requestID: middleware.GetReqID(ctx),
+	}
+	if err := es.Publish(ctx, verifyEmailStream, event); err != nil {
+		return user, err
+	}
 	return user, nil
 }
 

@@ -39,6 +39,24 @@ func (ms *metricsMiddleware) Register(ctx context.Context, session authn.Session
 	return ms.svc.Register(ctx, session, user, selfRegister)
 }
 
+// SendVerification instruments SendVerification method with metrics.
+func (ms *metricsMiddleware) SendVerification(ctx context.Context, session authn.Session) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "send_verification").Add(1)
+		ms.latency.With("method", "send_verification").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.SendVerification(ctx, session)
+}
+
+// VerifyEmail instruments VerifyEmail method with metrics.
+func (ms *metricsMiddleware) VerifyEmail(ctx context.Context, verificationToken string) (users.User, error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "verify_email").Add(1)
+		ms.latency.With("method", "verify_email").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.VerifyEmail(ctx, verificationToken)
+}
+
 // IssueToken instruments IssueToken method with metrics.
 func (ms *metricsMiddleware) IssueToken(ctx context.Context, username, secret string) (*grpcTokenV1.Token, error) {
 	defer func(begin time.Time) {

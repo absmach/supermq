@@ -127,7 +127,7 @@ func (repo *userRepo) RetrieveAll(ctx context.Context, pm users.Page) (users.Use
 	}
 
 	q := fmt.Sprintf(`SELECT u.id, u.tags, u.email, u.metadata, u.status, u.role, u.first_name, u.last_name, u.username,
-    u.created_at, u.updated_at, u.profile_picture, COALESCE(u.updated_by, '') AS updated_by
+    u.created_at, u.updated_at, u.profile_picture, COALESCE(u.updated_by, '') AS updated_by, u.verified, COALESCE(u.verified_at, '') AS verified_at
     FROM users u %s %s LIMIT :limit OFFSET :offset;`, query, orderClause)
 
 	dbPage, err := ToDBUsersPage(pm)
@@ -320,6 +320,7 @@ func (repo *userRepo) Delete(ctx context.Context, id string) error {
 }
 
 func (repo *userRepo) SearchUsers(ctx context.Context, pm users.Page) (users.UsersPage, error) {
+	pm.Verified = true
 	query, err := PageQuery(pm)
 	if err != nil {
 		return users.UsersPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
@@ -504,6 +505,8 @@ type DBUser struct {
 	LastName       sql.NullString   `db:"last_name, omitempty"`
 	ProfilePicture sql.NullString   `db:"profile_picture, omitempty"`
 	Email          string           `db:"email,omitempty"`
+	Verified       bool             `db:"verified"`
+	VerifiedAt     sql.NullTime     `db:"verified,omitempty"`
 }
 
 func toDBUser(u users.User) (DBUser, error) {
@@ -527,6 +530,10 @@ func toDBUser(u users.User) (DBUser, error) {
 	if u.UpdatedAt != (time.Time{}) {
 		updatedAt = sql.NullTime{Time: u.UpdatedAt, Valid: true}
 	}
+	var verifiedAt sql.NullTime
+	if u.VerifiedAt != (time.Time{}) {
+		verifiedAt = sql.NullTime{Time: u.VerifiedAt, Valid: true}
+	}
 
 	return DBUser{
 		ID:             u.ID,
@@ -543,6 +550,7 @@ func toDBUser(u users.User) (DBUser, error) {
 		Username:       stringToNullString(u.Credentials.Username),
 		ProfilePicture: stringToNullString(u.ProfilePicture),
 		Email:          u.Email,
+		VerifiedAt:     verifiedAt,
 	}, nil
 }
 
@@ -565,6 +573,10 @@ func ToUser(dbu DBUser) (users.User, error) {
 	if dbu.UpdatedAt.Valid {
 		updatedAt = dbu.UpdatedAt.Time.UTC()
 	}
+	var verifiedAt time.Time
+	if dbu.UpdatedAt.Valid {
+		verifiedAt = dbu.UpdatedAt.Time.UTC()
+	}
 
 	user := users.User{
 		ID:        dbu.ID,
@@ -582,6 +594,8 @@ func ToUser(dbu DBUser) (users.User, error) {
 		Status:         dbu.Status,
 		Tags:           tags,
 		ProfilePicture: nullStringString(dbu.ProfilePicture),
+		Verified:       dbu.Verified,
+		VerifiedAt:     verifiedAt,
 	}
 	if dbu.Role != nil {
 		user.Role = *dbu.Role
@@ -603,6 +617,7 @@ type DBUsersPage struct {
 	GroupID   string       `db:"group_id"`
 	Role      users.Role   `db:"role"`
 	Status    users.Status `db:"status"`
+	Verified  bool         `db:"verified"`
 }
 
 func ToDBUsersPage(pm users.Page) (DBUsersPage, error) {
@@ -624,6 +639,7 @@ func ToDBUsersPage(pm users.Page) (DBUsersPage, error) {
 		Status:    pm.Status,
 		Tag:       pm.Tag,
 		Role:      pm.Role,
+		Verified:  pm.Verified,
 	}, nil
 }
 
@@ -634,6 +650,10 @@ func PageQuery(pm users.Page) (string, error) {
 	}
 
 	var query []string
+	if pm.Verified {
+		query = append(query, "verified = true")
+
+	}
 	if pm.FirstName != "" {
 		query = append(query, "first_name ILIKE '%' || :first_name || '%'")
 	}
