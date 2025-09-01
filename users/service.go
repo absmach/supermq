@@ -26,23 +26,23 @@ var (
 )
 
 type service struct {
-	token          grpcTokenV1.TokenServiceClient
-	users          Repository
-	idProvider     supermq.IDProvider
-	policies       policies.Service
-	hasher         Hasher
-	email          Emailer
+	token      grpcTokenV1.TokenServiceClient
+	users      Repository
+	idProvider supermq.IDProvider
+	policies   policies.Service
+	hasher     Hasher
+	email      Emailer
 }
 
 // NewService returns a new Users service implementation.
 func NewService(token grpcTokenV1.TokenServiceClient, urepo Repository, policyService policies.Service, emailer Emailer, hasher Hasher, idp supermq.IDProvider) Service {
 	return service{
-		token:          token,
-		users:          urepo,
-		policies:       policyService,
-		hasher:         hasher,
-		email:          emailer,
-		idProvider:     idp,
+		token:      token,
+		users:      urepo,
+		policies:   policyService,
+		hasher:     hasher,
+		email:      emailer,
+		idProvider: idp,
 	}
 }
 
