@@ -327,7 +327,7 @@ func (lm *loggingMiddleware) SendPasswordReset(ctx context.Context, email string
 			lm.logger.Warn("Generate reset token failed", args...)
 			return
 		}
-		lm.logger.Info("Generate reset token completed successfully", args...)
+		lm.logger.Info("Send password reset completed successfully", args...)
 	}(time.Now())
 	return lm.svc.SendPasswordReset(ctx, email)
 }
