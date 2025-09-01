@@ -15,7 +15,6 @@ var _ users.Emailer = (*emailer)(nil)
 type emailer struct {
 	resetURL string
 	agent    *email.Agent
-	host     string
 }
 
 // New creates new emailer utility.
@@ -24,11 +23,10 @@ func New(url string, c *email.Config) (users.Emailer, error) {
 	return &emailer{
 		resetURL: url,
 		agent:    e,
-		host:     c.PasswordResetURLPrefix,
 	}, err
 }
 
 func (e *emailer) SendPasswordReset(to []string, user, token string) error {
-	url := fmt.Sprintf("%s%s?token=%s", e.host, e.resetURL, token)
+	url := fmt.Sprintf("%s?token=%s", e.resetURL, token)
 	return e.agent.Send(to, "", "Password Reset Request", "", user, url, "")
 }
