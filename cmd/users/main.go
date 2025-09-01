@@ -74,7 +74,6 @@ type config struct {
 	AdminFirstName         string        `env:"SMQ_USERS_ADMIN_FIRST_NAME"          envDefault:"super"`
 	AdminLastName          string        `env:"SMQ_USERS_ADMIN_LAST_NAME"           envDefault:"admin"`
 	PassRegexText          string        `env:"SMQ_USERS_PASS_REGEX"                envDefault:"^.{8,}$"`
-	ResetURL               string        `env:"SMQ_TOKEN_RESET_ENDPOINT"            envDefault:"/reset-request"`
 	JaegerURL              url.URL       `env:"SMQ_JAEGER_URL"                      envDefault:"http://localhost:4318/v1/traces"`
 	SendTelemetry          bool          `env:"SMQ_SEND_TELEMETRY"                  envDefault:"true"`
 	InstanceID             string        `env:"SMQ_USERS_INSTANCE_ID"               envDefault:""`
@@ -265,7 +264,7 @@ func newService(ctx context.Context, authz smqauthz.Authorization, token grpcTok
 
 	// Creating users service
 	repo := postgres.NewRepository(database)
-	emailerClient, err := emailer.New(fmt.Sprintf("%s%s", c.PasswordResetURLPrefix, c.ResetURL), &ec)
+	emailerClient, err := emailer.New(fmt.Sprintf("%s/reset-request", c.PasswordResetURLPrefix), &ec)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to configure e-mailing util: %s", err.Error()))
 	}
