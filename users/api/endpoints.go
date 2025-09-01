@@ -5,7 +5,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/pkg/authn"
@@ -67,7 +66,6 @@ func verifyEmailEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		fmt.Println("got here passed req validation")
 		if _, err := svc.VerifyEmail(ctx, req.token); err != nil {
 			return verifyEmailRes{}, err
 		}
