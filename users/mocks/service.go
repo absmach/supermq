@@ -250,63 +250,6 @@ func (_c *Service_Enable_Call) RunAndReturn(run func(ctx context.Context, sessio
 	return _c
 }
 
-// GenerateResetToken provides a mock function for the type Service
-func (_mock *Service) GenerateResetToken(ctx context.Context, email string) error {
-	ret := _mock.Called(ctx, email)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GenerateResetToken")
-	}
-
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = returnFunc(ctx, email)
-	} else {
-		r0 = ret.Error(0)
-	}
-	return r0
-}
-
-// Service_GenerateResetToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GenerateResetToken'
-type Service_GenerateResetToken_Call struct {
-	*mock.Call
-}
-
-// GenerateResetToken is a helper method to define mock.On call
-//   - ctx context.Context
-//   - email string
-func (_e *Service_Expecter) GenerateResetToken(ctx interface{}, email interface{}) *Service_GenerateResetToken_Call {
-	return &Service_GenerateResetToken_Call{Call: _e.mock.On("GenerateResetToken", ctx, email)}
-}
-
-func (_c *Service_GenerateResetToken_Call) Run(run func(ctx context.Context, email string)) *Service_GenerateResetToken_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 string
-		if args[1] != nil {
-			arg1 = args[1].(string)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *Service_GenerateResetToken_Call) Return(err error) *Service_GenerateResetToken_Call {
-	_c.Call.Return(err)
-	return _c
-}
-
-func (_c *Service_GenerateResetToken_Call) RunAndReturn(run func(ctx context.Context, email string) error) *Service_GenerateResetToken_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // Identify provides a mock function for the type Service
 func (_mock *Service) Identify(ctx context.Context, session authn.Session) (string, error) {
 	ret := _mock.Called(ctx, session)
@@ -924,16 +867,16 @@ func (_c *Service_SearchUsers_Call) RunAndReturn(run func(ctx context.Context, p
 }
 
 // SendPasswordReset provides a mock function for the type Service
-func (_mock *Service) SendPasswordReset(ctx context.Context, email string, user string, token string) error {
-	ret := _mock.Called(ctx, email, user, token)
+func (_mock *Service) SendPasswordReset(ctx context.Context, email string) error {
+	ret := _mock.Called(ctx, email)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SendPasswordReset")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, string) error); ok {
-		r0 = returnFunc(ctx, email, user, token)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = returnFunc(ctx, email)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -948,13 +891,11 @@ type Service_SendPasswordReset_Call struct {
 // SendPasswordReset is a helper method to define mock.On call
 //   - ctx context.Context
 //   - email string
-//   - user string
-//   - token string
-func (_e *Service_Expecter) SendPasswordReset(ctx interface{}, email interface{}, user interface{}, token interface{}) *Service_SendPasswordReset_Call {
-	return &Service_SendPasswordReset_Call{Call: _e.mock.On("SendPasswordReset", ctx, email, user, token)}
+func (_e *Service_Expecter) SendPasswordReset(ctx interface{}, email interface{}) *Service_SendPasswordReset_Call {
+	return &Service_SendPasswordReset_Call{Call: _e.mock.On("SendPasswordReset", ctx, email)}
 }
 
-func (_c *Service_SendPasswordReset_Call) Run(run func(ctx context.Context, email string, user string, token string)) *Service_SendPasswordReset_Call {
+func (_c *Service_SendPasswordReset_Call) Run(run func(ctx context.Context, email string)) *Service_SendPasswordReset_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -964,19 +905,9 @@ func (_c *Service_SendPasswordReset_Call) Run(run func(ctx context.Context, emai
 		if args[1] != nil {
 			arg1 = args[1].(string)
 		}
-		var arg2 string
-		if args[2] != nil {
-			arg2 = args[2].(string)
-		}
-		var arg3 string
-		if args[3] != nil {
-			arg3 = args[3].(string)
-		}
 		run(
 			arg0,
 			arg1,
-			arg2,
-			arg3,
 		)
 	})
 	return _c
@@ -987,7 +918,7 @@ func (_c *Service_SendPasswordReset_Call) Return(err error) *Service_SendPasswor
 	return _c
 }
 
-func (_c *Service_SendPasswordReset_Call) RunAndReturn(run func(ctx context.Context, email string, user string, token string) error) *Service_SendPasswordReset_Call {
+func (_c *Service_SendPasswordReset_Call) RunAndReturn(run func(ctx context.Context, email string) error) *Service_SendPasswordReset_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -255,7 +255,7 @@ func passwordResetRequestEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		if err := svc.GenerateResetToken(ctx, req.Email); err != nil {
+		if err := svc.SendPasswordReset(ctx, req.Email); err != nil {
 			return nil, err
 		}
 

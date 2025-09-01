@@ -1526,7 +1526,7 @@ func TestRefreshToken(t *testing.T) {
 	}
 }
 
-func TestGenerateResetToken(t *testing.T) {
+func TestSendPasswordReset(t *testing.T) {
 	svc, auth, cRepo, _, e := newService()
 
 	cases := []struct {
@@ -1570,7 +1570,7 @@ func TestGenerateResetToken(t *testing.T) {
 			repoCall := cRepo.On("RetrieveByEmail", context.Background(), tc.email).Return(tc.retrieveByEmailResponse, tc.retrieveByEmailErr)
 			authCall := auth.On("Issue", context.Background(), mock.Anything).Return(tc.issueResponse, tc.issueErr)
 			svcCall := e.On("SendPasswordReset", []string{tc.email}, user.Credentials.Username, validToken).Return(tc.err)
-			err := svc.GenerateResetToken(context.Background(), tc.email)
+			err := svc.SendPasswordReset(context.Background(), tc.email)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 			repoCall.Parent.AssertCalled(t, "RetrieveByEmail", context.Background(), tc.email)
 			repoCall.Unset()

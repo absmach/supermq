@@ -200,8 +200,8 @@ func (am *authorizationMiddleware) UpdateProfilePicture(ctx context.Context, ses
 	return am.svc.UpdateProfilePicture(ctx, session, id, usr)
 }
 
-func (am *authorizationMiddleware) GenerateResetToken(ctx context.Context, email string) error {
-	return am.svc.GenerateResetToken(ctx, email)
+func (am *authorizationMiddleware) SendPasswordReset(ctx context.Context, email string) error {
+	return am.svc.SendPasswordReset(ctx, email)
 }
 
 func (am *authorizationMiddleware) UpdateSecret(ctx context.Context, session authn.Session, oldSecret, newSecret string) (users.User, error) {
@@ -222,10 +222,6 @@ func (am *authorizationMiddleware) UpdateSecret(ctx context.Context, session aut
 
 func (am *authorizationMiddleware) ResetSecret(ctx context.Context, session authn.Session, secret string) error {
 	return am.svc.ResetSecret(ctx, session, secret)
-}
-
-func (am *authorizationMiddleware) SendPasswordReset(ctx context.Context, email, user, token string) error {
-	return am.svc.SendPasswordReset(ctx, email, user, token)
 }
 
 func (am *authorizationMiddleware) UpdateRole(ctx context.Context, session authn.Session, user users.User) (users.User, error) {

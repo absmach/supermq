@@ -24,7 +24,7 @@ func New(url string, c *email.Config) (users.Emailer, error) {
 	return &emailer{
 		resetURL: url,
 		agent:    e,
-		host:     c.UsersPasswordResetUrlPrefix,
+		host:     c.PasswordResetURLPrefix,
 	}, err
 }
 

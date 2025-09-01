@@ -269,7 +269,7 @@ func (svc service) UpdateEmail(ctx context.Context, session authn.Session, userI
 	return user, nil
 }
 
-func (svc service) GenerateResetToken(ctx context.Context, email string) error {
+func (svc service) SendPasswordReset(ctx context.Context, email string) error {
 	user, err := svc.users.RetrieveByEmail(ctx, email)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrViewEntity, err)
@@ -284,7 +284,7 @@ func (svc service) GenerateResetToken(ctx context.Context, email string) error {
 		return errors.Wrap(errRecoveryToken, err)
 	}
 
-	return svc.SendPasswordReset(ctx, email, user.Credentials.Username, token.AccessToken)
+	return svc.email.SendPasswordReset([]string{email}, user.Credentials.Username, token.AccessToken)
 }
 
 func (svc service) ResetSecret(ctx context.Context, session authn.Session, secret string) error {
@@ -356,11 +356,6 @@ func (svc service) UpdateUsername(ctx context.Context, session authn.Session, id
 		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	return updatedUser, nil
-}
-
-func (svc service) SendPasswordReset(_ context.Context, email, user, token string) error {
-	to := []string{email}
-	return svc.email.SendPasswordReset(to, user, token)
 }
 
 func (svc service) UpdateRole(ctx context.Context, session authn.Session, usr User) (User, error) {
