@@ -164,7 +164,7 @@ type Page struct {
 	FirstName  string   `json:"first_name,omitempty"`
 	LastName   string   `json:"last_name,omitempty"`
 	Email      string   `json:"email,omitempty"`
-	Verified   bool     `json:"Verified,omitempty"`
+	Verified   bool     `json:"verified,omitempty"`
 }
 
 // Service specifies an API that must be fullfiled by the domain service

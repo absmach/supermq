@@ -9,6 +9,7 @@ type authenticateRes struct {
 	id       string
 	userID   string
 	userRole smqauth.Role
+	verified bool
 }
 
 type authorizeRes struct {

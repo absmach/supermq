@@ -6,7 +6,7 @@ syntax = "proto3";
 package auth.v1;
 option go_package = "github.com/absmach/supermq/api/grpc/auth/v1";
 
-// AuthService is a service that provides authentication 
+// AuthService is a service that provides authentication
 // and authorization functionalities for SuperMQ services.
 service AuthService {
   rpc Authorize(AuthZReq) returns (AuthZRes) {}
@@ -23,7 +23,8 @@ message AuthNReq {
 message AuthNRes {
   string id    = 1;     // token id
   string user_id = 2;   // user id
-  uint32 user_role = 3; // user role  
+  uint32 user_role = 3; // user role
+  bool verified = 4; // verified user
 }
 
 message AuthZReq {

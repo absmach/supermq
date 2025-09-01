@@ -12,6 +12,7 @@ type issueReq struct {
 	userID   string
 	userRole auth.Role
 	keyType  auth.KeyType
+	verified bool
 }
 
 func (req issueReq) validate() error {
@@ -27,6 +28,7 @@ func (req issueReq) validate() error {
 
 type refreshReq struct {
 	refreshToken string
+	verified     bool
 }
 
 func (req refreshReq) validate() error {

@@ -18,9 +18,10 @@ func issueEndpoint(svc auth.Service) endpoint.Endpoint {
 		}
 
 		key := auth.Key{
-			Type:    req.keyType,
-			Subject: req.userID,
-			Role:    req.userRole,
+			Type:     req.keyType,
+			Subject:  req.userID,
+			Role:     req.userRole,
+			Verified: req.verified,
 		}
 		tkn, err := svc.Issue(ctx, "", key)
 		if err != nil {
@@ -42,7 +43,7 @@ func refreshEndpoint(svc auth.Service) endpoint.Endpoint {
 			return issueRes{}, err
 		}
 
-		key := auth.Key{Type: auth.RefreshKey}
+		key := auth.Key{Type: auth.RefreshKey, Verified: req.verified}
 		tkn, err := svc.Issue(ctx, req.refreshToken, key)
 		if err != nil {
 			return issueRes{}, err

@@ -75,7 +75,7 @@ func (client authGrpcClient) Authenticate(ctx context.Context, token *grpcAuthV1
 		return &grpcAuthV1.AuthNRes{}, grpcapi.DecodeError(err)
 	}
 	ir := res.(authenticateRes)
-	return &grpcAuthV1.AuthNRes{Id: ir.id, UserId: ir.userID, UserRole: uint32(ir.userRole)}, nil
+	return &grpcAuthV1.AuthNRes{Id: ir.id, UserId: ir.userID, UserRole: uint32(ir.userRole), Verified: ir.verified}, nil
 }
 
 func encodeIdentifyRequest(_ context.Context, grpcReq any) (any, error) {
@@ -85,7 +85,7 @@ func encodeIdentifyRequest(_ context.Context, grpcReq any) (any, error) {
 
 func decodeIdentifyResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(*grpcAuthV1.AuthNRes)
-	return authenticateRes{id: res.GetId(), userID: res.GetUserId(), userRole: auth.Role(res.UserRole)}, nil
+	return authenticateRes{id: res.GetId(), userID: res.GetUserId(), userRole: auth.Role(res.UserRole), verified: res.GetVerified()}, nil
 }
 
 func (client authGrpcClient) AuthenticatePAT(ctx context.Context, token *grpcAuthV1.AuthNReq, _ ...grpc.CallOption) (*grpcAuthV1.AuthNRes, error) {

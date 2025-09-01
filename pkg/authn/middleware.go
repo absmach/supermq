@@ -1,3 +1,6 @@
+// Copyright (c) Abstract Machines
+// SPDX-License-Identifier: Apache-2.0
+
 package authn
 
 import (
@@ -133,7 +136,7 @@ func (a *authnService) Middleware() func(http.Handler) http.Handler {
 				return
 			}
 
-			if !opts.allowUnverifiedUser && !resp.Verified {
+			if resp.Type == AccessToken && !opts.allowUnverifiedUser && resp.Role != AdminRole && !resp.Verified {
 				http.Error(w, "email not verified", http.StatusUnauthorized)
 				return
 			}

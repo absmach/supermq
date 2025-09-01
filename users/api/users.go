@@ -34,7 +34,8 @@ func usersHandler(svc users.Service, authn smqauthn.Authn, tokenClient grpcToken
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
-	//All endpoints in users service doesn't required Domain check
+
+	// All endpoints in users service don't required Domain check
 	authn = authn.WithOptions(smqauthn.WithDomainCheck(false))
 	r.Route("/users", func(r chi.Router) {
 		r.Use(api.RequestIDMiddleware(idp))
@@ -85,7 +86,7 @@ func usersHandler(svc users.Service, authn smqauthn.Authn, tokenClient grpcToken
 			), "update_user_email").ServeHTTP)
 		})
 
-		r.Post("/verify-email", otelhttp.NewHandler(kithttp.NewServer(
+		r.Get("/verify-email", otelhttp.NewHandler(kithttp.NewServer(
 			verifyEmailEndpoint(svc),
 			decodeVerifyEmail,
 			api.EncodeResponse,
@@ -213,15 +214,7 @@ func usersHandler(svc users.Service, authn smqauthn.Authn, tokenClient grpcToken
 }
 
 func decodeSendVerification(_ context.Context, r *http.Request) (any, error) {
-	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
-		return nil, errors.Wrap(apiutil.ErrValidation, apiutil.ErrUnsupportedContentType)
-	}
-
 	req := sendVerificationReq{}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
-	}
-
 	return req, nil
 }
 

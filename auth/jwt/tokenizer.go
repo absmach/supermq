@@ -21,6 +21,8 @@ var (
 	errInvalidType = errors.New("invalid token type")
 	// errInvalidRole is returned when the role is invalid.
 	errInvalidRole = errors.New("invalid role")
+	// errInvalidVerified is returned when the verified is invalid.
+	errInvalidVerified = errors.New("invalid verified")
 	// errJWTExpiryKey is used to check if the token is expired.
 	errJWTExpiryKey = errors.New(`"exp" not satisfied`)
 	// ErrSignJWT indicates an error in signing jwt token.
@@ -36,6 +38,7 @@ const (
 	tokenType              = "type"
 	userField              = "user"
 	RoleField              = "role"
+	VerifiedFiled          = "verified"
 	oauthProviderField     = "oauth_provider"
 	oauthAccessTokenField  = "access_token"
 	oauthRefreshTokenField = "refresh_token"
@@ -62,6 +65,7 @@ func (tok *tokenizer) Issue(key auth.Key) (string, error) {
 		Claim(tokenType, key.Type).
 		Expiration(key.ExpiresAt)
 	builder.Claim(RoleField, key.Role)
+	builder.Claim(VerifiedFiled, key.Verified)
 	if key.Subject != "" {
 		builder.Subject(key.Subject)
 	}
@@ -150,6 +154,16 @@ func toKey(tkn jwt.Token) (auth.Key, error) {
 	if !ok {
 		return auth.Key{}, errInvalidRole
 	}
+
+	tVerified, ok := tkn.Get(VerifiedFiled)
+	if !ok {
+		return auth.Key{}, errInvalidVerified
+	}
+	kVerified, ok := tVerified.(bool)
+	if !ok {
+		return auth.Key{}, errInvalidVerified
+	}
+
 	kr := auth.Role(kRole)
 	if !kr.Validate() {
 		return auth.Key{}, errInvalidRole
@@ -162,6 +176,7 @@ func toKey(tkn jwt.Token) (auth.Key, error) {
 	key.Subject = tkn.Subject()
 	key.IssuedAt = tkn.IssuedAt()
 	key.ExpiresAt = tkn.Expiration()
+	key.Verified = kVerified
 
 	return key, nil
 }

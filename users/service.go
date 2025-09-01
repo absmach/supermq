@@ -133,7 +133,7 @@ func (svc service) SendVerification(ctx context.Context, session authn.Session) 
 		return errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 
-	if err := svc.SendPasswordReset(ctx, "host", dbUser.Email, dbUser.Credentials.Username, dbUser.VerificationToken); err != nil {
+	if err := svc.SendPasswordReset(ctx, "http://localhost", dbUser.Email, dbUser.Credentials.Username, dbUser.VerificationToken); err != nil {
 		return errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 	return nil
@@ -153,9 +153,10 @@ func (svc service) VerifyEmail(ctx context.Context, verificationToken string) (U
 		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	if user.Email != payload.Email {
+	if user.Email != payload.Email || user.VerificationToken != verificationToken {
 		return User{}, svcerr.ErrInvalidVerificationToken
 	}
+
 	if user.IsVerificationTokenExpired() {
 		return User{}, svcerr.ErrVerificationTokenExpired
 	}
@@ -197,7 +198,7 @@ func (svc service) IssueToken(ctx context.Context, identity, secret string) (*gr
 		return &grpcTokenV1.Token{}, errors.Wrap(svcerr.ErrLogin, err)
 	}
 
-	token, err := svc.token.Issue(ctx, &grpcTokenV1.IssueReq{UserId: dbUser.ID, UserRole: uint32(dbUser.Role + 1), Type: uint32(smqauth.AccessKey)})
+	token, err := svc.token.Issue(ctx, &grpcTokenV1.IssueReq{UserId: dbUser.ID, UserRole: uint32(dbUser.Role + 1), Type: uint32(smqauth.AccessKey), Verified: dbUser.Verified})
 	if err != nil {
 		return &grpcTokenV1.Token{}, errors.Wrap(errIssueToken, err)
 	}
@@ -214,7 +215,7 @@ func (svc service) RefreshToken(ctx context.Context, session authn.Session, refr
 		return &grpcTokenV1.Token{}, errors.Wrap(svcerr.ErrAuthentication, errLoginDisableUser)
 	}
 
-	return svc.token.Refresh(ctx, &grpcTokenV1.RefreshReq{RefreshToken: refreshToken})
+	return svc.token.Refresh(ctx, &grpcTokenV1.RefreshReq{RefreshToken: refreshToken, Verified: dbUser.Verified})
 }
 
 func (svc service) View(ctx context.Context, session authn.Session, id string) (User, error) {
@@ -668,9 +669,9 @@ func (svc service) updateUserPolicy(ctx context.Context, userID string, role Rol
 }
 
 type tokenPayload struct {
-	UserID      string `json:"user_id"`
-	Email       string `json:"email"`
-	RandomBytes string `json:"random_bytes"`
+	UserID string `json:"user_id"`
+	Email  string `json:"email"`
+	Token  string `json:"token"`
 }
 
 func generateVerificationToken(userID, email string) (string, error) {
@@ -680,9 +681,9 @@ func generateVerificationToken(userID, email string) (string, error) {
 	}
 
 	payload := tokenPayload{
-		UserID:      userID,
-		Email:       email,
-		RandomBytes: base64.URLEncoding.EncodeToString(randomBytes),
+		UserID: userID,
+		Email:  email,
+		Token:  base64.URLEncoding.EncodeToString(randomBytes),
 	}
 
 	jsonBytes, err := json.Marshal(payload)

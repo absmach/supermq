@@ -38,7 +38,7 @@ func (req createUserReq) validate() error {
 		return err
 	}
 	// Username must not be a valid email format due to username/email login.
-	if err := api.ValidateEmail(req.User.Email); err == nil {
+	if err := api.ValidateEmail(req.User.Credentials.Username); err == nil {
 		return apiutil.ErrInvalidUsername
 	}
 
@@ -68,10 +68,6 @@ func (req createUserReq) validate() error {
 }
 
 type sendVerificationReq struct{}
-
-func (req sendVerificationReq) validate() error {
-	return nil
-}
 
 type verifyEmailReq struct {
 	token string

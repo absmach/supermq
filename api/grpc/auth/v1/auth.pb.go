@@ -73,6 +73,7 @@ type AuthNRes struct {
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`                              // token id
 	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`        // user id
 	UserRole      uint32                 `protobuf:"varint,3,opt,name=user_role,json=userRole,proto3" json:"user_role,omitempty"` // user role
+	Verified      bool                   `protobuf:"varint,4,opt,name=verified,proto3" json:"verified,omitempty"`                 // verified user
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -126,6 +127,13 @@ func (x *AuthNRes) GetUserRole() uint32 {
 		return x.UserRole
 	}
 	return 0
+}
+
+func (x *AuthNRes) GetVerified() bool {
+	if x != nil {
+		return x.Verified
+	}
+	return false
 }
 
 type AuthZReq struct {
@@ -378,11 +386,12 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"\n" +
 	"\x12auth/v1/auth.proto\x12\aauth.v1\" \n" +
 	"\bAuthNReq\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token\"P\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\"l\n" +
 	"\bAuthNRes\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x1b\n" +
-	"\tuser_role\x18\x03 \x01(\rR\buserRole\"\xa2\x02\n" +
+	"\tuser_role\x18\x03 \x01(\rR\buserRole\x12\x1a\n" +
+	"\bverified\x18\x04 \x01(\bR\bverified\"\xa2\x02\n" +
 	"\bAuthZReq\x12\x16\n" +
 	"\x06domain\x18\x01 \x01(\tR\x06domain\x12!\n" +
 	"\fsubject_type\x18\x02 \x01(\tR\vsubjectType\x12!\n" +

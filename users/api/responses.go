@@ -81,8 +81,7 @@ func (res tokenRes) Empty() bool {
 	return res.AccessToken == "" || res.RefreshToken == ""
 }
 
-type sendVerificationRes struct {
-}
+type sendVerificationRes struct{}
 
 func (res sendVerificationRes) Code() int {
 	return http.StatusOK
@@ -96,9 +95,7 @@ func (res sendVerificationRes) Empty() bool {
 	return false
 }
 
-type verifyEmailRes struct {
-	users.User `json:",inline"`
-}
+type verifyEmailRes struct{}
 
 func (res verifyEmailRes) Code() int {
 	return http.StatusOK

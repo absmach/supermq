@@ -56,6 +56,7 @@ func (client tokenGrpcClient) Issue(ctx context.Context, req *grpcTokenV1.IssueR
 		userID:   req.GetUserId(),
 		userRole: auth.Role(req.GetUserRole()),
 		keyType:  auth.KeyType(req.GetType()),
+		verified: req.GetVerified(),
 	})
 	if err != nil {
 		return &grpcTokenV1.Token{}, grpcapi.DecodeError(err)
@@ -69,6 +70,7 @@ func encodeIssueRequest(_ context.Context, grpcReq any) (any, error) {
 		UserId:   req.userID,
 		UserRole: uint32(req.userRole),
 		Type:     uint32(req.keyType),
+		Verified: req.verified,
 	}, nil
 }
 
@@ -80,7 +82,7 @@ func (client tokenGrpcClient) Refresh(ctx context.Context, req *grpcTokenV1.Refr
 	ctx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
 
-	res, err := client.refresh(ctx, refreshReq{refreshToken: req.GetRefreshToken()})
+	res, err := client.refresh(ctx, refreshReq{refreshToken: req.GetRefreshToken(), verified: req.GetVerified()})
 	if err != nil {
 		return &grpcTokenV1.Token{}, grpcapi.DecodeError(err)
 	}
@@ -89,7 +91,7 @@ func (client tokenGrpcClient) Refresh(ctx context.Context, req *grpcTokenV1.Refr
 
 func encodeRefreshRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(refreshReq)
-	return &grpcTokenV1.RefreshReq{RefreshToken: req.refreshToken}, nil
+	return &grpcTokenV1.RefreshReq{RefreshToken: req.refreshToken, Verified: req.verified}, nil
 }
 
 func decodeRefreshResponse(_ context.Context, grpcRes any) (any, error) {

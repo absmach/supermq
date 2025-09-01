@@ -29,6 +29,7 @@ type IssueReq struct {
 	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	UserRole      uint32                 `protobuf:"varint,2,opt,name=user_role,json=userRole,proto3" json:"user_role,omitempty"`
 	Type          uint32                 `protobuf:"varint,3,opt,name=type,proto3" json:"type,omitempty"`
+	Verified      bool                   `protobuf:"varint,4,opt,name=verified,proto3" json:"verified,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -84,9 +85,17 @@ func (x *IssueReq) GetType() uint32 {
 	return 0
 }
 
+func (x *IssueReq) GetVerified() bool {
+	if x != nil {
+		return x.Verified
+	}
+	return false
+}
+
 type RefreshReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	Verified      bool                   `protobuf:"varint,2,opt,name=verified,proto3" json:"verified,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -126,6 +135,13 @@ func (x *RefreshReq) GetRefreshToken() string {
 		return x.RefreshToken
 	}
 	return ""
+}
+
+func (x *RefreshReq) GetVerified() bool {
+	if x != nil {
+		return x.Verified
+	}
+	return false
 }
 
 // If a token is not carrying any information itself, the type
@@ -195,14 +211,16 @@ var File_token_v1_token_proto protoreflect.FileDescriptor
 
 const file_token_v1_token_proto_rawDesc = "" +
 	"\n" +
-	"\x14token/v1/token.proto\x12\btoken.v1\"T\n" +
+	"\x14token/v1/token.proto\x12\btoken.v1\"p\n" +
 	"\bIssueReq\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1b\n" +
 	"\tuser_role\x18\x02 \x01(\rR\buserRole\x12\x12\n" +
-	"\x04type\x18\x03 \x01(\rR\x04type\"1\n" +
+	"\x04type\x18\x03 \x01(\rR\x04type\x12\x1a\n" +
+	"\bverified\x18\x04 \x01(\bR\bverified\"M\n" +
 	"\n" +
 	"RefreshReq\x12#\n" +
-	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"\x87\x01\n" +
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\x12\x1a\n" +
+	"\bverified\x18\x02 \x01(\bR\bverified\"\x87\x01\n" +
 	"\x05Token\x12!\n" +
 	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12(\n" +
 	"\rrefresh_token\x18\x02 \x01(\tH\x00R\frefreshToken\x88\x01\x01\x12\x1f\n" +

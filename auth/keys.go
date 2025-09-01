@@ -88,6 +88,7 @@ type Key struct {
 	Role      Role      `json:"role,omitempty"`
 	IssuedAt  time.Time `json:"issued_at,omitempty"`
 	ExpiresAt time.Time `json:"expires_at,omitempty"`
+	Verified  bool      `json:"verified,omitempty"`
 }
 
 func (key Key) String() string {

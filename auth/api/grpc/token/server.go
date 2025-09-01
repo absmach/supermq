@@ -58,12 +58,13 @@ func decodeIssueRequest(_ context.Context, grpcReq any) (any, error) {
 		userID:   req.GetUserId(),
 		userRole: auth.Role(req.GetUserRole()),
 		keyType:  auth.KeyType(req.GetType()),
+		verified: req.Verified,
 	}, nil
 }
 
 func decodeRefreshRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcTokenV1.RefreshReq)
-	return refreshReq{refreshToken: req.GetRefreshToken()}, nil
+	return refreshReq{refreshToken: req.GetRefreshToken(), verified: req.Verified}, nil
 }
 
 func encodeIssueResponse(_ context.Context, grpcRes any) (any, error) {
