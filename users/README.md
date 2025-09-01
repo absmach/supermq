@@ -18,7 +18,6 @@ The service is configured using the environment variables presented in the follo
 | SMQ_USERS_ADMIN_EMAIL          | Default user, created on startup                                        | <admin@example.com>               |
 | SMQ_USERS_ADMIN_PASSWORD       | Default user password, created on startup                               | 12345678                          |
 | SMQ_USERS_PASS_REGEX           | Password regex                                                          | ^.{8,}$                           |
-| SMQ_TOKEN_RESET_ENDPOINT       | Password request reset endpoint, for constructing link                  | /reset-request                    |
 | SMQ_USERS_HTTP_HOST            | Users service HTTP host                                                 | localhost                         |
 | SMQ_USERS_HTTP_PORT            | Users service HTTP port                                                 | 9002                              |
 | SMQ_USERS_HTTP_SERVER_CERT     | Path to the PEM encoded server certificate file                         | ""                                |
@@ -79,7 +78,6 @@ SMQ_USERS_LOG_LEVEL=info \
 SMQ_USERS_ADMIN_EMAIL=admin@example.com \
 SMQ_USERS_ADMIN_PASSWORD=12345678 \
 SMQ_USERS_PASS_REGEX="^.{8,}$" \
-SMQ_TOKEN_RESET_ENDPOINT="/reset-request" \
 SMQ_USERS_HTTP_HOST=localhost \
 SMQ_USERS_HTTP_PORT=9002 \
 SMQ_USERS_HTTP_SERVER_CERT="" \
