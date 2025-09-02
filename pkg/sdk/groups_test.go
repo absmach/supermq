@@ -923,7 +923,7 @@ func TestUpdateGroupTags(t *testing.T) {
 			svcRes:          groups.Group{},
 			authenticateErr: svcerr.ErrAuthorization,
 			response:        sdk.Group{},
-			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			err:             errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusUnauthorized),
 		},
 		{
 			desc:           "update group tags with empty token",
