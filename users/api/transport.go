@@ -18,8 +18,8 @@ import (
 )
 
 // MakeHandler returns a HTTP handler for Users and Groups API endpoints.
-func MakeHandler(cls users.Service, authn smqauthn.Authn, tokensvc grpcTokenV1.TokenServiceClient, selfRegister bool, mux *chi.Mux, logger *slog.Logger, instanceID string, pr *regexp.Regexp, idp supermq.IDProvider, providers ...oauth2.Provider) http.Handler {
-	mux = usersHandler(cls, authn, tokensvc, selfRegister, mux, logger, pr, idp, providers...)
+func MakeHandler(cls users.Service, authnMiddleware smqauthn.AuthNMiddleware, tokensvc grpcTokenV1.TokenServiceClient, selfRegister bool, mux *chi.Mux, logger *slog.Logger, instanceID string, pr *regexp.Regexp, idp supermq.IDProvider, providers ...oauth2.Provider) http.Handler {
+	mux = usersHandler(cls, authnMiddleware, tokensvc, selfRegister, mux, logger, pr, idp, providers...)
 
 	mux.Get("/health", supermq.Health("users", instanceID))
 	mux.Handle("/metrics", promhttp.Handler())

@@ -94,7 +94,7 @@ func newUsersServer() (*httptest.Server, *mocks.Service, *authnmocks.Authenticat
 	provider := new(oauth2mocks.Provider)
 	provider.On("Name").Return("test")
 	authn := new(authnmocks.Authentication)
-	am := smqauthn.NewAuthn(authn, smqauthn.WithAllowUnverifiedUser(true))
+	am := smqauthn.NewAuthNMiddleware(authn, smqauthn.WithAllowUnverifiedUser(true))
 	token := new(authmocks.TokenServiceClient)
 	usersapi.MakeHandler(svc, am, token, true, mux, logger, "", passRegex, idp, provider)
 

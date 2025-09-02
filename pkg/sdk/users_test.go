@@ -45,7 +45,7 @@ func setupUsers() (*httptest.Server, *umocks.Service, *authnmocks.Authentication
 	provider := new(oauth2mocks.Provider)
 	provider.On("Name").Return("test")
 	authn := new(authnmocks.Authentication)
-	am := smqauthn.NewAuthn(authn, smqauthn.WithDomainCheck(false), smqauthn.WithAllowUnverifiedUser(true))
+	am := smqauthn.NewAuthNMiddleware(authn, smqauthn.WithDomainCheck(false), smqauthn.WithAllowUnverifiedUser(true))
 	token := new(authmocks.TokenServiceClient)
 	httpapi.MakeHandler(usvc, am, token, true, mux, logger, "", passRegex, idp, provider)
 

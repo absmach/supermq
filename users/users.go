@@ -176,8 +176,10 @@ type Service interface {
 	// non-nil error value is returned.
 	Register(ctx context.Context, session authn.Session, user User, selfRegister bool) (User, error)
 
+	// SendVerification sends a verification email to the user.
 	SendVerification(ctx context.Context, session authn.Session) error
 
+	// VerifyEmail verifies user's email using the verification token.
 	VerifyEmail(ctx context.Context, verificationToken string) (User, error)
 
 	// View retrieves user info for a given user ID and an authorized token.

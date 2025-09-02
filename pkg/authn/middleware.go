@@ -65,20 +65,20 @@ func WithDefaultMiddlewareOptions() MiddlewareOption {
 	}
 }
 
-// Authn defines the interface for authenticated services with middleware.
-type Authn interface {
+// AuthNMiddleware defines the interface for authenticated services with middleware.
+type AuthNMiddleware interface {
 	Authentication
-	WithOptions(options ...MiddlewareOption) Authn
+	WithOptions(options ...MiddlewareOption) AuthNMiddleware
 	Middleware() func(http.Handler) http.Handler
 }
 
-// authnService wraps Authentication with middleware functionality.
-type authnService struct {
+// authnMiddleware wraps Authentication with middleware functionality.
+type authnMiddleware struct {
 	Authentication
 	options []MiddlewareOption
 }
 
-// NewAuthn creates a new authenticated service with middleware support.
+// NewAuthNMiddleware creates a new authenticated service with middleware support.
 // The order of precedence for options is as follows, with later options overriding earlier ones:
 // 1. Default options (lowest precedence).
 // 2. Options from environment variables (e.g., SMQ_ALLOW_UNVERIFIED_USER).
@@ -88,9 +88,9 @@ type authnService struct {
 //   - By default, it is 'false'.
 //   - If the SMQ_ALLOW_UNVERIFIED_USER environment variable is set to "true",
 //     it becomes 'true'.
-//   - If NewAuthn is called with WithAllowUnverifiedUser(false), it will be 'false',
+//   - If NewAuthNMiddleware is called with WithAllowUnverifiedUser(false), it will be 'false',
 //     regardless of the environment variable, as function arguments have the highest precedence.
-func NewAuthn(authnSvc Authentication, options ...MiddlewareOption) Authn {
+func NewAuthNMiddleware(authnSvc Authentication, options ...MiddlewareOption) AuthNMiddleware {
 	allOptions := []MiddlewareOption{WithDefaultMiddlewareOptions()}
 	if val, ok := os.LookupEnv(allowUnverifiedUserEnv); ok {
 		allowUnverifiedUser, err := strconv.ParseBool(val)
@@ -99,22 +99,22 @@ func NewAuthn(authnSvc Authentication, options ...MiddlewareOption) Authn {
 		}
 	}
 	allOptions = append(allOptions, options...)
-	return &authnService{
+	return &authnMiddleware{
 		Authentication: authnSvc,
 		options:        allOptions,
 	}
 }
 
 // WithOptions returns a new service with additional options.
-func (a *authnService) WithOptions(options ...MiddlewareOption) Authn {
-	return &authnService{
+func (a *authnMiddleware) WithOptions(options ...MiddlewareOption) AuthNMiddleware {
+	return &authnMiddleware{
 		Authentication: a.Authentication,
 		options:        append(a.options, options...),
 	}
 }
 
 // getMiddlewareOptions returns the configured middleware options.
-func (a *authnService) getMiddlewareOptions() *middlewareOptions {
+func (a *authnMiddleware) getMiddlewareOptions() *middlewareOptions {
 	opts := defaultMiddlewareOptions()
 	for _, option := range a.options {
 		option(opts)
@@ -123,7 +123,7 @@ func (a *authnService) getMiddlewareOptions() *middlewareOptions {
 }
 
 // Middleware returns an HTTP middleware function that handles authentication.
-func (a *authnService) Middleware() func(http.Handler) http.Handler {
+func (a *authnMiddleware) Middleware() func(http.Handler) http.Handler {
 	opts := a.getMiddlewareOptions()
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
