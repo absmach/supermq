@@ -135,7 +135,6 @@ func (a *authnService) Middleware() func(http.Handler) http.Handler {
 			}
 			resp, err := a.Authenticate(r.Context(), token)
 			if err != nil {
-
 				encodeError(w, err, http.StatusUnauthorized)
 				return
 			}
@@ -174,7 +173,6 @@ func encodeError(w http.ResponseWriter, err error, statusCode int) {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
-
 	}
 	http.Error(w, err.Error(), statusCode)
 }
