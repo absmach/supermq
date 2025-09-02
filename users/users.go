@@ -29,7 +29,6 @@ type User struct {
 	CreatedAt      time.Time   `json:"created_at,omitempty"`
 	UpdatedAt      time.Time   `json:"updated_at,omitempty"`
 	UpdatedBy      string      `json:"updated_by,omitempty"`
-	Verified       bool        `json:"verified"`
 	VerifiedAt     time.Time   `json:"verified_at,omitempty"`
 
 	// VerificationToken is sent to the user's email and should not be exposed via API.

@@ -106,7 +106,7 @@ func (svc service) SendVerification(ctx context.Context, session authn.Session) 
 		return err
 	}
 
-	if dbUser.Verified {
+	if !dbUser.VerifiedAt.IsZero() {
 		return svcerr.ErrUserAlreadyVerified
 	}
 
@@ -118,7 +118,6 @@ func (svc service) SendVerification(ctx context.Context, session authn.Session) 
 
 		dbUser.VerificationToken = token
 		dbUser.VerificationTokenExpiresAt = time.Now().UTC().Add(verificationTokenExpiryDuration)
-		dbUser.Verified = false
 		dbUser.VerifiedAt = time.Time{}
 	}
 
@@ -154,14 +153,13 @@ func (svc service) VerifyEmail(ctx context.Context, verificationToken string) (U
 		return User{}, svcerr.ErrVerificationTokenExpired
 	}
 
-	if user.Verified {
+	if !user.VerifiedAt.IsZero() {
 		return User{}, svcerr.ErrUserAlreadyVerified
 	}
 
 	user = User{
 		ID:                user.ID,
 		Email:             user.Email,
-		Verified:          true,
 		VerifiedAt:        time.Now().UTC(),
 		VerificationToken: "",
 	}
@@ -191,7 +189,7 @@ func (svc service) IssueToken(ctx context.Context, identity, secret string) (*gr
 		return &grpcTokenV1.Token{}, errors.Wrap(svcerr.ErrLogin, err)
 	}
 
-	token, err := svc.token.Issue(ctx, &grpcTokenV1.IssueReq{UserId: dbUser.ID, UserRole: uint32(dbUser.Role + 1), Type: uint32(smqauth.AccessKey), Verified: dbUser.Verified})
+	token, err := svc.token.Issue(ctx, &grpcTokenV1.IssueReq{UserId: dbUser.ID, UserRole: uint32(dbUser.Role + 1), Type: uint32(smqauth.AccessKey), Verified: !dbUser.VerifiedAt.IsZero()})
 	if err != nil {
 		return &grpcTokenV1.Token{}, errors.Wrap(errIssueToken, err)
 	}
@@ -208,7 +206,7 @@ func (svc service) RefreshToken(ctx context.Context, session authn.Session, refr
 		return &grpcTokenV1.Token{}, errors.Wrap(svcerr.ErrAuthentication, errLoginDisableUser)
 	}
 
-	return svc.token.Refresh(ctx, &grpcTokenV1.RefreshReq{RefreshToken: refreshToken, Verified: dbUser.Verified})
+	return svc.token.Refresh(ctx, &grpcTokenV1.RefreshReq{RefreshToken: refreshToken, Verified: !dbUser.VerifiedAt.IsZero()})
 }
 
 func (svc service) View(ctx context.Context, session authn.Session, id string) (User, error) {
@@ -354,7 +352,6 @@ func (svc service) UpdateEmail(ctx context.Context, session authn.Session, userI
 		Email:                      email,
 		UpdatedAt:                  time.Now().UTC(),
 		UpdatedBy:                  session.UserID,
-		Verified:                   false,
 		VerifiedAt:                 time.Time{},
 		VerificationToken:          "",
 		VerificationTokenExpiresAt: time.Time{},

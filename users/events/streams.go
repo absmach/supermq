@@ -105,10 +105,10 @@ func (es *eventStore) VerifyEmail(ctx context.Context, verificationToken string)
 	}
 
 	event := verifyEmailEvent{
-		email:     user.Email,
-		userID:    user.ID,
-		verified:  user.Verified,
-		requestID: middleware.GetReqID(ctx),
+		email:      user.Email,
+		userID:     user.ID,
+		verifiedAt: user.VerifiedAt,
+		requestID:  middleware.GetReqID(ctx),
 	}
 	if err := es.Publish(ctx, verifyEmailStream, event); err != nil {
 		return user, err

@@ -101,14 +101,12 @@ func Migration() *migrate.MemoryMigrationSource {
 				Id: "clients_07",
 				Up: []string{
 					`ALTER TABLE users
-						ADD COLUMN verified BOOLEAN DEFAULT FALSE,
-						ADD COLUMN verified_at TIMESTAMPTZ,
+						ADD COLUMN verified_at TIMESTAMPTZ DEFAULT NULL,
 						ADD COLUMN verification_token TEXT,
 						ADD COLUMN verification_token_expires_at TIMESTAMPTZ;`,
 				},
 				Down: []string{
 					`ALTER TABLE users
-						DROP COLUMN verified,
 						DROP COLUMN verified_at,
 						DROP COLUMN verification_token,
 						DROP COLUMN verification_token_expires_at;`,

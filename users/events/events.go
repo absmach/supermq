@@ -118,19 +118,19 @@ func (sve sendVerificationEvent) Encode() (map[string]any, error) {
 }
 
 type verifyEmailEvent struct {
-	requestID string
-	email     string
-	userID    string
-	verified  bool
+	requestID  string
+	email      string
+	userID     string
+	verifiedAt time.Time
 }
 
 func (vee verifyEmailEvent) Encode() (map[string]any, error) {
 	return map[string]any{
-		"operation":  userVerifyEmail,
-		"request_id": vee.requestID,
-		"email":      vee.email,
-		"user_id":    vee.userID,
-		"verified":   vee.verified,
+		"operation":   userVerifyEmail,
+		"request_id":  vee.requestID,
+		"email":       vee.email,
+		"user_id":     vee.userID,
+		"verified_at": vee.verifiedAt,
 	}, nil
 }
 
