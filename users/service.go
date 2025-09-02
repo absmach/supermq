@@ -133,7 +133,7 @@ func (svc service) SendVerification(ctx context.Context, session authn.Session) 
 		return errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 
-	if err := svc.SendPasswordReset(ctx, "http://localhost", dbUser.Email, dbUser.Credentials.Username, dbUser.VerificationToken); err != nil {
+	if err := svc.email.SendVerification([]string{dbUser.Email}, dbUser.Credentials.Username, dbUser.VerificationToken); err != nil {
 		return errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 	return nil

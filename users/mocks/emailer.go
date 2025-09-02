@@ -100,3 +100,66 @@ func (_c *Emailer_SendPasswordReset_Call) RunAndReturn(run func(To []string, use
 	_c.Call.Return(run)
 	return _c
 }
+
+// SendVerification provides a mock function for the type Emailer
+func (_mock *Emailer) SendVerification(To []string, user string, verificationToken string) error {
+	ret := _mock.Called(To, user, verificationToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SendVerification")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func([]string, string, string) error); ok {
+		r0 = returnFunc(To, user, verificationToken)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Emailer_SendVerification_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SendVerification'
+type Emailer_SendVerification_Call struct {
+	*mock.Call
+}
+
+// SendVerification is a helper method to define mock.On call
+//   - To []string
+//   - user string
+//   - verificationToken string
+func (_e *Emailer_Expecter) SendVerification(To interface{}, user interface{}, verificationToken interface{}) *Emailer_SendVerification_Call {
+	return &Emailer_SendVerification_Call{Call: _e.mock.On("SendVerification", To, user, verificationToken)}
+}
+
+func (_c *Emailer_SendVerification_Call) Run(run func(To []string, user string, verificationToken string)) *Emailer_SendVerification_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 []string
+		if args[0] != nil {
+			arg0 = args[0].([]string)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *Emailer_SendVerification_Call) Return(err error) *Emailer_SendVerification_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Emailer_SendVerification_Call) RunAndReturn(run func(To []string, user string, verificationToken string) error) *Emailer_SendVerification_Call {
+	_c.Call.Return(run)
+	return _c
+}

@@ -13,20 +13,38 @@ import (
 var _ users.Emailer = (*emailer)(nil)
 
 type emailer struct {
-	resetURL string
-	agent    *email.Agent
+	resetURL        string
+	verificationURL string
+	resetAgent      *email.Agent
+	verifyAgent     *email.Agent
 }
 
 // New creates new emailer utility.
-func New(url string, c *email.Config) (users.Emailer, error) {
-	e, err := email.New(c)
+func New(resetURL, verificationURL string, resetConfig, verifyConfig *email.Config) (users.Emailer, error) {
+	resetAgent, err := email.New(resetConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	verifyAgent, err := email.New(verifyConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	return &emailer{
-		resetURL: url,
-		agent:    e,
-	}, err
+		resetURL:        resetURL,
+		verificationURL: verificationURL,
+		resetAgent:      resetAgent,
+		verifyAgent:     verifyAgent,
+	}, nil
 }
 
 func (e *emailer) SendPasswordReset(to []string, user, token string) error {
 	url := fmt.Sprintf("%s?token=%s", e.resetURL, token)
-	return e.agent.Send(to, "", "Password Reset Request", "", user, url, "")
+	return e.resetAgent.Send(to, "", "Password Reset Request", "", user, url, "")
+}
+
+func (e *emailer) SendVerification(to []string, user, verificationToken string) error {
+	url := fmt.Sprintf("%s?token=%s", e.verificationURL, verificationToken)
+	return e.verifyAgent.Send(to, "", "Email Verification", "", user, url, "")
 }
