@@ -95,8 +95,8 @@ type Repository interface {
 	// RetrieveVerificationToken retrieves verification token of given user id.
 	RetrieveVerificationToken(ctx context.Context, id string) (User, error)
 
-	// UpdateToUserVerificationDetails update given user id verification details.
-	UpdateToUserVerificationDetails(ctx context.Context, user User) (User, error)
+	// UpdateUserVerificationDetails update given user id verification details.
+	UpdateUserVerificationDetails(ctx context.Context, user User) (User, error)
 
 	// Update updates the user name and metadata.
 	Update(ctx context.Context, id string, user UserReq) (User, error)
@@ -107,8 +107,10 @@ type Repository interface {
 	// UpdateSecret updates secret for user with given email.
 	UpdateSecret(ctx context.Context, user User) (User, error)
 
+	// UpdateEmail updates email for user with given id.
 	UpdateEmail(ctx context.Context, user User) (User, error)
 
+	// UpdateRole updates role for user with given id.
 	UpdateRole(ctx context.Context, user User) (User, error)
 
 	// ChangeStatus changes user status to enabled or disabled

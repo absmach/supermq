@@ -97,7 +97,7 @@ var (
 	// ErrUserAlreadyVerified indicates user is already verified.
 	ErrUserAlreadyVerified = errors.New("user already verified")
 
-	// ErrInvalidVerificationToken indicates user is already verified.
+	// ErrInvalidVerificationToken indicates verification token is invalid.
 	ErrInvalidVerificationToken = errors.New("invalid verification token")
 
 	// ErrVerificationTokenExpired indicates verification token is expired.

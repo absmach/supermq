@@ -135,7 +135,7 @@ func main() {
 
 	verificationEmailConfig := email.Config{}
 	if err := env.Parse(&verificationEmailConfig); err != nil {
-		logger.Error(fmt.Sprintf("failed to load reset password email configuration : %s", err.Error()))
+		logger.Error(fmt.Sprintf("failed to load verification password email configuration : %s", err.Error()))
 		exitCode = 1
 		return
 	}

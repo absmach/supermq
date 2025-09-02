@@ -44,9 +44,9 @@ The service is configured using the environment variables presented in the follo
 | SMQ_EMAIL_PASSWORD                | Mail server password                                                    | ""                                |
 | SMQ_EMAIL_FROM_ADDRESS            | Email "from" address                                                    | ""                                |
 | SMQ_EMAIL_FROM_NAME               | Email "from" name                                                       | ""                                |
-| SMQ_PASSWORD_RESET_URL_PREFIX     | Password reset URL prefix                                               | http://localhost/password/reset>  |
+| SMQ_PASSWORD_RESET_URL_PREFIX     | Password reset URL prefix                                               | <http://localhost/password/reset> |
 | SMQ_PASSWORD_RESET_EMAIL_TEMPLATE | Password reset email template                                           | reset-password-email.tmpl         |
-| SMQ_VERIFICATION_URL_PREFIX       | Verification URL prefix                                                 | http://localhost/verify-email>    |
+| SMQ_VERIFICATION_URL_PREFIX       | Verification URL prefix                                                 | <http://localhost/verify-email>   |
 | SMQ_VERIFICATION_EMAIL_TEMPLATE   | Verification email template                                             | verification-email.tmpl           |
 | SMQ_USERS_ES_URL                  | Event store URL                                                         | <nats://localhost:4222>           |
 | SMQ_JAEGER_URL                    | Jaeger server URL                                                       | <http://localhost:4318/v1/traces> |

@@ -215,7 +215,7 @@ func (repo *userRepo) UpdateUsername(ctx context.Context, user users.User) (user
 	return repo.update(ctx, user, q)
 }
 
-func (repo *userRepo) UpdateToUserVerificationDetails(ctx context.Context, user users.User) (users.User, error) {
+func (repo *userRepo) UpdateUserVerificationDetails(ctx context.Context, user users.User) (users.User, error) {
 	q := `UPDATE users SET
 				verified = :verified, verified_at = :verified_at, updated_at = :updated_at,
 				verification_token = :verification_token, verification_token_expires_at = :verification_token_expires_at

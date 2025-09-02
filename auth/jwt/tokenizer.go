@@ -38,7 +38,7 @@ const (
 	tokenType              = "type"
 	userField              = "user"
 	RoleField              = "role"
-	VerifiedFiled          = "verified"
+	VerifiedField          = "verified"
 	oauthProviderField     = "oauth_provider"
 	oauthAccessTokenField  = "access_token"
 	oauthRefreshTokenField = "refresh_token"
@@ -65,7 +65,7 @@ func (tok *tokenizer) Issue(key auth.Key) (string, error) {
 		Claim(tokenType, key.Type).
 		Expiration(key.ExpiresAt)
 	builder.Claim(RoleField, key.Role)
-	builder.Claim(VerifiedFiled, key.Verified)
+	builder.Claim(VerifiedField, key.Verified)
 	if key.Subject != "" {
 		builder.Subject(key.Subject)
 	}
@@ -155,7 +155,7 @@ func toKey(tkn jwt.Token) (auth.Key, error) {
 		return auth.Key{}, errInvalidRole
 	}
 
-	tVerified, ok := tkn.Get(VerifiedFiled)
+	tVerified, ok := tkn.Get(VerifiedField)
 	if !ok {
 		return auth.Key{}, errInvalidVerified
 	}

@@ -22,10 +22,7 @@ import (
 	"github.com/absmach/supermq/pkg/policies"
 )
 
-const (
-	verificationTokenExpiryDuration = 24 * time.Hour
-	verificationTokenSeparator      = "."
-)
+const verificationTokenExpiryDuration = 24 * time.Hour
 
 var (
 	errIssueToken          = errors.New("failed to issue token")
@@ -105,10 +102,10 @@ func (svc service) Register(ctx context.Context, session authn.Session, u User, 
 
 func (svc service) SendVerification(ctx context.Context, session authn.Session) error {
 	dbUser, err := svc.users.RetrieveVerificationToken(ctx, session.UserID)
+	if err == repoerr.ErrNotFound {
+		return nil
+	}
 	if err != nil {
-		if err == repoerr.ErrNotFound {
-			return nil
-		}
 		return err
 	}
 
@@ -128,7 +125,7 @@ func (svc service) SendVerification(ctx context.Context, session authn.Session) 
 		dbUser.VerifiedAt = time.Time{}
 	}
 
-	if _, err := svc.users.UpdateToUserVerificationDetails(ctx, dbUser); err != nil {
+	if _, err := svc.users.UpdateUserVerificationDetails(ctx, dbUser); err != nil {
 		return errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 
@@ -145,10 +142,10 @@ func (svc service) VerifyEmail(ctx context.Context, verificationToken string) (U
 	}
 
 	user, err := svc.users.RetrieveVerificationToken(ctx, payload.UserID)
+	if err == repoerr.ErrNotFound {
+		return User{}, svcerr.ErrInvalidVerificationToken
+	}
 	if err != nil {
-		if err == repoerr.ErrNotFound {
-			return User{}, svcerr.ErrInvalidVerificationToken
-		}
 		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
@@ -171,7 +168,7 @@ func (svc service) VerifyEmail(ctx context.Context, verificationToken string) (U
 		VerifiedAt:        time.Now(),
 		VerificationToken: "",
 	}
-	user, err = svc.users.UpdateToUserVerificationDetails(ctx, user)
+	user, err = svc.users.UpdateUserVerificationDetails(ctx, user)
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}

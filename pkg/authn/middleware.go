@@ -21,7 +21,6 @@ type sessionKeyType string
 const (
 	allowUnverifiedUserEnv = "SMQ_ALLOW_UNVERIFIED_USER"
 	jsonContentType        = "application/json"
-	textContentType        = "text/plain"
 
 	SessionKey = sessionKeyType("session")
 )
