@@ -608,7 +608,7 @@ func ToUser(dbu DBUser) (users.User, error) {
 	}
 	var verifiedAt time.Time
 	if dbu.VerifiedAt.Valid {
-		verifiedAt = dbu.UpdatedAt.Time.UTC()
+		verifiedAt = dbu.VerifiedAt.Time.UTC()
 	}
 
 	var verificationTokenExpiresAt time.Time
