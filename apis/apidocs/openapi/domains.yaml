@@ -757,17 +757,18 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
-  /domains/{domainID}/invitations/{userID}:
     delete:
       operationId: deleteInvitation
       summary: Deletes a specific invitation
       description: |
-        Deletes a specific invitation that is identifier by the user ID and domain ID.
+        Deletes a specific invitation that is identified by the user ID and domain ID.
+        The user ID is provided in the request body.
       tags:
         - Invitations
       parameters:
         - $ref: "#/components/parameters/DomainID"
-        - $ref: "#/components/parameters/UserID"
+      requestBody:
+        $ref: "#/components/requestBodies/DeleteInvitationReq"
       security:
         - bearerAuth: []
       responses:
@@ -1289,6 +1290,21 @@ components:
                 description: Domain unique identifier.
             required:
               - domain_id
+    DeleteInvitationReq:
+      description: JSON-formatted document describing request for deleting invitation
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              user_id:
+                type: string
+                format: uuid
+                example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+                description: User unique identifier.
+            required:
+              - user_id
 
   responses:
     ServiceError:
