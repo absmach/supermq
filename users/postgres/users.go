@@ -109,7 +109,6 @@ func (repo *userRepo) RetrieveByID(ctx context.Context, id string) (users.User, 
 	}
 
 	return user, nil
-
 }
 
 func (repo *userRepo) RetrieveAll(ctx context.Context, pm users.Page) (users.UsersPage, error) {
