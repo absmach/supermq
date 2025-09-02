@@ -92,7 +92,7 @@ func (res sendVerificationRes) Headers() map[string]string {
 }
 
 func (res sendVerificationRes) Empty() bool {
-	return false
+	return true
 }
 
 type verifyEmailRes struct{}
@@ -106,7 +106,7 @@ func (res verifyEmailRes) Headers() map[string]string {
 }
 
 func (res verifyEmailRes) Empty() bool {
-	return false
+	return true
 }
 
 type updateUserRes struct {

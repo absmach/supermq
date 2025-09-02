@@ -86,16 +86,17 @@ func (tr testRequest) make() (*http.Response, error) {
 	return tr.user.Do(req)
 }
 
-func newUsersServer() (*httptest.Server, *mocks.Service, *authnmocks.Authn) {
+func newUsersServer() (*httptest.Server, *mocks.Service, *authnmocks.Authentication) {
 	svc := new(mocks.Service)
 	logger := smqlog.NewMock()
 	mux := chi.NewRouter()
 	idp := uuid.NewMock()
 	provider := new(oauth2mocks.Provider)
 	provider.On("Name").Return("test")
-	authn := authnmocks.NewAuthn(&testing.T{})
+	authn := new(authnmocks.Authentication)
+	am := smqauthn.NewAuthn(authn, smqauthn.WithAllowUnverifiedUser(true))
 	token := new(authmocks.TokenServiceClient)
-	usersapi.MakeHandler(svc, authn, token, true, mux, logger, "", passRegex, idp, provider)
+	usersapi.MakeHandler(svc, am, token, true, mux, logger, "", passRegex, idp, provider)
 
 	return httptest.NewServer(mux), svc, authn
 }
