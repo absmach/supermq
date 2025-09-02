@@ -96,7 +96,8 @@ func newClientsServer() (*httptest.Server, *mocks.Service, *authnmocks.Authentic
 	logger := smqlog.NewMock()
 	mux := chi.NewRouter()
 	idp := uuid.NewMock()
-	clientsapi.MakeHandler(svc, authn, mux, logger, "", idp)
+	am := smqauthn.NewAuthNMiddleware(authn, smqauthn.WithAllowUnverifiedUser(true))
+	clientsapi.MakeHandler(svc, am, mux, logger, "", idp)
 
 	return httptest.NewServer(mux), svc, authn
 }

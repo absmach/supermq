@@ -6,7 +6,6 @@ package http
 import (
 	"context"
 
-	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
@@ -22,7 +21,7 @@ func CreateRoleEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
@@ -42,7 +41,7 @@ func ListRolesEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
@@ -62,7 +61,7 @@ func ListEntityMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
@@ -94,7 +93,7 @@ func RemoveEntityMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
@@ -113,7 +112,7 @@ func ViewRoleEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
@@ -133,7 +132,7 @@ func UpdateRoleEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
@@ -153,7 +152,7 @@ func DeleteRoleEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
@@ -172,7 +171,7 @@ func ListAvailableActionsEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
@@ -192,7 +191,7 @@ func AddRoleActionsEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
@@ -212,7 +211,7 @@ func ListRoleActionsEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
@@ -232,7 +231,7 @@ func DeleteRoleActionsEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
@@ -251,7 +250,7 @@ func DeleteAllRoleActionsEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
@@ -270,7 +269,7 @@ func AddRoleMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
@@ -290,7 +289,7 @@ func ListRoleMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
@@ -310,7 +309,7 @@ func DeleteRoleMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
@@ -329,7 +328,7 @@ func DeleteAllRoleMembersEndpoint(svc roles.RoleManager) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}

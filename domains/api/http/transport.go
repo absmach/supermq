@@ -20,7 +20,7 @@ import (
 )
 
 // MakeHandler returns a HTTP handler for Domains and Invitations API endpoints.
-func MakeHandler(svc domains.Service, authn authn.Authentication, mux *chi.Mux, logger *slog.Logger, instanceID string, idp supermq.IDProvider) http.Handler {
+func MakeHandler(svc domains.Service, authnMW authn.AuthNMiddleware, mux *chi.Mux, logger *slog.Logger, instanceID string, idp supermq.IDProvider) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
@@ -30,7 +30,7 @@ func MakeHandler(svc domains.Service, authn authn.Authentication, mux *chi.Mux, 
 		r.Use(api.RequestIDMiddleware(idp))
 
 		r.Group(func(r chi.Router) {
-			r.Use(api.AuthenticateMiddleware(authn, false))
+			r.Use(authnMW.WithOptions(authn.WithDomainCheck(false)).Middleware())
 			r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
 				createDomainEndpoint(svc),
 				decodeCreateDomainRequest,
@@ -49,7 +49,7 @@ func MakeHandler(svc domains.Service, authn authn.Authentication, mux *chi.Mux, 
 		})
 
 		r.Route("/{domainID}", func(r chi.Router) {
-			r.Use(api.AuthenticateMiddleware(authn, true))
+			r.Use(authnMW.Middleware())
 			r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
 				retrieveDomainEndpoint(svc),
 				decodeRetrieveDomainRequest,
@@ -88,7 +88,7 @@ func MakeHandler(svc domains.Service, authn authn.Authentication, mux *chi.Mux, 
 		})
 
 		r.Route("/{domainID}/invitations", func(r chi.Router) {
-			r.Use(api.AuthenticateMiddleware(authn, true))
+			r.Use(authnMW.Middleware())
 			r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
 				sendInvitationEndpoint(svc),
 				decodeSendInvitationReq,
@@ -111,7 +111,7 @@ func MakeHandler(svc domains.Service, authn authn.Authentication, mux *chi.Mux, 
 	})
 
 	mux.Route("/invitations", func(r chi.Router) {
-		r.Use(api.AuthenticateMiddleware(authn, false))
+		r.Use(authnMW.WithOptions(authn.WithDomainCheck(false)).Middleware())
 		r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
 			listUserInvitationsEndpoint(svc),
 			decodeListInvitationsReq,

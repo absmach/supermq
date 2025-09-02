@@ -67,7 +67,8 @@ func setupCerts() (*httptest.Server, *mocks.Service, *authnmocks.Authentication)
 	logger := smqlog.NewMock()
 	authn := new(authnmocks.Authentication)
 	idp := uuid.NewMock()
-	mux := httpapi.MakeHandler(svc, authn, logger, instanceID, idp)
+	am := smqauthn.NewAuthNMiddleware(authn, smqauthn.WithAllowUnverifiedUser(true))
+	mux := httpapi.MakeHandler(svc, am, logger, instanceID, idp)
 
 	return httptest.NewServer(mux), svc, authn
 }

@@ -62,8 +62,9 @@ func setupDomains() (*httptest.Server, *mocks.Service, *authnmocks.Authenticatio
 	mux := chi.NewRouter()
 	idp := uuid.NewMock()
 	authn := new(authnmocks.Authentication)
+	am := smqauthn.NewAuthNMiddleware(authn, smqauthn.WithAllowUnverifiedUser(true))
 
-	handler := domainapi.MakeHandler(svc, authn, mux, logger, "", idp)
+	handler := domainapi.MakeHandler(svc, am, mux, logger, "", idp)
 	return httptest.NewServer(handler), svc, authn
 }
 

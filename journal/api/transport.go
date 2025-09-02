@@ -34,7 +34,7 @@ const (
 )
 
 // MakeHandler returns a HTTP API handler with health check and metrics.
-func MakeHandler(svc journal.Service, authn smqauthn.Authentication, logger *slog.Logger, svcName, instanceID string) http.Handler {
+func MakeHandler(svc journal.Service, authnMW smqauthn.AuthNMiddleware, logger *slog.Logger, svcName, instanceID string) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
@@ -43,7 +43,7 @@ func MakeHandler(svc journal.Service, authn smqauthn.Authentication, logger *slo
 	idp := uuid.New()
 	mux.Use(api.RequestIDMiddleware(idp))
 
-	mux.With(api.AuthenticateMiddleware(authn, false)).Get("/journal/user/{userID}", otelhttp.NewHandler(kithttp.NewServer(
+	mux.With(authnMW.WithOptions(smqauthn.WithDomainCheck(false)).Middleware()).Get("/journal/user/{userID}", otelhttp.NewHandler(kithttp.NewServer(
 		retrieveJournalsEndpoint(svc),
 		decodeRetrieveUserJournalReq,
 		api.EncodeResponse,
@@ -51,7 +51,7 @@ func MakeHandler(svc journal.Service, authn smqauthn.Authentication, logger *slo
 	), "list_user_journals").ServeHTTP)
 
 	mux.Route("/{domainID}/journal", func(r chi.Router) {
-		r.Use(api.AuthenticateMiddleware(authn, true))
+		r.Use(authnMW.Middleware())
 
 		r.Get("/{entityType}/{entityID}", otelhttp.NewHandler(kithttp.NewServer(
 			retrieveJournalsEndpoint(svc),

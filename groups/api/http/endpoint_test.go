@@ -60,7 +60,8 @@ func newGroupsServer() (*httptest.Server, *mocks.Service, *authnmocks.Authentica
 	mux := chi.NewRouter()
 	idp := uuid.NewMock()
 	logger := smqlog.NewMock()
-	mux = MakeHandler(svc, authn, mux, logger, "", idp)
+	am := smqauthn.NewAuthNMiddleware(authn, smqauthn.WithAllowUnverifiedUser(true))
+	mux = MakeHandler(svc, am, mux, logger, "", idp)
 
 	return httptest.NewServer(mux), svc, authn
 }

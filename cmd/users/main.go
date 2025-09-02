@@ -20,7 +20,7 @@ import (
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	"github.com/absmach/supermq/internal/email"
 	smqlog "github.com/absmach/supermq/logger"
-	smqAuthn "github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	authsvcAuthz "github.com/absmach/supermq/pkg/authz/authsvc"
@@ -186,7 +186,7 @@ func main() {
 	defer tokenHandler.Close()
 	logger.Info("Token service client successfully connected to auth gRPC server " + tokenHandler.Secure())
 
-	svcAuthn, authnHandler, err := authsvcAuthn.NewAuthentication(ctx, authClientConfig)
+	authn, authnHandler, err := authsvcAuthn.NewAuthentication(ctx, authClientConfig)
 	if err != nil {
 		logger.Error("failed to create authn " + err.Error())
 		exitCode = 1
@@ -195,7 +195,7 @@ func main() {
 	defer authnHandler.Close()
 	logger.Info("AuthN successfully connected to auth gRPC server " + authnHandler.Secure())
 
-	authnMiddleware := smqAuthn.NewAuthNMiddleware(svcAuthn)
+	authnMiddleware := smqauthn.NewAuthNMiddleware(authn)
 
 	domsGrpcCfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&domsGrpcCfg, env.Options{Prefix: envPrefixDomains}); err != nil {

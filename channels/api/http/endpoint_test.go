@@ -58,7 +58,8 @@ func newChannelsServer() (*httptest.Server, *mocks.Service, *authnmocks.Authenti
 	mux := chi.NewRouter()
 	idp := uuid.NewMock()
 	logger := smqlog.NewMock()
-	mux = MakeHandler(svc, authn, mux, logger, "", idp)
+	am := smqauthn.NewAuthNMiddleware(authn, smqauthn.WithAllowUnverifiedUser(true))
+	mux = MakeHandler(svc, am, mux, logger, "", idp)
 
 	return httptest.NewServer(mux), svc, authn
 }

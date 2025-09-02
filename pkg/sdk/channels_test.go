@@ -43,7 +43,8 @@ func setupChannels() (*httptest.Server, *chmocks.Service, *authnmocks.Authentica
 	authn := new(authnmocks.Authentication)
 	mux := chi.NewRouter()
 	idp := uuid.NewMock()
-	chapi.MakeHandler(svc, authn, mux, logger, "", idp)
+	am := smqauthn.NewAuthNMiddleware(authn, smqauthn.WithAllowUnverifiedUser(true))
+	chapi.MakeHandler(svc, am, mux, logger, "", idp)
 
 	return httptest.NewServer(mux), svc, authn
 }

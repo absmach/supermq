@@ -31,7 +31,7 @@ const (
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc certs.Service, authn smqauthn.Authentication, logger *slog.Logger, instanceID string, idp supermq.IDProvider) http.Handler {
+func MakeHandler(svc certs.Service, authnMW smqauthn.AuthNMiddleware, logger *slog.Logger, instanceID string, idp supermq.IDProvider) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
@@ -39,7 +39,7 @@ func MakeHandler(svc certs.Service, authn smqauthn.Authentication, logger *slog.
 	r := chi.NewRouter()
 
 	r.Group(func(r chi.Router) {
-		r.Use(api.AuthenticateMiddleware(authn, true))
+		r.Use(authnMW.Middleware())
 		r.Use(api.RequestIDMiddleware(idp))
 
 		r.Route("/{domainID}", func(r chi.Router) {

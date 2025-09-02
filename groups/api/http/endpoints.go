@@ -6,7 +6,6 @@ package api
 import (
 	"context"
 
-	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/pkg/authn"
@@ -22,7 +21,7 @@ func CreateGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 			return createGroupRes{created: false}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return createGroupRes{created: false}, svcerr.ErrAuthentication
 		}
@@ -43,7 +42,7 @@ func ViewGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 			return viewGroupRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return viewGroupRes{}, svcerr.ErrAuthentication
 		}
@@ -64,7 +63,7 @@ func UpdateGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 			return updateGroupRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return updateGroupRes{}, svcerr.ErrAuthentication
 		}
@@ -92,7 +91,7 @@ func updateGroupTagsEndpoint(svc groups.Service) endpoint.Endpoint {
 			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return nil, svcerr.ErrAuthentication
 		}
@@ -117,7 +116,7 @@ func EnableGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 			return changeStatusRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return changeStatusRes{}, svcerr.ErrAuthentication
 		}
@@ -137,7 +136,7 @@ func DisableGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 			return changeStatusRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return changeStatusRes{}, svcerr.ErrAuthentication
 		}
@@ -158,7 +157,7 @@ func ListGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 			return groupPageRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return groupPageRes{}, svcerr.ErrAuthentication
 		}
@@ -198,7 +197,7 @@ func DeleteGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 			return deleteGroupRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return deleteGroupRes{}, svcerr.ErrAuthentication
 		}
@@ -216,7 +215,7 @@ func retrieveGroupHierarchyEndpoint(svc groups.Service) endpoint.Endpoint {
 			return retrieveGroupHierarchyRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return changeStatusRes{}, svcerr.ErrAuthentication
 		}
@@ -244,7 +243,7 @@ func addParentGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 			return addParentGroupRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return changeStatusRes{}, svcerr.ErrAuthentication
 		}
@@ -263,7 +262,7 @@ func removeParentGroupEndpoint(svc groups.Service) endpoint.Endpoint {
 			return removeParentGroupRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return changeStatusRes{}, svcerr.ErrAuthentication
 		}
@@ -282,7 +281,7 @@ func addChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 			return addChildrenGroupsRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return changeStatusRes{}, svcerr.ErrAuthentication
 		}
@@ -301,7 +300,7 @@ func removeChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 			return removeChildrenGroupsRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return changeStatusRes{}, svcerr.ErrAuthentication
 		}
@@ -320,7 +319,7 @@ func removeAllChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 			return removeAllChildrenGroupsRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return changeStatusRes{}, svcerr.ErrAuthentication
 		}
@@ -339,7 +338,7 @@ func listChildrenGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 			return listChildrenGroupsRes{}, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
-		session, ok := ctx.Value(api.SessionKey).(authn.Session)
+		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
 			return changeStatusRes{}, svcerr.ErrAuthentication
 		}

@@ -37,7 +37,8 @@ func setupClients() (*httptest.Server, *mocks.Service, *authnmocks.Authenticatio
 	mux := chi.NewRouter()
 	idp := uuid.NewMock()
 	authn := new(authnmocks.Authentication)
-	api.MakeHandler(tsvc, authn, mux, logger, "", idp)
+	am := smqauthn.NewAuthNMiddleware(authn, smqauthn.WithAllowUnverifiedUser(true))
+	api.MakeHandler(tsvc, am, mux, logger, "", idp)
 
 	return httptest.NewServer(mux), tsvc, authn
 }

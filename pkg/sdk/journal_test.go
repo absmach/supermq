@@ -29,7 +29,8 @@ func setupJournal() (*httptest.Server, *mocks.Service, *authnmocks.Authenticatio
 	svc := new(mocks.Service)
 	authn := new(authnmocks.Authentication)
 	logger := smqlog.NewMock()
-	mux := api.MakeHandler(svc, authn, logger, "journal-log", "test")
+	am := smqauthn.NewAuthNMiddleware(authn, smqauthn.WithAllowUnverifiedUser(true))
+	mux := api.MakeHandler(svc, am, logger, "journal-log", "test")
 
 	return httptest.NewServer(mux), svc, authn
 }

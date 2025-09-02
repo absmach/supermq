@@ -21,6 +21,7 @@ import (
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmock "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
@@ -98,7 +99,8 @@ func newDomainsServer() (*httptest.Server, *mocks.Service, *authnmock.Authentica
 	authn := new(authnmock.Authentication)
 	mux := chi.NewMux()
 	idp := uuid.NewMock()
-	domainsapi.MakeHandler(svc, authn, mux, logger, "", idp)
+	am := smqauthn.NewAuthNMiddleware(authn, smqauthn.WithAllowUnverifiedUser(true))
+	domainsapi.MakeHandler(svc, am, mux, logger, "", idp)
 	return httptest.NewServer(mux), svc, authn
 }
 

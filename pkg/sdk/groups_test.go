@@ -48,7 +48,8 @@ func setupGroups() (*httptest.Server, *mocks.Service, *authnmocks.Authentication
 	provider := new(oauth2mocks.Provider)
 	provider.On("Name").Return(roleName)
 	authn := new(authnmocks.Authentication)
-	httpapi.MakeHandler(svc, authn, mux, logger, "", idp)
+	am := smqauthn.NewAuthNMiddleware(authn, smqauthn.WithAllowUnverifiedUser(true))
+	httpapi.MakeHandler(svc, am, mux, logger, "", idp)
 
 	return httptest.NewServer(mux), svc, authn
 }

@@ -19,14 +19,14 @@ import (
 )
 
 // MakeHandler returns a HTTP handler for Groups API endpoints.
-func MakeHandler(svc groups.Service, authn authn.Authentication, mux *chi.Mux, logger *slog.Logger, instanceID string, idp supermq.IDProvider) *chi.Mux {
+func MakeHandler(svc groups.Service, authnMW authn.AuthNMiddleware, mux *chi.Mux, logger *slog.Logger, instanceID string, idp supermq.IDProvider) *chi.Mux {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
 	d := roleManagerHttp.NewDecoder("groupID")
 
 	mux.Route("/{domainID}/groups", func(r chi.Router) {
-		r.Use(api.AuthenticateMiddleware(authn, true))
+		r.Use(authnMW.Middleware())
 		r.Use(api.RequestIDMiddleware(idp))
 
 		r.Post("/", otelhttp.NewHandler(kithttp.NewServer(

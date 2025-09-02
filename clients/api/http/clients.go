@@ -17,14 +17,14 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-func clientsHandler(svc clients.Service, authn smqauthn.Authentication, r *chi.Mux, logger *slog.Logger, idp supermq.IDProvider) *chi.Mux {
+func clientsHandler(svc clients.Service, authnMW smqauthn.AuthNMiddleware, r *chi.Mux, logger *slog.Logger, idp supermq.IDProvider) *chi.Mux {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
 	d := roleManagerHttp.NewDecoder("clientID")
 
 	r.Group(func(r chi.Router) {
-		r.Use(api.AuthenticateMiddleware(authn, true))
+		r.Use(authnMW.Middleware())
 		r.Use(api.RequestIDMiddleware(idp))
 
 		r.Route("/{domainID}/clients", func(r chi.Router) {

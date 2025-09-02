@@ -19,7 +19,7 @@ import (
 )
 
 // MakeHandler returns a HTTP handler for Channels API endpoints.
-func MakeHandler(svc channels.Service, authn smqauthn.Authentication, mux *chi.Mux, logger *slog.Logger, instanceID string, idp supermq.IDProvider) *chi.Mux {
+func MakeHandler(svc channels.Service, authnMW smqauthn.AuthNMiddleware, mux *chi.Mux, logger *slog.Logger, instanceID string, idp supermq.IDProvider) *chi.Mux {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
@@ -27,7 +27,7 @@ func MakeHandler(svc channels.Service, authn smqauthn.Authentication, mux *chi.M
 	d := roleManagerHttp.NewDecoder("channelID")
 
 	mux.Route("/{domainID}/channels", func(r chi.Router) {
-		r.Use(api.AuthenticateMiddleware(authn, true))
+		r.Use(authnMW.Middleware())
 		r.Use(api.RequestIDMiddleware(idp))
 
 		r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
