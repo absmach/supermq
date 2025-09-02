@@ -5,9 +5,6 @@ package users
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/base64"
-	"encoding/json"
 	"net/mail"
 	"time"
 
@@ -114,7 +111,7 @@ func (svc service) SendVerification(ctx context.Context, session authn.Session) 
 	}
 
 	if dbUser.VerificationToken == "" || dbUser.IsVerificationTokenExpired() {
-		token, err := generateVerificationToken(dbUser.ID, dbUser.Email)
+		token, err := newVerificationToken(dbUser.ID, dbUser.Email)
 		if err != nil {
 			return errors.Wrap(svcerr.ErrCreateEntity, err)
 		}
@@ -136,7 +133,7 @@ func (svc service) SendVerification(ctx context.Context, session authn.Session) 
 }
 
 func (svc service) VerifyEmail(ctx context.Context, verificationToken string) (User, error) {
-	payload, err := getUserIDFromToken(verificationToken)
+	payload, err := decodeVerificationToken(verificationToken)
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
 	}
@@ -662,44 +659,4 @@ func (svc service) updateUserPolicy(ctx context.Context, userID string, role Rol
 
 		return nil
 	}
-}
-
-type tokenPayload struct {
-	UserID string `json:"user_id"`
-	Email  string `json:"email"`
-	Token  string `json:"token"`
-}
-
-func generateVerificationToken(userID, email string) (string, error) {
-	randomBytes := make([]byte, 32)
-	if _, err := rand.Read(randomBytes); err != nil {
-		return "", errors.Wrap(errFailedToEncodeToken, err)
-	}
-
-	payload := tokenPayload{
-		UserID: userID,
-		Email:  email,
-		Token:  base64.URLEncoding.EncodeToString(randomBytes),
-	}
-
-	jsonBytes, err := json.Marshal(payload)
-	if err != nil {
-		return "", errors.Wrap(errFailedToEncodeToken, err)
-	}
-
-	return base64.URLEncoding.EncodeToString(jsonBytes), nil
-}
-
-func getUserIDFromToken(token string) (tokenPayload, error) {
-	decodedPayload, err := base64.URLEncoding.DecodeString(token)
-	if err != nil {
-		return tokenPayload{}, errors.Wrap(errFailedToDecodeToken, err)
-	}
-
-	var payload tokenPayload
-	if err := json.Unmarshal(decodedPayload, &payload); err != nil {
-		return tokenPayload{}, errInvalidTokenFormat
-	}
-
-	return payload, nil
 }
