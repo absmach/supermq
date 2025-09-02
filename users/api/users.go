@@ -86,13 +86,6 @@ func usersHandler(svc users.Service, authn smqauthn.Authn, tokenClient grpcToken
 			), "update_user_email").ServeHTTP)
 		})
 
-		r.Get("/verify-email", otelhttp.NewHandler(kithttp.NewServer(
-			verifyEmailEndpoint(svc),
-			decodeVerifyEmail,
-			api.EncodeResponse,
-			opts...,
-		), "verify_email").ServeHTTP)
-
 		r.Group(func(r chi.Router) {
 			r.Use(authn.Middleware())
 
@@ -205,6 +198,13 @@ func usersHandler(svc users.Service, authn smqauthn.Authn, tokenClient grpcToken
 		api.EncodeResponse,
 		opts...,
 	), "password_reset_req").ServeHTTP)
+
+	r.Get("/verify-email", otelhttp.NewHandler(kithttp.NewServer(
+		verifyEmailEndpoint(svc),
+		decodeVerifyEmail,
+		api.EncodeResponse,
+		opts...,
+	), "verify_email").ServeHTTP)
 
 	for _, provider := range providers {
 		r.HandleFunc("/oauth/callback/"+provider.Name(), oauth2CallbackHandler(provider, svc, tokenClient))

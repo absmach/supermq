@@ -37,16 +37,17 @@ var (
 	domainID = "c717fa97-ffd9-40cb-8cf9-7c2859059395"
 )
 
-func setupUsers() (*httptest.Server, *umocks.Service, *authnmocks.Authn) {
+func setupUsers() (*httptest.Server, *umocks.Service, *authnmocks.Authentication) {
 	usvc := new(umocks.Service)
 	logger := smqlog.NewMock()
 	mux := chi.NewRouter()
 	idp := uuid.NewMock()
 	provider := new(oauth2mocks.Provider)
 	provider.On("Name").Return("test")
-	authn := authnmocks.NewAuthn(&testing.T{})
+	authn := new(authnmocks.Authentication)
+	am := smqauthn.NewAuthn(authn, smqauthn.WithDomainCheck(false), smqauthn.WithAllowUnverifiedUser(true))
 	token := new(authmocks.TokenServiceClient)
-	httpapi.MakeHandler(usvc, authn, token, true, mux, logger, "", passRegex, idp, provider)
+	httpapi.MakeHandler(usvc, am, token, true, mux, logger, "", passRegex, idp, provider)
 
 	return httptest.NewServer(mux), usvc, authn
 }
@@ -567,6 +568,10 @@ func TestListUsers(t *testing.T) {
 			resp, err := mgsdk.Users(context.Background(), tc.pageMeta, tc.token)
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
+			if tc.token != "" {
+				ok := authCall.Parent.AssertCalled(t, "Authenticate", mock.Anything, tc.token)
+				assert.True(t, ok)
+			}
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "ListUsers", mock.Anything, tc.session, tc.svcReq)
 				assert.True(t, ok)

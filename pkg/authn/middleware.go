@@ -5,12 +5,14 @@ package authn
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"os"
 	"strconv"
 
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/auth"
+	"github.com/absmach/supermq/pkg/errors"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -18,6 +20,8 @@ type sessionKeyType string
 
 const (
 	allowUnverifiedUserEnv = "SMQ_ALLOW_UNVERIFIED_USER"
+	jsonContentType        = "application/json"
+	textContentType        = "text/plain"
 
 	SessionKey = sessionKeyType("session")
 )
@@ -87,7 +91,7 @@ type authnService struct {
 //     it becomes 'true'.
 //   - If NewAuthn is called with WithAllowUnverifiedUser(false), it will be 'false',
 //     regardless of the environment variable, as function arguments have the highest precedence.
-func NewAuthn(authn Authentication, options ...MiddlewareOption) Authn {
+func NewAuthn(authnSvc Authentication, options ...MiddlewareOption) Authn {
 	allOptions := []MiddlewareOption{WithDefaultMiddlewareOptions()}
 	if val, ok := os.LookupEnv(allowUnverifiedUserEnv); ok {
 		allowUnverifiedUser, err := strconv.ParseBool(val)
@@ -97,7 +101,7 @@ func NewAuthn(authn Authentication, options ...MiddlewareOption) Authn {
 	}
 	allOptions = append(allOptions, options...)
 	return &authnService{
-		Authentication: authn,
+		Authentication: authnSvc,
 		options:        allOptions,
 	}
 }
@@ -126,25 +130,25 @@ func (a *authnService) Middleware() func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token := apiutil.ExtractBearerToken(r)
 			if token == "" {
-				http.Error(w, apiutil.ErrBearerToken.Error(), http.StatusUnauthorized)
+				encodeError(w, apiutil.ErrBearerToken, http.StatusUnauthorized)
 				return
 			}
-
 			resp, err := a.Authenticate(r.Context(), token)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusUnauthorized)
+
+				encodeError(w, err, http.StatusUnauthorized)
 				return
 			}
 
 			if resp.Type == AccessToken && !opts.allowUnverifiedUser && resp.Role != AdminRole && !resp.Verified {
-				http.Error(w, "email not verified", http.StatusUnauthorized)
+				encodeError(w, apiutil.ErrEmailNotVerified, http.StatusUnauthorized)
 				return
 			}
 
 			if opts.domainCheck {
 				domain := chi.URLParam(r, "domainID")
 				if domain == "" {
-					http.Error(w, "missing domain ID", http.StatusBadRequest)
+					encodeError(w, apiutil.ErrMissingDomainID, http.StatusBadRequest)
 					return
 				}
 				resp.DomainID = domain
@@ -160,4 +164,17 @@ func (a *authnService) Middleware() func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+func encodeError(w http.ResponseWriter, err error, statusCode int) {
+	if errorVal, ok := err.(errors.Error); ok {
+		w.Header().Set("Content-Type", jsonContentType)
+		w.WriteHeader(statusCode)
+		if err := json.NewEncoder(w).Encode(errorVal); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+
+	}
+	http.Error(w, err.Error(), statusCode)
 }
