@@ -340,12 +340,24 @@ func (svc service) UpdateEmail(ctx context.Context, session authn.Session, userI
 			return User{}, err
 		}
 	}
+	oldUsr, err := svc.users.RetrieveByID(ctx, userID)
+	if err != nil {
+		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+	}
+	if oldUsr.Email == email {
+		oldUsr.Credentials.Secret = ""
+		return oldUsr, nil
+	}
 
 	usr := User{
-		ID:        userID,
-		Email:     email,
-		UpdatedAt: time.Now().UTC(),
-		UpdatedBy: session.UserID,
+		ID:                         userID,
+		Email:                      email,
+		UpdatedAt:                  time.Now().UTC(),
+		UpdatedBy:                  session.UserID,
+		Verified:                   false,
+		VerifiedAt:                 time.Time{},
+		VerificationToken:          "",
+		VerificationTokenExpiresAt: time.Time{},
 	}
 
 	user, err := svc.users.UpdateEmail(ctx, usr)

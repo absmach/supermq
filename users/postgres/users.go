@@ -298,7 +298,8 @@ func (repo *userRepo) update(ctx context.Context, user users.User, query string)
 }
 
 func (repo *userRepo) UpdateEmail(ctx context.Context, user users.User) (users.User, error) {
-	q := `UPDATE users SET email = :email, updated_at = :updated_at, updated_by = :updated_by
+	q := `UPDATE users SET email = :email,  verified = :verified, verified_at = :verified_at, verification_token = :verification_token,
+				verification_token_expires_at = :verification_token_expires_at, updated_at = :updated_at, updated_by = :updated_by
         WHERE id = :id AND status = :status
         RETURNING id, tags, email, metadata, status, created_at, updated_at, updated_by, first_name, last_name, username, role, verified, verified_at`
 	user.Status = users.EnabledStatus
