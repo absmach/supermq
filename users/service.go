@@ -120,7 +120,7 @@ func (svc service) SendVerification(ctx context.Context, session authn.Session) 
 		}
 
 		dbUser.VerificationToken = token
-		dbUser.VerificationTokenExpiresAt = time.Now().Add(verificationTokenExpiryDuration)
+		dbUser.VerificationTokenExpiresAt = time.Now().UTC().Add(verificationTokenExpiryDuration)
 		dbUser.Verified = false
 		dbUser.VerifiedAt = time.Time{}
 	}
@@ -165,7 +165,7 @@ func (svc service) VerifyEmail(ctx context.Context, verificationToken string) (U
 		ID:                user.ID,
 		Email:             user.Email,
 		Verified:          true,
-		VerifiedAt:        time.Now(),
+		VerifiedAt:        time.Now().UTC(),
 		VerificationToken: "",
 	}
 	user, err = svc.users.UpdateUserVerificationDetails(ctx, user)
