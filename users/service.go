@@ -34,7 +34,6 @@ var (
 	errFailedToEncodeToken = errors.New("failed to encode token")
 	errFailedToDecodeToken = errors.New("failed to decode token")
 	errInvalidTokenFormat  = errors.New("invalid token format")
-	errInvalidToken        = errors.New("invalid token")
 )
 
 type service struct {

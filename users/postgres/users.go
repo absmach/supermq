@@ -193,7 +193,6 @@ func (repo *userRepo) RetrieveVerificationToken(ctx context.Context, id string) 
 	dbu = DBUser{}
 	if !rows.Next() {
 		return users.User{}, repoerr.ErrNotFound
-
 	}
 
 	if err = rows.StructScan(&dbu); err != nil {
