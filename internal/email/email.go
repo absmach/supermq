@@ -100,7 +100,7 @@ func (a *Agent) Send(to []string, from, subject, header, user, content, footer s
 	m.SetHeader("From", e.From)
 	m.SetHeader("To", to...)
 	m.SetHeader("Subject", subject)
-	m.SetBody("text/plain", buff.String())
+	m.SetBody("text/html", buff.String())
 
 	if err := a.dial.DialAndSend(m); err != nil {
 		return errors.Wrap(errSendMail, err)
