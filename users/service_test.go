@@ -906,7 +906,7 @@ func TestUpdateEmail(t *testing.T) {
 	svc, cRepo := newServiceMinimal()
 
 	user2 := user
-	user2.Email = "updated@example.com"
+	user2.Email = "user2@example.com"
 
 	cases := []struct {
 		desc                string
@@ -921,7 +921,7 @@ func TestUpdateEmail(t *testing.T) {
 	}{
 		{
 			desc:                "update user as normal user successfully",
-			email:               "updated@example.com",
+			email:               "user2-update-1@example.com",
 			token:               validToken,
 			reqUserID:           user.ID,
 			id:                  user.ID,
@@ -929,8 +929,18 @@ func TestUpdateEmail(t *testing.T) {
 			err:                 nil,
 		},
 		{
+			desc:                "update to same email as normal user successfully",
+			email:               "user2-update-1@example.com",
+			token:               validToken,
+			reqUserID:           user.ID,
+			id:                  user.ID,
+			updateEmailResponse: user2,
+			err:                 nil,
+		},
+
+		{
 			desc:                "update user email as normal user with repo error on update",
-			email:               "updated@example.com",
+			email:               "user2-update-2@example.com",
 			token:               validToken,
 			reqUserID:           user.ID,
 			id:                  user.ID,
@@ -940,14 +950,14 @@ func TestUpdateEmail(t *testing.T) {
 		},
 		{
 			desc:  "update user email as admin successfully",
-			email: "updated@example.com",
+			email: "user2-update-3@example.com",
 			token: validToken,
 			id:    user.ID,
 			err:   nil,
 		},
 		{
 			desc:                "update user email as admin with repo error on update",
-			email:               "updated@exmaple.com",
+			email:               "user2-update-4@exmaple.com",
 			token:               validToken,
 			reqUserID:           user.ID,
 			id:                  user.ID,
@@ -957,7 +967,7 @@ func TestUpdateEmail(t *testing.T) {
 		},
 		{
 			desc:                "update user as admin user with failed check on super admin",
-			email:               "updated@exmaple.com",
+			email:               "user2-update-5@exmaple.com",
 			token:               validToken,
 			reqUserID:           user.ID,
 			id:                  "",
@@ -970,15 +980,18 @@ func TestUpdateEmail(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := cRepo.On("CheckSuperAdmin", context.Background(), mock.Anything).Return(tc.checkSuperAdminErr)
+		repocall2 := cRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(tc.updateEmailResponse, tc.updateEmailErr)
 		repoCall1 := cRepo.On("UpdateEmail", context.Background(), mock.Anything).Return(tc.updateEmailResponse, tc.updateEmailErr)
 		updatedUser, err := svc.UpdateEmail(context.Background(), authn.Session{DomainUserID: tc.reqUserID, UserID: validID, DomainID: validID}, tc.id, tc.email)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.updateEmailResponse, updatedUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateEmailResponse, updatedUser))
-		if tc.err == nil {
+		if tc.err == nil && user2.Email != tc.email {
 			ok := repoCall1.Parent.AssertCalled(t, "UpdateEmail", context.Background(), mock.Anything, mock.Anything)
 			assert.True(t, ok, fmt.Sprintf("Update was not called on %s", tc.desc))
+			user2.Email = tc.email
 		}
 		repoCall.Unset()
+		repocall2.Unset()
 		repoCall1.Unset()
 	}
 }

@@ -30,17 +30,6 @@ type User struct {
 	UpdatedAt      time.Time   `json:"updated_at,omitempty"`
 	UpdatedBy      string      `json:"updated_by,omitempty"`
 	VerifiedAt     time.Time   `json:"verified_at,omitempty"`
-
-	// VerificationToken is sent to the user's email and should not be exposed via API.
-	VerificationToken          string    `json:"-"`
-	VerificationTokenExpiresAt time.Time `json:"-"`
-}
-
-func (u *User) IsVerificationTokenExpired() bool {
-	if u.VerificationTokenExpiresAt.IsZero() {
-		return true
-	}
-	return time.Now().After(u.VerificationTokenExpiresAt)
 }
 
 type Credentials struct {
@@ -91,12 +80,6 @@ type Repository interface {
 	// RetrieveByUsername retrieves user by its unique credentials.
 	RetrieveByUsername(ctx context.Context, username string) (User, error)
 
-	// RetrieveVerificationToken retrieves verification token of given user id.
-	RetrieveVerificationToken(ctx context.Context, id string) (User, error)
-
-	// UpdateUserVerificationDetails update given user id verification details.
-	UpdateUserVerificationDetails(ctx context.Context, user User) (User, error)
-
 	// Update updates the user name and metadata.
 	Update(ctx context.Context, id string, user UserReq) (User, error)
 
@@ -111,6 +94,9 @@ type Repository interface {
 
 	// UpdateRole updates role for user with given id.
 	UpdateRole(ctx context.Context, user User) (User, error)
+
+	// UpdateVerifiedAt updates the verified time for user with given id.
+	UpdateVerifiedAt(ctx context.Context, user User) (User, error)
 
 	// ChangeStatus changes user status to enabled or disabled
 	ChangeStatus(ctx context.Context, user User) (User, error)
@@ -129,6 +115,15 @@ type Repository interface {
 	// Save persists the user account. A non-nil error is returned to indicate
 	// operation failure.
 	Save(ctx context.Context, user User) (User, error)
+
+	// AddUserVerification adds new verification for given user id and email
+	AddUserVerification(ctx context.Context, uv UserVerification) error
+
+	// RetrieveVerificationToken retrieves verification token of given user id and email.
+	RetrieveUserVerification(ctx context.Context, userID, email string) (UserVerification, error)
+
+	// UpdateUserVerificationDetails update verification details for the given user id and email.
+	UpdateUserVerification(ctx context.Context, uv UserVerification) error
 }
 
 // Validate returns an error if user representation is invalid.

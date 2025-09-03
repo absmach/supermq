@@ -41,6 +41,63 @@ func (_m *Repository) EXPECT() *Repository_Expecter {
 	return &Repository_Expecter{mock: &_m.Mock}
 }
 
+// AddUserVerification provides a mock function for the type Repository
+func (_mock *Repository) AddUserVerification(ctx context.Context, uv users.UserVerification) error {
+	ret := _mock.Called(ctx, uv)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddUserVerification")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, users.UserVerification) error); ok {
+		r0 = returnFunc(ctx, uv)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Repository_AddUserVerification_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddUserVerification'
+type Repository_AddUserVerification_Call struct {
+	*mock.Call
+}
+
+// AddUserVerification is a helper method to define mock.On call
+//   - ctx context.Context
+//   - uv users.UserVerification
+func (_e *Repository_Expecter) AddUserVerification(ctx interface{}, uv interface{}) *Repository_AddUserVerification_Call {
+	return &Repository_AddUserVerification_Call{Call: _e.mock.On("AddUserVerification", ctx, uv)}
+}
+
+func (_c *Repository_AddUserVerification_Call) Run(run func(ctx context.Context, uv users.UserVerification)) *Repository_AddUserVerification_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 users.UserVerification
+		if args[1] != nil {
+			arg1 = args[1].(users.UserVerification)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Repository_AddUserVerification_Call) Return(err error) *Repository_AddUserVerification_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Repository_AddUserVerification_Call) RunAndReturn(run func(ctx context.Context, uv users.UserVerification) error) *Repository_AddUserVerification_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ChangeStatus provides a mock function for the type Repository
 func (_mock *Repository) ChangeStatus(ctx context.Context, user users.User) (users.User, error) {
 	ret := _mock.Called(ctx, user)
@@ -551,45 +608,46 @@ func (_c *Repository_RetrieveByUsername_Call) RunAndReturn(run func(ctx context.
 	return _c
 }
 
-// RetrieveVerificationToken provides a mock function for the type Repository
-func (_mock *Repository) RetrieveVerificationToken(ctx context.Context, id string) (users.User, error) {
-	ret := _mock.Called(ctx, id)
+// RetrieveUserVerification provides a mock function for the type Repository
+func (_mock *Repository) RetrieveUserVerification(ctx context.Context, userID string, email string) (users.UserVerification, error) {
+	ret := _mock.Called(ctx, userID, email)
 
 	if len(ret) == 0 {
-		panic("no return value specified for RetrieveVerificationToken")
+		panic("no return value specified for RetrieveUserVerification")
 	}
 
-	var r0 users.User
+	var r0 users.UserVerification
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (users.User, error)); ok {
-		return returnFunc(ctx, id)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) (users.UserVerification, error)); ok {
+		return returnFunc(ctx, userID, email)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) users.User); ok {
-		r0 = returnFunc(ctx, id)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) users.UserVerification); ok {
+		r0 = returnFunc(ctx, userID, email)
 	} else {
-		r0 = ret.Get(0).(users.User)
+		r0 = ret.Get(0).(users.UserVerification)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = returnFunc(ctx, id)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = returnFunc(ctx, userID, email)
 	} else {
 		r1 = ret.Error(1)
 	}
 	return r0, r1
 }
 
-// Repository_RetrieveVerificationToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RetrieveVerificationToken'
-type Repository_RetrieveVerificationToken_Call struct {
+// Repository_RetrieveUserVerification_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RetrieveUserVerification'
+type Repository_RetrieveUserVerification_Call struct {
 	*mock.Call
 }
 
-// RetrieveVerificationToken is a helper method to define mock.On call
+// RetrieveUserVerification is a helper method to define mock.On call
 //   - ctx context.Context
-//   - id string
-func (_e *Repository_Expecter) RetrieveVerificationToken(ctx interface{}, id interface{}) *Repository_RetrieveVerificationToken_Call {
-	return &Repository_RetrieveVerificationToken_Call{Call: _e.mock.On("RetrieveVerificationToken", ctx, id)}
+//   - userID string
+//   - email string
+func (_e *Repository_Expecter) RetrieveUserVerification(ctx interface{}, userID interface{}, email interface{}) *Repository_RetrieveUserVerification_Call {
+	return &Repository_RetrieveUserVerification_Call{Call: _e.mock.On("RetrieveUserVerification", ctx, userID, email)}
 }
 
-func (_c *Repository_RetrieveVerificationToken_Call) Run(run func(ctx context.Context, id string)) *Repository_RetrieveVerificationToken_Call {
+func (_c *Repository_RetrieveUserVerification_Call) Run(run func(ctx context.Context, userID string, email string)) *Repository_RetrieveUserVerification_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -599,20 +657,25 @@ func (_c *Repository_RetrieveVerificationToken_Call) Run(run func(ctx context.Co
 		if args[1] != nil {
 			arg1 = args[1].(string)
 		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
 }
 
-func (_c *Repository_RetrieveVerificationToken_Call) Return(user users.User, err error) *Repository_RetrieveVerificationToken_Call {
-	_c.Call.Return(user, err)
+func (_c *Repository_RetrieveUserVerification_Call) Return(userVerification users.UserVerification, err error) *Repository_RetrieveUserVerification_Call {
+	_c.Call.Return(userVerification, err)
 	return _c
 }
 
-func (_c *Repository_RetrieveVerificationToken_Call) RunAndReturn(run func(ctx context.Context, id string) (users.User, error)) *Repository_RetrieveVerificationToken_Call {
+func (_c *Repository_RetrieveUserVerification_Call) RunAndReturn(run func(ctx context.Context, userID string, email string) (users.UserVerification, error)) *Repository_RetrieveUserVerification_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1019,53 +1082,44 @@ func (_c *Repository_UpdateSecret_Call) RunAndReturn(run func(ctx context.Contex
 	return _c
 }
 
-// UpdateUserVerificationDetails provides a mock function for the type Repository
-func (_mock *Repository) UpdateUserVerificationDetails(ctx context.Context, user users.User) (users.User, error) {
-	ret := _mock.Called(ctx, user)
+// UpdateUserVerification provides a mock function for the type Repository
+func (_mock *Repository) UpdateUserVerification(ctx context.Context, uv users.UserVerification) error {
+	ret := _mock.Called(ctx, uv)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateUserVerificationDetails")
+		panic("no return value specified for UpdateUserVerification")
 	}
 
-	var r0 users.User
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, users.User) (users.User, error)); ok {
-		return returnFunc(ctx, user)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, users.User) users.User); ok {
-		r0 = returnFunc(ctx, user)
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, users.UserVerification) error); ok {
+		r0 = returnFunc(ctx, uv)
 	} else {
-		r0 = ret.Get(0).(users.User)
+		r0 = ret.Error(0)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, users.User) error); ok {
-		r1 = returnFunc(ctx, user)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
+	return r0
 }
 
-// Repository_UpdateUserVerificationDetails_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateUserVerificationDetails'
-type Repository_UpdateUserVerificationDetails_Call struct {
+// Repository_UpdateUserVerification_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateUserVerification'
+type Repository_UpdateUserVerification_Call struct {
 	*mock.Call
 }
 
-// UpdateUserVerificationDetails is a helper method to define mock.On call
+// UpdateUserVerification is a helper method to define mock.On call
 //   - ctx context.Context
-//   - user users.User
-func (_e *Repository_Expecter) UpdateUserVerificationDetails(ctx interface{}, user interface{}) *Repository_UpdateUserVerificationDetails_Call {
-	return &Repository_UpdateUserVerificationDetails_Call{Call: _e.mock.On("UpdateUserVerificationDetails", ctx, user)}
+//   - uv users.UserVerification
+func (_e *Repository_Expecter) UpdateUserVerification(ctx interface{}, uv interface{}) *Repository_UpdateUserVerification_Call {
+	return &Repository_UpdateUserVerification_Call{Call: _e.mock.On("UpdateUserVerification", ctx, uv)}
 }
 
-func (_c *Repository_UpdateUserVerificationDetails_Call) Run(run func(ctx context.Context, user users.User)) *Repository_UpdateUserVerificationDetails_Call {
+func (_c *Repository_UpdateUserVerification_Call) Run(run func(ctx context.Context, uv users.UserVerification)) *Repository_UpdateUserVerification_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 users.User
+		var arg1 users.UserVerification
 		if args[1] != nil {
-			arg1 = args[1].(users.User)
+			arg1 = args[1].(users.UserVerification)
 		}
 		run(
 			arg0,
@@ -1075,12 +1129,12 @@ func (_c *Repository_UpdateUserVerificationDetails_Call) Run(run func(ctx contex
 	return _c
 }
 
-func (_c *Repository_UpdateUserVerificationDetails_Call) Return(user1 users.User, err error) *Repository_UpdateUserVerificationDetails_Call {
-	_c.Call.Return(user1, err)
+func (_c *Repository_UpdateUserVerification_Call) Return(err error) *Repository_UpdateUserVerification_Call {
+	_c.Call.Return(err)
 	return _c
 }
 
-func (_c *Repository_UpdateUserVerificationDetails_Call) RunAndReturn(run func(ctx context.Context, user users.User) (users.User, error)) *Repository_UpdateUserVerificationDetails_Call {
+func (_c *Repository_UpdateUserVerification_Call) RunAndReturn(run func(ctx context.Context, uv users.UserVerification) error) *Repository_UpdateUserVerification_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1147,6 +1201,72 @@ func (_c *Repository_UpdateUsername_Call) Return(user1 users.User, err error) *R
 }
 
 func (_c *Repository_UpdateUsername_Call) RunAndReturn(run func(ctx context.Context, user users.User) (users.User, error)) *Repository_UpdateUsername_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateVerifiedAt provides a mock function for the type Repository
+func (_mock *Repository) UpdateVerifiedAt(ctx context.Context, user users.User) (users.User, error) {
+	ret := _mock.Called(ctx, user)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateVerifiedAt")
+	}
+
+	var r0 users.User
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, users.User) (users.User, error)); ok {
+		return returnFunc(ctx, user)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, users.User) users.User); ok {
+		r0 = returnFunc(ctx, user)
+	} else {
+		r0 = ret.Get(0).(users.User)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, users.User) error); ok {
+		r1 = returnFunc(ctx, user)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Repository_UpdateVerifiedAt_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateVerifiedAt'
+type Repository_UpdateVerifiedAt_Call struct {
+	*mock.Call
+}
+
+// UpdateVerifiedAt is a helper method to define mock.On call
+//   - ctx context.Context
+//   - user users.User
+func (_e *Repository_Expecter) UpdateVerifiedAt(ctx interface{}, user interface{}) *Repository_UpdateVerifiedAt_Call {
+	return &Repository_UpdateVerifiedAt_Call{Call: _e.mock.On("UpdateVerifiedAt", ctx, user)}
+}
+
+func (_c *Repository_UpdateVerifiedAt_Call) Run(run func(ctx context.Context, user users.User)) *Repository_UpdateVerifiedAt_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 users.User
+		if args[1] != nil {
+			arg1 = args[1].(users.User)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *Repository_UpdateVerifiedAt_Call) Return(user1 users.User, err error) *Repository_UpdateVerifiedAt_Call {
+	_c.Call.Return(user1, err)
+	return _c
+}
+
+func (_c *Repository_UpdateVerifiedAt_Call) RunAndReturn(run func(ctx context.Context, user users.User) (users.User, error)) *Repository_UpdateVerifiedAt_Call {
 	_c.Call.Return(run)
 	return _c
 }

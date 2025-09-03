@@ -5,6 +5,7 @@ package users
 
 import (
 	"context"
+	"fmt"
 	"net/mail"
 	"time"
 
@@ -22,12 +23,9 @@ import (
 const verificationTokenExpiryDuration = 24 * time.Hour
 
 var (
-	errIssueToken          = errors.New("failed to issue token")
-	errRecoveryToken       = errors.New("failed to generate password recovery token")
-	errLoginDisableUser    = errors.New("failed to login in disabled user")
-	errFailedToEncodeToken = errors.New("failed to encode token")
-	errFailedToDecodeToken = errors.New("failed to decode token")
-	errInvalidTokenFormat  = errors.New("invalid token format")
+	errIssueToken       = errors.New("failed to issue token")
+	errRecoveryToken    = errors.New("failed to generate password recovery token")
+	errLoginDisableUser = errors.New("failed to login in disabled user")
 )
 
 type service struct {
@@ -98,10 +96,7 @@ func (svc service) Register(ctx context.Context, session authn.Session, u User, 
 }
 
 func (svc service) SendVerification(ctx context.Context, session authn.Session) error {
-	dbUser, err := svc.users.RetrieveVerificationToken(ctx, session.UserID)
-	if err == repoerr.ErrNotFound {
-		return nil
-	}
+	dbUser, err := svc.users.RetrieveByID(ctx, session.UserID)
 	if err != nil {
 		return err
 	}
@@ -110,60 +105,65 @@ func (svc service) SendVerification(ctx context.Context, session authn.Session) 
 		return svcerr.ErrUserAlreadyVerified
 	}
 
-	if dbUser.VerificationToken == "" || dbUser.IsVerificationTokenExpired() {
-		token, err := newVerificationToken(dbUser.ID, dbUser.Email)
+	uv, err := svc.users.RetrieveUserVerification(ctx, dbUser.ID, dbUser.Email)
+	if err != nil && err != repoerr.ErrNotFound {
+		return err
+	}
+
+	if err = uv.Valid(); err != nil {
+		uv, err = NewUserVerification(dbUser.ID, dbUser.Email)
 		if err != nil {
 			return errors.Wrap(svcerr.ErrCreateEntity, err)
 		}
-
-		dbUser.VerificationToken = token
-		dbUser.VerificationTokenExpiresAt = time.Now().UTC().Add(verificationTokenExpiryDuration)
-		dbUser.VerifiedAt = time.Time{}
+		if err := svc.users.AddUserVerification(ctx, uv); err != nil {
+			return errors.Wrap(svcerr.ErrCreateEntity, err)
+		}
 	}
 
-	if _, err := svc.users.UpdateUserVerificationDetails(ctx, dbUser); err != nil {
-		return errors.Wrap(svcerr.ErrUpdateEntity, err)
+	uvs, err := uv.Encode()
+	if err != nil {
+		return errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 
-	if err := svc.email.SendVerification([]string{dbUser.Email}, dbUser.Credentials.Username, dbUser.VerificationToken); err != nil {
+	if err := svc.email.SendVerification([]string{dbUser.Email}, dbUser.Credentials.Username, uvs); err != nil {
 		return errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 	return nil
 }
 
-func (svc service) VerifyEmail(ctx context.Context, verificationToken string) (User, error) {
-	payload, err := decodeVerificationToken(verificationToken)
-	if err != nil {
+func (svc service) VerifyEmail(ctx context.Context, ruvs string) (User, error) {
+	var ruv UserVerification
+	if err := ruv.Decode(ruvs); err != nil {
 		return User{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
 	}
 
-	user, err := svc.users.RetrieveVerificationToken(ctx, payload.UserID)
-	if err == repoerr.ErrNotFound {
-		return User{}, svcerr.ErrInvalidVerificationToken
-	}
+	oguv, err := svc.users.RetrieveUserVerification(ctx, ruv.UserID, ruv.Email)
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	if user.Email != payload.Email || user.VerificationToken != verificationToken {
-		return User{}, svcerr.ErrInvalidVerificationToken
+	if err := oguv.Valid(); err != nil {
+		if err == svcerr.ErrUserVerificationExpired || err == svcerr.ErrUserVerificationUsed {
+			return User{}, err
+		}
+		return User{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
 	}
 
-	if user.IsVerificationTokenExpired() {
-		return User{}, svcerr.ErrVerificationTokenExpired
+	if err := oguv.Match(ruv); err != nil {
+		return User{}, err
 	}
 
-	if !user.VerifiedAt.IsZero() {
-		return User{}, svcerr.ErrUserAlreadyVerified
+	oguv.UsedAt = time.Now().UTC()
+	if err = svc.users.UpdateUserVerification(ctx, oguv); err != nil {
+		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 
-	user = User{
-		ID:                user.ID,
-		Email:             user.Email,
-		VerifiedAt:        time.Now().UTC(),
-		VerificationToken: "",
+	user := User{
+		ID:         oguv.UserID,
+		Email:      oguv.Email,
+		VerifiedAt: time.Now().UTC(),
 	}
-	user, err = svc.users.UpdateUserVerificationDetails(ctx, user)
+	user, err = svc.users.UpdateVerifiedAt(ctx, user)
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
@@ -227,8 +227,6 @@ func (svc service) View(ctx context.Context, session authn.Session, id string) (
 	}
 
 	user.Credentials.Secret = ""
-	user.VerificationToken = ""
-	user.VerificationTokenExpiresAt = time.Time{}
 
 	return user, nil
 }
@@ -239,8 +237,6 @@ func (svc service) ViewProfile(ctx context.Context, session authn.Session) (User
 		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	user.Credentials.Secret = ""
-	user.VerificationToken = ""
-	user.VerificationTokenExpiresAt = time.Time{}
 
 	return user, nil
 }
@@ -343,18 +339,15 @@ func (svc service) UpdateEmail(ctx context.Context, session authn.Session, userI
 		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	if oldUsr.Email == email {
-		oldUsr.Credentials.Secret = ""
-		return oldUsr, nil
+		return User{}, fmt.Errorf("current email is same as update requested email")
 	}
 
 	usr := User{
-		ID:                         userID,
-		Email:                      email,
-		UpdatedAt:                  time.Now().UTC(),
-		UpdatedBy:                  session.UserID,
-		VerifiedAt:                 time.Time{},
-		VerificationToken:          "",
-		VerificationTokenExpiresAt: time.Time{},
+		ID:         userID,
+		Email:      email,
+		UpdatedAt:  time.Now().UTC(),
+		UpdatedBy:  session.UserID,
+		VerifiedAt: time.Time{},
 	}
 
 	user, err := svc.users.UpdateEmail(ctx, usr)

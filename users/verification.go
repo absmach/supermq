@@ -7,46 +7,111 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"time"
 
 	"github.com/absmach/supermq/pkg/errors"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
 )
 
-type verificationToken struct {
-	UserID string `json:"user_id"`
-	Email  string `json:"email"`
-	Token  string `json:"token"`
+var (
+	errFailedToCreateUserVerification = errors.New("failed to create new user verification")
+	errFailedToEncodeUserVerification = errors.New("failed to encode user verification")
+	errFailedToDecodeUserVerification = errors.New("failed to decode user verification")
+)
+
+// UserVerification OTP is sent to the user's email as base64 encoded with UserID, Email and OTP. It should not be exposed via API.
+type UserVerification struct {
+	UserID    string    `json:"user_id"`
+	Email     string    `json:"email"`
+	OTP       string    `json:"otp"`
+	CreatedAt time.Time `json:"-"`
+	ExpiryAt  time.Time `json:"-"`
+	UsedAt    time.Time `json:"-"`
 }
 
-func newVerificationToken(userID, email string) (string, error) {
+func NewUserVerification(userID, email string) (UserVerification, error) {
 	randomBytes := make([]byte, 32)
 	if _, err := rand.Read(randomBytes); err != nil {
-		return "", errors.Wrap(errFailedToEncodeToken, err)
+		return UserVerification{}, errors.Wrap(errFailedToCreateUserVerification, err)
 	}
 
-	payload := verificationToken{
+	return UserVerification{
 		UserID: userID,
 		Email:  email,
-		Token:  base64.URLEncoding.EncodeToString(randomBytes),
-	}
+		OTP:    base64.URLEncoding.EncodeToString(randomBytes),
+	}, nil
+}
 
-	jsonBytes, err := json.Marshal(payload)
+func (u UserVerification) Encode() (string, error) {
+	jsonBytes, err := json.Marshal(u)
 	if err != nil {
-		return "", errors.Wrap(errFailedToEncodeToken, err)
+		return "", errors.Wrap(errFailedToEncodeUserVerification, err)
 	}
 
 	return base64.URLEncoding.EncodeToString(jsonBytes), nil
 }
 
-func decodeVerificationToken(token string) (verificationToken, error) {
-	decodedPayload, err := base64.URLEncoding.DecodeString(token)
+func (u *UserVerification) Decode(data string) error {
+	decodedPayload, err := base64.URLEncoding.DecodeString(data)
 	if err != nil {
-		return verificationToken{}, errors.Wrap(errFailedToDecodeToken, err)
+		return errors.Wrap(errFailedToDecodeUserVerification, err)
 	}
 
-	var payload verificationToken
-	if err := json.Unmarshal(decodedPayload, &payload); err != nil {
-		return verificationToken{}, errInvalidTokenFormat
+	if err := json.Unmarshal(decodedPayload, u); err != nil {
+		return errors.Wrap(errFailedToDecodeUserVerification, err)
 	}
 
-	return payload, nil
+	if u.UserID == "" || u.Email == "" || u.OTP == "" {
+		return svcerr.ErrInvalidUserVerification
+	}
+
+	return nil
+}
+
+func (u UserVerification) Valid() error {
+	if u.UserID == "" || u.Email == "" || u.OTP == "" {
+		return svcerr.ErrInvalidUserVerification
+	}
+
+	// Verification should have created time.
+	if u.CreatedAt.IsZero() {
+		return svcerr.ErrInvalidUserVerification
+	}
+
+	// Verification should have expiry time.
+	if u.ExpiryAt.IsZero() {
+		return svcerr.ErrInvalidUserVerification
+	}
+
+	// Expiry time should not be before Created time
+	if u.ExpiryAt.Before(u.CreatedAt) {
+		return svcerr.ErrInvalidUserVerification
+	}
+
+	// Verification should be not be Expired.
+	if time.Now().After(u.ExpiryAt) {
+		return svcerr.ErrUserVerificationExpired
+	}
+
+	// Verification should not be used.
+	if !u.UsedAt.IsZero() {
+		return svcerr.ErrUserVerificationUsed
+	}
+
+	return nil
+}
+
+func (u UserVerification) Match(ruv UserVerification) error {
+	if u.UserID != ruv.UserID {
+		return svcerr.ErrInvalidUserVerification
+	}
+
+	if u.Email != ruv.Email {
+		return svcerr.ErrInvalidUserVerification
+	}
+
+	if u.OTP != ruv.OTP {
+		return svcerr.ErrInvalidUserVerification
+	}
+	return nil
 }

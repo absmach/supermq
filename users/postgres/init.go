@@ -100,16 +100,22 @@ func Migration() *migrate.MemoryMigrationSource {
 			{
 				Id: "clients_07",
 				Up: []string{
-					`ALTER TABLE users
-						ADD COLUMN verified_at TIMESTAMPTZ DEFAULT NULL,
-						ADD COLUMN verification_token TEXT,
-						ADD COLUMN verification_token_expires_at TIMESTAMPTZ;`,
+					`ALTER TABLE users ADD COLUMN verified_at TIMESTAMPTZ DEFAULT NULL;`,
+					`CREATE TABLE users_verifications (
+						user_id VARCHAR(36) NOT NULL,
+						email VARCHAR(254) NOT NULL,
+						otp VARCHAR(255),
+						created_at TIMESTAMPTZ,
+						expiry_at TIMESTAMPTZ,
+						used_at TIMESTAMPTZ,
+						FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+					);
+					CREATE INDEX idx_users_verifications_lookup ON users_verifications (user_id, email, created_at DESC);
+					`,
 				},
 				Down: []string{
-					`ALTER TABLE users
-						DROP COLUMN verified_at,
-						DROP COLUMN verification_token,
-						DROP COLUMN verification_token_expires_at;`,
+					`ALTER TABLE users DROP COLUMN verified_at;`,
+					`DROP TABLE users_verifications;`,
 				},
 			},
 		},
