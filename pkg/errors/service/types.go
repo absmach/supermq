@@ -98,11 +98,8 @@ var (
 	ErrUserAlreadyVerified = errors.New("user already verified")
 
 	// ErrInvalidUserVerification indicates user verification is invalid.
-	ErrInvalidUserVerification = errors.New("invalid user verification")
+	ErrInvalidUserVerification = errors.New("invalid verification")
 
 	// ErrUserVerificationExpired indicates user verification is expired.
-	ErrUserVerificationExpired = errors.New("user verification expired")
-
-	// ErrUserVerificationExpired indicates user verification is used.
-	ErrUserVerificationUsed = errors.New("user verification used")
+	ErrUserVerificationExpired = errors.New("verification expired, please generate new verification")
 )

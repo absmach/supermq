@@ -13,6 +13,8 @@ import (
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 )
 
+const verificationExpiryDuration = 24 * time.Hour
+
 var (
 	errFailedToCreateUserVerification = errors.New("failed to create new user verification")
 	errFailedToEncodeUserVerification = errors.New("failed to encode user verification")
@@ -36,9 +38,11 @@ func NewUserVerification(userID, email string) (UserVerification, error) {
 	}
 
 	return UserVerification{
-		UserID: userID,
-		Email:  email,
-		OTP:    base64.URLEncoding.EncodeToString(randomBytes),
+		UserID:    userID,
+		Email:     email,
+		OTP:       base64.URLEncoding.EncodeToString(randomBytes),
+		CreatedAt: time.Now().UTC(),
+		ExpiryAt:  time.Now().Add(verificationExpiryDuration).UTC(),
 	}, nil
 }
 
@@ -95,7 +99,7 @@ func (u UserVerification) Valid() error {
 
 	// Verification should not be used.
 	if !u.UsedAt.IsZero() {
-		return svcerr.ErrUserVerificationUsed
+		return svcerr.ErrUserVerificationExpired
 	}
 
 	return nil

@@ -1,3 +1,6 @@
+// Copyright (c) Abstract Machines
+// SPDX-License-Identifier: Apache-2.0
+
 package postgres
 
 import (
@@ -10,7 +13,7 @@ import (
 	"github.com/absmach/supermq/users"
 )
 
-// AddUserVerification adds new verification for given user id and email
+// AddUserVerification adds new verification for given user id and email.
 func (repo *userRepo) AddUserVerification(ctx context.Context, uv users.UserVerification) error {
 	q := `INSERT INTO users_verifications (user_id, email, otp, created_at, expiry_at)
 		VALUES (:user_id, :email, :otp, :created_at, :expiry_at);`

@@ -288,7 +288,7 @@ func (repo *userRepo) ChangeStatus(ctx context.Context, user users.User) (users.
 }
 
 func (repo *userRepo) UpdateVerifiedAt(ctx context.Context, user users.User) (users.User, error) {
-	q := `UPDATE users SET verified_at = :verified_at,
+	q := `UPDATE users SET verified_at = :verified_at
 			WHERE id = :id and email = :email
         RETURNING id, tags, email, metadata, status, created_at, updated_at, updated_by, first_name, last_name, username, role, verified_at`
 

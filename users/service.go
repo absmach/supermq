@@ -20,8 +20,6 @@ import (
 	"github.com/absmach/supermq/pkg/policies"
 )
 
-const verificationTokenExpiryDuration = 24 * time.Hour
-
 var (
 	errIssueToken       = errors.New("failed to issue token")
 	errRecoveryToken    = errors.New("failed to generate password recovery token")
@@ -142,15 +140,15 @@ func (svc service) VerifyEmail(ctx context.Context, ruvs string) (User, error) {
 		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
+	if err := oguv.Match(ruv); err != nil {
+		return User{}, err
+	}
+
 	if err := oguv.Valid(); err != nil {
-		if err == svcerr.ErrUserVerificationExpired || err == svcerr.ErrUserVerificationUsed {
+		if err == svcerr.ErrUserVerificationExpired {
 			return User{}, err
 		}
 		return User{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
-	}
-
-	if err := oguv.Match(ruv); err != nil {
-		return User{}, err
 	}
 
 	oguv.UsedAt = time.Now().UTC()
@@ -164,6 +162,9 @@ func (svc service) VerifyEmail(ctx context.Context, ruvs string) (User, error) {
 		VerifiedAt: time.Now().UTC(),
 	}
 	user, err = svc.users.UpdateVerifiedAt(ctx, user)
+	if err == repoerr.ErrNotFound {
+		return User{}, svcerr.ErrInvalidUserVerification
+	}
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
