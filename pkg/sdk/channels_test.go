@@ -1095,7 +1095,7 @@ func TestUpdateChannelTags(t *testing.T) {
 			svcRes:           channels.Channel{},
 			authenticateErr:  svcerr.ErrAuthorization,
 			response:         sdk.Channel{},
-			err:              errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusForbidden),
+			err:              errors.NewSDKErrorWithStatus(svcerr.ErrAuthorization, http.StatusUnauthorized),
 		},
 		{
 			desc:             "update channel tags with empty token",
