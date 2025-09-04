@@ -106,7 +106,7 @@ func Migration() *migrate.MemoryMigrationSource {
 						email VARCHAR(254) NOT NULL,
 						otp VARCHAR(255),
 						created_at TIMESTAMPTZ,
-						expiry_at TIMESTAMPTZ,
+						expires_at  TIMESTAMPTZ,
 						used_at TIMESTAMPTZ,
 						FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 					);

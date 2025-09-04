@@ -75,7 +75,7 @@ type verifyEmailReq struct {
 
 func (req verifyEmailReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrInvalidEmailVerificationToken
+		return apiutil.ErrInvalidVerification
 	}
 
 	return nil

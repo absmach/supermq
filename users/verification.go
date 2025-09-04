@@ -13,7 +13,7 @@ import (
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 )
 
-const verificationExpiryDuration = 24 * time.Hour
+const VerificationExpiryDuration = 24 * time.Hour
 
 var (
 	errFailedToCreateUserVerification = errors.New("failed to create new user verification")
@@ -27,7 +27,7 @@ type UserVerification struct {
 	Email     string    `json:"email"`
 	OTP       string    `json:"otp"`
 	CreatedAt time.Time `json:"-"`
-	ExpiryAt  time.Time `json:"-"`
+	ExpiresAt time.Time `json:"-"`
 	UsedAt    time.Time `json:"-"`
 }
 
@@ -42,7 +42,7 @@ func NewUserVerification(userID, email string) (UserVerification, error) {
 		Email:     email,
 		OTP:       base64.URLEncoding.EncodeToString(randomBytes),
 		CreatedAt: time.Now().UTC(),
-		ExpiryAt:  time.Now().Add(verificationExpiryDuration).UTC(),
+		ExpiresAt: time.Now().Add(VerificationExpiryDuration).UTC(),
 	}, nil
 }
 
@@ -83,17 +83,17 @@ func (u UserVerification) Valid() error {
 	}
 
 	// Verification should have expiry time.
-	if u.ExpiryAt.IsZero() {
+	if u.ExpiresAt.IsZero() {
 		return svcerr.ErrInvalidUserVerification
 	}
 
 	// Expiry time should not be before Created time
-	if u.ExpiryAt.Before(u.CreatedAt) {
+	if u.ExpiresAt.Before(u.CreatedAt) {
 		return svcerr.ErrInvalidUserVerification
 	}
 
 	// Verification should be not be Expired.
-	if time.Now().After(u.ExpiryAt) {
+	if time.Now().After(u.ExpiresAt) {
 		return svcerr.ErrUserVerificationExpired
 	}
 

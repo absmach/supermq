@@ -54,7 +54,7 @@ func TestAddUserVerification(t *testing.T) {
 				Email:     user.Email,
 				CreatedAt: time.Now().UTC(),
 				OTP:       "123456",
-				ExpiryAt:  time.Now().UTC().Add(time.Hour),
+				ExpiresAt: time.Now().UTC().Add(time.Hour),
 			},
 			err: nil,
 		},
@@ -65,7 +65,7 @@ func TestAddUserVerification(t *testing.T) {
 				Email:     "non-existing@example.com",
 				OTP:       "654321",
 				CreatedAt: time.Now().UTC(),
-				ExpiryAt:  time.Now().UTC().Add(time.Hour),
+				ExpiresAt: time.Now().UTC().Add(time.Hour),
 			},
 			err: repoerr.ErrCreateEntity,
 		},
@@ -107,7 +107,7 @@ func TestRetrieveUserVerification(t *testing.T) {
 		Email:     user.Email,
 		OTP:       "123456",
 		CreatedAt: time.Now(),
-		ExpiryAt:  time.Now().Add(time.Hour),
+		ExpiresAt: time.Now().Add(time.Hour),
 	}
 	err = repo.AddUserVerification(context.Background(), uv)
 	require.Nil(t, err, fmt.Sprintf("adding user verification unexpected error: %s", err))
@@ -173,7 +173,7 @@ func TestUpdateUserVerification(t *testing.T) {
 		Email:     user.Email,
 		OTP:       "123456",
 		CreatedAt: time.Now().UTC(),
-		ExpiryAt:  time.Now().UTC().Add(time.Hour),
+		ExpiresAt: time.Now().UTC().Add(time.Hour),
 	}
 	err = repo.AddUserVerification(context.Background(), uv)
 	require.Nil(t, err, fmt.Sprintf("adding user verification unexpected error: %s", err))

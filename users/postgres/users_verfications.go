@@ -15,8 +15,8 @@ import (
 
 // AddUserVerification adds new verification for given user id and email.
 func (repo *userRepo) AddUserVerification(ctx context.Context, uv users.UserVerification) error {
-	q := `INSERT INTO users_verifications (user_id, email, otp, created_at, expiry_at)
-		VALUES (:user_id, :email, :otp, :created_at, :expiry_at);`
+	q := `INSERT INTO users_verifications (user_id, email, otp, created_at, expires_at )
+		VALUES (:user_id, :email, :otp, :created_at, :expires_at );`
 	dbuv := toDBUserVerification(uv)
 	if _, err := repo.Repository.DB.NamedExecContext(ctx, q, dbuv); err != nil {
 		return errors.Wrap(repoerr.ErrCreateEntity, err)
@@ -30,7 +30,7 @@ func (repo *userRepo) RetrieveUserVerification(ctx context.Context, userID, emai
 		UserID: userID,
 		Email:  email,
 	}
-	q := `SELECT user_id, email, otp, created_at, expiry_at, used_at FROM users_verifications WHERE user_id = :user_id AND email = :email ORDER BY created_at DESC LIMIT 1 `
+	q := `SELECT user_id, email, otp, created_at, expires_at , used_at FROM users_verifications WHERE user_id = :user_id AND email = :email ORDER BY created_at DESC LIMIT 1 `
 
 	row, err := repo.Repository.DB.NamedQueryContext(ctx, q, dbuv)
 	if err != nil {
@@ -72,7 +72,7 @@ type dbUserVerification struct {
 	Email     string         `db:"email"`
 	OTP       sql.NullString `db:"otp"`
 	CreatedAt sql.NullTime   `db:"created_at"`
-	ExpiryAt  sql.NullTime   `db:"expiry_at"`
+	ExpiresAt sql.NullTime   `db:"expires_at"`
 	UsedAt    sql.NullTime   `db:"used_at"`
 }
 
@@ -85,9 +85,9 @@ func toDBUserVerification(uv users.UserVerification) dbUserVerification {
 	if !uv.CreatedAt.IsZero() {
 		createdAt = sql.NullTime{Time: uv.CreatedAt, Valid: true}
 	}
-	var expiryAt sql.NullTime
-	if !uv.ExpiryAt.IsZero() {
-		expiryAt = sql.NullTime{Time: uv.ExpiryAt, Valid: true}
+	var expiresAt sql.NullTime
+	if !uv.ExpiresAt.IsZero() {
+		expiresAt = sql.NullTime{Time: uv.ExpiresAt, Valid: true}
 	}
 	var usedAt sql.NullTime
 	if !uv.UsedAt.IsZero() {
@@ -99,7 +99,7 @@ func toDBUserVerification(uv users.UserVerification) dbUserVerification {
 		Email:     uv.Email,
 		OTP:       otp,
 		CreatedAt: createdAt,
-		ExpiryAt:  expiryAt,
+		ExpiresAt: expiresAt,
 		UsedAt:    usedAt,
 	}
 }
@@ -110,9 +110,9 @@ func toUserVerification(dbuv dbUserVerification) users.UserVerification {
 		createdAt = dbuv.CreatedAt.Time.UTC()
 	}
 
-	var expiryAt time.Time
-	if dbuv.ExpiryAt.Valid {
-		expiryAt = dbuv.ExpiryAt.Time.UTC()
+	var expiresAt time.Time
+	if dbuv.ExpiresAt.Valid {
+		expiresAt = dbuv.ExpiresAt.Time.UTC()
 	}
 
 	var usedAt time.Time
@@ -125,7 +125,7 @@ func toUserVerification(dbuv dbUserVerification) users.UserVerification {
 		Email:     dbuv.Email,
 		OTP:       dbuv.OTP.String,
 		CreatedAt: createdAt,
-		ExpiryAt:  expiryAt,
+		ExpiresAt: expiresAt,
 		UsedAt:    usedAt,
 	}
 }

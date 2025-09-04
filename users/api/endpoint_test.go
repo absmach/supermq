@@ -1751,7 +1751,155 @@ func TestPasswordResetRequest(t *testing.T) {
 	}
 }
 
+func TestSendVerification(t *testing.T) {
+	us, svc, authn := newUsersServer()
+	defer us.Close()
+
+	cases := []struct {
+		desc     string
+		token    string
+		status   int
+		authnRes smqauthn.Session
+		authnErr error
+		svcErr   error
+		err      error
+	}{
+		{
+			desc:     "send verification with valid token",
+			token:    validToken,
+			status:   http.StatusOK,
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
+			err:      nil,
+		},
+		{
+			desc:     "send verification with invalid token",
+			token:    inValidToken,
+			status:   http.StatusUnauthorized,
+			authnErr: svcerr.ErrAuthentication,
+			authnRes: smqauthn.Session{},
+			err:      svcerr.ErrAuthentication,
+		},
+		{
+			desc:     "send verification with empty token",
+			token:    "",
+			status:   http.StatusUnauthorized,
+			authnErr: svcerr.ErrAuthentication,
+			authnRes: smqauthn.Session{},
+			err:      apiutil.ErrBearerToken,
+		},
+		{
+			desc:     "send verification with service error",
+			token:    validToken,
+			status:   http.StatusUnprocessableEntity,
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID},
+			svcErr:   svcerr.ErrCreateEntity,
+			err:      svcerr.ErrCreateEntity,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			req := testRequest{
+				user:   us.Client(),
+				method: http.MethodPost,
+				url:    fmt.Sprintf("%s/users/send-verification", us.URL),
+				token:  tc.token,
+			}
+
+			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
+			svcCall := svc.On("SendVerification", mock.Anything, tc.authnRes).Return(tc.svcErr)
+			res, err := req.make()
+			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+			body, err := io.ReadAll(res.Body)
+			if err != nil {
+				assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while reading response body: %s", tc.desc, err))
+			}
+			defer res.Body.Close()
+			var errRes respBody
+			if len(body) > 0 {
+				if err := json.Unmarshal(body, &errRes); err != nil {
+					assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while unmarshal response body: %s", tc.desc, err))
+
+				}
+			}
+			if errRes.Err != "" || errRes.Message != "" {
+				err = errors.Wrap(errors.New(errRes.Err), errors.New(errRes.Message))
+			}
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.err, err))
+			assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+			svcCall.Unset()
+			authnCall.Unset()
+		})
+	}
+}
+
+func TestVerifyEmail(t *testing.T) {
+	us, svc, _ := newUsersServer()
+	defer us.Close()
+
+	cases := []struct {
+		desc   string
+		token  string
+		status int
+		svcErr error
+		err    error
+	}{
+		{
+			desc:   "verify email with valid token",
+			token:  validToken,
+			status: http.StatusOK,
+			err:    nil,
+		},
+		{
+			desc:   "verify email with empty token",
+			token:  "",
+			status: http.StatusBadRequest,
+			err:    apiutil.ErrValidation,
+		},
+		{
+			desc:   "verify email with service error",
+			token:  validToken,
+			status: http.StatusBadRequest,
+			svcErr: svcerr.ErrMalformedEntity,
+			err:    svcerr.ErrMalformedEntity,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			req := testRequest{
+				user:   us.Client(),
+				method: http.MethodGet,
+				url:    fmt.Sprintf("%s/verify-email?token=%s", us.URL, tc.token),
+			}
+
+			svcCall := svc.On("VerifyEmail", mock.Anything, mock.Anything).Return(users.User{}, tc.svcErr)
+			res, err := req.make()
+			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+			body, err := io.ReadAll(res.Body)
+			if err != nil {
+				assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while reading response body: %s", tc.desc, err))
+			}
+			defer res.Body.Close()
+			var errRes respBody
+			if len(body) > 0 {
+				if err := json.Unmarshal(body, &errRes); err != nil {
+					assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while unmarshal response body: %s", tc.desc, err))
+
+				}
+			}
+			if errRes.Err != "" || errRes.Message != "" {
+				err = errors.Wrap(errors.New(errRes.Err), errors.New(errRes.Message))
+			}
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.err, err))
+			assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+			svcCall.Unset()
+		})
+	}
+}
+
 func TestPasswordReset(t *testing.T) {
+
 	us, svc, authn := newUsersServer()
 	defer us.Close()
 

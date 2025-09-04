@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	smqauth "github.com/absmach/supermq/auth"
@@ -1801,6 +1802,162 @@ func TestOAuthCallback(t *testing.T) {
 			repoCall.Unset()
 			repoCall1.Unset()
 			policyCall.Unset()
+		})
+	}
+}
+
+func TestSendVerification(t *testing.T) {
+	svc, _, cRepo, _, e := newService()
+
+	verifiedAt := time.Now().UTC()
+	cases := []struct {
+		desc                       string
+		session                    authn.Session
+		retrieveByIDResponse       users.User
+		retrieveByIDError          error
+		retrieveUserVerResponse    users.UserVerification
+		retrieveUserVerError       error
+		addUserVerError            error
+		sendVerificationEmailError error
+		err                        error
+	}{
+		{
+			desc:                       "send verification email successfully",
+			session:                    authn.Session{UserID: user.ID},
+			retrieveByIDResponse:       user,
+			retrieveUserVerError:       repoerr.ErrNotFound,
+			sendVerificationEmailError: nil,
+			err:                        nil,
+		},
+		{
+			desc:                 "send verification email for already verified user",
+			session:              authn.Session{UserID: user.ID},
+			retrieveByIDResponse: users.User{VerifiedAt: verifiedAt},
+			err:                  svcerr.ErrUserAlreadyVerified,
+		},
+		{
+			desc:              "send verification email for non-existing user",
+			session:           authn.Session{UserID: wrongID},
+			retrieveByIDError: repoerr.ErrNotFound,
+			err:               repoerr.ErrNotFound,
+		},
+		{
+			desc:                 "send verification email with failed to retrieve user verification",
+			session:              authn.Session{UserID: user.ID},
+			retrieveByIDResponse: user,
+			retrieveUserVerError: svcerr.ErrViewEntity,
+			err:                  svcerr.ErrViewEntity,
+		},
+		{
+			desc:                 "send verification email with failed to add user verification",
+			session:              authn.Session{UserID: user.ID},
+			retrieveByIDResponse: user,
+			retrieveUserVerError: repoerr.ErrNotFound,
+			addUserVerError:      svcerr.ErrCreateEntity,
+			err:                  svcerr.ErrCreateEntity,
+		},
+		{
+			desc:                       "send verification email with failed to send email",
+			session:                    authn.Session{UserID: user.ID},
+			retrieveByIDResponse:       user,
+			retrieveUserVerError:       repoerr.ErrNotFound,
+			sendVerificationEmailError: svcerr.ErrCreateEntity,
+			err:                        svcerr.ErrCreateEntity,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			repoCall := cRepo.On("RetrieveByID", context.Background(), tc.session.UserID).Return(tc.retrieveByIDResponse, tc.retrieveByIDError)
+			repoCall1 := cRepo.On("RetrieveUserVerification", context.Background(), mock.Anything, mock.Anything).Return(tc.retrieveUserVerResponse, tc.retrieveUserVerError)
+			repoCall2 := cRepo.On("AddUserVerification", context.Background(), mock.Anything).Return(tc.addUserVerError)
+			emailCall := e.On("SendVerification", []string{user.Email}, user.Credentials.Username, mock.Anything).Return(tc.sendVerificationEmailError)
+
+			err := svc.SendVerification(context.Background(), tc.session)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+
+			repoCall.Unset()
+			repoCall1.Unset()
+			repoCall2.Unset()
+			emailCall.Unset()
+		})
+	}
+}
+
+func TestVerifyEmail(t *testing.T) {
+	svc, _, cRepo, _, _ := newService()
+	uv, err := users.NewUserVerification(user.ID, user.Email)
+	assert.Nil(t, err, fmt.Sprintf("failed to create user verification: %v", err))
+	uvs, err := uv.Encode()
+	assert.Nil(t, err, fmt.Sprintf("failed to encode user verification: %v", err))
+	createdAt := time.Now().Add(-5 * users.VerificationExpiryDuration).UTC()
+	expiresdAt := time.Now().Add(-users.VerificationExpiryDuration).UTC()
+	cases := []struct {
+		desc                    string
+		uvs                     string
+		retrieveUserVerResponse users.UserVerification
+		retrieveUserVerError    error
+		updateUserVerError      error
+		updateVerifiedAtError   error
+		err                     error
+	}{
+		{
+			desc:                    "verify email successfully",
+			uvs:                     uvs,
+			retrieveUserVerResponse: uv,
+			err:                     nil,
+		},
+		{
+			desc: "verify email with malformed token",
+			uvs:  "invalid",
+			err:  svcerr.ErrInvalidUserVerification,
+		},
+		{
+			desc:                 "verify email with non-existing user verification",
+			uvs:                  uvs,
+			retrieveUserVerError: repoerr.ErrNotFound,
+			err:                  svcerr.ErrViewEntity,
+		},
+		{
+			desc: "verify email with expired token",
+			uvs:  uvs,
+			retrieveUserVerResponse: users.UserVerification{
+				UserID:    uv.UserID,
+				Email:     uv.Email,
+				OTP:       uv.OTP,
+				ExpiresAt: expiresdAt,
+				CreatedAt: createdAt,
+				UsedAt:    uv.UsedAt,
+			},
+			err: svcerr.ErrUserVerificationExpired,
+		},
+		{
+			desc:                    "verify email with failed to update user verification",
+			uvs:                     uvs,
+			retrieveUserVerResponse: uv,
+			updateUserVerError:      svcerr.ErrUpdateEntity,
+			err:                     svcerr.ErrUpdateEntity,
+		},
+		{
+			desc:                    "verify email with failed to update verified at",
+			uvs:                     uvs,
+			retrieveUserVerResponse: uv,
+			updateVerifiedAtError:   svcerr.ErrUpdateEntity,
+			err:                     svcerr.ErrUpdateEntity,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			repoCall := cRepo.On("RetrieveUserVerification", context.Background(), mock.Anything, mock.Anything).Return(tc.retrieveUserVerResponse, tc.retrieveUserVerError)
+			repoCall1 := cRepo.On("UpdateUserVerification", context.Background(), mock.Anything).Return(tc.updateUserVerError)
+			repoCall2 := cRepo.On("UpdateVerifiedAt", context.Background(), mock.Anything).Return(users.User{}, tc.updateVerifiedAtError)
+			_, err := svc.VerifyEmail(context.Background(), tc.uvs)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+
+			repoCall.Unset()
+			repoCall1.Unset()
+			repoCall2.Unset()
 		})
 	}
 }

@@ -269,9 +269,9 @@ var (
 	// ErrMissingUsernameEmail indicates missing user name / email.
 	ErrMissingUsernameEmail = errors.New("missing username / email")
 
-	// ErrInvalidEmailVerificationToken indicates invalid email verification toke.
-	ErrInvalidEmailVerificationToken = errors.New("invalid email verification token")
+	// ErrInvalidVerification indicates invalid email verification.
+	ErrInvalidVerification = errors.New("invalid verification")
 
-	// ErrEmailNotVerified indicates invalid email verification toke.
+	// ErrEmailNotVerified indicates invalid email not verified.
 	ErrEmailNotVerified = errors.New("email not verified")
 )

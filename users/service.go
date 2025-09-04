@@ -132,7 +132,8 @@ func (svc service) SendVerification(ctx context.Context, session authn.Session) 
 func (svc service) VerifyEmail(ctx context.Context, ruvs string) (User, error) {
 	var ruv UserVerification
 	if err := ruv.Decode(ruvs); err != nil {
-		return User{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
+		fmt.Println(errors.Wrap(svcerr.ErrInvalidUserVerification, err))
+		return User{}, errors.Wrap(svcerr.ErrInvalidUserVerification, err)
 	}
 
 	oguv, err := svc.users.RetrieveUserVerification(ctx, ruv.UserID, ruv.Email)
