@@ -1275,24 +1275,24 @@ func PageQuery(pm clients.Page) (string, error) {
 }
 
 func applyOrdering(emq string, pm clients.Page) string {
-    var orderBy string
-    switch pm.Order {
-    case "name":
-        orderBy = "name"
-    case "identity":
-        orderBy = "identity"
-    case "created_at":
-        orderBy = "created_at"
-    case "updated_at":
-        orderBy = "COALESCE(updated_at, created_at)"
-    default:
-        return emq
-    }
+	var orderBy string
+	switch pm.Order {
+	case "name":
+		orderBy = "name"
+	case "identity":
+		orderBy = "identity"
+	case "created_at":
+		orderBy = "created_at"
+	case "updated_at":
+		orderBy = "COALESCE(updated_at, created_at)"
+	default:
+		return emq
+	}
 
-    if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
-        return fmt.Sprintf("%s ORDER BY %s %s, id %s", emq, orderBy, pm.Dir, pm.Dir)
-    }
-    return fmt.Sprintf("%s ORDER BY %s", emq, orderBy)
+	if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
+		return fmt.Sprintf("%s ORDER BY %s %s, id %s", emq, orderBy, pm.Dir, pm.Dir)
+	}
+	return fmt.Sprintf("%s ORDER BY %s", emq, orderBy)
 }
 
 func applyLimitOffset(query string) string {
