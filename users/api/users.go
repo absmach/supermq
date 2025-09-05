@@ -28,7 +28,7 @@ import (
 var passRegex = regexp.MustCompile("^.{8,}$")
 
 // usersHandler returns a HTTP handler for API endpoints.
-func usersHandler(svc users.Service, authnMW smqauthn.AuthNMiddleware, tokenClient grpcTokenV1.TokenServiceClient, selfRegister bool, r *chi.Mux, logger *slog.Logger, pr *regexp.Regexp, idp supermq.IDProvider, providers ...oauth2.Provider) *chi.Mux {
+func usersHandler(svc users.Service, authn smqauthn.AuthNMiddleware, tokenClient grpcTokenV1.TokenServiceClient, selfRegister bool, r *chi.Mux, logger *slog.Logger, pr *regexp.Regexp, idp supermq.IDProvider, providers ...oauth2.Provider) *chi.Mux {
 	passRegex = pr
 
 	opts := []kithttp.ServerOption{
@@ -36,7 +36,7 @@ func usersHandler(svc users.Service, authnMW smqauthn.AuthNMiddleware, tokenClie
 	}
 
 	// All endpoints in users service don't required Domain check
-	authnMW = authnMW.WithOptions(smqauthn.WithDomainCheck(false))
+	authn = authn.WithOptions(smqauthn.WithDomainCheck(false))
 	r.Route("/users", func(r chi.Router) {
 		r.Use(api.RequestIDMiddleware(idp))
 
@@ -49,7 +49,7 @@ func usersHandler(svc users.Service, authnMW smqauthn.AuthNMiddleware, tokenClie
 				opts...,
 			), "register_user").ServeHTTP)
 		default:
-			r.With(authnMW.Middleware()).Post("/", otelhttp.NewHandler(kithttp.NewServer(
+			r.With(authn.Middleware()).Post("/", otelhttp.NewHandler(kithttp.NewServer(
 				registrationEndpoint(svc, selfRegister),
 				decodeCreateUserReq,
 				api.EncodeResponse,
@@ -58,7 +58,7 @@ func usersHandler(svc users.Service, authnMW smqauthn.AuthNMiddleware, tokenClie
 		}
 		// Endpoints which are allowed for unverified user
 		r.Group(func(r chi.Router) {
-			r.Use(authnMW.WithOptions(smqauthn.WithAllowUnverifiedUser(true)).Middleware())
+			r.Use(authn.WithOptions(smqauthn.WithAllowUnverifiedUser(true)).Middleware())
 			r.Post("/send-verification", otelhttp.NewHandler(kithttp.NewServer(
 				sendVerificationEndpoint(svc),
 				decodeSendVerification,
@@ -87,7 +87,7 @@ func usersHandler(svc users.Service, authnMW smqauthn.AuthNMiddleware, tokenClie
 		})
 
 		r.Group(func(r chi.Router) {
-			r.Use(authnMW.Middleware())
+			r.Use(authn.Middleware())
 
 			r.Get("/{id}", otelhttp.NewHandler(kithttp.NewServer(
 				viewEndpoint(svc),
@@ -176,7 +176,7 @@ func usersHandler(svc users.Service, authnMW smqauthn.AuthNMiddleware, tokenClie
 	})
 
 	r.Group(func(r chi.Router) {
-		r.Use(authnMW.Middleware())
+		r.Use(authn.Middleware())
 		r.Put("/password/reset", otelhttp.NewHandler(kithttp.NewServer(
 			passwordResetEndpoint(svc),
 			decodePasswordReset,

@@ -11,7 +11,7 @@ import (
 	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/domains"
-	"github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	roleManagerHttp "github.com/absmach/supermq/pkg/roles/rolemanager/api"
 	"github.com/go-chi/chi/v5"
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -20,7 +20,7 @@ import (
 )
 
 // MakeHandler returns a HTTP handler for Domains and Invitations API endpoints.
-func MakeHandler(svc domains.Service, authnMW authn.AuthNMiddleware, mux *chi.Mux, logger *slog.Logger, instanceID string, idp supermq.IDProvider) http.Handler {
+func MakeHandler(svc domains.Service, authn smqauthn.AuthNMiddleware, mux *chi.Mux, logger *slog.Logger, instanceID string, idp supermq.IDProvider) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
@@ -30,7 +30,7 @@ func MakeHandler(svc domains.Service, authnMW authn.AuthNMiddleware, mux *chi.Mu
 		r.Use(api.RequestIDMiddleware(idp))
 
 		r.Group(func(r chi.Router) {
-			r.Use(authnMW.WithOptions(authn.WithDomainCheck(false)).Middleware())
+			r.Use(authn.WithOptions(smqauthn.WithDomainCheck(false)).Middleware())
 			r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
 				createDomainEndpoint(svc),
 				decodeCreateDomainRequest,
@@ -49,7 +49,7 @@ func MakeHandler(svc domains.Service, authnMW authn.AuthNMiddleware, mux *chi.Mu
 		})
 
 		r.Route("/{domainID}", func(r chi.Router) {
-			r.Use(authnMW.Middleware())
+			r.Use(authn.Middleware())
 			r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
 				retrieveDomainEndpoint(svc),
 				decodeRetrieveDomainRequest,
@@ -88,7 +88,7 @@ func MakeHandler(svc domains.Service, authnMW authn.AuthNMiddleware, mux *chi.Mu
 		})
 
 		r.Route("/{domainID}/invitations", func(r chi.Router) {
-			r.Use(authnMW.Middleware())
+			r.Use(authn.Middleware())
 			r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
 				sendInvitationEndpoint(svc),
 				decodeSendInvitationReq,
@@ -111,7 +111,7 @@ func MakeHandler(svc domains.Service, authnMW authn.AuthNMiddleware, mux *chi.Mu
 	})
 
 	mux.Route("/invitations", func(r chi.Router) {
-		r.Use(authnMW.WithOptions(authn.WithDomainCheck(false)).Middleware())
+		r.Use(authn.WithOptions(smqauthn.WithDomainCheck(false)).Middleware())
 		r.Get("/", otelhttp.NewHandler(kithttp.NewServer(
 			listUserInvitationsEndpoint(svc),
 			decodeListInvitationsReq,

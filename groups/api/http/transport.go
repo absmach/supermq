@@ -10,7 +10,7 @@ import (
 	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/groups"
-	"github.com/absmach/supermq/pkg/authn"
+	smqauthn "github.com/absmach/supermq/pkg/authn"
 	roleManagerHttp "github.com/absmach/supermq/pkg/roles/rolemanager/api"
 	"github.com/go-chi/chi/v5"
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -19,14 +19,14 @@ import (
 )
 
 // MakeHandler returns a HTTP handler for Groups API endpoints.
-func MakeHandler(svc groups.Service, authnMW authn.AuthNMiddleware, mux *chi.Mux, logger *slog.Logger, instanceID string, idp supermq.IDProvider) *chi.Mux {
+func MakeHandler(svc groups.Service, authn smqauthn.AuthNMiddleware, mux *chi.Mux, logger *slog.Logger, instanceID string, idp supermq.IDProvider) *chi.Mux {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
 	d := roleManagerHttp.NewDecoder("groupID")
 
 	mux.Route("/{domainID}/groups", func(r chi.Router) {
-		r.Use(authnMW.Middleware())
+		r.Use(authn.Middleware())
 		r.Use(api.RequestIDMiddleware(idp))
 
 		r.Post("/", otelhttp.NewHandler(kithttp.NewServer(
