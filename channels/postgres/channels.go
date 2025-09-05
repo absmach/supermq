@@ -477,7 +477,6 @@ func (cr *channelRepository) RetrieveAll(ctx context.Context, pm channels.Page) 
 	return page, nil
 }
 
-// same situation as groups so  pay attention
 func (repo *channelRepository) RetrieveUserChannels(ctx context.Context, domainID, userID string, pm channels.Page) (channels.ChannelsPage, error) {
 	return repo.retrieveChannels(ctx, domainID, userID, pm)
 }
