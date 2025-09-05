@@ -130,35 +130,35 @@ func (svc service) SendVerification(ctx context.Context, session authn.Session) 
 }
 
 func (svc service) VerifyEmail(ctx context.Context, token string) (User, error) {
-	var uv UserVerification
-	if err := uv.Decode(token); err != nil {
+	var received UserVerification
+	if err := received.Decode(token); err != nil {
 		return User{}, errors.Wrap(svcerr.ErrInvalidUserVerification, err)
 	}
 
-	oguv, err := svc.users.RetrieveUserVerification(ctx, uv.UserID, uv.Email)
+	stored, err := svc.users.RetrieveUserVerification(ctx, received.UserID, received.Email)
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	if err := oguv.Match(uv); err != nil {
+	if err := stored.Match(received); err != nil {
 		return User{}, err
 	}
 
-	if err := oguv.Valid(); err != nil {
+	if err := stored.Valid(); err != nil {
 		if err == svcerr.ErrUserVerificationExpired {
 			return User{}, err
 		}
 		return User{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
 	}
 
-	oguv.UsedAt = time.Now().UTC()
-	if err = svc.users.UpdateUserVerification(ctx, oguv); err != nil {
+	stored.UsedAt = time.Now().UTC()
+	if err = svc.users.UpdateUserVerification(ctx, stored); err != nil {
 		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 
 	user := User{
-		ID:         oguv.UserID,
-		Email:      oguv.Email,
+		ID:         stored.UserID,
+		Email:      stored.Email,
 		VerifiedAt: time.Now().UTC(),
 	}
 	user, err = svc.users.UpdateVerifiedAt(ctx, user)
