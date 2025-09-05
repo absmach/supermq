@@ -1885,6 +1885,7 @@ func TestSendVerification(t *testing.T) {
 }
 
 func TestVerifyEmail(t *testing.T) {
+	//nolint:dogsled
 	svc, _, cRepo, _, _ := newService()
 	uv, err := users.NewUserVerification(user.ID, user.Email)
 	assert.Nil(t, err, fmt.Sprintf("failed to create user verification: %v", err))

@@ -1819,7 +1819,6 @@ func TestSendVerification(t *testing.T) {
 			if len(body) > 0 {
 				if err := json.Unmarshal(body, &errRes); err != nil {
 					assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while unmarshal response body: %s", tc.desc, err))
-
 				}
 			}
 			if errRes.Err != "" || errRes.Message != "" {
@@ -1885,7 +1884,6 @@ func TestVerifyEmail(t *testing.T) {
 			if len(body) > 0 {
 				if err := json.Unmarshal(body, &errRes); err != nil {
 					assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while unmarshal response body: %s", tc.desc, err))
-
 				}
 			}
 			if errRes.Err != "" || errRes.Message != "" {
@@ -1899,7 +1897,6 @@ func TestVerifyEmail(t *testing.T) {
 }
 
 func TestPasswordReset(t *testing.T) {
-
 	us, svc, authn := newUsersServer()
 	defer us.Close()
 
