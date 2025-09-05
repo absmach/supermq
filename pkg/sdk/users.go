@@ -72,20 +72,14 @@ func (sdk mgSDK) SendVerification(ctx context.Context, token string) errors.SDKE
 	return sdkErr
 }
 
-func (sdk mgSDK) VerifyEmail(ctx context.Context, verificationToken string) (User, errors.SDKError) {
-	url := fmt.Sprintf("%s/%s/%s?%s=%s", sdk.usersURL, usersEndpoint, verifyEmailEndpoint, tokenQueryParamKey, verificationToken)
+func (sdk mgSDK) VerifyEmail(ctx context.Context, verificationToken string) errors.SDKError {
+	url := fmt.Sprintf("%s/%s?%s=%s", sdk.usersURL, verifyEmailEndpoint, tokenQueryParamKey, verificationToken)
 
-	_, body, sdkErr := sdk.processRequest(ctx, http.MethodGet, url, "", nil, nil, http.StatusOK)
+	_, _, sdkErr := sdk.processRequest(ctx, http.MethodGet, url, "", nil, nil, http.StatusOK)
 	if sdkErr != nil {
-		return User{}, sdkErr
+		return sdkErr
 	}
-
-	user := User{}
-	if err := json.Unmarshal(body, &user); err != nil {
-		return User{}, errors.NewSDKError(err)
-	}
-
-	return user, nil
+	return nil
 }
 
 func (sdk mgSDK) Users(ctx context.Context, pm PageMetadata, token string) (UsersPage, errors.SDKError) {

@@ -72,10 +72,15 @@ Examples:
 				logUsageCmd(*cmd, cmd.Use)
 				return
 			}
-
 			switch args[0] {
 			case create:
 				handleUserCreate(cmd, args[1:])
+				return
+			case sendVerification:
+				handleSendVerification(cmd, args[1])
+				return
+			case verifyEmail:
+				handleVerify(cmd, args[1])
 				return
 			case token:
 				handleUserToken(cmd, args[1], args[2:])
@@ -150,6 +155,34 @@ func handleUserCreate(cmd *cobra.Command, args []string) {
 	}
 
 	logJSONCmd(*cmd, user)
+}
+
+func handleSendVerification(cmd *cobra.Command, token string) {
+	if token == "" {
+		logUsageCmd(*cmd, usageUserToken)
+		return
+	}
+
+	if err := sdk.SendVerification(cmd.Context(), token); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, "sent verification successfully")
+}
+
+func handleVerify(cmd *cobra.Command, token string) {
+	if token == "" {
+		logUsageCmd(*cmd, usageUserToken)
+		return
+	}
+
+	if err := sdk.VerifyEmail(cmd.Context(), token); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
+
+	logJSONCmd(*cmd, "verified successfully")
 }
 
 func handleUserGet(cmd *cobra.Command, userParams string, args []string) {

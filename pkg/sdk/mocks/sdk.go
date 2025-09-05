@@ -10034,31 +10034,22 @@ func (_c *SDK_Users_Call) RunAndReturn(run func(ctx context.Context, pm sdk.Page
 }
 
 // VerifyEmail provides a mock function for the type SDK
-func (_mock *SDK) VerifyEmail(ctx context.Context, verificationToken string) (sdk.User, errors.SDKError) {
+func (_mock *SDK) VerifyEmail(ctx context.Context, verificationToken string) errors.SDKError {
 	ret := _mock.Called(ctx, verificationToken)
 
 	if len(ret) == 0 {
 		panic("no return value specified for VerifyEmail")
 	}
 
-	var r0 sdk.User
-	var r1 errors.SDKError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (sdk.User, errors.SDKError)); ok {
-		return returnFunc(ctx, verificationToken)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) sdk.User); ok {
+	var r0 errors.SDKError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) errors.SDKError); ok {
 		r0 = returnFunc(ctx, verificationToken)
 	} else {
-		r0 = ret.Get(0).(sdk.User)
-	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, string) errors.SDKError); ok {
-		r1 = returnFunc(ctx, verificationToken)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.SDKError)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.SDKError)
 		}
 	}
-	return r0, r1
+	return r0
 }
 
 // SDK_VerifyEmail_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'VerifyEmail'
@@ -10091,12 +10082,12 @@ func (_c *SDK_VerifyEmail_Call) Run(run func(ctx context.Context, verificationTo
 	return _c
 }
 
-func (_c *SDK_VerifyEmail_Call) Return(user sdk.User, sDKError errors.SDKError) *SDK_VerifyEmail_Call {
-	_c.Call.Return(user, sDKError)
+func (_c *SDK_VerifyEmail_Call) Return(sDKError errors.SDKError) *SDK_VerifyEmail_Call {
+	_c.Call.Return(sDKError)
 	return _c
 }
 
-func (_c *SDK_VerifyEmail_Call) RunAndReturn(run func(ctx context.Context, verificationToken string) (sdk.User, errors.SDKError)) *SDK_VerifyEmail_Call {
+func (_c *SDK_VerifyEmail_Call) RunAndReturn(run func(ctx context.Context, verificationToken string) errors.SDKError) *SDK_VerifyEmail_Call {
 	_c.Call.Return(run)
 	return _c
 }

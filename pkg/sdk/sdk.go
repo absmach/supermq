@@ -188,9 +188,9 @@ type SDK interface {
 	// VerifyEmail verifies the user's email address using the provided token.
 	//
 	// example:
-	//  user, err := sdk.VerifyEmail("verificationToken")
+	//  err := sdk.VerifyEmail("verificationToken")
 	//  fmt.Println(user)
-	VerifyEmail(ctx context.Context, verificationToken string) (User, errors.SDKError)
+	VerifyEmail(ctx context.Context, verificationToken string) errors.SDKError
 
 	// User returns user object by id.
 	//

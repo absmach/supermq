@@ -12,14 +12,16 @@ import (
 )
 
 const (
-	all     = "all"
-	create  = "create"
-	get     = "get"
-	update  = "update"
-	delete  = "delete"
-	enable  = "enable"
-	disable = "disable"
-	users   = "users"
+	all              = "all"
+	create           = "create"
+	get              = "get"
+	update           = "update"
+	delete           = "delete"
+	enable           = "enable"
+	disable          = "disable"
+	users            = "users"
+	sendVerification = "send-verification"
+	verifyEmail      = "verify-email"
 
 	usageCreate  = "cli channels <channel_id> create <JSON_channel> <domain_id> <user_auth_token>"
 	usageGet     = "cli channels <channel_id|all> get <domain_id> <user_auth_token>"
