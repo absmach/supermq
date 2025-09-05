@@ -521,24 +521,22 @@ func (repo domainRepo) processRows(rows *sqlx.Rows) ([]domains.Domain, error) {
 }
 
 func applyOrdering(emq string, pm domains.Page) string {
+	var orderBy string
 	switch pm.Order {
 	case "name":
-		emq = fmt.Sprintf("%s ORDER BY d.name", emq)
-		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
-			emq = fmt.Sprintf("%s %s, d.id %s", emq, pm.Dir, pm.Dir)
-		}
+		orderBy = "d.name"
 	case "created_at":
-		emq = fmt.Sprintf("%s ORDER BY d.created_at", emq)
-		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
-			emq = fmt.Sprintf("%s %s, d.id %s", emq, pm.Dir, pm.Dir)
-		}
+		orderBy = "d.created_at"
 	case "updated_at":
-		emq = fmt.Sprintf("%s ORDER BY COALESCE(d.updated_at, d.created_at)", emq)
-		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
-			emq = fmt.Sprintf("%s %s, d.id %s", emq, pm.Dir, pm.Dir)
-		}
+		orderBy = "COALESCE(d.updated_at, d.created_at)"
+	default:
+		return emq
 	}
-	return emq
+
+	if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
+		return fmt.Sprintf("%s ORDER BY %s %s, d.id %s", emq, orderBy, pm.Dir, pm.Dir)
+	}
+	return fmt.Sprintf("%s ORDER BY %s", emq, orderBy)
 }
 
 type dbDomain struct {

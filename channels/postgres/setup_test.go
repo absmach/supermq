@@ -12,7 +12,6 @@ import (
 	"time"
 
 	chpostgres "github.com/absmach/supermq/channels/postgres"
-	"github.com/absmach/supermq/pkg/postgres"
 	pgclient "github.com/absmach/supermq/pkg/postgres"
 	"github.com/jmoiron/sqlx"
 	"github.com/ory/dockertest/v3"
@@ -22,7 +21,7 @@ import (
 
 var (
 	db       *sqlx.DB
-	database postgres.Database
+	database pgclient.Database
 	tracer   = otel.Tracer("repo_tests")
 )
 
@@ -84,7 +83,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not setup test DB connection: %s", err)
 	}
 
-	database = postgres.NewDatabase(db, dbConfig, tracer)
+	database = pgclient.NewDatabase(db, dbConfig, tracer)
 
 	code := m.Run()
 

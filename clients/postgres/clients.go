@@ -1275,29 +1275,24 @@ func PageQuery(pm clients.Page) (string, error) {
 }
 
 func applyOrdering(emq string, pm clients.Page) string {
-	switch pm.Order {
-	case "name":
-		emq = fmt.Sprintf("%s ORDER BY %s", emq, pm.Order)
-		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
-			emq = fmt.Sprintf("%s %s, id %s", emq, pm.Dir, pm.Dir)
-		}
-	case "identity":
-		emq = fmt.Sprintf("%s ORDER BY identity", emq)
-		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
-			emq = fmt.Sprintf("%s %s, id %s", emq, pm.Dir, pm.Dir)
-		}
-	case "created_at":
-		emq = fmt.Sprintf("%s ORDER BY created_at", emq)
-		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
-			emq = fmt.Sprintf("%s %s, id %s", emq, pm.Dir, pm.Dir)
-		}
-	case "updated_at":
-		emq = fmt.Sprintf("%s ORDER BY COALESCE(updated_at, created_at)", emq)
-		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
-			emq = fmt.Sprintf("%s %s, id %s", emq, pm.Dir, pm.Dir)
-		}
-	}
-	return emq
+    var orderBy string
+    switch pm.Order {
+    case "name":
+        orderBy = "name"
+    case "identity":
+        orderBy = "identity"
+    case "created_at":
+        orderBy = "created_at"
+    case "updated_at":
+        orderBy = "COALESCE(updated_at, created_at)"
+    default:
+        return emq
+    }
+
+    if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
+        return fmt.Sprintf("%s ORDER BY %s %s, id %s", emq, orderBy, pm.Dir, pm.Dir)
+    }
+    return fmt.Sprintf("%s ORDER BY %s", emq, orderBy)
 }
 
 func applyLimitOffset(query string) string {

@@ -412,23 +412,23 @@ func (repo groupRepository) RetrieveAll(ctx context.Context, pm groups.PageMeta)
 	query := buildQuery(pm)
 
 	orderClause := ""
-	switch pm.Order {
-	case "name":
-		orderClause = "ORDER BY g.name"
-		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
-			orderClause = fmt.Sprintf("%s %s, g.id %s", orderClause, pm.Dir, pm.Dir)
-		}
-	case "created_at":
-		orderClause = "ORDER BY g.created_at"
-		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
-			orderClause = fmt.Sprintf("%s %s, g.id %s", orderClause, pm.Dir, pm.Dir)
-		}
-	case "updated_at":
-		orderClause = "ORDER BY COALESCE(g.updated_at, g.created_at)"
-		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
-			orderClause = fmt.Sprintf("%s %s, g.id %s", orderClause, pm.Dir, pm.Dir)
-		}
-	}
+	var orderBy string
+    switch pm.Order {
+    case "name":
+        orderBy = "g.name"
+    case "created_at":
+        orderBy = "g.created_at"
+    case "updated_at":
+        orderBy = "COALESCE(g.updated_at, g.created_at)"
+    }
+
+	if orderBy != "" {
+        dir := pm.Dir
+        if dir != api.AscDir && dir != api.DescDir {
+            dir = api.DescDir
+        }
+        orderClause = fmt.Sprintf("ORDER BY %s %s, g.id %s", orderBy, dir, dir)
+    }
 
 	q := fmt.Sprintf(`SELECT DISTINCT g.id, g.domain_id, tags, COALESCE(g.parent_id, '') AS parent_id, g.name, g.description,
 		g.metadata, g.created_at, g.updated_at, g.updated_by, g.status FROM groups g %s %s LIMIT :limit OFFSET :offset;`, query, orderClause)
