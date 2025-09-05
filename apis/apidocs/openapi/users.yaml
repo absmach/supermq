@@ -607,6 +607,54 @@ paths:
         "500":
           $ref: "#/components/responses/ServiceError"
 
+  /users/send-verification:
+    post:
+      operationId: sendVerification
+      tags:
+        - Users
+      summary: Sends a verification email
+      description: |
+        Sends a verification email to the user.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Sent verification email if registered.
+        "400":
+          description: Failed due to malformed JSON.
+        "401":
+          description: Missing or invalid access token provided.
+        "415":
+          description: Missing or invalid content type.
+        "422":
+          description: Database can't process request.
+        "500":
+          $ref: "#/components/responses/ServiceError"
+
+  /verify-email:
+    get:
+      operationId: verifyEmail
+      tags:
+        - Users
+      summary: Verify user's email
+      description: |
+        Verify user's email using the token from the verification link.
+      parameters:
+        - $ref: "#/components/parameters/VerificationToken"
+      responses:
+        "200":
+          description: Email verified successfully.
+        "400":
+          description: Failed due to malformed query parameters.
+        "401":
+          description: Missing or invalid access token provided.
+        "404":
+          description: A non-existent entity request.
+        "422":
+          description: Database can't process request.
+        "500":
+          $ref: "#/components/responses/ServiceError"
+
   /health:
     get:
       operationId: health
@@ -1239,6 +1287,14 @@ components:
         minimum: 0
       required: false
       example: "0"
+
+    VerificationToken:
+      name: token
+      description: Verification token.
+      in: query
+      schema:
+        type: string
+      required: true
 
   requestBodies:
     UserCreateReq:
