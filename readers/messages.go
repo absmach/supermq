@@ -43,6 +43,8 @@ type MessagesPage struct {
 type PageMetadata struct {
 	Offset      uint64  `json:"offset"`
 	Limit       uint64  `json:"limit"`
+	Order       string  `json:"order,omitempty"`
+	Dir         string  `json:"dir,omitempty"`
 	Subtopic    string  `json:"subtopic,omitempty"`
 	Publisher   string  `json:"publisher,omitempty"`
 	Protocol    string  `json:"protocol,omitempty"`
