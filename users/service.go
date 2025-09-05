@@ -129,18 +129,18 @@ func (svc service) SendVerification(ctx context.Context, session authn.Session) 
 	return nil
 }
 
-func (svc service) VerifyEmail(ctx context.Context, ruvs string) (User, error) {
-	var ruv UserVerification
-	if err := ruv.Decode(ruvs); err != nil {
+func (svc service) VerifyEmail(ctx context.Context, token string) (User, error) {
+	var uv UserVerification
+	if err := uv.Decode(token); err != nil {
 		return User{}, errors.Wrap(svcerr.ErrInvalidUserVerification, err)
 	}
 
-	oguv, err := svc.users.RetrieveUserVerification(ctx, ruv.UserID, ruv.Email)
+	oguv, err := svc.users.RetrieveUserVerification(ctx, uv.UserID, uv.Email)
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
-	if err := oguv.Match(ruv); err != nil {
+	if err := oguv.Match(uv); err != nil {
 		return User{}, err
 	}
 
