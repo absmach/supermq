@@ -6,7 +6,7 @@ require (
 	github.com/0x6flab/namegenerator v1.4.0
 	github.com/absmach/callhome v0.18.1
 	github.com/absmach/certs v0.17.0
-	github.com/absmach/mgate v0.4.6-0.20250605150648-edf967fbb46a
+	github.com/absmach/mgate v0.4.6-0.20250905180717-001349e726b3
 	github.com/absmach/senml v1.0.8
 	github.com/authzed/authzed-go v1.5.0
 	github.com/authzed/grpcutil v0.0.0-20250221190651-1985b19b35b8
@@ -84,6 +84,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
+	github.com/felixgateru/mgate v0.0.0-20250911063028-9ce871ebc02c // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
 	github.com/go-errors/errors v1.5.1 // indirect
