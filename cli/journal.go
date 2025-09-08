@@ -4,7 +4,7 @@
 package cli
 
 import (
-	smqsdk "github.com/absmach/supermq/pkg/sdk"
+	smqsdk "github.com/absmach/supermq/pkg/sdk/go"
 	"github.com/spf13/cobra"
 )
 

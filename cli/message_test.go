@@ -12,7 +12,7 @@ import (
 	"github.com/absmach/supermq/cli"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
-	sdkmocks "github.com/absmach/supermq/pkg/sdk/mocks"
+	sdkmocks "github.com/absmach/supermq/pkg/sdk/go/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

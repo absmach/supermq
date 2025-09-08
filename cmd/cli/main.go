@@ -8,7 +8,7 @@ import (
 	"log"
 
 	"github.com/absmach/supermq/cli"
-	sdk "github.com/absmach/supermq/pkg/sdk"
+	sdk "github.com/absmach/supermq/pkg/sdk/go"
 	"github.com/spf13/cobra"
 )
 

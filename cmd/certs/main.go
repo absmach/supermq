@@ -27,7 +27,7 @@ import (
 	pg "github.com/absmach/supermq/pkg/postgres"
 	pgclient "github.com/absmach/supermq/pkg/postgres"
 	"github.com/absmach/supermq/pkg/prometheus"
-	mgsdk "github.com/absmach/supermq/pkg/sdk"
+	mgsdk "github.com/absmach/supermq/pkg/sdk/go"
 	"github.com/absmach/supermq/pkg/server"
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/uuid"

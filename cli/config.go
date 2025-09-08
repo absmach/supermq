@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/absmach/supermq/pkg/errors"
-	smqsdk "github.com/absmach/supermq/pkg/sdk"
+	smqsdk "github.com/absmach/supermq/pkg/sdk/go"
 	"github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
 )
