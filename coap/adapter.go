@@ -23,15 +23,11 @@ var errFailedToDisconnectClient = errors.New("failed to disconnect client")
 
 // Service specifies CoAP service API.
 type Service interface {
-	// Publish publishes message to specified channel.
-	// Key is used to authorize publisher.
-	Publish(ctx context.Context, key string, msg *messaging.Message) error
-
 	// Subscribes to channel with specified id, domainID, subtopic and adds subscription to
 	// service map of subscriptions under given ID.
 	Subscribe(ctx context.Context, key, domainID, chanID, subtopic string, c Client) error
 
-	// Unsubscribe method is used to stop observing resource.
+	// Unsubscribe methdod is used to stop observing resource.
 	Unsubscribe(ctx context.Context, key, domainID, chanID, subptopic, token string) error
 
 	// DisconnectHandler method is used to disconnected the client
@@ -58,36 +54,6 @@ func New(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.Cha
 	return as
 }
 
-func (svc *adapterService) Publish(ctx context.Context, key string, msg *messaging.Message) error {
-	authnRes, err := svc.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{
-		Token: authn.AuthPack(authn.DomainAuth, msg.GetDomain(), key),
-	})
-	if err != nil {
-		return errors.Wrap(svcerr.ErrAuthentication, err)
-	}
-	if !authnRes.Authenticated {
-		return svcerr.ErrAuthentication
-	}
-
-	authzRes, err := svc.channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
-		DomainId:   msg.GetDomain(),
-		ClientId:   authnRes.GetId(),
-		ClientType: policies.ClientType,
-		Type:       uint32(connections.Publish),
-		ChannelId:  msg.GetChannel(),
-	})
-	if err != nil {
-		return errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-	if !authzRes.Authorized {
-		return svcerr.ErrAuthorization
-	}
-
-	msg.Publisher = authnRes.GetId()
-
-	return svc.pubsub.Publish(ctx, messaging.EncodeMessageTopic(msg), msg)
-}
-
 func (svc *adapterService) Subscribe(ctx context.Context, key, domainID, chanID, subtopic string, c Client) error {
 	authnRes, err := svc.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{
 		Token: authn.AuthPack(authn.DomainAuth, domainID, key),
@@ -100,19 +66,6 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, domainID, chanID,
 	}
 
 	clientID := authnRes.GetId()
-	authzRes, err := svc.channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
-		DomainId:   domainID,
-		ClientId:   clientID,
-		ClientType: policies.ClientType,
-		Type:       uint32(connections.Subscribe),
-		ChannelId:  chanID,
-	})
-	if err != nil {
-		return errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-	if !authzRes.Authorized {
-		return svcerr.ErrAuthorization
-	}
 
 	subject := messaging.EncodeTopic(domainID, chanID, subtopic)
 	authzc := newAuthzClient(clientID, domainID, chanID, subtopic, svc.channels, c)

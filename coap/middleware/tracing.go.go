@@ -1,13 +1,12 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package tracing
+package middleware
 
 import (
 	"context"
 
 	"github.com/absmach/supermq/coap"
-	"github.com/absmach/supermq/pkg/messaging"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -28,19 +27,12 @@ type tracingServiceMiddleware struct {
 	svc    coap.Service
 }
 
-// New creates a new instance of TracingServiceMiddleware that wraps an existing CoAP service with tracing capabilities.
-func New(tracer trace.Tracer, svc coap.Service) coap.Service {
+// TracingMiddleware creates a new instance of TracingServiceMiddleware that wraps an existing CoAP service with tracing capabilities.
+func TracingMiddleware(tracer trace.Tracer, svc coap.Service) coap.Service {
 	return &tracingServiceMiddleware{
 		tracer: tracer,
 		svc:    svc,
 	}
-}
-
-// Publish traces a CoAP publish operation.
-func (tm *tracingServiceMiddleware) Publish(ctx context.Context, key string, msg *messaging.Message) error {
-	ctx, span := tm.tracer.Start(ctx, publishOP)
-	defer span.End()
-	return tm.svc.Publish(ctx, key, msg)
 }
 
 // Subscribe traces a CoAP subscribe operation.

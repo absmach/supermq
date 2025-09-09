@@ -3,7 +3,7 @@
 
 //go:build !test
 
-package api
+package middleware
 
 import (
 	"context"
@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/coap"
-	"github.com/absmach/supermq/pkg/messaging"
 )
 
 var _ coap.Service = (*loggingMiddleware)(nil)
@@ -24,29 +23,6 @@ type loggingMiddleware struct {
 // LoggingMiddleware adds logging facilities to the adapter.
 func LoggingMiddleware(svc coap.Service, logger *slog.Logger) coap.Service {
 	return &loggingMiddleware{logger, svc}
-}
-
-// Publish logs the publish request. It logs the channel ID, subtopic (if any) and the time it took to complete the request.
-// If the request fails, it logs the error.
-func (lm *loggingMiddleware) Publish(ctx context.Context, key string, msg *messaging.Message) (err error) {
-	defer func(begin time.Time) {
-		args := []any{
-			slog.String("duration", time.Since(begin).String()),
-			slog.String("channel_id", msg.GetChannel()),
-			slog.String("domain_id", msg.GetDomain()),
-		}
-		if msg.GetSubtopic() != "" {
-			args = append(args, slog.String("subtopic", msg.GetSubtopic()))
-		}
-		if err != nil {
-			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn("Publish message failed", args...)
-			return
-		}
-		lm.logger.Info("Publish message completed successfully", args...)
-	}(time.Now())
-
-	return lm.svc.Publish(ctx, key, msg)
 }
 
 // Subscribe logs the subscribe request. It logs the channel ID, subtopic (if any) and the time it took to complete the request.

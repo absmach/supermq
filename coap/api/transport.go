@@ -104,7 +104,7 @@ func (h *CoAPHandler) ServeCOAP(w mux.ResponseWriter, m *mux.Message) {
 		err = h.handleGet(m, w, msg, key)
 	case codes.POST:
 		resp.SetCode(codes.Created)
-		err = h.service.Publish(m.Context(), key, msg)
+		err = nil
 	default:
 		err = errMethodNotAllowed
 	}
