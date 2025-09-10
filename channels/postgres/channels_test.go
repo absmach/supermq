@@ -576,6 +576,8 @@ func TestRetrieveAll(t *testing.T) {
 				Page: channels.Page{
 					Offset: 0,
 					Limit:  10,
+					Order:  "created_at",
+					Dir:    "asc",
 				},
 			},
 			response: channels.ChannelsPage{
@@ -594,6 +596,8 @@ func TestRetrieveAll(t *testing.T) {
 				Page: channels.Page{
 					Offset: 10,
 					Limit:  10,
+					Order:  "created_at",
+					Dir:    "asc",
 				},
 			},
 			response: channels.ChannelsPage{
@@ -612,6 +616,8 @@ func TestRetrieveAll(t *testing.T) {
 				Page: channels.Page{
 					Offset: 0,
 					Limit:  50,
+					Order:  "created_at",
+					Dir:    "asc",
 				},
 			},
 			response: channels.ChannelsPage{
@@ -630,6 +636,8 @@ func TestRetrieveAll(t *testing.T) {
 				Page: channels.Page{
 					Offset: 50,
 					Limit:  50,
+					Order:  "created_at",
+					Dir:    "asc",
 				},
 			},
 			response: channels.ChannelsPage{
@@ -648,6 +656,8 @@ func TestRetrieveAll(t *testing.T) {
 				Page: channels.Page{
 					Offset: 1000,
 					Limit:  50,
+					Order:  "created_at",
+					Dir:    "desc",
 				},
 			},
 			response: channels.ChannelsPage{
@@ -666,6 +676,8 @@ func TestRetrieveAll(t *testing.T) {
 				Page: channels.Page{
 					Offset: 170,
 					Limit:  50,
+					Order:  "created_at",
+					Dir:    "asc",
 				},
 			},
 			response: channels.ChannelsPage{
