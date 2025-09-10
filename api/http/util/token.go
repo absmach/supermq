@@ -8,11 +8,16 @@ import (
 	"strings"
 )
 
-// BearerPrefix represents the token prefix for Bearer authentication scheme.
-const BearerPrefix = "Bearer "
+const (
+	// BearerPrefix represents the token prefix for Bearer authentication scheme.
+	BearerPrefix = "Bearer "
 
-// ClientPrefix represents the key prefix for Client authentication scheme.
-const ClientPrefix = "Client "
+	// ClientPrefix represents the key prefix for Client authentication scheme.
+	ClientPrefix = "Client "
+
+	// BasicAuthPrefix represents the prefix for Basic authentication scheme.
+	BasicAuthPrefix = "Basic "
+)
 
 // ExtractBearerToken returns value of the bearer token. If there is no bearer token - an empty value is returned.
 func ExtractBearerToken(r *http.Request) string {

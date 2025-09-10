@@ -5,6 +5,7 @@ package http
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -48,6 +49,7 @@ var (
 	errFailedPublishToMsgBroker = errors.New("failed to publish to supermq message broker")
 	errMalformedTopic           = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("malformed topic"))
 	errMissingTopicPub          = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("failed to publish due to missing topic"))
+	errInvalidAuthFormat        = errors.New("invalid basic auth format")
 )
 
 // Event implements events.Event interface.
@@ -120,19 +122,33 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 
 	var clientID, clientType string
 	switch {
-	case strings.HasPrefix(string(s.Password), "Client"):
-		secret := strings.TrimPrefix(string(s.Password), apiutil.ClientPrefix)
-		authnRes, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, secret)})
+	case s.Username != "" && string(s.Password) != "":
+		clientID, err = h.clientAuthenticate(ctx, smqauthn.AuthPack(smqauthn.BasicAuth, s.Username, string(s.Password)))
 		if err != nil {
-			h.logger.Warn(fmt.Sprintf(logInfoFailedAuthNClient, secret, *topic, err))
-			return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
-		}
-		if !authnRes.Authenticated {
-			h.logger.Warn(fmt.Sprintf(logInfoFailedAuthNClient, secret, *topic, svcerr.ErrAuthentication))
-			return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
+			h.logger.Warn(fmt.Sprintf(logInfoFailedAuthNClient, s.Username, *topic, err))
+			return mgate.NewHTTPProxyError(http.StatusUnauthorized, err)
 		}
 		clientType = policies.ClientType
-		clientID = authnRes.GetId()
+	case strings.HasPrefix(string(s.Password), apiutil.BasicAuthPrefix):
+		username, password, err := decodeAuth(strings.TrimPrefix(string(s.Password), apiutil.BasicAuthPrefix))
+		if err != nil {
+			h.logger.Warn(fmt.Sprintf(logInfoFailedAuthNClient, s.Username, *topic, err))
+			return mgate.NewHTTPProxyError(http.StatusUnauthorized, err)
+		}
+		clientID, err = h.clientAuthenticate(ctx, smqauthn.AuthPack(smqauthn.BasicAuth, username, password))
+		if err != nil {
+			h.logger.Warn(fmt.Sprintf(logInfoFailedAuthNClient, username, *topic, err))
+			return mgate.NewHTTPProxyError(http.StatusUnauthorized, err)
+		}
+		clientType = policies.ClientType
+	case strings.HasPrefix(string(s.Password), "Client"):
+		secret := strings.TrimPrefix(string(s.Password), apiutil.ClientPrefix)
+		clientID, err = h.clientAuthenticate(ctx, smqauthn.AuthPack(smqauthn.DomainAuth, domainID, secret))
+		if err != nil {
+			h.logger.Warn(fmt.Sprintf(logInfoFailedAuthNClient, s.Username, *topic, err))
+			return mgate.NewHTTPProxyError(http.StatusUnauthorized, err)
+		}
+		clientType = policies.ClientType
 	case strings.HasPrefix(string(s.Password), apiutil.BearerPrefix):
 		token := strings.TrimPrefix(string(s.Password), apiutil.BearerPrefix)
 		authnSession, err := h.authn.Authenticate(ctx, token)
@@ -165,7 +181,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 	}
 	res, err := h.channels.Authorize(ctx, ar)
 	if err != nil {
-		return mgate.NewHTTPProxyError(http.StatusBadRequest, err)
+		return mgate.NewHTTPProxyError(http.StatusUnauthorized, err)
 	}
 	if !res.GetAuthorized() {
 		return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthorization)
@@ -193,4 +209,32 @@ func (h *handler) Unsubscribe(ctx context.Context, topics *[]string) error {
 // Disconnect - not used for HTTP.
 func (h *handler) Disconnect(ctx context.Context) error {
 	return nil
+}
+
+func (h *handler) clientAuthenticate(ctx context.Context, token string) (string, error) {
+	authnRes, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{Token: token})
+	if err != nil {
+		return "", svcerr.ErrAuthentication
+	}
+	if !authnRes.Authenticated {
+		return "", svcerr.ErrAuthentication
+	}
+
+	return authnRes.GetId(), nil
+}
+
+// decodeAuth decodes the base64 encoded string in the format "clientID:secret".
+func decodeAuth(s string) (string, string, error) {
+	db, err := base64.URLEncoding.DecodeString(s)
+	if err != nil {
+		return "", "", err
+	}
+	parts := strings.SplitN(string(db), ":", 2)
+	if len(parts) != 2 {
+		return "", "", errInvalidAuthFormat
+	}
+	clientID := parts[0]
+	secret := parts[1]
+
+	return clientID, secret, nil
 }

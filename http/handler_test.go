@@ -5,6 +5,7 @@ package http_test
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"strings"
@@ -32,13 +33,10 @@ import (
 )
 
 const (
-	clientID              = "513d02d2-16c1-4f23-98be-9e12f8fee898"
-	clientID1             = "513d02d2-16c1-4f23-98be-9e12f8fee899"
-	clientKey             = "password"
-	chanID                = "123e4567-e89b-12d3-a456-000000000001"
-	invalidID             = "invalidID"
-	invalidValue          = "invalidValue"
-	invalidChannelIDTopic = "m/**/c"
+	clientID     = "513d02d2-16c1-4f23-98be-9e12f8fee898"
+	clientKey    = "password"
+	chanID       = "123e4567-e89b-12d3-a456-000000000001"
+	invalidValue = "invalidValue"
 )
 
 var (
@@ -145,21 +143,34 @@ func TestPublish(t *testing.T) {
 	clientKeySession := session.Session{
 		Password: []byte("Client " + clientKey),
 	}
-
 	tokenSession := session.Session{
 		Password: []byte(apiutil.BearerPrefix + validToken),
 	}
 	invalidTokenSession := session.Session{
 		Password: []byte(apiutil.BearerPrefix + invalidToken),
 	}
+	basicAuthSession := session.Session{
+		Username: clientID,
+		Password: []byte(clientKey),
+	}
+	invalidBasicAuthSession := session.Session{
+		Username: clientID,
+		Password: []byte(invalidValue),
+	}
+	creds := base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", clientID, clientKey)))
+	encodedCredsSession := session.Session{
+		Password: []byte(apiutil.BasicAuthPrefix + creds),
+	}
 	cases := []struct {
 		desc       string
 		topic      *string
 		channelID  string
+		username   string
 		payload    *[]byte
 		password   string
 		session    *session.Session
 		status     int
+		authNToken string
 		authNRes   *grpcClientsV1.AuthnRes
 		authNRes1  smqauthn.Session
 		authNErr   error
@@ -169,17 +180,18 @@ func TestPublish(t *testing.T) {
 		err        error
 	}{
 		{
-			desc:      "publish  with key successfully",
-			topic:     &topic,
-			payload:   &payload,
-			password:  clientKey,
-			session:   &clientKeySession,
-			channelID: chanID,
-			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
-			authNErr:  nil,
-			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: true},
-			authZErr:  nil,
-			err:       nil,
+			desc:       "publish  with key successfully",
+			topic:      &topic,
+			payload:    &payload,
+			password:   clientKey,
+			session:    &clientKeySession,
+			channelID:  chanID,
+			authNToken: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey),
+			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
+			authNErr:   nil,
+			authZRes:   &grpcChannelsV1.AuthzRes{Authorized: true},
+			authZErr:   nil,
+			err:        nil,
 		},
 		{
 			desc:      "publish  with token successfully",
@@ -207,17 +219,18 @@ func TestPublish(t *testing.T) {
 			err:       svcerr.ErrAuthentication,
 		},
 		{
-			desc:      "publish  with key and subtopic successfully",
-			topic:     &subtopic,
-			payload:   &payload,
-			password:  clientKey,
-			session:   &clientKeySession,
-			channelID: chanID,
-			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
-			authNErr:  nil,
-			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: true},
-			authZErr:  nil,
-			err:       nil,
+			desc:       "publish  with key and subtopic successfully",
+			topic:      &subtopic,
+			payload:    &payload,
+			password:   clientKey,
+			session:    &clientKeySession,
+			channelID:  chanID,
+			authNToken: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey),
+			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
+			authNErr:   nil,
+			authZRes:   &grpcChannelsV1.AuthzRes{Authorized: true},
+			authZErr:   nil,
+			err:        nil,
 		},
 		{
 			desc:      "publish with empty topic",
@@ -238,14 +251,15 @@ func TestPublish(t *testing.T) {
 			err:       errClientNotInitialized,
 		},
 		{
-			desc:     "publish with invalid topic",
-			topic:    &invalidTopic,
-			status:   http.StatusBadRequest,
-			password: clientKey,
-			session:  &clientKeySession,
-			authNRes: &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
-			authNErr: nil,
-			err:      errMalformedTopic,
+			desc:       "publish with invalid topic",
+			topic:      &invalidTopic,
+			status:     http.StatusBadRequest,
+			password:   clientKey,
+			session:    &clientKeySession,
+			authNToken: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey),
+			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
+			authNErr:   nil,
+			err:        errMalformedTopic,
 		},
 		{
 			desc:     "publish with malformwd subtopic",
@@ -269,28 +283,30 @@ func TestPublish(t *testing.T) {
 			err:       svcerr.ErrAuthentication,
 		},
 		{
-			desc:      "publish with client key and failed to authenticate",
-			topic:     &topic,
-			payload:   &payload,
-			password:  clientKey,
-			session:   &clientKeySession,
-			channelID: chanID,
-			status:    http.StatusUnauthorized,
-			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: false},
-			authNErr:  nil,
-			err:       svcerr.ErrAuthentication,
+			desc:       "publish with client key and failed to authenticate",
+			topic:      &topic,
+			payload:    &payload,
+			password:   clientKey,
+			session:    &clientKeySession,
+			channelID:  chanID,
+			status:     http.StatusUnauthorized,
+			authNToken: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey),
+			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: false},
+			authNErr:   nil,
+			err:        svcerr.ErrAuthentication,
 		},
 		{
-			desc:      "publish with client key and failed to authenticate with error",
-			topic:     &topic,
-			payload:   &payload,
-			password:  clientKey,
-			session:   &clientKeySession,
-			channelID: chanID,
-			status:    http.StatusUnauthorized,
-			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: false},
-			authNErr:  svcerr.ErrAuthentication,
-			err:       svcerr.ErrAuthentication,
+			desc:       "publish with client key and failed to authenticate with error",
+			topic:      &topic,
+			payload:    &payload,
+			password:   clientKey,
+			session:    &clientKeySession,
+			channelID:  chanID,
+			status:     http.StatusUnauthorized,
+			authNToken: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey),
+			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: false},
+			authNErr:   svcerr.ErrAuthentication,
+			err:        svcerr.ErrAuthentication,
 		},
 		{
 			desc:      "publish with  token and failed to authenticate",
@@ -305,32 +321,78 @@ func TestPublish(t *testing.T) {
 			err:       svcerr.ErrAuthentication,
 		},
 		{
-			desc:      "publish with unauthorized client",
-			topic:     &topic,
-			payload:   &payload,
-			password:  clientKey,
-			session:   &clientKeySession,
-			channelID: chanID,
-			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
-			status:    http.StatusUnauthorized,
-			authNErr:  nil,
-			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: false},
-			authZErr:  nil,
-			err:       svcerr.ErrAuthorization,
+			desc:       "publish with basic auth",
+			topic:      &topic,
+			payload:    &payload,
+			username:   clientID,
+			password:   clientKey,
+			session:    &basicAuthSession,
+			channelID:  chanID,
+			authNToken: smqauthn.AuthPack(smqauthn.BasicAuth, clientID, clientKey),
+			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
+			authNRes1:  smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
+			authNErr:   nil,
+			authZRes:   &grpcChannelsV1.AuthzRes{Authorized: true},
+			authZErr:   nil,
 		},
 		{
-			desc:      "publish with authorization error",
-			topic:     &topic,
-			payload:   &payload,
-			password:  clientKey,
-			session:   &clientKeySession,
-			channelID: chanID,
-			authNRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
-			status:    http.StatusBadRequest,
-			authNErr:  nil,
-			authZRes:  &grpcChannelsV1.AuthzRes{Authorized: false},
-			authZErr:  svcerr.ErrAuthorization,
-			err:       svcerr.ErrAuthorization,
+			desc:       "publish with invalid basic auth",
+			topic:      &topic,
+			payload:    &payload,
+			username:   clientID,
+			password:   clientKey,
+			session:    &invalidBasicAuthSession,
+			channelID:  chanID,
+			authNToken: smqauthn.AuthPack(smqauthn.BasicAuth, clientID, invalidValue),
+			authNRes:   &grpcClientsV1.AuthnRes{},
+			authNErr:   svcerr.ErrAuthentication,
+			status:     http.StatusUnauthorized,
+			err:        svcerr.ErrAuthentication,
+		},
+		{
+			desc:       "publish with encoded credentials",
+			topic:      &topic,
+			payload:    &payload,
+			username:   clientID,
+			password:   clientKey,
+			session:    &encodedCredsSession,
+			channelID:  chanID,
+			authNToken: smqauthn.AuthPack(smqauthn.BasicAuth, clientID, clientKey),
+			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
+			authNRes1:  smqauthn.Session{DomainUserID: validID, UserID: validID, DomainID: validID},
+			authNErr:   nil,
+			authZRes:   &grpcChannelsV1.AuthzRes{Authorized: true},
+			authZErr:   nil,
+		},
+		{
+			desc:       "publish with unauthorized client",
+			topic:      &topic,
+			payload:    &payload,
+			password:   clientKey,
+			session:    &clientKeySession,
+			channelID:  chanID,
+			authNToken: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey),
+			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
+			status:     http.StatusUnauthorized,
+			authNErr:   nil,
+			authZRes:   &grpcChannelsV1.AuthzRes{Authorized: false},
+			authZErr:   nil,
+			err:        svcerr.ErrAuthorization,
+		},
+		{
+			desc:       "publish with authorization error",
+			topic:      &topic,
+			payload:    &payload,
+			password:   clientKey,
+			session:    &clientKeySession,
+			channelID:  chanID,
+			authNToken: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey),
+			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
+			status:     http.StatusUnauthorized,
+			authNErr:   nil,
+			authZRes:   &grpcChannelsV1.AuthzRes{Authorized: false},
+			authZErr:   svcerr.ErrAuthorization,
+			err:        svcerr.ErrAuthorization,
 		},
 		{
 			desc:       "publish with failed to publish",
@@ -339,6 +401,7 @@ func TestPublish(t *testing.T) {
 			password:   clientKey,
 			session:    &clientKeySession,
 			channelID:  chanID,
+			authNToken: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey),
 			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			authNErr:   nil,
 			authZRes:   &grpcChannelsV1.AuthzRes{Authorized: true},
@@ -357,7 +420,7 @@ func TestPublish(t *testing.T) {
 			if tc.topic != nil {
 				internalTopic = strings.TrimPrefix(strings.ReplaceAll(*tc.topic, "/", "."), ".m.")
 			}
-			clientsCall := clients.On("Authenticate", ctx, &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, tc.password)}).Return(tc.authNRes, tc.authNErr)
+			clientsCall := clients.On("Authenticate", ctx, &grpcClientsV1.AuthnReq{Token: tc.authNToken}).Return(tc.authNRes, tc.authNErr)
 			authCall := authn.On("Authenticate", ctx, mock.Anything).Return(tc.authNRes1, tc.authNErr)
 			channelsCall := channels.On("Authorize", ctx, mock.Anything).Return(tc.authZRes, tc.authZErr)
 			repoCall := publisher.On("Publish", ctx, internalTopic, mock.Anything).Return(tc.publishErr)
