@@ -925,15 +925,10 @@ func (repo groupRepository) retrieveGroups(ctx context.Context, domainID, userID
         ) AS subquery;`,
 		baseQuery, query)
 
-	fmt.Printf("[groups][retrieveGroups] Count SQL:\n%s\n", cq)
-
 	total, err := postgres.Total(ctx, repo.db, cq, dbPageMeta)
 	if err != nil {
-		fmt.Printf("[groups][retrieveGroups] count error: %v\n", err)
 		return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
-
-	fmt.Printf("[groups][retrieveGroups] total=%d\n", total)
 
 	page := groups.Page{PageMeta: pm}
 	page.Total = total
