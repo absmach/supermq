@@ -32,33 +32,33 @@ func MetricsMiddleware(svc coap.Service, counter metrics.Counter, latency metric
 }
 
 // Publish instruments Publish method with metrics.
-func (mm *metricsMiddleware) Publish(ctx context.Context, key string, msg *messaging.Message) error {
+func (mm *metricsMiddleware) Publish(ctx context.Context, key string, msg *messaging.Message, topicType messaging.TopicType) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "publish").Add(1)
 		mm.latency.With("method", "publish").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.Publish(ctx, key, msg)
+	return mm.svc.Publish(ctx, key, msg, topicType)
 }
 
 // Subscribe instruments Subscribe method with metrics.
-func (mm *metricsMiddleware) Subscribe(ctx context.Context, key, domainID, chanID, subtopic string, c coap.Client) error {
+func (mm *metricsMiddleware) Subscribe(ctx context.Context, key, domainID, chanID, subtopic string, topicType messaging.TopicType, c coap.Client) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "subscribe").Add(1)
 		mm.latency.With("method", "subscribe").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.Subscribe(ctx, key, domainID, chanID, subtopic, c)
+	return mm.svc.Subscribe(ctx, key, domainID, chanID, subtopic, topicType, c)
 }
 
 // Unsubscribe instruments Unsubscribe method with metrics.
-func (mm *metricsMiddleware) Unsubscribe(ctx context.Context, key, domainID, chanID, subtopic, token string) error {
+func (mm *metricsMiddleware) Unsubscribe(ctx context.Context, key, domainID, chanID, subtopic, token string, topicType messaging.TopicType) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "unsubscribe").Add(1)
 		mm.latency.With("method", "unsubscribe").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.Unsubscribe(ctx, key, domainID, chanID, subtopic, token)
+	return mm.svc.Unsubscribe(ctx, key, domainID, chanID, subtopic, token, topicType)
 }
 
 // DisconnectHandler instruments DisconnectHandler method with metrics.

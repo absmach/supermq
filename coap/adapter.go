@@ -25,14 +25,14 @@ var errFailedToDisconnectClient = errors.New("failed to disconnect client")
 type Service interface {
 	// Publish publishes message to specified channel.
 	// Key is used to authorize publisher.
-	Publish(ctx context.Context, key string, msg *messaging.Message) error
+	Publish(ctx context.Context, key string, msg *messaging.Message, topicType messaging.TopicType) error
 
 	// Subscribes to channel with specified id, domainID, subtopic and adds subscription to
 	// service map of subscriptions under given ID.
-	Subscribe(ctx context.Context, key, domainID, chanID, subtopic string, c Client) error
+	Subscribe(ctx context.Context, key, domainID, chanID, subtopic string, topicType messaging.TopicType, c Client) error
 
 	// Unsubscribe method is used to stop observing resource.
-	Unsubscribe(ctx context.Context, key, domainID, chanID, subptopic, token string) error
+	Unsubscribe(ctx context.Context, key, domainID, chanID, subptopic, token string, topicType messaging.TopicType) error
 
 	// DisconnectHandler method is used to disconnected the client
 	DisconnectHandler(ctx context.Context, domainID, chanID, subptopic, token string) error
@@ -58,7 +58,7 @@ func New(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.Cha
 	return as
 }
 
-func (svc *adapterService) Publish(ctx context.Context, key string, msg *messaging.Message) error {
+func (svc *adapterService) Publish(ctx context.Context, key string, msg *messaging.Message, topicType messaging.TopicType) error {
 	authnRes, err := svc.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{
 		Token: authn.AuthPack(authn.DomainAuth, msg.GetDomain(), key),
 	})
@@ -67,6 +67,11 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 	}
 	if !authnRes.Authenticated {
 		return svcerr.ErrAuthentication
+	}
+
+	// Health topics do not require channel authorization.
+	if topicType == messaging.HealthType {
+		return nil
 	}
 
 	authzRes, err := svc.channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
@@ -88,7 +93,7 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 	return svc.pubsub.Publish(ctx, messaging.EncodeMessageTopic(msg), msg)
 }
 
-func (svc *adapterService) Subscribe(ctx context.Context, key, domainID, chanID, subtopic string, c Client) error {
+func (svc *adapterService) Subscribe(ctx context.Context, key, domainID, chanID, subtopic string, topicType messaging.TopicType, c Client) error {
 	authnRes, err := svc.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{
 		Token: authn.AuthPack(authn.DomainAuth, domainID, key),
 	})
@@ -97,6 +102,11 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, domainID, chanID,
 	}
 	if !authnRes.Authenticated {
 		return svcerr.ErrAuthentication
+	}
+
+	// Health topics do not subscribe to the message broker.
+	if topicType == messaging.HealthType {
+		return nil
 	}
 
 	clientID := authnRes.GetId()
@@ -125,7 +135,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, domainID, chanID,
 	return svc.pubsub.Subscribe(ctx, subCfg)
 }
 
-func (svc *adapterService) Unsubscribe(ctx context.Context, key, domainID, chanID, subtopic, token string) error {
+func (svc *adapterService) Unsubscribe(ctx context.Context, key, domainID, chanID, subtopic, token string, topicType messaging.TopicType) error {
 	authnRes, err := svc.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{
 		Token: authn.AuthPack(authn.DomainAuth, domainID, key),
 	})
@@ -134,6 +144,11 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, key, domainID, chanI
 	}
 	if !authnRes.Authenticated {
 		return svcerr.ErrAuthentication
+	}
+
+	// Health topics do not subscribe to the message broker.
+	if topicType == messaging.HealthType {
+		return nil
 	}
 
 	authzRes, err := svc.channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{

@@ -4,9 +4,7 @@
 package api
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -74,18 +72,7 @@ func (h *CoAPHandler) ServeCOAP(w mux.ResponseWriter, m *mux.Message) {
 	}
 	defer h.sendResp(w, resp)
 
-	path, err := m.Path()
-	if err != nil {
-		h.logger.Warn(fmt.Sprintf("Error reading path: %s", err))
-		resp.SetCode(codes.BadRequest)
-		return
-	}
-	if strings.TrimPrefix(path, "/") == messaging.HealthTopicPrefix {
-		h.handleHealthCheck(w, m)
-		return
-	}
-
-	msg, err := h.decodeMessage(m)
+	msg, topicType, err := h.decodeMessage(m)
 	if err != nil {
 		h.logger.Warn(fmt.Sprintf("Error decoding message: %s", err))
 		resp.SetCode(codes.BadRequest)
@@ -101,10 +88,10 @@ func (h *CoAPHandler) ServeCOAP(w mux.ResponseWriter, m *mux.Message) {
 	switch m.Code() {
 	case codes.GET:
 		resp.SetCode(codes.Content)
-		err = h.handleGet(m, w, msg, key)
+		err = h.handleGet(m, w, topicType, msg, key)
 	case codes.POST:
 		resp.SetCode(codes.Created)
-		err = h.service.Publish(m.Context(), key, msg)
+		err = h.service.Publish(m.Context(), key, msg, topicType)
 	default:
 		err = errMethodNotAllowed
 	}
@@ -125,7 +112,7 @@ func (h *CoAPHandler) ServeCOAP(w mux.ResponseWriter, m *mux.Message) {
 	}
 }
 
-func (h *CoAPHandler) handleGet(m *mux.Message, w mux.ResponseWriter, msg *messaging.Message, key string) error {
+func (h *CoAPHandler) handleGet(m *mux.Message, w mux.ResponseWriter, topicType messaging.TopicType, msg *messaging.Message, key string) error {
 	var obs uint32
 	obs, err := m.Options().Observe()
 	if err != nil {
@@ -137,29 +124,30 @@ func (h *CoAPHandler) handleGet(m *mux.Message, w mux.ResponseWriter, msg *messa
 		w.Conn().AddOnClose(func() {
 			_ = h.service.DisconnectHandler(context.Background(), msg.GetDomain(), msg.GetChannel(), msg.GetSubtopic(), c.Token())
 		})
-		return h.service.Subscribe(w.Conn().Context(), key, msg.GetDomain(), msg.GetChannel(), msg.GetSubtopic(), c)
+		return h.service.Subscribe(w.Conn().Context(), key, msg.GetDomain(), msg.GetChannel(), msg.GetSubtopic(), topicType, c)
 	}
-	return h.service.Unsubscribe(w.Conn().Context(), key, msg.GetDomain(), msg.GetChannel(), msg.GetSubtopic(), m.Token().String())
+	return h.service.Unsubscribe(w.Conn().Context(), key, msg.GetDomain(), msg.GetChannel(), msg.GetSubtopic(), m.Token().String(), topicType)
 }
 
-func (h *CoAPHandler) decodeMessage(msg *mux.Message) (*messaging.Message, error) {
+func (h *CoAPHandler) decodeMessage(msg *mux.Message) (*messaging.Message, messaging.TopicType, error) {
 	if msg.Options() == nil {
-		return &messaging.Message{}, errBadOptions
+		return &messaging.Message{}, messaging.InvalidType, errBadOptions
 	}
 	path, err := msg.Path()
 	if err != nil {
-		return &messaging.Message{}, err
+		return &messaging.Message{}, messaging.InvalidType, err
 	}
 
 	var domainID, channelID, subTopic string
+	var topicType messaging.TopicType
 	switch msg.Code() {
 	case codes.GET:
-		domainID, channelID, subTopic, _, err = h.parser.ParseSubscribeTopic(msg.Context(), path, true)
+		domainID, channelID, subTopic, topicType, err = h.parser.ParseSubscribeTopic(msg.Context(), path, true)
 	case codes.POST:
-		domainID, channelID, subTopic, _, err = h.parser.ParsePublishTopic(msg.Context(), path, true)
+		domainID, channelID, subTopic, topicType, err = h.parser.ParsePublishTopic(msg.Context(), path, true)
 	}
 	if err != nil {
-		return &messaging.Message{}, err
+		return &messaging.Message{}, messaging.InvalidType, err
 	}
 
 	ret := &messaging.Message{
@@ -174,36 +162,17 @@ func (h *CoAPHandler) decodeMessage(msg *mux.Message) (*messaging.Message, error
 	if msg.Body() != nil {
 		buff, err := io.ReadAll(msg.Body())
 		if err != nil {
-			return ret, err
+			return ret, messaging.InvalidType, err
 		}
 		ret.Payload = buff
 	}
-	return ret, nil
+	return ret, topicType, nil
 }
 
 func (h *CoAPHandler) sendResp(w mux.ResponseWriter, resp *pool.Message) {
 	if err := w.Conn().WriteMessage(resp); err != nil {
 		h.logger.Warn(fmt.Sprintf("Can't set response: %s", err))
 	}
-}
-
-func (h *CoAPHandler) handleHealthCheck(w mux.ResponseWriter, m *mux.Message) {
-	pd := messaging.HealthInfo{
-		Status:    messaging.StatusOK,
-		Protocol:  protocol,
-		Timestamp: time.Now().UTC(),
-	}
-	pdBytes, err := json.Marshal(pd)
-	if err != nil {
-		h.logger.Warn(fmt.Sprintf("Error marshaling health info: %s", err))
-	}
-	resp := w.Conn().AcquireMessage(m.Context())
-	defer w.Conn().ReleaseMessage(resp)
-	resp.SetCode(codes.Content)
-	resp.SetToken(m.Token())
-	resp.SetContentFormat(message.AppJSON)
-	resp.SetBody(bytes.NewReader(pdBytes))
-	h.sendResp(w, resp)
 }
 
 func parseKey(msg *mux.Message) (string, error) {
