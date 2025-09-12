@@ -9,6 +9,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/absmach/supermq/ws"
 	"github.com/go-kit/kit/metrics"
 )
@@ -31,20 +32,20 @@ func MetricsMiddleware(svc ws.Service, counter metrics.Counter, latency metrics.
 }
 
 // Subscribe instruments Subscribe method with metrics.
-func (mm *metricsMiddleware) Subscribe(ctx context.Context, sessionID, authKey, domainID, chanID, subtopic string, c *ws.Client) error {
+func (mm *metricsMiddleware) Subscribe(ctx context.Context, sessionID, authKey, domainID, chanID, subtopic string, topicType messaging.TopicType, c *ws.Client) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "subscribe").Add(1)
 		mm.latency.With("method", "subscribe").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.Subscribe(ctx, sessionID, authKey, domainID, chanID, subtopic, c)
+	return mm.svc.Subscribe(ctx, sessionID, authKey, domainID, chanID, subtopic, topicType, c)
 }
 
-func (mm *metricsMiddleware) Unsubscribe(ctx context.Context, sessionID, domainID, chanID, subtopic string) error {
+func (mm *metricsMiddleware) Unsubscribe(ctx context.Context, sessionID, domainID, chanID, subtopic string, topicType messaging.TopicType) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "unsubscribe").Add(1)
 		mm.latency.With("method", "unsubscribe").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.Unsubscribe(ctx, sessionID, domainID, chanID, subtopic)
+	return mm.svc.Unsubscribe(ctx, sessionID, domainID, chanID, subtopic, topicType)
 }

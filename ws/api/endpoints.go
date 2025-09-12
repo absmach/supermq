@@ -27,7 +27,7 @@ func generateSessionID() (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func handshake(ctx context.Context, svc ws.Service, resolver messaging.TopicResolver, logger *slog.Logger) http.HandlerFunc {
+func handshake(ctx context.Context, svc ws.Service, resolver messaging.TopicResolver, topicType messaging.TopicType, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req, err := decodeRequest(r, resolver, logger)
 		if err != nil {
@@ -51,12 +51,12 @@ func handshake(ctx context.Context, svc ws.Service, resolver messaging.TopicReso
 		client := ws.NewClient(logger, conn, sessionID)
 
 		client.SetCloseHandler(func(code int, text string) error {
-			return svc.Unsubscribe(ctx, sessionID, req.domainID, req.channelID, req.subtopic)
+			return svc.Unsubscribe(ctx, sessionID, req.domainID, req.channelID, req.subtopic, topicType)
 		})
 
 		go client.Start(ctx)
 
-		if err := svc.Subscribe(ctx, sessionID, req.authKey, req.domainID, req.channelID, req.subtopic, client); err != nil {
+		if err := svc.Subscribe(ctx, sessionID, req.authKey, req.domainID, req.channelID, req.subtopic, topicType, client); err != nil {
 			conn.Close()
 			return
 		}

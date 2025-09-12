@@ -6,6 +6,7 @@ package tracing
 import (
 	"context"
 
+	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/absmach/supermq/ws"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -31,16 +32,16 @@ func New(tracer trace.Tracer, svc ws.Service) ws.Service {
 }
 
 // Subscribe traces the "Subscribe" operation of the wrapped ws.Service.
-func (tm *tracingMiddleware) Subscribe(ctx context.Context, sessionID, clientKey, domainID, chanID, subtopic string, client *ws.Client) error {
+func (tm *tracingMiddleware) Subscribe(ctx context.Context, sessionID, clientKey, domainID, chanID, subtopic string, topicType messaging.TopicType, client *ws.Client) error {
 	ctx, span := tm.tracer.Start(ctx, subscribeOP)
 	defer span.End()
 
-	return tm.svc.Subscribe(ctx, sessionID, clientKey, domainID, chanID, subtopic, client)
+	return tm.svc.Subscribe(ctx, sessionID, clientKey, domainID, chanID, subtopic, topicType, client)
 }
 
-func (tm *tracingMiddleware) Unsubscribe(ctx context.Context, sessionID, domainID, chanID, subtopic string) error {
+func (tm *tracingMiddleware) Unsubscribe(ctx context.Context, sessionID, domainID, chanID, subtopic string, topicType messaging.TopicType) error {
 	ctx, span := tm.tracer.Start(ctx, unsubscribeOP)
 	defer span.End()
 
-	return tm.svc.Unsubscribe(ctx, sessionID, domainID, chanID, subtopic)
+	return tm.svc.Unsubscribe(ctx, sessionID, domainID, chanID, subtopic, topicType)
 }

@@ -79,9 +79,16 @@ func newProxyHTPPServer(svc session.Handler, targetServer *httptest.Server) (*ht
 	return httptest.NewServer(http.HandlerFunc(mp.ServeHTTP)), nil
 }
 
-func makeURL(tsURL, domainID, chanID, subtopic, authKey string, header bool) (string, error) {
+func makeURL(tsURL, domainID, chanID, subtopic, authKey string, header bool, healthCheck bool) (string, error) {
 	u, _ := url.Parse(tsURL)
 	u.Scheme = protocol
+
+	if healthCheck {
+		if header {
+			return fmt.Sprintf("%s/hc/%s", u, domainID), nil
+		}
+		return fmt.Sprintf("%s/hc/%s?authorization=%s", u, domainID, authKey), nil
+	}
 
 	if chanID == "0" || chanID == "" {
 		if header {
@@ -101,13 +108,13 @@ func makeURL(tsURL, domainID, chanID, subtopic, authKey string, header bool) (st
 	return fmt.Sprintf("%s/m/%s/c/%s%s?authorization=%s", u, domainID, chanID, subtopicPart, authKey), nil
 }
 
-func handshake(tsURL, domainID, chanID, subtopic, authKey string, addHeader bool) (*websocket.Conn, *http.Response, error) {
+func handshake(tsURL, domainID, chanID, subtopic, authKey string, addHeader bool, healthCheck bool) (*websocket.Conn, *http.Response, error) {
 	header := http.Header{}
 	if addHeader {
 		header.Add("Authorization", authKey)
 	}
 
-	turl, _ := makeURL(tsURL, domainID, chanID, subtopic, authKey, addHeader)
+	turl, _ := makeURL(tsURL, domainID, chanID, subtopic, authKey, addHeader, healthCheck)
 	conn, res, errRet := websocket.DefaultDialer.Dial(turl, header)
 
 	return conn, res, errRet
@@ -140,15 +147,16 @@ func TestHandshake(t *testing.T) {
 	channels.On("Authorize", mock.Anything, mock.Anything, mock.Anything).Return(&grpcChannelsV1.AuthzRes{Authorized: true}, nil)
 
 	cases := []struct {
-		desc     string
-		domainID string
-		chanID   string
-		subtopic string
-		header   bool
-		authKey  string
-		status   int
-		err      error
-		msg      []byte
+		desc        string
+		domainID    string
+		chanID      string
+		subtopic    string
+		header      bool
+		authKey     string
+		status      int
+		healthCheck bool
+		err         error
+		msg         []byte
 	}{
 		{
 			desc:     "connect and send message",
@@ -250,11 +258,33 @@ func TestHandshake(t *testing.T) {
 			status:   http.StatusUnauthorized,
 			msg:      msg,
 		},
+		{
+			desc:        "connect with health check and send message",
+			domainID:    domainID,
+			chanID:      id,
+			subtopic:    "",
+			header:      true,
+			healthCheck: true,
+			authKey:     clientKey,
+			status:      http.StatusSwitchingProtocols,
+			msg:         msg,
+		},
+		{
+			desc:        "connect with health check and send message with clientKey as query parameter",
+			domainID:    domainID,
+			chanID:      id,
+			subtopic:    "",
+			header:      false,
+			healthCheck: true,
+			authKey:     clientKey,
+			status:      http.StatusSwitchingProtocols,
+			msg:         msg,
+		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			conn, res, err := handshake(ts.URL, tc.domainID, tc.chanID, tc.subtopic, tc.authKey, tc.header)
+			conn, res, err := handshake(ts.URL, tc.domainID, tc.chanID, tc.subtopic, tc.authKey, tc.header, tc.healthCheck)
 			assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code '%d' got '%d'\n", tc.desc, tc.status, res.StatusCode))
 
 			if tc.status == http.StatusSwitchingProtocols {

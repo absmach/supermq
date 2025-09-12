@@ -33,9 +33,9 @@ type Service interface {
 	// the channelID for subscription and domainID specifies the domain for authorization.
 	// Subtopic is optional.
 	// If the subscription is successful, nil is returned otherwise error is returned.
-	Subscribe(ctx context.Context, sessionID, clientKey, domainID, chanID, subtopic string, client *Client) error
+	Subscribe(ctx context.Context, sessionID, clientKey, domainID, chanID, subtopic string, topicType messaging.TopicType, client *Client) error
 
-	Unsubscribe(ctx context.Context, sessionID, domainID, chanID, subtopic string) error
+	Unsubscribe(ctx context.Context, sessionID, domainID, chanID, subtopic string, topicType messaging.TopicType) error
 }
 
 var _ Service = (*adapterService)(nil)
@@ -57,17 +57,22 @@ func New(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.Cha
 	}
 }
 
-func (svc *adapterService) Subscribe(ctx context.Context, sessionID, clientKey, domainID, channelID, subtopic string, c *Client) error {
-	if channelID == "" || clientKey == "" || domainID == "" {
+func (svc *adapterService) Subscribe(ctx context.Context, sessionID, clientKey, domainID, channelID, subtopic string, topicType messaging.TopicType, c *Client) error {
+	if (channelID == "" && topicType != messaging.HealthType) || clientKey == "" || domainID == "" {
 		return svcerr.ErrAuthentication
 	}
 
-	clientID, err := svc.authorize(ctx, clientKey, domainID, channelID, connections.Subscribe)
+	clientID, err := svc.authorize(ctx, clientKey, domainID, channelID, connections.Subscribe, topicType)
 	if err != nil {
 		return svcerr.ErrAuthorization
 	}
 
 	c.id = clientID
+
+	// Health check topics do not subscribe to the message broker.
+	if topicType == messaging.HealthType {
+		return nil
+	}
 
 	subject := messaging.EncodeTopic(domainID, channelID, subtopic)
 	subCfg := messaging.SubscriberConfig{
@@ -83,18 +88,21 @@ func (svc *adapterService) Subscribe(ctx context.Context, sessionID, clientKey, 
 	return nil
 }
 
-func (svc *adapterService) Unsubscribe(ctx context.Context, sessionID, domainID, channelID, subtopic string) error {
+func (svc *adapterService) Unsubscribe(ctx context.Context, sessionID, domainID, channelID, subtopic string, topicType messaging.TopicType) error {
 	topic := messaging.EncodeTopic(domainID, channelID, subtopic)
 
-	if err := svc.pubsub.Unsubscribe(ctx, sessionID, topic); err != nil {
-		return errors.Wrap(ErrFailedSubscribe, err)
+	// Health check topics do not subscribe to the message broker.
+	if topicType == messaging.MessageType {
+		if err := svc.pubsub.Unsubscribe(ctx, sessionID, topic); err != nil {
+			return errors.Wrap(ErrFailedSubscribe, err)
+		}
 	}
 	return nil
 }
 
 // authorize checks if the authKey is authorized to access the channel
 // and returns the clientID or userID if it is.
-func (svc *adapterService) authorize(ctx context.Context, authKey, domainID, chanID string, msgType connections.ConnType) (string, error) {
+func (svc *adapterService) authorize(ctx context.Context, authKey, domainID, chanID string, msgType connections.ConnType, topicType messaging.TopicType) (string, error) {
 	var clientID, clientType string
 	switch {
 	case strings.HasPrefix(authKey, apiutil.BearerPrefix):
@@ -116,6 +124,11 @@ func (svc *adapterService) authorize(ctx context.Context, authKey, domainID, cha
 		}
 		clientType = policies.ClientType
 		clientID = authnRes.GetId()
+	}
+
+	// Health check topics do not require channel authorization.
+	if topicType == messaging.HealthType {
+		return clientID, nil
 	}
 
 	authzReq := &grpcChannelsV1.AuthzReq{

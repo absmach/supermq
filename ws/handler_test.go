@@ -33,15 +33,18 @@ import (
 )
 
 var (
-	invalidValue  = "invalid"
-	topicMsg      = "/m/%s/c/%s"
-	subtopicMsg   = "/m/%s/c/%s/subtopic"
-	topic         = fmt.Sprintf(topicMsg, domainID, chanID)
-	subtopic      = fmt.Sprintf(subtopicMsg, domainID, chanID)
-	invalidTopic  = invalidValue
-	topics        = []string{topic}
-	payload       = []byte("[{'n':'test-name', 'v': 1.2}]")
-	sessionClient = session.Session{
+	invalidValue   = "invalid"
+	topicMsg       = "/m/%s/c/%s"
+	subtopicMsg    = "/m/%s/c/%s/subtopic"
+	topic          = fmt.Sprintf(topicMsg, domainID, chanID)
+	subtopic       = fmt.Sprintf(subtopicMsg, domainID, chanID)
+	hcTopicFmt     = "/hc/%s"
+	hcTopic        = fmt.Sprintf(hcTopicFmt, domainID)
+	invalidHCTopic = "/hc"
+	invalidTopic   = invalidValue
+	topics         = []string{topic}
+	payload        = []byte("[{'n':'test-name', 'v': 1.2}]")
+	sessionClient  = session.Session{
 		ID:       clientID,
 		Password: []byte(clientKey),
 	}
@@ -50,6 +53,7 @@ var (
 	errClientNotInitialized = errors.New("client is not initialized")
 	errMissingTopicPub      = errors.New("failed to publish due to missing topic")
 	errMissingTopicSub      = errors.New("failed to subscribe due to missing topic")
+	errFailedPublish        = errors.New("failed to publish")
 )
 
 var (
@@ -216,6 +220,30 @@ func TestAuthPublish(t *testing.T) {
 			status:     http.StatusUnauthorized,
 			err:        svcerr.ErrAuthentication,
 		},
+		{
+			desc:       "publish with health check topic successfully",
+			session:    &clientKeySession,
+			topic:      &hcTopic,
+			authKey:    clientKey,
+			payload:    &payload,
+			status:     http.StatusOK,
+			clientType: policies.ClientType,
+			chanID:     "",
+			domainID:   domainID,
+			clientID:   userID,
+			authNRes:   &grpcClientsV1.AuthnRes{Authenticated: true},
+			authNErr:   nil,
+		},
+		{
+			desc:       "publish with invalid health check topic",
+			session:    &clientKeySession,
+			topic:      &invalidHCTopic,
+			authKey:    clientKey,
+			payload:    &payload,
+			status:     http.StatusBadRequest,
+			err:        errors.Wrap(errFailedPublish, messaging.ErrMalformedTopic),
+			clientType: policies.ClientType,
+		},
 	}
 
 	for _, tc := range tests {
@@ -242,7 +270,7 @@ func TestAuthPublish(t *testing.T) {
 			if ok {
 				assert.Equal(t, tc.status, hpe.StatusCode())
 			}
-			assert.True(t, errors.Contains(err, tc.err))
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected: %v, got: %v", tc.err, err))
 			authCall.Unset()
 			clientsCall.Unset()
 			channelsCall.Unset()
@@ -387,6 +415,28 @@ func TestAuthSubscribe(t *testing.T) {
 			status:     http.StatusUnauthorized,
 			err:        svcerr.ErrAuthentication,
 		},
+		{
+			desc:       "subscribe with health check topic successfully",
+			session:    &clientKeySession,
+			topics:     &[]string{hcTopic},
+			authKey:    clientKey,
+			status:     http.StatusOK,
+			clientType: policies.ClientType,
+			chanID:     chanID,
+			domainID:   domainID,
+			clientID:   clientID,
+			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
+			err:        nil,
+		},
+		{
+			desc:       "subscribe with invalid health check topic",
+			session:    &clientKeySession,
+			topics:     &[]string{invalidHCTopic},
+			authKey:    clientKey,
+			status:     http.StatusBadRequest,
+			err:        messaging.ErrMalformedTopic,
+			clientType: policies.ClientType,
+		},
 	}
 
 	for _, tc := range tests {
@@ -413,7 +463,7 @@ func TestAuthSubscribe(t *testing.T) {
 			if ok {
 				assert.Equal(t, tc.status, hpe.StatusCode())
 			}
-			assert.True(t, errors.Contains(err, tc.err))
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected: %v, got: %v", tc.err, err))
 			authCall.Unset()
 			clientsCall.Unset()
 			channelsCall.Unset()
@@ -482,6 +532,19 @@ func TestPublish(t *testing.T) {
 			topic:   topic,
 			payload: payload,
 		},
+		{
+			desc:    "publish with health check topic",
+			session: &sessionClient,
+			topic:   hcTopic,
+			payload: payload,
+		},
+		{
+			desc:    "puvlish with invalid health check topic",
+			session: &sessionClient,
+			topic:   invalidHCTopic,
+			payload: payload,
+			err:     messaging.ErrMalformedTopic,
+		},
 	}
 
 	for _, tc := range cases {
@@ -491,7 +554,7 @@ func TestPublish(t *testing.T) {
 		}
 		repoCall := publisher.On("Publish", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 		err := handler.Publish(ctx, &tc.topic, &tc.payload)
-		assert.True(t, errors.Contains(err, tc.err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected: %v, got: %v", tc.err, err))
 		repoCall.Unset()
 	}
 }

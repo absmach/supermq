@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/absmach/supermq/ws"
 )
 
@@ -25,7 +26,7 @@ func LoggingMiddleware(svc ws.Service, logger *slog.Logger) ws.Service {
 
 // Subscribe logs the subscribe request. It logs the channel and subtopic(if present) and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) Subscribe(ctx context.Context, sessionID, authKey, domainID, chanID, subtopic string, c *ws.Client) (err error) {
+func (lm *loggingMiddleware) Subscribe(ctx context.Context, sessionID, authKey, domainID, chanID, subtopic string, topicType messaging.TopicType, c *ws.Client) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -44,10 +45,10 @@ func (lm *loggingMiddleware) Subscribe(ctx context.Context, sessionID, authKey, 
 		lm.logger.Info("Subscribe completed successfully", args...)
 	}(time.Now())
 
-	return lm.svc.Subscribe(ctx, sessionID, authKey, domainID, chanID, subtopic, c)
+	return lm.svc.Subscribe(ctx, sessionID, authKey, domainID, chanID, subtopic, topicType, c)
 }
 
-func (lm *loggingMiddleware) Unsubscribe(ctx context.Context, sessionID, domainID, chanID, subtopic string) (err error) {
+func (lm *loggingMiddleware) Unsubscribe(ctx context.Context, sessionID, domainID, chanID, subtopic string, topicType messaging.TopicType) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -66,5 +67,5 @@ func (lm *loggingMiddleware) Unsubscribe(ctx context.Context, sessionID, domainI
 		lm.logger.Info("Unsubscribe completed successfully", args...)
 	}(time.Now())
 
-	return lm.svc.Unsubscribe(ctx, sessionID, domainID, chanID, subtopic)
+	return lm.svc.Unsubscribe(ctx, sessionID, domainID, chanID, subtopic, topicType)
 }

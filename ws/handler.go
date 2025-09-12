@@ -84,12 +84,12 @@ func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byt
 		return errClientNotInitialized
 	}
 
-	domainID, channelID, _, _, err := h.parser.ParsePublishTopic(ctx, *topic, true)
+	domainID, channelID, _, topicType, err := h.parser.ParsePublishTopic(ctx, *topic, true)
 	if err != nil {
 		return mgate.NewHTTPProxyError(http.StatusBadRequest, errors.Wrap(errFailedPublish, err))
 	}
 
-	clientID, err := h.authAccess(ctx, string(s.Password), domainID, channelID, connections.Publish)
+	clientID, err := h.authAccess(ctx, string(s.Password), domainID, channelID, connections.Publish, topicType)
 	if err != nil {
 		return err
 	}
@@ -113,11 +113,11 @@ func (h *handler) AuthSubscribe(ctx context.Context, topics *[]string) error {
 	}
 
 	for _, topic := range *topics {
-		domainID, channelID, _, _, err := h.parser.ParseSubscribeTopic(ctx, topic, true)
+		domainID, channelID, _, topicType, err := h.parser.ParseSubscribeTopic(ctx, topic, true)
 		if err != nil {
 			return err
 		}
-		if _, err := h.authAccess(ctx, string(s.Password), domainID, channelID, connections.Subscribe); err != nil {
+		if _, err := h.authAccess(ctx, string(s.Password), domainID, channelID, connections.Subscribe, topicType); err != nil {
 			return err
 		}
 	}
@@ -141,7 +141,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		return nil
 	}
 
-	domainID, channelID, subtopic, _, err := h.parser.ParsePublishTopic(ctx, *topic, true)
+	domainID, channelID, subtopic, topicType, err := h.parser.ParsePublishTopic(ctx, *topic, true)
 	if err != nil {
 		return errors.Wrap(errFailedPublish, err)
 	}
@@ -156,8 +156,11 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		Created:   time.Now().UnixNano(),
 	}
 
-	if err := h.pubsub.Publish(ctx, messaging.EncodeMessageTopic(&msg), &msg); err != nil {
-		return mgate.NewHTTPProxyError(http.StatusInternalServerError, errors.Wrap(errFailedPublishToMsgBroker, err))
+	// Health check topic messages do not get published to message broker.
+	if topicType == messaging.MessageType {
+		if err := h.pubsub.Publish(ctx, messaging.EncodeMessageTopic(&msg), &msg); err != nil {
+			return mgate.NewHTTPProxyError(http.StatusInternalServerError, errors.Wrap(errFailedPublishToMsgBroker, err))
+		}
 	}
 
 	h.logger.Info(fmt.Sprintf(LogInfoPublished, s.ID, *topic))
@@ -185,7 +188,7 @@ func (h *handler) Disconnect(ctx context.Context) error {
 	return nil
 }
 
-func (h *handler) authAccess(ctx context.Context, token, domainID, chanID string, msgType connections.ConnType) (string, error) {
+func (h *handler) authAccess(ctx context.Context, token, domainID, chanID string, msgType connections.ConnType, topicType messaging.TopicType) (string, error) {
 	var clientID, clientType string
 	switch {
 	case strings.HasPrefix(token, apiutil.BearerPrefix):
@@ -207,6 +210,11 @@ func (h *handler) authAccess(ctx context.Context, token, domainID, chanID string
 		}
 		clientType = policies.ClientType
 		clientID = authnRes.GetId()
+	}
+
+	// Health check topics do not require channel authorization.
+	if topicType == messaging.HealthType {
+		return clientID, nil
 	}
 
 	ar := &grpcChannelsV1.AuthzReq{
