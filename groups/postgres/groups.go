@@ -430,7 +430,7 @@ func (repo groupRepository) RetrieveAll(ctx context.Context, pm groups.PageMeta)
 		orderClause = fmt.Sprintf("ORDER BY %s %s, g.id %s", orderBy, dir, dir)
 	}
 
-	q := fmt.Sprintf(`SELECT DISTINCT g.id, g.domain_id, tags, COALESCE(g.parent_id, '') AS parent_id, g.name, g.description,
+	q := fmt.Sprintf(`SELECT g.id, g.domain_id, tags, COALESCE(g.parent_id, '') AS parent_id, g.name, g.description,
 		g.metadata, g.created_at, g.updated_at, g.updated_by, g.status FROM groups g %s %s LIMIT :limit OFFSET :offset;`, query, orderClause)
 
 	dbPageMeta, err := toDBGroupPageMeta(pm)
@@ -454,7 +454,7 @@ func (repo groupRepository) RetrieveAll(ctx context.Context, pm groups.PageMeta)
 
 	cq := fmt.Sprintf(`	SELECT COUNT(*) AS total_count
 						FROM (
-							SELECT DISTINCT g.id, g.domain_id, COALESCE(g.parent_id, '') AS parent_id, g.name, g.tags, g.description,
+							SELECT g.id, g.domain_id, COALESCE(g.parent_id, '') AS parent_id, g.name, g.tags, g.description,
 							g.metadata, g.created_at, g.updated_at, g.updated_by, g.status FROM groups g %s
 						) AS subquery;
 						`, query)
@@ -849,37 +849,54 @@ func (repo groupRepository) RetrieveUserGroups(ctx context.Context, domainID, us
 
 func (repo groupRepository) retrieveGroups(ctx context.Context, domainID, userID, query string, pm groups.PageMeta) (groups.Page, error) {
 	baseQuery := repo.userGroupsBaseQuery(domainID, userID)
+
+	orderClause := ""
+	var orderBy string
+	switch pm.Order {
+	case "name":
+		orderBy = "g.name"
+	case "created_at":
+		orderBy = "g.created_at"
+	case "updated_at", "":
+		orderBy = "COALESCE(g.updated_at, g.created_at)"
+	}
+
+	if orderBy != "" {
+		dir := pm.Dir
+		if dir != api.AscDir && dir != api.DescDir {
+			dir = api.DescDir
+		}
+		orderClause = fmt.Sprintf("ORDER BY %s %s, g.id %s", orderBy, dir, dir)
+	}
+
 	q := fmt.Sprintf(`%s
-					SELECT
-						g.id,
-						g.name,
-						g.domain_id,
-						COALESCE(g.parent_id, '') AS parent_id,
-						g.description,
-						g.tags,
-						g.metadata,
-						g.created_at,
-						g.updated_at,
-						g.updated_by,
-						g.status,
-						g.path as path,
-						g.role_id,
-						g.role_name,
-						g.actions,
-						g.access_type,
-						g.access_provider_id,
-						g.access_provider_role_id,
-						g.access_provider_role_name,
-						g.access_provider_role_actions
-					FROM
-						final_groups g
-					%s
-					ORDER BY
-						g.created_at
-					LIMIT :limit
-					OFFSET :offset;
-					`,
-		baseQuery, query)
+        SELECT
+            g.id,
+            g.name,
+            g.domain_id,
+            COALESCE(g.parent_id, '') AS parent_id,
+            g.description,
+            g.tags,
+            g.metadata,
+            g.created_at,
+            g.updated_at,
+            g.updated_by,
+            g.status,
+            g.path as path,
+            g.role_id,
+            g.role_name,
+            g.actions,
+            g.access_type,
+            g.access_provider_id,
+            g.access_provider_role_id,
+            g.access_provider_role_name,
+            g.access_provider_role_actions
+        FROM final_groups g
+        %s
+        %s
+        LIMIT :limit OFFSET :offset;`,
+		baseQuery, query, orderClause)
+
 	dbPageMeta, err := toDBGroupPageMeta(pm)
 	if err != nil {
 		return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
@@ -900,34 +917,13 @@ func (repo groupRepository) retrieveGroups(ctx context.Context, domainID, userID
 	}
 
 	cq := fmt.Sprintf(`%s
-						SELECT COUNT(*) AS total_count
-						FROM (
-							SELECT
-								g.id,
-								g.name,
-								g.domain_id,
-								COALESCE(g.parent_id, '') AS parent_id,
-								g.description,
-								g.tags,
-								g.metadata,
-								g.created_at,
-								g.updated_at,
-								g.updated_by,
-								g.status,
-								g.path as path,
-								g.role_id,
-								g.role_name,
-								g.actions,
-								g.access_type,
-								g.access_provider_id,
-								g.access_provider_role_id,
-								g.access_provider_role_name,
-								g.access_provider_role_actions
-							FROM
-								final_groups g
-							%s
-						) AS subquery;
-						`, baseQuery, query)
+        SELECT COUNT(*) AS total_count
+        FROM (
+            SELECT g.id
+            FROM final_groups g
+            %s
+        ) AS subquery;`,
+		baseQuery, query)
 
 	total, err := postgres.Total(ctx, repo.db, cq, dbPageMeta)
 	if err != nil {
