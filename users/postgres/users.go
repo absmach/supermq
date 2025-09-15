@@ -669,7 +669,6 @@ func PageQuery(pm users.Page) (string, error) {
 }
 
 func applyOrdering(emq string, pm users.Page) string {
-	
 	col := "COALESCE(u.updated_at, u.created_at)"
 
 	switch pm.Order {

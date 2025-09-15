@@ -259,11 +259,10 @@ func (repo domainRepo) RetrieveAllDomainsByIDs(ctx context.Context, pm domains.P
 	baseQ := `SELECT d.id as id, d.name as name, d.tags as tags, d.route as route, d.metadata as metadata,
 		d.created_at as created_at, d.updated_at as updated_at, d.updated_by as updated_by,
 		d.created_by as created_by, d.status as status FROM domains d`
-	
-	squery := applyOrdering(query, pm)
-	
-	q = fmt.Sprintf("%s %s  LIMIT %d OFFSET %d;", baseQ, squery, pm.Limit, pm.Offset)
 
+	squery := applyOrdering(query, pm)
+
+	q = fmt.Sprintf("%s %s  LIMIT %d OFFSET %d;", baseQ, squery, pm.Limit, pm.Offset)
 
 	dbPage, err := toDBDomainsPage(pm)
 	if err != nil {
