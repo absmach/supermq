@@ -117,28 +117,11 @@ func (repo *userRepo) RetrieveAll(ctx context.Context, pm users.Page) (users.Use
 		return users.UsersPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
 
-	orderClause := ""
-	switch pm.Order {
-	case "first_name":
-		orderClause = "ORDER BY u.first_name"
-	case "last_name":
-		orderClause = "ORDER BY u.last_name"
-	case "username":
-		orderClause = "ORDER BY u.username"
-	case "email":
-		orderClause = "ORDER BY u.email"
-	case "created_at":
-		orderClause = "ORDER BY u.created_at"
-	case "updated_at":
-		orderClause = "ORDER BY COALESCE(u.updated_at, u.created_at)"
-	}
-	if orderClause != "" && (pm.Dir == api.AscDir || pm.Dir == api.DescDir) {
-		orderClause = fmt.Sprintf("%s %s, u.id %s", orderClause, pm.Dir, pm.Dir)
-	}
+	squery := applyOrdering(query, pm)
 
 	q := fmt.Sprintf(`SELECT u.id, u.tags, u.email, u.metadata, u.status, u.role, u.first_name, u.last_name, u.username,
     u.created_at, u.updated_at, u.profile_picture, COALESCE(u.updated_by, '') AS updated_by, u.verified_at
-    FROM users u %s %s LIMIT :limit OFFSET :offset;`, query, orderClause)
+    FROM users u %s LIMIT :limit OFFSET :offset;`, squery)
 
 	dbPage, err := ToDBUsersPage(pm)
 	if err != nil {
@@ -385,11 +368,10 @@ func (repo *userRepo) RetrieveAllByIDs(ctx context.Context, pm users.Page) (user
 	if err != nil {
 		return users.UsersPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
-	query = applyOrdering(query, pm)
+	squery := applyOrdering(query, pm)
 
 	q := fmt.Sprintf(`SELECT u.id, u.username, u.tags, u.email, u.metadata, u.status, u.role, u.first_name, u.last_name,
-                    u.created_at, u.updated_at, COALESCE(u.updated_by, '') AS updated_by FROM users u %s ORDER BY u.created_at LIMIT :limit OFFSET :offset;`, query)
-
+                    u.created_at, u.updated_at, COALESCE(u.updated_by, '') AS updated_by FROM users u %s LIMIT :limit OFFSET :offset;`, squery)
 	dbPage, err := ToDBUsersPage(pm)
 	if err != nil {
 		return users.UsersPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
@@ -687,14 +669,30 @@ func PageQuery(pm users.Page) (string, error) {
 }
 
 func applyOrdering(emq string, pm users.Page) string {
+	
+	col := "COALESCE(u.updated_at, u.created_at)"
+
 	switch pm.Order {
-	case "username", "first_name", "email", "last_name", "created_at", "updated_at":
-		emq = fmt.Sprintf("%s ORDER BY %s", emq, pm.Order)
-		if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
-			emq = fmt.Sprintf("%s %s", emq, pm.Dir)
-		}
+	case "username":
+		col = "u.username"
+	case "first_name":
+		col = "u.first_name"
+	case "last_name":
+		col = "u.last_name"
+	case "email":
+		col = "u.email"
+	case "created_at":
+		col = "u.created_at"
+	case "updated_at", "":
+		col = "COALESCE(u.updated_at, u.created_at)"
 	}
-	return emq
+
+	dir := pm.Dir
+	if dir != api.AscDir && dir != api.DescDir {
+		dir = api.DescDir
+	}
+
+	return fmt.Sprintf("%s ORDER BY %s %s, u.id %s", emq, col, dir, dir)
 }
 
 func stringToNullString(s string) sql.NullString {

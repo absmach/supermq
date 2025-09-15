@@ -256,9 +256,14 @@ func (repo domainRepo) RetrieveAllDomainsByIDs(ctx context.Context, pm domains.P
 		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
 	}
 
-	q = `SELECT d.id as id, d.name as name, d.tags as tags, d.route as route, d.metadata as metadata, d.created_at as created_at, d.updated_at as updated_at, d.updated_by as updated_by, d.created_by as created_by, d.status as status
-	FROM domains d`
-	q = fmt.Sprintf("%s %s  LIMIT %d OFFSET %d;", q, query, pm.Limit, pm.Offset)
+	baseQ := `SELECT d.id as id, d.name as name, d.tags as tags, d.route as route, d.metadata as metadata,
+		d.created_at as created_at, d.updated_at as updated_at, d.updated_by as updated_by,
+		d.created_by as created_by, d.status as status FROM domains d`
+	
+	squery := applyOrdering(query, pm)
+	
+	q = fmt.Sprintf("%s %s  LIMIT %d OFFSET %d;", baseQ, squery, pm.Limit, pm.Offset)
+
 
 	dbPage, err := toDBDomainsPage(pm)
 	if err != nil {
@@ -521,22 +526,23 @@ func (repo domainRepo) processRows(rows *sqlx.Rows) ([]domains.Domain, error) {
 }
 
 func applyOrdering(emq string, pm domains.Page) string {
-	var orderBy string
+	col := "COALESCE(d.updated_at, d.created_at)"
+
 	switch pm.Order {
 	case "name":
-		orderBy = "d.name"
+		col = "d.name"
 	case "created_at":
-		orderBy = "d.created_at"
-	case "updated_at":
-		orderBy = "COALESCE(d.updated_at, d.created_at)"
-	default:
-		return emq
+		col = "d.created_at"
+	case "updated_at", "":
+		col = "COALESCE(d.updated_at, d.created_at)"
 	}
 
-	if pm.Dir == api.AscDir || pm.Dir == api.DescDir {
-		return fmt.Sprintf("%s ORDER BY %s %s, d.id %s", emq, orderBy, pm.Dir, pm.Dir)
+	dir := pm.Dir
+	if dir != api.AscDir && dir != api.DescDir {
+		dir = api.DescDir
 	}
-	return fmt.Sprintf("%s ORDER BY %s", emq, orderBy)
+
+	return fmt.Sprintf("%s ORDER BY %s %s, d.id %s", emq, col, dir, dir)
 }
 
 type dbDomain struct {
