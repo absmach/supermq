@@ -320,9 +320,10 @@ func TestRetrieveAll(t *testing.T) {
 				Username: namesgen.Generate(),
 				Secret:   "",
 			},
-			Metadata: users.Metadata{},
-			Status:   users.EnabledStatus,
-			Tags:     []string{"tag1"},
+			Metadata:  users.Metadata{},
+			Status:    users.EnabledStatus,
+			Tags:      []string{"tag1"},
+			CreatedAt: time.Now().UTC().Truncate(time.Millisecond),
 		}
 		if i%50 == 0 {
 			user.Metadata = map[string]any{
@@ -352,6 +353,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:  50,
 				Role:   users.AllRole,
 				Status: users.AllStatus,
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -370,6 +373,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:  200,
 				Role:   users.AllRole,
 				Status: users.AllStatus,
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -388,6 +393,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:  50,
 				Role:   users.AllRole,
 				Status: users.AllStatus,
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -423,6 +430,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:  1000,
 				Role:   users.AllRole,
 				Status: users.AllStatus,
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -455,6 +464,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:  3,
 				Role:   users.AllRole,
 				Status: users.AllStatus,
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -493,6 +504,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:     3,
 				Role:      users.AllRole,
 				Status:    users.AllStatus,
+				Order:     "created_at",
+				Dir:       "asc",
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -512,6 +525,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:    3,
 				Role:     users.AllRole,
 				Status:   users.AllStatus,
+				Order:    "created_at",
+				Dir:      "asc",
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -530,6 +545,8 @@ func TestRetrieveAll(t *testing.T) {
 				Offset: 0,
 				Limit:  200,
 				Role:   users.AllRole,
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -548,6 +565,8 @@ func TestRetrieveAll(t *testing.T) {
 				Offset: 0,
 				Limit:  200,
 				Role:   users.AllRole,
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -565,6 +584,8 @@ func TestRetrieveAll(t *testing.T) {
 				Offset: 0,
 				Limit:  200,
 				Role:   users.AllRole,
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -622,6 +643,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:  200,
 				Role:   users.AllRole,
 				Status: users.AllStatus,
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -661,6 +684,8 @@ func TestRetrieveAll(t *testing.T) {
 				Offset: 0,
 				Limit:  200,
 				Status: users.AllStatus,
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -1733,6 +1758,8 @@ func TestRetrieveByIDs(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 				IDs:    getIDs(items[0:3]),
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			response: users.UsersPage{
 				Page: users.Page{
@@ -1765,6 +1792,8 @@ func TestRetrieveByIDs(t *testing.T) {
 			page: users.Page{
 				Offset: 10,
 				IDs:    getIDs(items[0:20]),
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			response: users.UsersPage{
 				Page: users.Page{
@@ -1781,6 +1810,8 @@ func TestRetrieveByIDs(t *testing.T) {
 			page: users.Page{
 				Limit: 10,
 				IDs:   getIDs(items[0:20]),
+				Order: "created_at",
+				Dir:   "asc",
 			},
 			response: users.UsersPage{
 				Page: users.Page{
@@ -1815,6 +1846,8 @@ func TestRetrieveByIDs(t *testing.T) {
 				Offset: 15,
 				Limit:  10,
 				IDs:    getIDs(items[0:20]),
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			response: users.UsersPage{
 				Page: users.Page{
@@ -1850,6 +1883,8 @@ func TestRetrieveByIDs(t *testing.T) {
 				Limit:     10,
 				FirstName: items[0].FirstName,
 				IDs:       getIDs(items[0:20]),
+				Order:     "created_at",
+				Dir:       "asc",
 			},
 			response: users.UsersPage{
 				Page: users.Page{
