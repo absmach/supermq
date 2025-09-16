@@ -181,12 +181,12 @@ func main() {
 
 	svc := coap.New(clientsClient, channelsClient, nps)
 
-	svc = middleware.Tracing(tracer, svc)
+	svc = middleware.TracingMiddleware(tracer, svc)
 
-	svc = middleware.Logging(svc, logger)
+	svc = middleware.LoggingMiddleware(svc, logger)
 
 	counter, latency := prometheus.MakeMetrics(svcName, "api")
-	svc = middleware.Metrics(svc, counter, latency)
+	svc = middleware.MetricsMiddleware(svc, counter, latency)
 
 	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(cfg.InstanceID), logger)
 

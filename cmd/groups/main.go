@@ -328,16 +328,16 @@ func newService(ctx context.Context, authz smqauthz.Authorization, policy polici
 		return nil, nil, err
 	}
 
-	svc, err = middleware.Authorization(policies.GroupType, svc, repo, authz, groups.NewOperationPermissionMap(), groups.NewRolesOperationPermissionMap(),
+	svc, err = middleware.AuthorizationMiddleware(policies.GroupType, svc, repo, authz, groups.NewOperationPermissionMap(), groups.NewRolesOperationPermissionMap(),
 		groups.NewExternalOperationPermissionMap(), callout)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	svc = middleware.Tracing(svc, tracer)
-	svc = middleware.Logging(svc, logger)
+	svc = middleware.TracingMiddleware(svc, tracer)
+	svc = middleware.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics("groups", "api")
-	svc = middleware.Metrics(svc, counter, latency)
+	svc = middleware.MetricsMiddleware(svc, counter, latency)
 
 	psvc := pgroups.New(repo)
 	return svc, psvc, err

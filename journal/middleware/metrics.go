@@ -20,8 +20,8 @@ type metricsMiddleware struct {
 	service journal.Service
 }
 
-// Metrics returns new message repository with Save method wrapped to expose metrics.
-func Metrics(service journal.Service, counter metrics.Counter, latency metrics.Histogram) journal.Service {
+// MetricsMiddleware returns new message repository with Save method wrapped to expose metrics.
+func MetricsMiddleware(service journal.Service, counter metrics.Counter, latency metrics.Histogram) journal.Service {
 	return &metricsMiddleware{
 		counter: counter,
 		latency: latency,

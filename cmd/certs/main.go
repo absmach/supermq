@@ -193,10 +193,10 @@ func newService(db *sqlx.DB, dbConfig pgclient.Config, tracer trace.Tracer, logg
 	sdk := mgsdk.NewSDK(config)
 	repo := postgres.NewRepository(database)
 	svc := certs.New(sdk, repo, pkiAgent)
-	svc = middleware.Logging(svc, logger)
+	svc = middleware.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics(svcName, "api")
-	svc = middleware.Metrics(svc, counter, latency)
-	svc = middleware.Tracing(svc, tracer)
+	svc = middleware.MetricsMiddleware(svc, counter, latency)
+	svc = middleware.TracingMiddleware(svc, tracer)
 
 	return svc
 }

@@ -24,8 +24,8 @@ type loggingMiddleware struct {
 	rmMW.RoleManagerLoggingMiddleware
 }
 
-// Logging adds logging facilities to the core service.
-func Logging(svc clients.Service, logger *slog.Logger) clients.Service {
+// LoggingMiddleware adds logging facilities to the core service.
+func LoggingMiddleware(svc clients.Service, logger *slog.Logger) clients.Service {
 	return &loggingMiddleware{
 		logger:                       logger,
 		svc:                          svc,

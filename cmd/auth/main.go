@@ -244,10 +244,10 @@ func newService(db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.
 	t := jwt.New([]byte(cfg.SecretKey))
 
 	svc := auth.New(keysRepo, patsRepo, nil, hasher, idProvider, t, pEvaluator, pService, cfg.AccessDuration, cfg.RefreshDuration, cfg.InvitationDuration)
-	svc = middleware.Logging(svc, logger)
+	svc = middleware.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics("auth", "api")
-	svc = middleware.Metrics(svc, counter, latency)
-	svc = middleware.Tracing(svc, tracer)
+	svc = middleware.MetricsMiddleware(svc, counter, latency)
+	svc = middleware.TracingMiddleware(svc, tracer)
 
 	return svc, nil
 }

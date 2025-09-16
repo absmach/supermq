@@ -23,8 +23,8 @@ type tracingMiddleware struct {
 	rmTrace.RoleManagerTracing
 }
 
-// Tracing returns a new domains service with tracing capabilities.
-func Tracing(svc domains.Service, tracer trace.Tracer) domains.Service {
+// TracingMiddleware returns a new domains service with tracing capabilities.
+func TracingMiddleware(svc domains.Service, tracer trace.Tracer) domains.Service {
 	return &tracingMiddleware{tracer, svc, rmTrace.NewRoleManagerTracing("domain", svc, tracer)}
 }
 

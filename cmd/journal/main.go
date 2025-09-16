@@ -201,11 +201,11 @@ func newService(db *sqlx.DB, dbConfig pgclient.Config, authz smqauthz.Authorizat
 	idp := uuid.New()
 
 	svc := journal.NewService(idp, repo)
-	svc = middleware.Authorization(svc, authz)
-	svc = middleware.Logging(svc, logger)
+	svc = middleware.AuthorizationMiddleware(svc, authz)
+	svc = middleware.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics("journal", "journal_writer")
-	svc = middleware.Metrics(svc, counter, latency)
-	svc = middleware.Tracing(svc, tracer)
+	svc = middleware.MetricsMiddleware(svc, counter, latency)
+	svc = middleware.TracingMiddleware(svc, tracer)
 
 	return svc
 }
