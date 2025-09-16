@@ -702,6 +702,7 @@ func TestListDomains(t *testing.T) {
 			CreatedBy: userID,
 			UpdatedBy: userID,
 			Status:    domains.EnabledStatus,
+			CreatedAt: time.Now().UTC().Truncate(time.Millisecond),
 		}
 		if i%5 == 0 {
 			domain.Status = domains.DisabledStatus
@@ -726,6 +727,8 @@ func TestListDomains(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 				Status: domains.AllStatus,
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			response: domains.DomainsPage{
 				Total:   10,
@@ -741,6 +744,8 @@ func TestListDomains(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 				Status: domains.EnabledStatus,
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			response: domains.DomainsPage{
 				Total:   8,
@@ -757,6 +762,8 @@ func TestListDomains(t *testing.T) {
 				Limit:  10,
 				Name:   items[0].Name,
 				Status: domains.AllStatus,
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			response: domains.DomainsPage{
 				Total:   1,
@@ -772,6 +779,8 @@ func TestListDomains(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 				Status: domains.DisabledStatus,
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			response: domains.DomainsPage{
 				Total:   2,
@@ -788,6 +797,8 @@ func TestListDomains(t *testing.T) {
 				Limit:  10,
 				Tag:    "admin",
 				Status: domains.AllStatus,
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			response: domains.DomainsPage{
 				Total:   2,
@@ -822,6 +833,8 @@ func TestListDomains(t *testing.T) {
 					"test1": "test1",
 				},
 				Status: domains.AllStatus,
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			response: domains.DomainsPage{
 				Total:   2,
