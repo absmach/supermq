@@ -285,6 +285,7 @@ func TestRetrieveAllByIDs(t *testing.T) {
 			CreatedBy: userID,
 			UpdatedBy: userID,
 			Status:    domains.EnabledStatus,
+			CreatedAt: time.Now().UTC().Truncate(time.Millisecond),
 		}
 		if i%5 == 0 {
 			domain.Status = domains.DisabledStatus
@@ -310,6 +311,8 @@ func TestRetrieveAllByIDs(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 				IDs:    []string{items[1].ID, items[2].ID},
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			response: domains.DomainsPage{
 				Total:   2,
@@ -369,6 +372,8 @@ func TestRetrieveAllByIDs(t *testing.T) {
 				Limit:  10,
 				IDs:    []string{items[0].ID, items[1].ID},
 				Status: 5,
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			response: domains.DomainsPage{
 				Total:   2,
@@ -402,6 +407,8 @@ func TestRetrieveAllByIDs(t *testing.T) {
 					"test": "test",
 				},
 				Status: domains.EnabledStatus,
+				Order:  "created_at",
+				Dir:    "asc",
 			},
 			response: domains.DomainsPage{
 				Total:   2,
