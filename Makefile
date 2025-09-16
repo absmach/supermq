@@ -255,6 +255,9 @@ endif
 endif
 endif
 
+fetch_certs:
+	@./scripts/certs.sh
+
 run: check_certs
 	docker compose -f docker/docker-compose.yaml --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
 
