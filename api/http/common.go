@@ -13,7 +13,6 @@ import (
 
 	"github.com/absmach/supermq"
 	apiutil "github.com/absmach/supermq/api/http/util"
-	"github.com/absmach/supermq/certs"
 	"github.com/absmach/supermq/clients"
 	"github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/pkg/errors"
@@ -248,7 +247,6 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		errors.Contains(err, apiutil.ErrEmptySearchQuery),
 		errors.Contains(err, apiutil.ErrLenSearchQuery),
 		errors.Contains(err, apiutil.ErrMissingDomainID),
-		errors.Contains(err, certs.ErrFailedReadFromPKI),
 		errors.Contains(err, apiutil.ErrMissingUserID),
 		errors.Contains(err, apiutil.ErrMissingPATID),
 		errors.Contains(err, apiutil.ErrMissingUsername),

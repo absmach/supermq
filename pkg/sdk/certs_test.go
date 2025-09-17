@@ -12,8 +12,8 @@ import (
 	"time"
 
 	apiutil "github.com/absmach/supermq/api/http/util"
-	"github.com/absmach/supermq/certs"
-	httpapi "github.com/absmach/supermq/certs/api"
+	"github.com/absmach/certs"
+	httpapi "github.com/absmach/certs/api"
 	"github.com/absmach/supermq/certs/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqlog "github.com/absmach/supermq/logger"

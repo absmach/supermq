@@ -1,0 +1,5 @@
+FROM scratch
+ARG SVC
+COPY --from=alpine:latest /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY ./build/$SVC /exe
+ENTRYPOINT ["/exe"]

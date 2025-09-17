@@ -1,0 +1,114 @@
+# Copyright (c) Abstract Machines
+# SPDX-License-Identifier: Apache-2.0
+
+networks:
+  certs-base-net:
+    driver: bridge
+
+volumes:
+  openbao-data:
+  certs-db-volume:
+
+services:
+  certs:
+    image: ghcr.io/absmach/certs:${AM_CERTS_RELEASE_TAG}
+    container_name: certs
+    depends_on:
+      - openbao
+      - certs-db
+    restart: always
+    networks:
+      - certs-base-net
+    environment:
+      AM_CERTS_LOG_LEVEL: ${AM_CERTS_LOG_LEVEL}
+      AM_CERTS_HTTP_HOST: ${AM_CERTS_HTTP_HOST}
+      AM_CERTS_HTTP_PORT: ${AM_CERTS_HTTP_PORT}
+      AM_CERTS_GRPC_HOST: ${AM_CERTS_GRPC_HOST}
+      AM_CERTS_GRPC_PORT: ${AM_CERTS_GRPC_PORT}
+      AM_JAEGER_URL: ${AM_JAEGER_URL}
+      AM_JAEGER_TRACE_RATIO: ${AM_JAEGER_TRACE_RATIO}
+      AM_CERTS_OPENBAO_HOST: ${AM_CERTS_OPENBAO_HOST}
+      AM_CERTS_OPENBAO_APP_ROLE: ${AM_CERTS_OPENBAO_APP_ROLE}
+      AM_CERTS_OPENBAO_APP_SECRET: ${AM_CERTS_OPENBAO_APP_SECRET}
+      AM_CERTS_OPENBAO_NAMESPACE: ${AM_CERTS_OPENBAO_NAMESPACE}
+      AM_CERTS_OPENBAO_PKI_PATH: ${AM_CERTS_OPENBAO_PKI_PATH}
+      AM_CERTS_OPENBAO_ROLE: ${AM_CERTS_OPENBAO_ROLE}
+      AM_CERTS_DB_HOST: ${AM_CERTS_DB_HOST}
+      AM_CERTS_DB_PORT: ${AM_CERTS_DB_PORT}
+      AM_CERTS_DB_USER: ${AM_CERTS_DB_USER}
+      AM_CERTS_DB_PASS: ${AM_CERTS_DB_PASS}
+      AM_CERTS_DB: ${AM_CERTS_DB}
+      AM_CERTS_DB_SSL_MODE: ${AM_CERTS_DB_SSL_MODE}
+    ports:
+      - ${AM_CERTS_HTTP_PORT}:${AM_CERTS_HTTP_PORT}
+      - ${AM_CERTS_GRPC_PORT}:${AM_CERTS_GRPC_PORT}
+
+  certs-db:
+    image: postgres:16.2-alpine
+    container_name: certs-db
+    restart: on-failure
+    networks:
+      - certs-base-net
+    command: postgres -c "max_connections=${AM_CERTS_DB_MAX_CONNECTIONS}"
+    environment:
+      POSTGRES_USER: ${AM_CERTS_DB_USER}
+      POSTGRES_PASSWORD: ${AM_CERTS_DB_PASS}
+      POSTGRES_DB: ${AM_CERTS_DB}
+    ports:
+      - 5454:5432
+    volumes:
+      - certs-db-volume:/var/lib/postgresql/data
+
+  openbao:
+    image: openbao/openbao:2.4.0
+    container_name: certs-openbao
+    restart: on-failure
+    networks:
+      - certs-base-net
+    ports:
+      - 8200:8200
+    environment:
+      - BAO_ADDR=http://127.0.0.1:8200
+      - BAO_LOG_LEVEL=info
+      - AM_OPENBAO_PKI_ROLE=${AM_CERTS_OPENBAO_ROLE}
+      - AM_OPENBAO_APP_ROLE=${AM_CERTS_OPENBAO_APP_ROLE}
+      - AM_OPENBAO_APP_SECRET=${AM_CERTS_OPENBAO_APP_SECRET}
+      - AM_OPENBAO_NAMESPACE=${AM_CERTS_OPENBAO_NAMESPACE}
+      - AM_OPENBAO_PKI_CA_CN=${AM_OPENBAO_PKI_CA_CN}
+      - AM_OPENBAO_PKI_CA_OU=${AM_OPENBAO_PKI_CA_OU}
+      - AM_OPENBAO_PKI_CA_O=${AM_OPENBAO_PKI_CA_O}
+      - AM_OPENBAO_PKI_CA_C=${AM_OPENBAO_PKI_CA_C}
+      - AM_OPENBAO_PKI_CA_L=${AM_OPENBAO_PKI_CA_L}
+      - AM_OPENBAO_PKI_CA_ST=${AM_OPENBAO_PKI_CA_ST}
+      - AM_OPENBAO_PKI_CA_ADDR=${AM_OPENBAO_PKI_CA_ADDR}
+      - AM_OPENBAO_PKI_CA_PO=${AM_OPENBAO_PKI_CA_PO}
+      - AM_OPENBAO_PKI_CA_DNS_NAMES=${AM_OPENBAO_PKI_CA_DNS_NAMES}
+      - AM_OPENBAO_PKI_CA_IP_ADDRESSES=${AM_OPENBAO_PKI_CA_IP_ADDRESSES}
+      - AM_OPENBAO_PKI_CA_URI_SANS=${AM_OPENBAO_PKI_CA_URI_SANS}
+      - AM_OPENBAO_PKI_CA_EMAIL_ADDRESSES=${AM_OPENBAO_PKI_CA_EMAIL_ADDRESSES}
+      - AM_OPENBAO_UNSEAL_KEY_1=${AM_OPENBAO_UNSEAL_KEY_1}
+      - AM_OPENBAO_UNSEAL_KEY_2=${AM_OPENBAO_UNSEAL_KEY_2}
+      - AM_OPENBAO_UNSEAL_KEY_3=${AM_OPENBAO_UNSEAL_KEY_3}
+      - AM_OPENBAO_ROOT_TOKEN=${AM_OPENBAO_ROOT_TOKEN}
+    cap_add:
+      - IPC_LOCK
+    mem_swappiness: 0
+    volumes:
+      - openbao-data:/opt/openbao/data
+      - openbao-data:/opt/openbao/config
+      - ./openbao-entrypoint.sh:/entrypoint.sh
+    entrypoint: /bin/sh
+    command: /entrypoint.sh
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.53.0
+    container_name: certs-jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: ${AM_JAEGER_COLLECTOR_OTLP_ENABLED}
+    command: --memory.max-traces ${AM_JAEGER_MEMORY_MAX_TRACES}
+    restart: on-failure
+    networks:
+      - certs-base-net
+    ports:
+      - ${AM_JAEGER_FRONTEND}:${AM_JAEGER_FRONTEND}
+      - ${AM_JAEGER_OLTP_HTTP_PORT}:${AM_JAEGER_OLTP_HTTP_PORT}

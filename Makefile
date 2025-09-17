@@ -3,7 +3,7 @@
 
 SMQ_DOCKER_IMAGE_NAME_PREFIX ?= supermq
 BUILD_DIR ?= build
-SERVICES = auth users clients groups channels domains http coap ws cli mqtt certs journal
+SERVICES = auth users clients groups channels domains http coap ws cli mqtt journal
 TEST_API_SERVICES = journal auth certs http clients users channels groups domains
 TEST_API = $(addprefix test_api_,$(TEST_API_SERVICES))
 DOCKERS = $(addprefix docker_,$(SERVICES))
@@ -259,12 +259,12 @@ fetch_certs:
 	@./scripts/certs.sh
 
 run: check_certs
-	docker compose -f docker/docker-compose.yaml --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
+	docker compose -f docker/docker-compose.yaml -f docker/addons/certs/docker-compose.yml -f docker/certs-docker-compose-override.yml --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
 
 run_addons: check_certs
 	$(foreach SVC,$(RUN_ADDON_ARGS),$(if $(filter $(SVC),$(ADDON_SERVICES) $(EXTERNAL_SERVICES)),,$(error Invalid Service $(SVC))))
 	@for SVC in $(RUN_ADDON_ARGS); do \
-		SMQ_ADDONS_CERTS_PATH_PREFIX="../."  docker compose -f docker/addons/$$SVC/docker-compose.yaml -p $(DOCKER_PROJECT) --env-file ./docker/.env $(DOCKER_COMPOSE_COMMAND) $(args) & \
+		SMQ_ADDONS_CERTS_PATH_PREFIX="../."  docker compose -f docker/addons/$$SVC/docker-compose.yml --env-file ./docker/.env --env-file ./docker/addons/$$SVC/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args) & \
 	done
 
 run_live: check_certs

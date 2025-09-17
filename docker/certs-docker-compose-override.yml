@@ -1,0 +1,25 @@
+# Copyright (c) Abstract Machines
+# SPDX-License-Identifier: Apache-2.0
+
+services:
+  certs:
+    environment: !override
+      AM_CERTS_HTTP_HOST: certs
+      AM_CERTS_HTTP_PORT: 9019
+    networks: !override
+      - supermq-base-net
+
+  certs-db:
+    networks: !override
+      - supermq-base-net
+
+  openbao:
+    networks: !override
+      - supermq-base-net
+
+  jaeger:
+    ports: !override
+      - ${SMQ_CERTS_JAEGER_FRONTEND}:16686  # Avoid conflict with main jaeger frontend port (16686)
+      - ${SMQ_CERTS_JAEGER_OLTP_HTTP}:4318    # Avoid conflict with main jaeger OTLP HTTP port (4318)
+    networks: !override
+      - supermq-base-net
