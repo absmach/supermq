@@ -30,6 +30,7 @@ require (
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/ory/dockertest/v3 v3.12.0
 	github.com/pelletier/go-toml v1.9.5
+	github.com/pion/dtls/v3 v3.0.7
 	github.com/plgd-dev/go-coap/v3 v3.4.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/rabbitmq/amqp091-go v1.10.0
@@ -81,7 +82,6 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
-	github.com/felixgateru/mgate v0.0.0-20250911063028-9ce871ebc02c // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
 	github.com/go-errors/errors v1.5.1 // indirect
@@ -123,8 +123,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/opencontainers/runc v1.2.3 // indirect
-	github.com/pion/dtls/v3 v3.0.6 // indirect
-	github.com/pion/logging v0.2.3 // indirect
+	github.com/pion/logging v0.2.4 // indirect
 	github.com/pion/transport/v3 v3.0.7 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240917153116-6f2963f01587 // indirect

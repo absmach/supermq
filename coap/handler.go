@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"strings"
 
+	mgate "github.com/absmach/mgate/pkg/http"
+	"github.com/absmach/mgate/pkg/session"
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
@@ -18,8 +20,6 @@ import (
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/absmach/supermq/pkg/policies"
-	mgate "github.com/felixgateru/mgate/pkg/http"
-	"github.com/felixgateru/mgate/pkg/session"
 )
 
 var _ session.Handler = (*handler)(nil)
