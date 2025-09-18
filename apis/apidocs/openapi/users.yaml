@@ -75,6 +75,8 @@ paths:
       parameters:
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Order"
+        - $ref: "#/components/parameters/Direction"
         - $ref: "#/components/parameters/Metadata"
         - $ref: "#/components/parameters/Status"
         - $ref: "#/components/parameters/FirstName"
@@ -82,6 +84,7 @@ paths:
         - $ref: "#/components/parameters/Username"
         - $ref: "#/components/parameters/Email"
         - $ref: "#/components/parameters/Tag"
+        - $ref: "#/components/parameters/OnlyTotal"
       security:
         - bearerAuth: []
       responses:
@@ -1287,6 +1290,36 @@ components:
         minimum: 0
       required: false
       example: "0"
+
+    Order:
+      name: order
+      description: Field by which to order the results
+      in: query
+      schema:
+        type: string
+      required: false
+      example: created_at
+
+    Direction:
+      name: dir
+      description: Direction of ordering the results.
+      in: query
+      schema:
+        type: string
+        enum:
+          - asc
+          - desc
+      required: false
+      example: desc
+
+    OnlyTotal:
+      name: only_total
+      description: If true, the response will contain only the total number of users that match the query parameters.
+      in: query
+      schema:
+        type: boolean
+        default: false
+      required: false
 
     VerificationToken:
       name: token

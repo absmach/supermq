@@ -88,11 +88,20 @@ paths:
         - $ref: "auth.yaml#/components/parameters/DomainID"
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Order"
+        - $ref: "#/components/parameters/DirectionOrder"
         - $ref: "#/components/parameters/Level"
         - $ref: "#/components/parameters/Tree"
         - $ref: "#/components/parameters/Metadata"
         - $ref: "#/components/parameters/GroupName"
         - $ref: "#/components/parameters/RootGroup"
+        - $ref: "#/components/parameters/Status"
+        - $ref: "#/components/parameters/ID" 
+        - $ref: "#/components/parameters/Actions"
+        - $ref: "#/components/parameters/RoleID"
+        - $ref: "#/components/parameters/RoleName"
+        - $ref: "#/components/parameters/AccessType"
+        - $ref: "#/components/parameters/OnlyTotal" 
       responses:
         "200":
           $ref: "#/components/responses/GroupPageRes"
@@ -233,7 +242,6 @@ paths:
           description: Database can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
-
 
   /{domainID}/groups/{groupID}/enable:
     post:
@@ -1356,11 +1364,14 @@ components:
 
     Status:
       name: status
-      description: User account status.
+      description: Lists groups with the given status.
       in: query
       schema:
         type: string
-        default: enabled
+        enum:
+          - enabled
+          - disabled
+          - all
       required: false
       example: enabled
 
@@ -1527,6 +1538,99 @@ components:
         minimum: 0
       required: false
       example: "0"
+    
+    Order: 
+      name: order
+      description: Field by which to order the results
+      in: query
+      schema:
+        type: string
+      required: false
+      example: created_at
+    
+    DirectionOrder: 
+      name: order
+      description: Direction of ordering the results.
+      in: query
+      schema:
+        type: string
+        enum:
+          - asc
+          - desc
+      required: false
+      example: desc
+
+    ID: 
+      name: id
+      description: List groups with the given ID.
+      in: query
+      schema:
+        type: string
+        format: uuid
+      required: false
+      example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+
+    Actions:
+      name: actions
+      description: Lists groups that the user has the given actions on. Multiple actions can be specified separated by comma.
+      in: query
+      schema:
+        type: string
+      required: false
+      example: "action1,action2"
+
+    RoleID:
+      name: role_id
+      description: List groups that the user has the given role ID on.
+      in: query
+      schema:
+        type: string
+        format: uuid
+      required: false
+      example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+    
+    RoleName:
+      name: role_name
+      description: List groups that the user has the given role name on.
+      in: query
+      schema:
+        type: string
+      required: false
+      example: admin
+    
+    AccessType: 
+      name: access_type
+      description: Type of access the user has on the group.
+      in: query
+      schema:
+        type: string
+        enum:
+          - direct
+          - domain
+          - indirect
+          - indirect_group
+      required: false
+      example: direct
+    
+    OnlyTotal: 
+      name: only_total
+      description: If true, the response will contain only the total number of groups that match the query parameters.
+      in: query
+      schema:
+        type: boolean
+        default: false
+      required: false
+    
+    User:
+      name: user
+      description: If provided lists groups associated with a user with the provided ID. Only available for admin users.
+      in: query
+      schema:
+        type: string
+        format: uuid
+        minLength: 36
+      required: false
+      example: bb7edb32-2eac-4aad-aebe-ed96fe073879
 
   requestBodies:
     GroupCreateReq:
