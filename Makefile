@@ -259,12 +259,15 @@ fetch_certs:
 	@./scripts/certs.sh
 
 run: check_certs
-	docker compose -f docker/docker-compose.yaml -f docker/addons/certs/docker-compose.yml -f docker/certs-docker-compose-override.yml --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
+	docker compose -f docker/docker-compose.yaml --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
 
 run_addons: check_certs
 	$(foreach SVC,$(RUN_ADDON_ARGS),$(if $(filter $(SVC),$(ADDON_SERVICES) $(EXTERNAL_SERVICES)),,$(error Invalid Service $(SVC))))
+	@echo "Starting required SuperMQ services for addon connectivity..."
+	@docker compose -f docker/docker-compose.yaml --env-file ./docker/.env -p $(DOCKER_PROJECT) up -d auth domains jaeger
 	@for SVC in $(RUN_ADDON_ARGS); do \
-		SMQ_ADDONS_CERTS_PATH_PREFIX="../."  docker compose -f docker/addons/$$SVC/docker-compose.yml --env-file ./docker/.env --env-file ./docker/addons/$$SVC/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args) & \
+		echo "Starting addon service: $$SVC"; \
+		docker compose -f docker/addons/$$SVC/docker-compose.yml -f docker/certs-docker-compose-override.yml --env-file ./docker/.env --env-file ./docker/addons/$$SVC/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args) & \
 	done
 
 run_live: check_certs

@@ -1,3 +1,6 @@
+# Copyright (c) Abstract Machines
+# SPDX-License-Identifier: Apache-2.0
+
 FROM golang:1.25-alpine AS builder
 
 ARG SVC

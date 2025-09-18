@@ -1,6 +1,8 @@
 # Copyright (c) Abstract Machines
 # SPDX-License-Identifier: Apache-2.0
 
+name: "certs"
+
 networks:
   certs-base-net:
     driver: bridge
@@ -39,6 +41,17 @@ services:
       AM_CERTS_DB_PASS: ${AM_CERTS_DB_PASS}
       AM_CERTS_DB: ${AM_CERTS_DB}
       AM_CERTS_DB_SSL_MODE: ${AM_CERTS_DB_SSL_MODE}
+      AM_AUTH_GRPC_URL: ${AM_AUTH_GRPC_URL}
+      AM_AUTH_GRPC_TIMEOUT: ${AM_AUTH_GRPC_TIMEOUT}
+      AM_AUTH_GRPC_CLIENT_CERT: ${AM_AUTH_GRPC_CLIENT_CERT}
+      AM_AUTH_GRPC_CLIENT_KEY: ${AM_AUTH_GRPC_CLIENT_KEY}
+      AM_AUTH_GRPC_SERVER_CA_CERTS: ${AM_AUTH_GRPC_SERVER_CA_CERTS}
+      AM_DOMAINS_GRPC_URL: ${AM_DOMAINS_GRPC_URL}
+      AM_DOMAINS_GRPC_TIMEOUT: ${AM_DOMAINS_GRPC_TIMEOUT}
+      AM_DOMAINS_GRPC_CLIENT_CERT: ${AM_DOMAINS_GRPC_CLIENT_CERT:+/domains-grpc-client.crt}
+      AM_DOMAINS_GRPC_CLIENT_KEY: ${AM_DOMAINS_GRPC_CLIENT_KEY:+/domains-grpc-client.key}
+      AM_DOMAINS_GRPC_SERVER_CA_CERTS: ${AM_DOMAINS_GRPC_SERVER_CA_CERTS:+/domains-grpc-server-ca.crt}
+      AM_CERTS_TOKEN: ${AM_CERTS_TOKEN}
     ports:
       - ${AM_CERTS_HTTP_PORT}:${AM_CERTS_HTTP_PORT}
       - ${AM_CERTS_GRPC_PORT}:${AM_CERTS_GRPC_PORT}
@@ -99,16 +112,3 @@ services:
       - ./openbao-entrypoint.sh:/entrypoint.sh
     entrypoint: /bin/sh
     command: /entrypoint.sh
-
-  jaeger:
-    image: jaegertracing/all-in-one:1.53.0
-    container_name: certs-jaeger
-    environment:
-      COLLECTOR_OTLP_ENABLED: ${AM_JAEGER_COLLECTOR_OTLP_ENABLED}
-    command: --memory.max-traces ${AM_JAEGER_MEMORY_MAX_TRACES}
-    restart: on-failure
-    networks:
-      - certs-base-net
-    ports:
-      - ${AM_JAEGER_FRONTEND}:${AM_JAEGER_FRONTEND}
-      - ${AM_JAEGER_OLTP_HTTP_PORT}:${AM_JAEGER_OLTP_HTTP_PORT}

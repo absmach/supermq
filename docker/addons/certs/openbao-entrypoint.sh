@@ -165,7 +165,7 @@ if [ ! -f /opt/openbao/data/configured ]; then
   [ -n "$AM_OPENBAO_PKI_CA_DNS_NAMES" ] && PKI_CMD="$PKI_CMD alt_names=\"$AM_OPENBAO_PKI_CA_DNS_NAMES\""
   [ -n "$AM_OPENBAO_PKI_CA_IP_ADDRESSES" ] && PKI_CMD="$PKI_CMD ip_sans=\"$AM_OPENBAO_PKI_CA_IP_ADDRESSES\""
   [ -n "$AM_OPENBAO_PKI_CA_URI_SANS" ] && PKI_CMD="$PKI_CMD uri_sans=\"$AM_OPENBAO_PKI_CA_URI_SANS\""
-  [ -n "$AM_OPENBAO_PKI_CA_EMAIL_ADDRESSES" ] && PKI_CMD="$PKI_CMD other_sans=\"email:$AM_OPENBAO_PKI_CA_EMAIL_ADDRESSES\""
+  [ -n "$AM_OPENBAO_PKI_CA_EMAIL_ADDRESSES" ] && PKI_CMD="$PKI_CMD email_sans=\"$AM_OPENBAO_PKI_CA_EMAIL_ADDRESSES\""
 
   eval $PKI_CMD > /dev/null
 
