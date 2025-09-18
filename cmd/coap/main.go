@@ -13,6 +13,10 @@ import (
 	"os"
 
 	chclient "github.com/absmach/callhome/pkg/client"
+	"github.com/absmach/mgate"
+	mgatecoap "github.com/absmach/mgate/pkg/coap"
+	"github.com/absmach/mgate/pkg/session"
+	mgtls "github.com/absmach/mgate/pkg/tls"
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/coap"
 	httpapi "github.com/absmach/supermq/coap/api"
@@ -31,10 +35,6 @@ import (
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/caarlos0/env/v11"
-	"github.com/felixgateru/mgate"
-	mgatecoap "github.com/felixgateru/mgate/pkg/coap"
-	"github.com/felixgateru/mgate/pkg/session"
-	mgtls "github.com/felixgateru/mgate/pkg/tls"
 	"github.com/pion/dtls/v3"
 	"golang.org/x/sync/errgroup"
 )
