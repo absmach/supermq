@@ -26,7 +26,6 @@ import (
 	"github.com/absmach/supermq/channels/middleware"
 	"github.com/absmach/supermq/channels/postgres"
 	pChannels "github.com/absmach/supermq/channels/private"
-	"github.com/absmach/supermq/channels/tracing"
 	dpostgres "github.com/absmach/supermq/domains/postgres"
 	gpostgres "github.com/absmach/supermq/groups/postgres"
 	redisclient "github.com/absmach/supermq/internal/clients/redis"
@@ -359,7 +358,7 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, cach
 		return nil, nil, err
 	}
 
-	svc = tracing.New(svc, tracer)
+	svc = middleware.TracingMiddleware(svc, tracer)
 
 	counter, latency := prometheus.MakeMetrics("channels", "api")
 	svc = middleware.MetricsMiddleware(svc, counter, latency)

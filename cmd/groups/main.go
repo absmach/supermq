@@ -26,7 +26,6 @@ import (
 	"github.com/absmach/supermq/groups/middleware"
 	"github.com/absmach/supermq/groups/postgres"
 	pgroups "github.com/absmach/supermq/groups/private"
-	"github.com/absmach/supermq/groups/tracing"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
@@ -335,7 +334,7 @@ func newService(ctx context.Context, authz smqauthz.Authorization, policy polici
 		return nil, nil, err
 	}
 
-	svc = tracing.New(svc, tracer)
+	svc = middleware.TracingMiddleware(svc, tracer)
 	svc = middleware.LoggingMiddleware(svc, logger)
 	counter, latency := prometheus.MakeMetrics("groups", "api")
 	svc = middleware.MetricsMiddleware(svc, counter, latency)
