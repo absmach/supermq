@@ -75,12 +75,12 @@ func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byt
 		return errClientNotInitialized
 	}
 
-	domainID, channelID, _, err := h.parser.ParsePublishTopic(ctx, *topic, true)
+	domainID, channelID, _, topicType, err := h.parser.ParsePublishTopic(ctx, *topic, true)
 	if err != nil {
 		return mgate.NewHTTPProxyError(http.StatusBadRequest, errors.Wrap(errFailedPublish, err))
 	}
 
-	clientID, err := h.authAccess(ctx, string(s.Password), domainID, channelID, connections.Publish)
+	clientID, err := h.authAccess(ctx, string(s.Password), domainID, channelID, connections.Publish, topicType)
 	if err != nil {
 		return err
 	}
@@ -101,11 +101,11 @@ func (h *handler) AuthSubscribe(ctx context.Context, topics *[]string) error {
 	}
 
 	for _, topic := range *topics {
-		domainID, channelID, _, err := h.parser.ParseSubscribeTopic(ctx, topic, true)
+		domainID, channelID, _, topicType, err := h.parser.ParseSubscribeTopic(ctx, topic, true)
 		if err != nil {
 			return err
 		}
-		if _, err := h.authAccess(ctx, string(s.Password), domainID, channelID, connections.Subscribe); err != nil {
+		if _, err := h.authAccess(ctx, string(s.Password), domainID, channelID, connections.Subscribe, topicType); err != nil {
 			return err
 		}
 	}
@@ -154,13 +154,17 @@ func (h *handler) Disconnect(ctx context.Context) error {
 	return nil
 }
 
-func (h *handler) authAccess(ctx context.Context, secret, domainID, chanID string, msgType connections.ConnType) (string, error) {
+func (h *handler) authAccess(ctx context.Context, secret, domainID, chanID string, msgType connections.ConnType, topicType messaging.TopicType) (string, error) {
 	authnRes, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, secret)})
 	if err != nil {
 		return "", mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
 	}
 	if !authnRes.Authenticated {
 		return "", mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
+	}
+
+	if topicType == messaging.HealthType {
+		return authnRes.GetId(), nil
 	}
 
 	ar := &grpcChannelsV1.AuthzReq{
