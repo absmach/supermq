@@ -26,9 +26,9 @@ jobs:
       - name: Fetch Certs
         run: |
           make fetch_certs
-          if [[ -n $(git status --porcelain docker/addon/certs) ]]; then
+          if [[ -n $(git status --porcelain docker/addons/certs) ]]; then
             echo "Certs docker file is not up to date. Please update it"
-            git diff docker/addon/certs
+            git diff docker/addons/certs
             exit 1
           else
             exit 0

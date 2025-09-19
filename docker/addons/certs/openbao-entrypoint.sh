@@ -170,19 +170,87 @@ if [ ! -f /opt/openbao/data/configured ]; then
   eval $PKI_CMD > /dev/null
 
   if [ $? -eq 0 ]; then
-    echo "Root CA certificate generated successfully!"
+    echo "OpenBao root CA certificate generated successfully!"
   else
-    echo "ERROR: Failed to generate root CA certificate" >&2
+    echo "ERROR: Failed to generate OpenBao root CA certificate" >&2
     exit 1
   fi
 
-  # Configure CA, CRL, and OCSP URLs
+  if ! bao secrets enable -path=pki_int pki > /tmp/pki_int_success 2>/tmp/pki_int_error; then
+    if ! grep -q "already in use" /tmp/pki_int_error; then
+      echo "ERROR: Failed to enable intermediate PKI secrets engine:" >&2
+      cat /tmp/pki_int_error >&2
+      exit 1
+    fi
+    echo "Intermediate PKI already enabled"
+  fi
+  rm -f /tmp/pki_int_error /tmp/pki_int_success
+
+  bao secrets tune -max-lease-ttl=8760h pki_int > /dev/null
+
+  INTERMEDIATE_CN="${AM_OPENBAO_PKI_CA_CN} Intermediate"
+  INTERMEDIATE_CSR_CMD="bao write -field=csr pki_int/intermediate/generate/internal \
+    common_name=\"$INTERMEDIATE_CN\" \
+    organization=\"$AM_OPENBAO_PKI_CA_O\" \
+    country=\"$AM_OPENBAO_PKI_CA_C\" \
+    ttl=8760h \
+    key_bits=2048"
+
+  [ -n "$AM_OPENBAO_PKI_CA_OU" ] && INTERMEDIATE_CSR_CMD="$INTERMEDIATE_CSR_CMD ou=\"$AM_OPENBAO_PKI_CA_OU\""
+  [ -n "$AM_OPENBAO_PKI_CA_L" ] && INTERMEDIATE_CSR_CMD="$INTERMEDIATE_CSR_CMD locality=\"$AM_OPENBAO_PKI_CA_L\""
+  [ -n "$AM_OPENBAO_PKI_CA_ST" ] && INTERMEDIATE_CSR_CMD="$INTERMEDIATE_CSR_CMD province=\"$AM_OPENBAO_PKI_CA_ST\""
+  [ -n "$AM_OPENBAO_PKI_CA_ADDR" ] && INTERMEDIATE_CSR_CMD="$INTERMEDIATE_CSR_CMD street_address=\"$AM_OPENBAO_PKI_CA_ADDR\""
+  [ -n "$AM_OPENBAO_PKI_CA_PO" ] && INTERMEDIATE_CSR_CMD="$INTERMEDIATE_CSR_CMD postal_code=\"$AM_OPENBAO_PKI_CA_PO\""
+  
+  [ -n "$AM_OPENBAO_PKI_CA_DNS_NAMES" ] && INTERMEDIATE_CSR_CMD="$INTERMEDIATE_CSR_CMD alt_names=\"$AM_OPENBAO_PKI_CA_DNS_NAMES\""
+  [ -n "$AM_OPENBAO_PKI_CA_IP_ADDRESSES" ] && INTERMEDIATE_CSR_CMD="$INTERMEDIATE_CSR_CMD ip_sans=\"$AM_OPENBAO_PKI_CA_IP_ADDRESSES\""
+  [ -n "$AM_OPENBAO_PKI_CA_URI_SANS" ] && INTERMEDIATE_CSR_CMD="$INTERMEDIATE_CSR_CMD uri_sans=\"$AM_OPENBAO_PKI_CA_URI_SANS\""
+  [ -n "$AM_OPENBAO_PKI_CA_EMAIL_ADDRESSES" ] && INTERMEDIATE_CSR_CMD="$INTERMEDIATE_CSR_CMD email_sans=\"$AM_OPENBAO_PKI_CA_EMAIL_ADDRESSES\""
+
+  INTERMEDIATE_CSR=$(eval $INTERMEDIATE_CSR_CMD)
+
+  if [ $? -ne 0 ] || [ -z "$INTERMEDIATE_CSR" ]; then
+    echo "ERROR: Failed to generate intermediate CA CSR" >&2
+    exit 1
+  fi
+
+  echo "Intermediate CA CSR generated successfully!"
+
+  INTERMEDIATE_CERT=$(bao write -field=certificate pki/root/sign-intermediate \
+    csr="$INTERMEDIATE_CSR" \
+    format=pem_bundle \
+    ttl=8760h \
+    use_csr_values=true)
+
+  if [ $? -ne 0 ] || [ -z "$INTERMEDIATE_CERT" ]; then
+    echo "ERROR: Failed to sign intermediate CA certificate" >&2
+    exit 1
+  fi
+
+  echo "Intermediate CA certificate signed successfully!"
+
+  bao write pki_int/intermediate/set-signed certificate="$INTERMEDIATE_CERT" > /dev/null
+
+  if [ $? -eq 0 ]; then
+    echo "Intermediate CA setup completed successfully!"
+  else
+    echo "ERROR: Failed to set signed intermediate certificate" >&2
+    exit 1
+  fi
+
+  echo "$INTERMEDIATE_CERT" > /opt/openbao/data/intermediate_ca.pem
+
   bao write pki/config/urls \
     issuing_certificates='http://127.0.0.1:8200/v1/pki/ca' \
     crl_distribution_points='http://127.0.0.1:8200/v1/pki/crl' \
     ocsp_servers='http://127.0.0.1:8200/v1/pki/ocsp' > /dev/null
 
-  bao write pki/roles/"${AM_OPENBAO_PKI_ROLE}" \
+  bao write pki_int/config/urls \
+    issuing_certificates='http://127.0.0.1:8200/v1/pki_int/ca' \
+    crl_distribution_points='http://127.0.0.1:8200/v1/pki_int/crl' \
+    ocsp_servers='http://127.0.0.1:8200/v1/pki_int/ocsp' > /dev/null
+
+  ROLE_CMD="bao write pki_int/roles/${AM_OPENBAO_PKI_ROLE} \
     allow_any_name=true \
     enforce_hostnames=false \
     allow_ip_sans=true \
@@ -190,39 +258,49 @@ if [ ! -f /opt/openbao/data/configured ]; then
     allow_bare_domains=true \
     allow_subdomains=true \
     allow_glob_domains=true \
-    allowed_domains="*" \
-    allowed_uri_sans="*" \
-    allowed_other_sans="*" \
+    allowed_domains=\"*\" \
+    allowed_uri_sans=\"*\" \
+    allowed_other_sans=\"*\" \
     server_flag=true \
     client_flag=true \
     code_signing_flag=false \
     email_protection_flag=false \
     key_type=rsa \
     key_bits=2048 \
-    key_usage="DigitalSignature,KeyAgreement,KeyEncipherment" \
-    ext_key_usage="ServerAuth,ClientAuth" \
+    key_usage=\"DigitalSignature,KeyEncipherment,KeyAgreement\" \
+    ext_key_usage=\"ServerAuth,ClientAuth,OCSPSigning\" \
     use_csr_common_name=true \
-    use_csr_sans=true \
+    use_csr_sans=false \
     max_ttl=720h \
-    ttl=720h > /dev/null
+    ttl=720h"
+
+  eval "$ROLE_CMD" > /dev/null
 
   # Create PKI policy
   cat > /opt/openbao/config/pki-policy.hcl << EOF
-# PKI certificate operations
-path "pki/issue/${AM_OPENBAO_PKI_ROLE}" {
+path "pki_int/issue/${AM_OPENBAO_PKI_ROLE}" {
   capabilities = ["create", "update"]
 }
-path "pki/sign/${AM_OPENBAO_PKI_ROLE}" {
+path "pki_int/sign/${AM_OPENBAO_PKI_ROLE}" {
   capabilities = ["create", "update"]
 }
-path "pki/certs" {
+path "pki_int/certs" {
   capabilities = ["list"]
 }
-path "pki/cert/*" {
+path "pki_int/cert/*" {
   capabilities = ["read"]
 }
-path "pki/revoke" {
+path "pki_int/revoke" {
   capabilities = ["create", "update"]
+}
+path "pki_int/ca" {
+  capabilities = ["read"]
+}
+path "pki_int/ca_chain" {
+  capabilities = ["read"]
+}
+path "pki_int/crl" {
+  capabilities = ["read"]
 }
 path "pki/ca" {
   capabilities = ["read"]

@@ -51,7 +51,7 @@ services:
       AM_DOMAINS_GRPC_CLIENT_CERT: ${AM_DOMAINS_GRPC_CLIENT_CERT:+/domains-grpc-client.crt}
       AM_DOMAINS_GRPC_CLIENT_KEY: ${AM_DOMAINS_GRPC_CLIENT_KEY:+/domains-grpc-client.key}
       AM_DOMAINS_GRPC_SERVER_CA_CERTS: ${AM_DOMAINS_GRPC_SERVER_CA_CERTS:+/domains-grpc-server-ca.crt}
-      AM_CERTS_TOKEN: ${AM_CERTS_TOKEN}
+      AM_CERTS_SECRET: ${AM_CERTS_SECRET}
     ports:
       - ${AM_CERTS_HTTP_PORT}:${AM_CERTS_HTTP_PORT}
       - ${AM_CERTS_GRPC_PORT}:${AM_CERTS_GRPC_PORT}
