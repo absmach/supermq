@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/0x6flab/namegenerator v1.4.0
 	github.com/absmach/callhome v0.18.1
-	github.com/absmach/certs v0.17.1-0.20250917112321-8f5858cda80e
+	github.com/absmach/certs v0.17.1-0.20250919105802-9306617d8c5a
 	github.com/absmach/mgate v0.4.6-0.20250605150648-edf967fbb46a
 	github.com/absmach/senml v1.0.8
 	github.com/authzed/authzed-go v1.5.0
