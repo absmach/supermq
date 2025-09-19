@@ -39,7 +39,6 @@ var (
 	cert, sdkCert        = generateTestCerts(&testing.T{})
 	defOffset     uint64 = 0
 	defLimit      uint64 = 10
-	revoked              = "all"
 	expectedToken        = "token"
 )
 
@@ -420,7 +419,7 @@ func TestRevokeAllCert(t *testing.T) {
 			clientID: invalid,
 			domainID: validID,
 			token:    validToken,
-			svcErr:    svcerr.ErrNotFound,
+			svcErr:   svcerr.ErrNotFound,
 			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
 		},
 		{
