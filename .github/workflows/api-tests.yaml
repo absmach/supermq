@@ -11,7 +11,6 @@ on:
       - ".github/workflows/api-tests.yaml"
       - "api/**"
       - "auth/api/http/**"
-      - "certs/api/**"
       - "channels/api/http/**"
       - "clients/api/http/**"
       - "domains/api/http/**"
@@ -33,7 +32,6 @@ env:
   GROUPS_URL: http://localhost:9004
   HTTP_ADAPTER_URL: http://localhost:8008
   AUTH_URL: http://localhost:9001
-  CERTS_URL: http://localhost:9019
   JOURNAL_URL: http://localhost:9021
 
 jobs:
@@ -77,11 +75,6 @@ jobs:
               - ".github/workflows/api-tests.yaml"
               - "apidocs/openapi/auth.yaml"
               - "auth/api/http/**"
-
-            certs:
-              - ".github/workflows/api-tests.yaml"
-              - "apidocs/openapi/certs.yaml"
-              - "certs/api/**"
 
             domains:
               - ".github/workflows/api-tests.yaml"
@@ -182,15 +175,6 @@ jobs:
         with:
           schema: apidocs/openapi/journal.yaml
           base-url: ${{ env.JOURNAL_URL }}
-          checks: all
-          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --suppress-health-check=filter_too_much --exclude-checks=positive_data_acceptance --phases=examples'
-
-      - name: Run Certs API tests
-        if: steps.changes.outputs.certs == 'true'
-        uses: schemathesis/action@v2.1.0
-        with:
-          schema: apidocs/openapi/certs.yaml
-          base-url: ${{ env.CERTS_URL }}
           checks: all
           args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --suppress-health-check=filter_too_much --exclude-checks=positive_data_acceptance --phases=examples'
 

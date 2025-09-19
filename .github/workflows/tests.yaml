@@ -95,14 +95,6 @@ jobs:
               - "pkg/ulid/**"
               - "pkg/uuid/**"
 
-            certs:
-              - "certs/**"
-              - "cmd/certs/**"
-              - "auth.pb.go"
-              - "auth_grpc.pb.go"
-              - "auth/**"
-              - "pkg/sdk/**"
-
             channels:
               - "channels/**"
               - "cmd/channels/**"
@@ -270,11 +262,6 @@ jobs:
         if: steps.changes.outputs.domains == 'true' || steps.changes.outputs.workflow == 'true'
         run: |
           go test --race -v -count=1 -coverprofile=coverage/domains.out ./domains/...
-
-      - name: Run certs tests
-        if: steps.changes.outputs.certs == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/certs.out ./certs/...
 
       - name: Run cli tests
         if: steps.changes.outputs.cli == 'true' || steps.changes.outputs.workflow == 'true'
