@@ -206,7 +206,6 @@ jobs:
               - "pkg/errors/**"
               - "pkg/groups/**"
               - "auth/**"
-              - "certs/**"
               - "http/**"
               - "internal/*"
               - "clients/**"
