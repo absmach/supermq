@@ -23,6 +23,8 @@ github.com/absmach/callhome v0.18.1 h1:s/dN/MxqJ4rbau5rnKzzK1oXIw5KvOMECf9fh0Ct9
 github.com/absmach/callhome v0.18.1/go.mod h1:rPn/Ggxv6drskz3V0TJJApsQEeiIeK0V/dt079ckCiM=
 github.com/absmach/certs v0.17.1-0.20250919105802-9306617d8c5a h1:hFN/YXem3PEcck8wfqVa17P/zNWh1UtpxM4QIx+u1fI=
 github.com/absmach/certs v0.17.1-0.20250919105802-9306617d8c5a/go.mod h1:gIBYXV2A3q7shNirebgnt1mIv7Na4x4xaQ1vHymJH0Y=
+github.com/absmach/certs v0.17.1-0.20250919140026-c7677be08c06 h1:fw64ZMhULEGxQTEvEbaM0fgGyNoNjpoClVQ2V75qJXw=
+github.com/absmach/certs v0.17.1-0.20250919140026-c7677be08c06/go.mod h1:UXD87dZ2QQJSG2MtLGF7mrAkbylJnbEvOxZkGe92rVI=
 github.com/absmach/mgate v0.4.6-0.20250605150648-edf967fbb46a h1:1+772OQFHAS23JLAHrCZxO+DnGoiMllKcSwLQy74y+k=
 github.com/absmach/mgate v0.4.6-0.20250605150648-edf967fbb46a/go.mod h1:X2amjQg/2cnM+UKblMdpU2M4cZO74xtEHNIxtuUXCeA=
 github.com/absmach/senml v1.0.8 h1:+opem/r4g6c6eA/JLyCIuksyEhj7eBdysY3pEmy1mqo=
