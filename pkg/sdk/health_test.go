@@ -20,16 +20,12 @@ func TestHealth(t *testing.T) {
 	usersTs, _, _ := setupUsers()
 	defer usersTs.Close()
 
-	certsTs, _, _ := setupCerts()
-	defer certsTs.Close()
-
 	httpAdapterTs, _ := setupMessages(t)
 	defer httpAdapterTs.Close()
 
 	sdkConf := sdk.Config{
 		ClientsURL:      clientsTs.URL,
 		UsersURL:        usersTs.URL,
-		CertsURL:        certsTs.URL,
 		HTTPAdapterURL:  httpAdapterTs.URL,
 		MsgContentType:  contentType,
 		TLSVerification: false,

@@ -52,14 +52,6 @@ packages:
           dir: "./pkg/sdk/mocks"
           structname: "SDK"
           filename: "sdk.go"
-
-  github.com/absmach/supermq/certs/pki/openbao:
-    interfaces:
-      Agent:
-        config:
-          dir: "./certs/mocks"
-          structname: "Agent"
-          filename: "pki.go"
   github.com/absmach/supermq/auth:
     interfaces:
       Authz:
@@ -69,10 +61,6 @@ packages:
       PATS:
       PATSRepository:
       Service:
-  github.com/absmach/supermq/certs:
-    interfaces:
-      Service:
-      Repository:
   github.com/absmach/supermq/channels:
     interfaces:
       Cache:

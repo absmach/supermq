@@ -34,6 +34,7 @@ import (
 var (
 	channelName = "channelName"
 	newName     = "newName"
+	valid       = "valid"
 	channel     = generateTestChannel(&testing.T{})
 )
 
