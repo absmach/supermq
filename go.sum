@@ -21,8 +21,6 @@ github.com/VividCortex/gohistogram v1.0.0 h1:6+hBz+qvs0JOrrNhhmR7lFxo5sINxBCGXrd
 github.com/VividCortex/gohistogram v1.0.0/go.mod h1:Pf5mBqqDxYaXu3hDrrU+w6nw50o/4+TcAqDqk/vUH7g=
 github.com/absmach/callhome v0.18.1 h1:s/dN/MxqJ4rbau5rnKzzK1oXIw5KvOMECf9fh0Ct9eg=
 github.com/absmach/callhome v0.18.1/go.mod h1:rPn/Ggxv6drskz3V0TJJApsQEeiIeK0V/dt079ckCiM=
-github.com/absmach/certs v0.17.1-0.20250917112321-8f5858cda80e h1:9wjQTUwqxCnLEIAkucNBcPjD60LLaeqkzpbgeQN3fTk=
-github.com/absmach/certs v0.17.1-0.20250917112321-8f5858cda80e/go.mod h1:2XpPxqUeTkE8rNYr4exu84KnybMG/diAUO63JN+6Wro=
 github.com/absmach/certs v0.17.1-0.20250919105802-9306617d8c5a h1:hFN/YXem3PEcck8wfqVa17P/zNWh1UtpxM4QIx+u1fI=
 github.com/absmach/certs v0.17.1-0.20250919105802-9306617d8c5a/go.mod h1:gIBYXV2A3q7shNirebgnt1mIv7Na4x4xaQ1vHymJH0Y=
 github.com/absmach/mgate v0.4.6-0.20250605150648-edf967fbb46a h1:1+772OQFHAS23JLAHrCZxO+DnGoiMllKcSwLQy74y+k=
