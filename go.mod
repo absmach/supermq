@@ -8,9 +8,9 @@ require (
 	github.com/absmach/certs v0.17.0
 	github.com/absmach/mgate v0.4.6-0.20250605150648-edf967fbb46a
 	github.com/absmach/senml v1.0.8
-	github.com/authzed/authzed-go v1.5.0
+	github.com/authzed/authzed-go v1.5.1-0.20250909211335-16b58d03994c
 	github.com/authzed/grpcutil v0.0.0-20250221190651-1985b19b35b8
-	github.com/authzed/spicedb v1.45.3
+	github.com/authzed/spicedb v1.45.4
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/dgraph-io/ristretto/v2 v2.3.0
@@ -51,7 +51,7 @@ require (
 	golang.org/x/crypto v0.42.0
 	golang.org/x/oauth2 v0.31.0
 	golang.org/x/sync v0.17.0
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250825161204-c5933d9347a5
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250908214217-97024824d090
 	google.golang.org/grpc v1.75.1
 	google.golang.org/protobuf v1.36.9
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
@@ -59,8 +59,8 @@ require (
 )
 
 require (
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.6-20250613105001-9f2d3c737feb.1 // indirect
-	cloud.google.com/go/compute/metadata v0.7.0 // indirect
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.8-20250717185734-6c6e0d3c608e.1 // indirect
+	cloud.google.com/go/compute/metadata v0.8.0 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
@@ -88,7 +88,7 @@ require (
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
 	github.com/go-errors/errors v1.5.1 // indirect
 	github.com/go-gorp/gorp/v3 v3.1.0 // indirect
-	github.com/go-jose/go-jose/v4 v4.1.1 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.2 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
@@ -162,12 +162,12 @@ require (
 	go.opentelemetry.io/proto/otlp v1.7.1 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
-	golang.org/x/exp v0.0.0-20250606033433-dcc06ee1d476 // indirect
+	golang.org/x/exp v0.0.0-20250819193227-8b4c13bb791b // indirect
 	golang.org/x/net v0.44.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 	golang.org/x/text v0.29.0 // indirect
-	golang.org/x/time v0.12.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250825161204-c5933d9347a5 // indirect
+	golang.org/x/time v0.13.0 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250908214217-97024824d090 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
