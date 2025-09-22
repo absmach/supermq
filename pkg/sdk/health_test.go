@@ -20,16 +20,12 @@ func TestHealth(t *testing.T) {
 	usersTs, _, _ := setupUsers()
 	defer usersTs.Close()
 
-	certsTs, _, _ := setupCerts()
-	defer certsTs.Close()
-
 	httpAdapterTs, _ := setupMessages(t)
 	defer httpAdapterTs.Close()
 
 	sdkConf := sdk.Config{
 		ClientsURL:      clientsTs.URL,
 		UsersURL:        usersTs.URL,
-		CertsURL:        certsTs.URL,
 		HTTPAdapterURL:  httpAdapterTs.URL,
 		MsgContentType:  contentType,
 		TLSVerification: false,
@@ -58,14 +54,6 @@ func TestHealth(t *testing.T) {
 			empty:       false,
 			err:         nil,
 			description: "users service",
-			status:      "pass",
-		},
-		{
-			desc:        "get certs service health check",
-			service:     "certs",
-			empty:       false,
-			err:         nil,
-			description: "certs service",
 			status:      "pass",
 		},
 		{

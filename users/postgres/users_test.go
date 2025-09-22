@@ -310,6 +310,7 @@ func TestRetrieveAll(t *testing.T) {
 
 	num := 200
 	var items, enabledUsers []users.User
+	baseTime := time.Now().UTC().Truncate(time.Millisecond)
 	for i := 0; i < num; i++ {
 		user := users.User{
 			ID:        testsutil.GenerateUUID(t),
@@ -323,7 +324,7 @@ func TestRetrieveAll(t *testing.T) {
 			Metadata:  users.Metadata{},
 			Status:    users.EnabledStatus,
 			Tags:      []string{"tag1"},
-			CreatedAt: time.Now().UTC().Truncate(time.Millisecond),
+			CreatedAt: baseTime.Add(time.Duration(i) * time.Millisecond),
 		}
 		if i%50 == 0 {
 			user.Metadata = map[string]any{
@@ -738,8 +739,9 @@ func TestSearch(t *testing.T) {
 
 	nUsers := uint64(200)
 	expectedUsers := []users.User{}
+	baseTime := time.Now().UTC().Truncate(time.Millisecond)
 	for i := 0; i < int(nUsers); i++ {
-		user := generateUser(t, users.EnabledStatus, repo)
+		user := generateUserWithTime(t, users.EnabledStatus, repo, baseTime.Add(time.Duration(i)*time.Millisecond))
 
 		expectedUsers = append(expectedUsers, users.User{
 			ID:        user.ID,
@@ -1737,8 +1739,9 @@ func TestRetrieveByIDs(t *testing.T) {
 	num := 200
 
 	var items []users.User
+	baseTime := time.Now().UTC().Truncate(time.Millisecond)
 	for i := 0; i < num; i++ {
-		user := generateUser(t, users.EnabledStatus, repo)
+		user := generateUserWithTime(t, users.EnabledStatus, repo, baseTime.Add(time.Duration(i)*time.Millisecond))
 		items = append(items, user)
 	}
 
@@ -2072,6 +2075,10 @@ func findUsers(usrs []users.User, query string, offset, limit uint64) []users.Us
 }
 
 func generateUser(t *testing.T, status users.Status, repo users.Repository) users.User {
+	return generateUserWithTime(t, status, repo, time.Now().UTC().Truncate(time.Millisecond))
+}
+
+func generateUserWithTime(t *testing.T, status users.Status, repo users.Repository, createdAt time.Time) users.User {
 	usr := users.User{
 		ID:        testsutil.GenerateUUID(t),
 		FirstName: namesgen.Generate(),
@@ -2086,7 +2093,7 @@ func generateUser(t *testing.T, status users.Status, repo users.Repository) user
 			"name": namesgen.Generate(),
 		},
 		Status:    status,
-		CreatedAt: time.Now().UTC().Truncate(time.Millisecond),
+		CreatedAt: createdAt,
 	}
 	user, err := repo.Save(context.Background(), usr)
 	require.Nil(t, err, fmt.Sprintf("add new user: expected nil got %s\n", err))

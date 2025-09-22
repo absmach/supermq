@@ -16,7 +16,6 @@ import (
 	apiutil "github.com/absmach/supermq/api/http/util"
 	authmocks "github.com/absmach/supermq/auth/mocks"
 	smqlog "github.com/absmach/supermq/logger"
-	"github.com/absmach/supermq/pkg/authn"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
@@ -265,7 +264,7 @@ func TestCreateUser(t *testing.T) {
 			assert.Equal(t, tc.err, err)
 			assert.Equal(t, tc.response, resp)
 			if tc.err == nil {
-				ok := svcCall.Parent.AssertCalled(t, "Register", mock.Anything, authn.Session{}, tc.svcReq, true)
+				ok := svcCall.Parent.AssertCalled(t, "Register", mock.Anything, smqauthn.Session{}, tc.svcReq, true)
 				assert.True(t, ok)
 			}
 			svcCall.Unset()

@@ -24,7 +24,6 @@ const (
 	defDomainsURL      string = defURL + ":9003"
 	defChannelsURL     string = defURL + ":9005"
 	defGroupsURL       string = defURL + ":9004"
-	defCertsURL        string = defURL + ":9019"
 	defHTTPURL         string = defURL + ":8008"
 	defJournalURL      string = defURL + ":9021"
 	defTLSVerification bool   = false
@@ -111,7 +110,6 @@ func ParseConfig(sdkConf smqsdk.Config) (smqsdk.Config, error) {
 				ChannelsURL:     defChannelsURL,
 				GroupsURL:       defGroupsURL,
 				HTTPAdapterURL:  defHTTPURL,
-				CertsURL:        defCertsURL,
 				JournalURL:      defJournalURL,
 				HostURL:         defURL,
 				TLSVerification: defTLSVerification,

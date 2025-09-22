@@ -31,13 +31,6 @@ const (
 	usersCmd   = "users"
 )
 
-// Certs commands
-const (
-	revokeCmd    = "revoke"
-	revokeAllCmd = "revoke-all"
-	issueCmd     = "issue"
-)
-
 // Messages commands
 const sendCmd = "send"
 

@@ -41,7 +41,6 @@ func main() {
 	groupsCmd := cli.NewGroupsCmd()
 	channelsCmd := cli.NewChannelsCmd()
 	messagesCmd := cli.NewMessagesCmd()
-	certsCmd := cli.NewCertsCmd()
 	configCmd := cli.NewConfigCmd()
 	invitationsCmd := cli.NewInvitationsCmd()
 	journalCmd := cli.NewJournalCmd()
@@ -54,20 +53,11 @@ func main() {
 	rootCmd.AddCommand(clientsCmd)
 	rootCmd.AddCommand(channelsCmd)
 	rootCmd.AddCommand(messagesCmd)
-	rootCmd.AddCommand(certsCmd)
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(invitationsCmd)
 	rootCmd.AddCommand(journalCmd)
 
 	// Root Flags
-	rootCmd.PersistentFlags().StringVarP(
-		&sdkConf.CertsURL,
-		"certs-url",
-		"s",
-		sdkConf.CertsURL,
-		"Certs service URL",
-	)
-
 	rootCmd.PersistentFlags().StringVarP(
 		&sdkConf.ClientsURL,
 		"clients-url",

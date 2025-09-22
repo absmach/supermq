@@ -6,7 +6,6 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/fatih/color"
 	"github.com/hokaccha/go-prettyjson"
@@ -75,14 +74,6 @@ func logErrorCmd(cmd cobra.Command, err error) {
 
 func logOKCmd(cmd cobra.Command) {
 	fmt.Fprintf(cmd.OutOrStdout(), "\n%s\n\n", color.BlueString("ok"))
-}
-
-func logRevokedTimeCmd(cmd cobra.Command, t time.Time) {
-	if RawOutput {
-		fmt.Fprintln(cmd.OutOrStdout(), t)
-	} else {
-		fmt.Fprintf(cmd.OutOrStdout(), color.BlueString("\nrevoked: %v\n\n"), t)
-	}
 }
 
 func convertMetadata(m string) (map[string]any, error) {

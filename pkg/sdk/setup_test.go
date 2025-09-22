@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/channels"
-	mgchannels "github.com/absmach/supermq/channels"
 	"github.com/absmach/supermq/clients"
 	"github.com/absmach/supermq/domains"
 	groups "github.com/absmach/supermq/groups"
@@ -89,8 +88,8 @@ func convertGroups(cs []sdk.Group) []groups.Group {
 	return cgs
 }
 
-func convertChannels(cs []sdk.Channel) []mgchannels.Channel {
-	chs := []mgchannels.Channel{}
+func convertChannels(cs []sdk.Channel) []channels.Channel {
+	chs := []channels.Channel{}
 
 	for _, c := range cs {
 		chs = append(chs, convertChannel(c))
@@ -205,15 +204,15 @@ func convertClient(c sdk.Client) clients.Client {
 	}
 }
 
-func convertChannel(g sdk.Channel) mgchannels.Channel {
+func convertChannel(g sdk.Channel) channels.Channel {
 	if g.Status == "" {
 		g.Status = channels.EnabledStatus.String()
 	}
 	status, err := channels.ToStatus(g.Status)
 	if err != nil {
-		return mgchannels.Channel{}
+		return channels.Channel{}
 	}
-	return mgchannels.Channel{
+	return channels.Channel{
 		ID:          g.ID,
 		Name:        g.Name,
 		Tags:        g.Tags,

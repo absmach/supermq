@@ -3,11 +3,7 @@
 
 package sdk
 
-import (
-	"time"
-
-	"github.com/absmach/supermq/pkg/transformers/senml"
-)
+import "github.com/absmach/supermq/pkg/transformers/senml"
 
 type createClientsRes struct {
 	Clients []Client `json:"clients"`
@@ -61,15 +57,6 @@ type MembersPage struct {
 type MembershipsPage struct {
 	PageRes
 	Memberships []Group `json:"memberships"`
-}
-
-type revokeCertsRes struct {
-	RevocationTime time.Time `json:"revocation_time"`
-}
-
-type CertSerials struct {
-	Certs []Cert `json:"certs"`
-	PageRes
 }
 
 type DomainsPage struct {

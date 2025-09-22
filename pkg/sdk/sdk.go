@@ -1151,46 +1151,6 @@ type SDK interface {
 	//  fmt.Println(health)
 	Health(service string) (HealthInfo, errors.SDKError)
 
-	// IssueCert issues a certificate for a client required for mTLS.
-	//
-	// example:
-	//  ctx := context.Background()
-	//  cert, _ := sdk.IssueCert(ctx, "clientID", "24h", "domainID", "token")
-	//  fmt.Println(cert)
-	IssueCert(ctx context.Context, clientID, validity, domainID, token string) (Cert, errors.SDKError)
-
-	// ViewCert returns a certificate given certificate ID
-	//
-	// example:
-	//  ctx := context.Background()
-	//  cert, _ := sdk.ViewCert(ctx, "certID", "domainID", "token")
-	//  fmt.Println(cert)
-	ViewCert(ctx context.Context, certID, domainID, token string) (Cert, errors.SDKError)
-
-	// ViewCertByClient retrieves a list of certificates' serial IDs for a given client ID.
-	//
-	// example:
-	//  ctx := context.Background()
-	//  cserial, _ := sdk.ViewCertByClient(ctx, "clientID", "domainID", "token")
-	//  fmt.Println(cserial)
-	ViewCertByClient(ctx context.Context, clientID, domainID, token string) (CertSerials, errors.SDKError)
-
-	// RevokeAllCerts revokes all certificates for client with clientID
-	//
-	// example:
-	//  ctx := context.Background()
-	//  tm, _ := sdk.RevokeAllCerts(ctx, "clientID", "domainID", "token")
-	//  fmt.Println(tm)
-	RevokeAllCerts(ctx context.Context, clientID, domainID, token string) (time.Time, errors.SDKError)
-
-	//RevokeCert revokes a certificate with given certID.
-	//
-	// example:
-	//  ctx := context.Background()
-	//  tm, _ := sdk.RevokeCert(ctx, "certID", "domainID", "token")
-	//  fmt.Println(tm)
-	RevokeCert(ctx context.Context, certID, domainID, token string) (time.Time, errors.SDKError)
-
 	// CreateDomain creates new domain and returns its details.
 	//
 	// example:

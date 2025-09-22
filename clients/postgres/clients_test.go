@@ -865,6 +865,7 @@ func TestRetrieveAll(t *testing.T) {
 
 	expectedClients := []clients.Client{}
 	disabledClients := []clients.Client{}
+	baseTime := time.Now().UTC().Truncate(time.Microsecond)
 	for i := uint64(0); i < nClients; i++ {
 		client := clients.Client{
 			ID:     testsutil.GenerateUUID(t),
@@ -879,7 +880,7 @@ func TestRetrieveAll(t *testing.T) {
 				"department": namegen.Generate(),
 			},
 			Status:    clients.EnabledStatus,
-			CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
+			CreatedAt: baseTime.Add(time.Duration(i) * time.Microsecond),
 		}
 		if i%50 == 0 {
 			client.Status = clients.DisabledStatus
@@ -1344,6 +1345,7 @@ func TestSearchClients(t *testing.T) {
 
 	nClients := uint64(200)
 	expectedClients := []clients.Client{}
+	baseTime := time.Now().UTC().Truncate(time.Microsecond)
 	for i := 0; i < int(nClients); i++ {
 		username := name + strconv.Itoa(i) + emailSuffix
 		client := clients.Client{
@@ -1355,7 +1357,7 @@ func TestSearchClients(t *testing.T) {
 			},
 			Metadata:  clients.Metadata{},
 			Status:    clients.EnabledStatus,
-			CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
+			CreatedAt: baseTime.Add(time.Duration(i) * time.Microsecond),
 		}
 		_, err := repo.Save(context.Background(), client)
 		require.Nil(t, err, fmt.Sprintf("save client unexpected error: %s", err))
@@ -1723,6 +1725,7 @@ func TestRetrieveByIDs(t *testing.T) {
 	num := 10
 
 	var items []clients.Client
+	baseTime := time.Now().UTC().Truncate(time.Microsecond)
 	for i := 0; i < num; i++ {
 		name := namegen.Generate()
 		client := clients.Client{
@@ -1735,7 +1738,7 @@ func TestRetrieveByIDs(t *testing.T) {
 			},
 			Tags:      namegen.GenerateMultiple(5),
 			Metadata:  map[string]any{"name": name},
-			CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
+			CreatedAt: baseTime.Add(time.Duration(i) * time.Microsecond),
 			Status:    clients.EnabledStatus,
 		}
 		_, err := repo.Save(context.Background(), client)
@@ -2357,6 +2360,7 @@ func TestRetrieveParentGroupClients(t *testing.T) {
 
 	var items []clients.Client
 	parentID := testsutil.GenerateUUID(t)
+	baseTime := time.Now().UTC().Truncate(time.Microsecond)
 	for i := 0; i < 10; i++ {
 		name := namegen.Generate()
 		client := clients.Client{
@@ -2365,7 +2369,7 @@ func TestRetrieveParentGroupClients(t *testing.T) {
 			ParentGroup: parentID,
 			Name:        name,
 			Metadata:    map[string]any{"name": name},
-			CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
+			CreatedAt:   baseTime.Add(time.Duration(i) * time.Microsecond),
 			Status:      clients.EnabledStatus,
 		}
 		items = append(items, client)
@@ -2424,6 +2428,7 @@ func TestUnsetParentGroupFromClients(t *testing.T) {
 
 	var items []clients.Client
 	parentID := testsutil.GenerateUUID(t)
+	baseTime := time.Now().UTC().Truncate(time.Microsecond)
 	for i := 0; i < 10; i++ {
 		name := namegen.Generate()
 		client := clients.Client{
@@ -2432,7 +2437,7 @@ func TestUnsetParentGroupFromClients(t *testing.T) {
 			ParentGroup: parentID,
 			Name:        name,
 			Metadata:    map[string]any{"name": name},
-			CreatedAt:   time.Now().UTC().Truncate(time.Microsecond),
+			CreatedAt:   baseTime.Add(time.Duration(i) * time.Microsecond),
 			Status:      clients.EnabledStatus,
 		}
 		items = append(items, client)
