@@ -40,19 +40,18 @@ import (
 )
 
 const (
-	svcName            = "coap_adapter"
-	envPrefix          = "SMQ_COAP_ADAPTER_"
-	envPrefixHTTP      = "SMQ_COAP_ADAPTER_HTTP_"
-	envPrefixDTLS      = "SMQ_COAP_ADAPTER_SERVER_"
-	envPrefixCache     = "SMQ_COAP_CACHE_"
-	envPrefixClients   = "SMQ_CLIENTS_GRPC_"
-	envPrefixChannels  = "SMQ_CHANNELS_GRPC_"
-	envPrefixDomains   = "SMQ_DOMAINS_GRPC_"
-	defSvcHTTPPort     = "5683"
-	defSvcCoAPPort     = "5683"
-	targetProtocol     = "coap"
-	targetCoapPort     = "5682"
-	targetCoapDtlsPort = "5684"
+	svcName           = "coap_adapter"
+	envPrefix         = "SMQ_COAP_ADAPTER_"
+	envPrefixHTTP     = "SMQ_COAP_ADAPTER_HTTP_"
+	envPrefixDTLS     = "SMQ_COAP_ADAPTER_SERVER_"
+	envPrefixCache    = "SMQ_COAP_CACHE_"
+	envPrefixClients  = "SMQ_CLIENTS_GRPC_"
+	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
+	envPrefixDomains  = "SMQ_DOMAINS_GRPC_"
+	defSvcHTTPPort    = "5683"
+	defSvcCoAPPort    = "5683"
+	targetProtocol    = "coap"
+	targetCoapPort    = "5682"
 )
 
 type config struct {
@@ -253,21 +252,23 @@ func proxyCoAP(ctx context.Context, cfg server.Config, dtlsCfg mgtls.Config, han
 
 	errCh := make(chan error)
 
-	logger.Info(fmt.Sprintf("Starting COAP without DTLS proxy on port %s", cfg.Port))
-	go func() {
-		errCh <- mg.Listen(ctx)
-	}()
-
 	config.DTLSConfig, err = mgtls.LoadTLSConfig(&dtlsCfg, &dtls.Config{})
 	if err != nil {
 		return err
 	}
-	if config.DTLSConfig != nil {
-		config.Port = targetCoapDtlsPort
-		mgDtls := mgatecoap.NewProxy(config, handler, logger)
+
+	switch {
+	case config.DTLSConfig != nil:
+		dltsCfg := config
+		mgDtls := mgatecoap.NewProxy(dltsCfg, handler, logger)
 		logger.Info(fmt.Sprintf("Starting COAP with DTLS proxy on port %s", cfg.Port))
 		go func() {
 			errCh <- mgDtls.Listen(ctx)
+		}()
+	default:
+		logger.Info(fmt.Sprintf("Starting COAP without DTLS proxy on port %s", cfg.Port))
+		go func() {
+			errCh <- mg.Listen(ctx)
 		}()
 	}
 	select {
