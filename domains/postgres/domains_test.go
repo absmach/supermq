@@ -18,7 +18,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const invalid = "invalid"
+const (
+	invalid  = "invalid"
+	defOrder = "created_at"
+	defDir   = "asc"
+)
 
 var (
 	domainID = testsutil.GenerateUUID(&testing.T{})
@@ -311,8 +315,8 @@ func TestRetrieveAllByIDs(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 				IDs:    []string{items[1].ID, items[2].ID},
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			response: domains.DomainsPage{
 				Total:   2,
@@ -372,8 +376,8 @@ func TestRetrieveAllByIDs(t *testing.T) {
 				Limit:  10,
 				IDs:    []string{items[0].ID, items[1].ID},
 				Status: 5,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			response: domains.DomainsPage{
 				Total:   2,
@@ -388,7 +392,7 @@ func TestRetrieveAllByIDs(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 				IDs:    []string{items[0].ID, items[1].ID},
-				Tag:    "test",
+				Tags:   domains.TagsQuery{Elements: []string{"test"}, Operator: domains.OrOp},
 			},
 			response: domains.DomainsPage{
 				Total:   1,
@@ -407,8 +411,8 @@ func TestRetrieveAllByIDs(t *testing.T) {
 					"test": "test",
 				},
 				Status: domains.EnabledStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			response: domains.DomainsPage{
 				Total:   2,
@@ -702,7 +706,7 @@ func TestListDomains(t *testing.T) {
 			ID:    testsutil.GenerateUUID(t),
 			Name:  fmt.Sprintf(`"test%d"`, i),
 			Route: fmt.Sprintf(`"test%d"`, i),
-			Tags:  []string{"test"},
+			Tags:  []string{"tag1", "tag2"},
 			Metadata: map[string]any{
 				"test": "test",
 			},
@@ -713,10 +717,12 @@ func TestListDomains(t *testing.T) {
 		}
 		if i%5 == 0 {
 			domain.Status = domains.DisabledStatus
-			domain.Tags = []string{"test", "admin"}
 			domain.Metadata = map[string]any{
 				"test1": "test1",
 			}
+		}
+		if i%9 == 0 {
+			domain.Tags = []string{"tag1", "tag3"}
 		}
 		_, err := repo.SaveDomain(context.Background(), domain)
 		require.Nil(t, err, fmt.Sprintf("save domain unexpected error: %s", err))
@@ -734,8 +740,8 @@ func TestListDomains(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 				Status: domains.AllStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			response: domains.DomainsPage{
 				Total:   10,
@@ -751,8 +757,8 @@ func TestListDomains(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 				Status: domains.EnabledStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			response: domains.DomainsPage{
 				Total:   8,
@@ -769,8 +775,8 @@ func TestListDomains(t *testing.T) {
 				Limit:  10,
 				Name:   items[0].Name,
 				Status: domains.AllStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			response: domains.DomainsPage{
 				Total:   1,
@@ -786,8 +792,8 @@ func TestListDomains(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 				Status: domains.DisabledStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			response: domains.DomainsPage{
 				Total:   2,
@@ -798,30 +804,67 @@ func TestListDomains(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc: "list all domains with tags",
+			desc: "list all domains with single tag",
 			pm: domains.Page{
 				Offset: 0,
 				Limit:  10,
-				Tag:    "admin",
+				Tags:   domains.TagsQuery{Elements: []string{"tag1"}, Operator: domains.OrOp},
 				Status: domains.AllStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: domains.DomainsPage{
+				Total:   10,
+				Offset:  0,
+				Limit:   10,
+				Domains: items,
+			},
+			err: nil,
+		},
+		{
+			desc: "list all domain with multiple tags and OR operator",
+			pm: domains.Page{
+				Offset: 0,
+				Limit:  10,
+				Tags:   domains.TagsQuery{Elements: []string{"tag2", "tag3"}, Operator: domains.OrOp},
+				Status: domains.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: domains.DomainsPage{
+				Total:   10,
+				Offset:  0,
+				Limit:   10,
+				Domains: items,
+			},
+			err: nil,
+		},
+		{
+			desc: "retrieve domain with multiple tags and AND operator",
+			pm: domains.Page{
+				Offset: 0,
+				Limit:  10,
+				Tags:   domains.TagsQuery{Elements: []string{"tag1", "tag3"}, Operator: domains.AndOp},
+				Status: domains.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			response: domains.DomainsPage{
 				Total:   2,
 				Offset:  0,
 				Limit:   10,
-				Domains: []domains.Domain{items[0], items[5]},
+				Domains: []domains.Domain{items[0], items[9]},
 			},
-			err: nil,
 		},
 		{
-			desc: "list all domains with invalid tag",
+			desc: "retrieve domain with invalid tags",
 			pm: domains.Page{
 				Offset: 0,
 				Limit:  10,
-				Tag:    "invalid",
+				Tags:   domains.TagsQuery{Elements: []string{"invalid-tag"}, Operator: domains.OrOp},
 				Status: domains.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			response: domains.DomainsPage{
 				Total:   0,
@@ -829,7 +872,6 @@ func TestListDomains(t *testing.T) {
 				Limit:   10,
 				Domains: []domains.Domain(nil),
 			},
-			err: nil,
 		},
 		{
 			desc: "list all domains with metadata",
@@ -840,8 +882,8 @@ func TestListDomains(t *testing.T) {
 					"test1": "test1",
 				},
 				Status: domains.AllStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			response: domains.DomainsPage{
 				Total:   2,

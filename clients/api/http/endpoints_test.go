@@ -427,6 +427,7 @@ func TestListClients(t *testing.T) {
 		query               string
 		domainID            string
 		token               string
+		pageMeta            clients.Page
 		listClientsResponse clients.ClientsPage
 		status              int
 		authnRes            smqauthn.Session
@@ -439,6 +440,13 @@ func TestListClients(t *testing.T) {
 			token:    validToken,
 			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
 			status:   http.StatusOK,
+			pageMeta: clients.Page{
+				Offset:  0,
+				Limit:   10,
+				Order:   api.DefOrder,
+				Dir:     api.DefDir,
+				Actions: []string{},
+			},
 			listClientsResponse: clients.ClientsPage{
 				Page: clients.Page{
 					Total: 1,
@@ -453,6 +461,13 @@ func TestListClients(t *testing.T) {
 			token:    validToken,
 			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
 			status:   http.StatusOK,
+			pageMeta: clients.Page{
+				Offset:  0,
+				Limit:   10,
+				Order:   api.DefOrder,
+				Dir:     api.DefDir,
+				Actions: []string{},
+			},
 			listClientsResponse: clients.ClientsPage{
 				Page: clients.Page{
 					Total: 1,
@@ -481,6 +496,13 @@ func TestListClients(t *testing.T) {
 			domainID: domainID,
 			token:    validToken,
 			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
+			pageMeta: clients.Page{
+				Offset:  1,
+				Limit:   10,
+				Order:   api.DefOrder,
+				Dir:     api.DefDir,
+				Actions: []string{},
+			},
 			listClientsResponse: clients.ClientsPage{
 				Page: clients.Page{
 					Offset: 1,
@@ -506,6 +528,13 @@ func TestListClients(t *testing.T) {
 			domainID: domainID,
 			token:    validToken,
 			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
+			pageMeta: clients.Page{
+				Offset:  0,
+				Limit:   1,
+				Order:   api.DefOrder,
+				Dir:     api.DefDir,
+				Actions: []string{},
+			},
 			listClientsResponse: clients.ClientsPage{
 				Page: clients.Page{
 					Limit: 1,
@@ -540,6 +569,14 @@ func TestListClients(t *testing.T) {
 			domainID: domainID,
 			token:    validToken,
 			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
+			pageMeta: clients.Page{
+				Offset:  0,
+				Limit:   10,
+				Order:   api.DefOrder,
+				Dir:     api.DefDir,
+				Actions: []string{},
+				Name:    "clientname",
+			},
 			listClientsResponse: clients.ClientsPage{
 				Page: clients.Page{
 					Total: 1,
@@ -549,15 +586,6 @@ func TestListClients(t *testing.T) {
 			query:  "name=clientname",
 			status: http.StatusOK,
 			err:    nil,
-		},
-		{
-			desc:     "list clients with invalid name",
-			domainID: domainID,
-			token:    validToken,
-			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
-			query:    "name=invalid",
-			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
 		},
 		{
 			desc:     "list clients with duplicate name",
@@ -573,6 +601,14 @@ func TestListClients(t *testing.T) {
 			domainID: domainID,
 			token:    validToken,
 			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
+			pageMeta: clients.Page{
+				Offset:  0,
+				Limit:   10,
+				Order:   api.DefOrder,
+				Dir:     api.DefDir,
+				Actions: []string{},
+				Status:  clients.EnabledStatus,
+			},
 			listClientsResponse: clients.ClientsPage{
 				Page: clients.Page{
 					Total: 1,
@@ -602,35 +638,80 @@ func TestListClients(t *testing.T) {
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
-			desc:     "list clients with tags",
+			desc:     "list clients with single tag",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
+			pageMeta: clients.Page{
+				Offset:  0,
+				Limit:   10,
+				Order:   api.DefOrder,
+				Dir:     api.DefDir,
+				Actions: []string{},
+				Tags:    clients.TagsQuery{Elements: []string{"tag1"}, Operator: clients.OrOp},
+			},
 			listClientsResponse: clients.ClientsPage{
 				Page: clients.Page{
 					Total: 1,
 				},
 				Clients: []clients.Client{client},
 			},
-			query:  "tag=tag1,tag2",
+			query:  "tags=tag1",
 			status: http.StatusOK,
 			err:    nil,
 		},
 		{
-			desc:     "list clients with invalid tags",
+			desc:     "list clients with multiple tags and OR operator",
 			domainID: domainID,
 			token:    validToken,
 			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
-			query:    "tag=invalid",
-			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			pageMeta: clients.Page{
+				Offset:  0,
+				Limit:   10,
+				Order:   api.DefOrder,
+				Dir:     api.DefDir,
+				Actions: []string{},
+				Tags:    clients.TagsQuery{Elements: []string{"tag1", "tag2", "tag3"}, Operator: clients.OrOp},
+			},
+			listClientsResponse: clients.ClientsPage{
+				Page: clients.Page{
+					Total: 1,
+				},
+				Clients: []clients.Client{client},
+			},
+			query:  "tags=tag1,tag2,tag3",
+			status: http.StatusOK,
+			err:    nil,
+		},
+		{
+			desc:     "list clients with multiple tags and AND operator",
+			domainID: domainID,
+			token:    validToken,
+			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
+			pageMeta: clients.Page{
+				Offset:  0,
+				Limit:   10,
+				Order:   api.DefOrder,
+				Dir:     api.DefDir,
+				Actions: []string{},
+				Tags:    clients.TagsQuery{Elements: []string{"tag1", "tag2", "tag3"}, Operator: clients.AndOp},
+			},
+			listClientsResponse: clients.ClientsPage{
+				Page: clients.Page{
+					Total: 1,
+				},
+				Clients: []clients.Client{client},
+			},
+			query:  "tags=tag1-tag2-tag3",
+			status: http.StatusOK,
+			err:    nil,
 		},
 		{
 			desc:     "list clients with duplicate tags",
 			domainID: domainID,
-			token:    validToken,
 			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
-			query:    "tag=tag1&tag=tag2",
+			token:    validToken,
+			query:    "tags=tag1&tags=tag2",
 			status:   http.StatusBadRequest,
 			err:      apiutil.ErrInvalidQueryParams,
 		},
@@ -639,6 +720,14 @@ func TestListClients(t *testing.T) {
 			domainID: domainID,
 			token:    validToken,
 			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
+			pageMeta: clients.Page{
+				Offset:   0,
+				Limit:    10,
+				Order:    api.DefOrder,
+				Dir:      api.DefDir,
+				Actions:  []string{},
+				Metadata: clients.Metadata{"domain": "example.com"},
+			},
 			listClientsResponse: clients.ClientsPage{
 				Page: clients.Page{
 					Total: 1,
@@ -667,72 +756,6 @@ func TestListClients(t *testing.T) {
 			status:   http.StatusBadRequest,
 			err:      apiutil.ErrInvalidQueryParams,
 		},
-		{
-			desc:     "list clients with permissions",
-			domainID: domainID,
-			token:    validToken,
-			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
-			listClientsResponse: clients.ClientsPage{
-				Page: clients.Page{
-					Total: 1,
-				},
-				Clients: []clients.Client{client},
-			},
-			query:  "permission=view",
-			status: http.StatusOK,
-			err:    nil,
-		},
-		{
-			desc:     "list clients with invalid permissions",
-			domainID: domainID,
-			token:    validToken,
-			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
-			query:    "permission=invalid",
-			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
-		},
-		{
-			desc:     "list clients with duplicate permissions",
-			domainID: domainID,
-			token:    validToken,
-			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
-			query:    "permission=view&permission=view",
-			status:   http.StatusBadRequest,
-			err:      apiutil.ErrInvalidQueryParams,
-		},
-		{
-			desc:     "list clients with list perms",
-			domainID: domainID,
-			token:    validToken,
-			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
-			listClientsResponse: clients.ClientsPage{
-				Page: clients.Page{
-					Total: 1,
-				},
-				Clients: []clients.Client{client},
-			},
-			query:  "list_perms=true",
-			status: http.StatusOK,
-			err:    nil,
-		},
-		{
-			desc:     "list clients with invalid list perms",
-			domainID: domainID,
-			token:    validToken,
-			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
-			query:    "list_perms=invalid",
-			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
-		},
-		{
-			desc:     "list clients with duplicate list perms",
-			domainID: domainID,
-			token:    validToken,
-			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
-			query:    "list_perms=true&listPerms=true",
-			status:   http.StatusBadRequest,
-			err:      apiutil.ErrInvalidQueryParams,
-		},
 	}
 
 	for _, tc := range cases {
@@ -746,7 +769,7 @@ func TestListClients(t *testing.T) {
 			}
 
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-			svcCall := svc.On("ListClients", mock.Anything, tc.authnRes, mock.Anything).Return(tc.listClientsResponse, tc.err)
+			svcCall := svc.On("ListClients", mock.Anything, tc.authnRes, tc.pageMeta).Return(tc.listClientsResponse, tc.err)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 
