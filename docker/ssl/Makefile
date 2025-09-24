@@ -72,7 +72,7 @@ It can be downloaded from $(DOWNLOAD_URL).
 
 etc, etc.
 endef
-all: clean_certs ca server_cert auth_grpc_certs domains_grpc_certs groups_grpc_certs clients_grpc_certs channels_grpc_certs
+all: clean_certs ca server_cert auth_grpc_certs domains_grpc_certs groups_grpc_certs clients_grpc_certs channels_grpc_certs coap_dtls_certs
 
 # CA name and key is "ca".
 ca:
