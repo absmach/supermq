@@ -306,7 +306,7 @@ func TestUpdateClientCmd(t *testing.T) {
 		logType       outputLog
 	}{
 		{
-			desc: "update client name and metadata successfully",
+			desc: "update client name and public metadata successfully",
 			args: []string{
 				client.ID,
 				updateCmd,
@@ -316,10 +316,28 @@ func TestUpdateClientCmd(t *testing.T) {
 			},
 			client: smqsdk.Client{
 				Name: "clientName",
-				Metadata: map[string]any{
-					"metadata": map[string]any{
-						"role": "general",
-					},
+				PublicMetadata: map[string]any{
+					"role": "general",
+				},
+				ID:       client.ID,
+				DomainID: client.DomainID,
+				Status:   client.Status,
+			},
+			logType: entityLog,
+		},
+		{
+			desc: "update client name and private metadata successfully",
+			args: []string{
+				client.ID,
+				updateCmd,
+				newNameandMeta,
+				domainID,
+				token,
+			},
+			client: smqsdk.Client{
+				Name: "clientName",
+				PrivateMetadata: map[string]any{
+					"role": "general",
 				},
 				ID:       client.ID,
 				DomainID: client.DomainID,

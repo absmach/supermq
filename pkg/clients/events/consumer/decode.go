@@ -90,9 +90,9 @@ func ToClient(data map[string]any) (clients.Client, error) {
 		c.Tags = tags
 	}
 
-	meta, ok := data["metadata"].(map[string]any)
+	meta, ok := data["public_metadata"].(map[string]any)
 	if ok {
-		c.Metadata = meta
+		c.PublicMetadata = meta
 	}
 
 	uby, ok := data["updated_by"].(string)

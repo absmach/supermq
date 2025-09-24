@@ -57,13 +57,14 @@ func TestCreateUser(t *testing.T) {
 	defer ts.Close()
 
 	createSdkUserReq := sdk.User{
-		FirstName:   user.FirstName,
-		LastName:    user.LastName,
-		Email:       user.Email,
-		Tags:        user.Tags,
-		Credentials: user.Credentials,
-		Metadata:    user.Metadata,
-		Status:      user.Status,
+		FirstName:       user.FirstName,
+		LastName:        user.LastName,
+		Email:           user.Email,
+		Tags:            user.Tags,
+		Credentials:     user.Credentials,
+		PublicMetadata:  user.PublicMetadata,
+		PrivateMetadata: user.PrivateMetadata,
+		Status:          user.Status,
 	}
 
 	conf := sdk.Config{
@@ -143,10 +144,11 @@ func TestCreateUser(t *testing.T) {
 			desc:  "register user with first name too long",
 			token: validToken,
 			createSdkUserReq: sdk.User{
-				FirstName:   strings.Repeat("a", 1025),
-				Credentials: createSdkUserReq.Credentials,
-				Metadata:    createSdkUserReq.Metadata,
-				Tags:        createSdkUserReq.Tags,
+				FirstName:       strings.Repeat("a", 1025),
+				Credentials:     createSdkUserReq.Credentials,
+				PublicMetadata:  createSdkUserReq.PublicMetadata,
+				PrivateMetadata: createSdkUserReq.PrivateMetadata,
+				Tags:            createSdkUserReq.Tags,
 			},
 			svcReq:   users.User{},
 			svcRes:   users.User{},
@@ -165,8 +167,9 @@ func TestCreateUser(t *testing.T) {
 					Username: "",
 					Secret:   createSdkUserReq.Credentials.Secret,
 				},
-				Metadata: createSdkUserReq.Metadata,
-				Tags:     createSdkUserReq.Tags,
+				PublicMetadata:  createSdkUserReq.PublicMetadata,
+				PrivateMetadata: createSdkUserReq.PrivateMetadata,
+				Tags:            createSdkUserReq.Tags,
 			},
 			svcReq:   users.User{},
 			svcRes:   users.User{},
@@ -185,8 +188,9 @@ func TestCreateUser(t *testing.T) {
 					Username: createSdkUserReq.Credentials.Username,
 					Secret:   "",
 				},
-				Metadata: createSdkUserReq.Metadata,
-				Tags:     createSdkUserReq.Tags,
+				PublicMetadata:  createSdkUserReq.PublicMetadata,
+				PrivateMetadata: createSdkUserReq.PrivateMetadata,
+				Tags:            createSdkUserReq.Tags,
 			},
 			svcReq:   users.User{},
 			svcRes:   users.User{},
@@ -205,8 +209,9 @@ func TestCreateUser(t *testing.T) {
 					Username: createSdkUserReq.Credentials.Username,
 					Secret:   "weak",
 				},
-				Metadata: createSdkUserReq.Metadata,
-				Tags:     createSdkUserReq.Tags,
+				PublicMetadata:  createSdkUserReq.PublicMetadata,
+				PrivateMetadata: createSdkUserReq.PrivateMetadata,
+				Tags:            createSdkUserReq.Tags,
 			},
 			svcReq:   users.User{},
 			svcRes:   users.User{},
@@ -225,7 +230,7 @@ func TestCreateUser(t *testing.T) {
 				FirstName: createSdkUserReq.FirstName,
 				LastName:  createSdkUserReq.LastName,
 				Email:     createSdkUserReq.Email,
-				Metadata: map[string]any{
+				PublicMetadata: map[string]any{
 					"test": make(chan int),
 				},
 			},
@@ -249,7 +254,7 @@ func TestCreateUser(t *testing.T) {
 					Username: createSdkUserReq.Credentials.Username,
 					Secret:   createSdkUserReq.Credentials.Secret,
 				},
-				Metadata: users.Metadata{
+				PublicMetadata: users.Metadata{
 					"key": make(chan int),
 				},
 			},
@@ -291,9 +296,9 @@ func TestListUsers(t *testing.T) {
 				Username: fmt.Sprintf("Username_%d", i),
 				Secret:   fmt.Sprintf("password_%d", i),
 			},
-			Metadata: sdk.Metadata{"name": fmt.Sprintf("user_%d", i)},
-			Status:   users.EnabledStatus.String(),
-			Role:     users.UserRole.String(),
+			PublicMetadata: sdk.Metadata{"name": fmt.Sprintf("user_%d", i)},
+			Status:         users.EnabledStatus.String(),
+			Role:           users.UserRole.String(),
 		}
 		if i == 50 {
 			cl.Status = users.DisabledStatus.String()
@@ -547,7 +552,7 @@ func TestListUsers(t *testing.T) {
 					{
 						ID:        id,
 						FirstName: "user_99",
-						Metadata: users.Metadata{
+						PublicMetadata: users.Metadata{
 							"key": make(chan int),
 						},
 					},
@@ -601,9 +606,9 @@ func TestSearchUsers(t *testing.T) {
 				Username: fmt.Sprintf("Username_%d", i),
 				Secret:   fmt.Sprintf("password_%d", i),
 			},
-			Metadata: sdk.Metadata{"name": fmt.Sprintf("user_%d", i)},
-			Status:   users.EnabledStatus.String(),
-			Role:     users.UserRole.String(),
+			PublicMetadata: sdk.Metadata{"name": fmt.Sprintf("user_%d", i)},
+			Status:         users.EnabledStatus.String(),
+			Role:           users.UserRole.String(),
 		}
 		if i == 50 {
 			cl.Status = users.DisabledStatus.String()
@@ -783,7 +788,7 @@ func TestViewUser(t *testing.T) {
 				ID:        id,
 				FirstName: user.FirstName,
 				LastName:  user.LastName,
-				Metadata: users.Metadata{
+				PublicMetadata: users.Metadata{
 					"key": make(chan int),
 				},
 			},
@@ -862,7 +867,7 @@ func TestUserProfile(t *testing.T) {
 			svcRes: users.User{
 				ID:        id,
 				FirstName: user.FirstName,
-				Metadata: users.Metadata{
+				PublicMetadata: users.Metadata{
 					"key": make(chan int),
 				},
 			},
@@ -1002,7 +1007,7 @@ func TestUpdateUser(t *testing.T) {
 			token: validToken,
 			updateUserReq: sdk.User{
 				ID: generateUUID(t),
-				Metadata: map[string]any{
+				PublicMetadata: map[string]any{
 					"test": make(chan int),
 				},
 			},
@@ -1026,7 +1031,7 @@ func TestUpdateUser(t *testing.T) {
 			svcRes: users.User{
 				ID:        id,
 				FirstName: updatedName,
-				Metadata: users.Metadata{
+				PublicMetadata: users.Metadata{
 					"key": make(chan int),
 				},
 			},
@@ -1163,7 +1168,7 @@ func TestUpdateUserTags(t *testing.T) {
 			token: validToken,
 			updateUserReq: sdk.User{
 				ID: generateUUID(t),
-				Metadata: map[string]any{
+				PublicMetadata: map[string]any{
 					"test": make(chan int),
 				},
 			},
@@ -1187,7 +1192,7 @@ func TestUpdateUserTags(t *testing.T) {
 			svcRes: users.User{
 				ID:   id,
 				Tags: updatedTags,
-				Metadata: users.Metadata{
+				PublicMetadata: users.Metadata{
 					"key": make(chan int),
 				},
 			},
@@ -1335,7 +1340,7 @@ func TestUpdateUserEmail(t *testing.T) {
 			svcRes: users.User{
 				ID:        id,
 				FirstName: updatedEmail,
-				Metadata: users.Metadata{
+				PublicMetadata: users.Metadata{
 					"key": make(chan int),
 				},
 			},
@@ -1631,7 +1636,7 @@ func TestUpdatePassword(t *testing.T) {
 			svcRes: users.User{
 				ID:        id,
 				FirstName: user.FirstName,
-				Metadata: users.Metadata{
+				PublicMetadata: users.Metadata{
 					"key": make(chan int),
 				},
 			},
@@ -1765,7 +1770,7 @@ func TestUpdateUserRole(t *testing.T) {
 			token: validToken,
 			updateUserReq: sdk.User{
 				ID: generateUUID(t),
-				Metadata: map[string]any{
+				PublicMetadata: map[string]any{
 					"test": make(chan int),
 				},
 			},
@@ -1789,7 +1794,7 @@ func TestUpdateUserRole(t *testing.T) {
 			svcRes: users.User{
 				ID:   id,
 				Role: users.AdminRole,
-				Metadata: users.Metadata{
+				PublicMetadata: users.Metadata{
 					"key": make(chan int),
 				},
 			},
@@ -1953,7 +1958,7 @@ func TestUpdateUsername(t *testing.T) {
 				Credentials: users.Credentials{
 					Username: updatedUsername,
 				},
-				Metadata: users.Metadata{
+				PublicMetadata: users.Metadata{
 					"key": make(chan int),
 				},
 			},
@@ -2093,7 +2098,7 @@ func TestUpdateProfilePicture(t *testing.T) {
 			token: validToken,
 			updateUserReq: sdk.User{
 				ID: generateUUID(t),
-				Metadata: map[string]any{
+				PublicMetadata: map[string]any{
 					"test": make(chan int),
 				},
 			},
@@ -2116,7 +2121,7 @@ func TestUpdateProfilePicture(t *testing.T) {
 			},
 			svcRes: users.User{
 				ID: id,
-				Metadata: users.Metadata{
+				PublicMetadata: users.Metadata{
 					"key": make(chan int),
 				},
 			},
@@ -2294,7 +2299,7 @@ func TestDisableUser(t *testing.T) {
 			svcRes: users.User{
 				ID:     id,
 				Status: users.DisabledStatus,
-				Metadata: users.Metadata{
+				PublicMetadata: users.Metadata{
 					"key": make(chan int),
 				},
 			},
