@@ -112,10 +112,11 @@ func (req listMembersReq) validate() error {
 }
 
 type updateClientReq struct {
-	id       string
-	Name     string         `json:"name,omitempty"`
-	Metadata map[string]any `json:"metadata,omitempty"`
-	Tags     []string       `json:"tags,omitempty"`
+	id              string
+	Name            string         `json:"name,omitempty"`
+	PublicMetadata  map[string]any `json:"public_metadata,omitempty"`
+	PrivateMetadata map[string]any `json:"private_metadata,omitempty"`
+	Tags            []string       `json:"tags,omitempty"`
 }
 
 func (req updateClientReq) validate() error {

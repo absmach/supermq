@@ -29,18 +29,19 @@ const (
 
 // User represents supermq user its credentials.
 type User struct {
-	ID             string      `json:"id"`
-	FirstName      string      `json:"first_name,omitempty"`
-	LastName       string      `json:"last_name,omitempty"`
-	Email          string      `json:"email,omitempty"`
-	Credentials    Credentials `json:"credentials"`
-	Tags           []string    `json:"tags,omitempty"`
-	Metadata       Metadata    `json:"metadata,omitempty"`
-	CreatedAt      time.Time   `json:"created_at,omitempty"`
-	UpdatedAt      time.Time   `json:"updated_at,omitempty"`
-	Status         string      `json:"status,omitempty"`
-	Role           string      `json:"role,omitempty"`
-	ProfilePicture string      `json:"profile_picture,omitempty"`
+	ID              string      `json:"id"`
+	FirstName       string      `json:"first_name,omitempty"`
+	LastName        string      `json:"last_name,omitempty"`
+	Email           string      `json:"email,omitempty"`
+	Credentials     Credentials `json:"credentials"`
+	Tags            []string    `json:"tags,omitempty"`
+	PublicMetadata  Metadata    `json:"public_metadata,omitempty"`
+	PrivateMetadata Metadata    `json:"private_metadata,omitempty"`
+	CreatedAt       time.Time   `json:"created_at,omitempty"`
+	UpdatedAt       time.Time   `json:"updated_at,omitempty"`
+	Status          string      `json:"status,omitempty"`
+	Role            string      `json:"role,omitempty"`
+	ProfilePicture  string      `json:"profile_picture,omitempty"`
 	AuthProvider   string      `json:"auth_provider,omitempty"`
 }
 

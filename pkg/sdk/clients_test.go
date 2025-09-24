@@ -51,11 +51,12 @@ func TestCreateClient(t *testing.T) {
 
 	client := generateTestClient(t, false)
 	createClientReq := sdk.Client{
-		Name:        client.Name,
-		Tags:        client.Tags,
-		Credentials: client.Credentials,
-		Metadata:    client.Metadata,
-		Status:      client.Status,
+		Name:            client.Name,
+		Tags:            client.Tags,
+		Credentials:     client.Credentials,
+		PublicMetadata:  client.PublicMetadata,
+		PrivateMetadata: client.PrivateMetadata,
+		Status:          client.Status,
 	}
 
 	conf := sdk.Config{
@@ -126,11 +127,12 @@ func TestCreateClient(t *testing.T) {
 			domainID: domainID,
 			token:    validToken,
 			createClientReq: sdk.Client{
-				Name:        strings.Repeat("a", 1025),
-				Tags:        client.Tags,
-				Credentials: client.Credentials,
-				Metadata:    client.Metadata,
-				Status:      client.Status,
+				Name:            strings.Repeat("a", 1025),
+				Tags:            client.Tags,
+				Credentials:     client.Credentials,
+				PublicMetadata:  client.PublicMetadata,
+				PrivateMetadata: client.PrivateMetadata,
+				Status:          client.Status,
 			},
 			svcReq:   clients.Client{},
 			svcRes:   []clients.Client{},
@@ -143,12 +145,13 @@ func TestCreateClient(t *testing.T) {
 			domainID: domainID,
 			token:    validToken,
 			createClientReq: sdk.Client{
-				ID:          "123456789",
-				Name:        client.Name,
-				Tags:        client.Tags,
-				Credentials: client.Credentials,
-				Metadata:    client.Metadata,
-				Status:      client.Status,
+				ID:              "123456789",
+				Name:            client.Name,
+				Tags:            client.Tags,
+				Credentials:     client.Credentials,
+				PublicMetadata:  client.PublicMetadata,
+				PrivateMetadata: client.PrivateMetadata,
+				Status:          client.Status,
 			},
 			svcReq:   clients.Client{},
 			svcRes:   []clients.Client{},
@@ -162,7 +165,7 @@ func TestCreateClient(t *testing.T) {
 			token:    validToken,
 			createClientReq: sdk.Client{
 				Name: valid,
-				Metadata: map[string]any{
+				PublicMetadata: map[string]any{
 					valid: make(chan int),
 				},
 			},
@@ -182,7 +185,7 @@ func TestCreateClient(t *testing.T) {
 				Name:        client.Name,
 				Tags:        client.Tags,
 				Credentials: clients.Credentials(client.Credentials),
-				Metadata: clients.Metadata{
+				PublicMetadata: clients.Metadata{
 					"test": make(chan int),
 				},
 			}},
@@ -276,7 +279,7 @@ func TestCreateClients(t *testing.T) {
 			desc:                 "create new clients with a request that can't be marshalled",
 			domainID:             domainID,
 			token:                validToken,
-			createClientsRequest: []sdk.Client{{Name: "test", Metadata: map[string]any{"test": make(chan int)}}},
+			createClientsRequest: []sdk.Client{{Name: "test", PublicMetadata: map[string]any{"test": make(chan int)}}},
 			svcReq:               convertClients(sdkClients...),
 			svcRes:               []clients.Client{},
 			svcErr:               nil,
@@ -293,7 +296,7 @@ func TestCreateClients(t *testing.T) {
 				Name:        sdkClients[0].Name,
 				Tags:        sdkClients[0].Tags,
 				Credentials: clients.Credentials(sdkClients[0].Credentials),
-				Metadata: clients.Metadata{
+				PublicMetadata: clients.Metadata{
 					"test": make(chan int),
 				},
 			}},
@@ -559,7 +562,7 @@ func TestListClients(t *testing.T) {
 					Name:        sdkClients[0].Name,
 					Tags:        sdkClients[0].Tags,
 					Credentials: clients.Credentials(sdkClients[0].Credentials),
-					Metadata: clients.Metadata{
+					PublicMetadata: clients.Metadata{
 						"test": make(chan int),
 					},
 				}},
@@ -695,7 +698,7 @@ func TestViewClient(t *testing.T) {
 				Name:        sdkClient.Name,
 				Tags:        sdkClient.Tags,
 				Credentials: clients.Credentials(sdkClient.Credentials),
-				Metadata: clients.Metadata{
+				PublicMetadata: clients.Metadata{
 					"test": make(chan int),
 				},
 			},
@@ -742,13 +745,13 @@ func TestUpdateClient(t *testing.T) {
 	sdkClient := generateTestClient(t, false)
 	updatedClient := sdkClient
 	updatedClient.Name = "newName"
-	updatedClient.Metadata = map[string]any{
+	updatedClient.PublicMetadata = map[string]any{
 		"newKey": "newValue",
 	}
 	updateClientReq := sdk.Client{
-		ID:       sdkClient.ID,
-		Name:     updatedClient.Name,
-		Metadata: updatedClient.Metadata,
+		ID:             sdkClient.ID,
+		Name:           updatedClient.Name,
+		PublicMetadata: updatedClient.PublicMetadata,
 	}
 
 	conf := sdk.Config{
@@ -844,7 +847,7 @@ func TestUpdateClient(t *testing.T) {
 
 			updateClientReq: sdk.Client{
 				ID: valid,
-				Metadata: map[string]any{
+				PublicMetadata: map[string]any{
 					"test": make(chan int),
 				},
 			},
@@ -864,7 +867,7 @@ func TestUpdateClient(t *testing.T) {
 				Name:        updatedClient.Name,
 				Tags:        updatedClient.Tags,
 				Credentials: clients.Credentials(updatedClient.Credentials),
-				Metadata: clients.Metadata{
+				PublicMetadata: clients.Metadata{
 					"test": make(chan int),
 				},
 			},
@@ -996,7 +999,7 @@ func TestUpdateClientTags(t *testing.T) {
 			token:    validToken,
 			updateClientReq: sdk.Client{
 				ID: valid,
-				Metadata: map[string]any{
+				PublicMetadata: map[string]any{
 					"test": make(chan int),
 				},
 			},
@@ -1016,7 +1019,7 @@ func TestUpdateClientTags(t *testing.T) {
 				Name:        updatedClient.Name,
 				Tags:        updatedClient.Tags,
 				Credentials: clients.Credentials(updatedClient.Credentials),
-				Metadata: clients.Metadata{
+				PublicMetadata: clients.Metadata{
 					"test": make(chan int),
 				},
 			},
@@ -1148,7 +1151,7 @@ func TestUpdateClientSecret(t *testing.T) {
 				Name:        updatedClient.Name,
 				Tags:        updatedClient.Tags,
 				Credentials: clients.Credentials(updatedClient.Credentials),
-				Metadata: clients.Metadata{
+				PublicMetadata: clients.Metadata{
 					"test": make(chan int),
 				},
 			},
@@ -1251,7 +1254,7 @@ func TestEnableClient(t *testing.T) {
 				Name:        enabledClient.Name,
 				Tags:        enabledClient.Tags,
 				Credentials: clients.Credentials(enabledClient.Credentials),
-				Metadata: clients.Metadata{
+				PublicMetadata: clients.Metadata{
 					"test": make(chan int),
 				},
 			},
@@ -1354,7 +1357,7 @@ func TestDisableClient(t *testing.T) {
 				Name:        disabledClient.Name,
 				Tags:        disabledClient.Tags,
 				Credentials: clients.Credentials(disabledClient.Credentials),
-				Metadata: clients.Metadata{
+				PublicMetadata: clients.Metadata{
 					"test": make(chan int),
 				},
 			},
@@ -3268,11 +3271,12 @@ func generateTestClient(t *testing.T, withRoles bool) sdk.Client {
 			Identity: "client@example.com",
 			Secret:   generateUUID(t),
 		},
-		Tags:      []string{"tag1", "tag2"},
-		Metadata:  validMetadata,
-		Status:    clients.EnabledStatus.String(),
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
-		Roles:     rl,
+		Tags:            []string{"tag1", "tag2"},
+		PublicMetadata:  validMetadata,
+		PrivateMetadata: validMetadata,
+		Status:          clients.EnabledStatus.String(),
+		CreatedAt:       createdAt,
+		UpdatedAt:       updatedAt,
+		Roles:           rl,
 	}
 }

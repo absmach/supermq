@@ -15,21 +15,22 @@ import (
 )
 
 type User struct {
-	ID             string      `json:"id"`
-	FirstName      string      `json:"first_name,omitempty"`
-	LastName       string      `json:"last_name,omitempty"`
-	Tags           []string    `json:"tags,omitempty"`
-	Metadata       Metadata    `json:"metadata,omitempty"`
-	Status         Status      `json:"status"`                    // 0 for enabled, 1 for disabled
-	Role           Role        `json:"role"`                      // 0 for normal user, 1 for admin
-	ProfilePicture string      `json:"profile_picture,omitempty"` // profile picture URL
-	Credentials    Credentials `json:"credentials,omitempty"`
-	Permissions    []string    `json:"permissions,omitempty"`
-	Email          string      `json:"email,omitempty"`
-	CreatedAt      time.Time   `json:"created_at,omitempty"`
-	UpdatedAt      time.Time   `json:"updated_at,omitempty"`
-	UpdatedBy      string      `json:"updated_by,omitempty"`
-	VerifiedAt     time.Time   `json:"verified_at,omitempty"`
+	ID              string      `json:"id"`
+	FirstName       string      `json:"first_name,omitempty"`
+	LastName        string      `json:"last_name,omitempty"`
+	Tags            []string    `json:"tags,omitempty"`
+	PublicMetadata  Metadata    `json:"public_metadata,omitempty"`
+	PrivateMetadata Metadata    `json:"private_metadata,omitempty"`
+	Status          Status      `json:"status"`                    // 0 for enabled, 1 for disabled
+	Role            Role        `json:"role"`                      // 0 for normal user, 1 for admin
+	ProfilePicture  string      `json:"profile_picture,omitempty"` // profile picture URL
+	Credentials     Credentials `json:"credentials,omitempty"`
+	Permissions     []string    `json:"permissions,omitempty"`
+	Email           string      `json:"email,omitempty"`
+	CreatedAt       time.Time   `json:"created_at,omitempty"`
+	UpdatedAt       time.Time   `json:"updated_at,omitempty"`
+	UpdatedBy       string      `json:"updated_by,omitempty"`
+	VerifiedAt      time.Time   `json:"verified_at,omitempty"`
 	AuthProvider   string      `json:"auth_provider,omitempty"`
 }
 
@@ -47,13 +48,14 @@ type UsersPage struct {
 type Metadata map[string]any
 
 type UserReq struct {
-	FirstName      *string    `json:"first_name,omitempty"`
-	LastName       *string    `json:"last_name,omitempty"`
-	Metadata       *Metadata  `json:"metadata,omitempty"`
-	Tags           *[]string  `json:"tags,omitempty"`
-	ProfilePicture *string    `json:"profile_picture,omitempty"`
-	UpdatedBy      *string    `json:"updated_by,omitempty"`
-	UpdatedAt      *time.Time `json:"updated_at,omitempty"`
+	FirstName       *string    `json:"first_name,omitempty"`
+	LastName        *string    `json:"last_name,omitempty"`
+	PublicMetadata  *Metadata  `json:"public_metadata,omitempty"`
+	PrivateMetadata *Metadata  `json:"private_metadata,omitempty"`
+	Tags            *[]string  `json:"tags,omitempty"`
+	ProfilePicture  *string    `json:"profile_picture,omitempty"`
+	UpdatedBy       *string    `json:"updated_by,omitempty"`
+	UpdatedAt       *time.Time `json:"updated_at,omitempty"`
 }
 
 // MembersPage contains page related metadata as well as list of members that

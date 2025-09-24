@@ -20,7 +20,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const maxNameSize = 254
+const (
+	maxNameSize = 254
+	defOrder    = "created_at"
+	defDir      = "asc"
+)
 
 var (
 	invalidName = strings.Repeat("m", maxNameSize+10)
@@ -72,8 +76,13 @@ func TestUsersSave(t *testing.T) {
 					Username: username,
 					Secret:   password,
 				},
-				Metadata: users.Metadata{},
-				Status:   users.EnabledStatus,
+				PublicMetadata: users.Metadata{
+					"organization": namesgen.Generate(),
+				},
+				PrivateMetadata: users.Metadata{
+					"address": namesgen.Generate(),
+				},
+				Status: users.EnabledStatus,
 			},
 			err: nil,
 		},
@@ -94,8 +103,13 @@ func TestUsersSave(t *testing.T) {
 					Username: namesgen.Generate(),
 					Secret:   password,
 				},
-				Metadata: users.Metadata{},
-				Status:   users.EnabledStatus,
+				PublicMetadata: users.Metadata{
+					"organization": namesgen.Generate(),
+				},
+				PrivateMetadata: users.Metadata{
+					"address": namesgen.Generate(),
+				},
+				Status: users.EnabledStatus,
 			},
 			err: errors.ErrEmailAlreadyExists,
 		},
@@ -110,8 +124,13 @@ func TestUsersSave(t *testing.T) {
 					Username: username,
 					Secret:   password,
 				},
-				Metadata: users.Metadata{},
-				Status:   users.EnabledStatus,
+				PublicMetadata: users.Metadata{
+					"organization": namesgen.Generate(),
+				},
+				PrivateMetadata: users.Metadata{
+					"address": namesgen.Generate(),
+				},
+				Status: users.EnabledStatus,
 			},
 			err: errors.ErrUsernameNotAvailable,
 		},
@@ -126,8 +145,13 @@ func TestUsersSave(t *testing.T) {
 					Username: username,
 					Secret:   password,
 				},
-				Metadata: users.Metadata{},
-				Status:   users.EnabledStatus,
+				PublicMetadata: users.Metadata{
+					"organization": namesgen.Generate(),
+				},
+				PrivateMetadata: users.Metadata{
+					"address": namesgen.Generate(),
+				},
+				Status: users.EnabledStatus,
 			},
 			err: errors.ErrMalformedEntity,
 		},
@@ -142,8 +166,13 @@ func TestUsersSave(t *testing.T) {
 					Username: invalidName,
 					Secret:   password,
 				},
-				Metadata: users.Metadata{},
-				Status:   users.EnabledStatus,
+				PublicMetadata: users.Metadata{
+					"organization": namesgen.Generate(),
+				},
+				PrivateMetadata: users.Metadata{
+					"address": namesgen.Generate(),
+				},
+				Status: users.EnabledStatus,
 			},
 			err: errors.ErrMalformedEntity,
 		},
@@ -157,7 +186,12 @@ func TestUsersSave(t *testing.T) {
 				Credentials: users.Credentials{
 					Secret: password,
 				},
-				Metadata: users.Metadata{},
+				PublicMetadata: users.Metadata{
+					"organization": namesgen.Generate(),
+				},
+				PrivateMetadata: users.Metadata{
+					"address": namesgen.Generate(),
+				},
 			},
 			err: nil,
 		},
@@ -171,7 +205,12 @@ func TestUsersSave(t *testing.T) {
 				Credentials: users.Credentials{
 					Username: namesgen.Generate(),
 				},
-				Metadata: users.Metadata{},
+				PublicMetadata: users.Metadata{
+					"organization": namesgen.Generate(),
+				},
+				PrivateMetadata: users.Metadata{
+					"address": namesgen.Generate(),
+				},
 			},
 			err: nil,
 		},
@@ -185,7 +224,7 @@ func TestUsersSave(t *testing.T) {
 					Username: username,
 					Secret:   password,
 				},
-				Metadata: map[string]any{
+				PublicMetadata: map[string]any{
 					"key": make(chan int),
 				},
 			},
@@ -232,9 +271,10 @@ func TestIsPlatformAdmin(t *testing.T) {
 					Username: username,
 					Secret:   password,
 				},
-				Metadata: users.Metadata{},
-				Status:   users.EnabledStatus,
-				Role:     users.AdminRole,
+				PublicMetadata:  users.Metadata{},
+				PrivateMetadata: users.Metadata{},
+				Status:          users.EnabledStatus,
+				Role:            users.AdminRole,
 			},
 			err: nil,
 		},
@@ -249,9 +289,10 @@ func TestIsPlatformAdmin(t *testing.T) {
 					Username: namesgen.Generate(),
 					Secret:   password,
 				},
-				Metadata: users.Metadata{},
-				Status:   users.EnabledStatus,
-				Role:     users.UserRole,
+				PublicMetadata:  users.Metadata{},
+				PrivateMetadata: users.Metadata{},
+				Status:          users.EnabledStatus,
+				Role:            users.UserRole,
 			},
 			err: repoerr.ErrNotFound,
 		},
@@ -282,8 +323,13 @@ func TestRetrieveByID(t *testing.T) {
 			Username: namesgen.Generate(),
 			Secret:   password,
 		},
-		Metadata: users.Metadata{},
-		Status:   users.EnabledStatus,
+		PublicMetadata: users.Metadata{
+			"organization": namesgen.Generate(),
+		},
+		PrivateMetadata: users.Metadata{
+			"address": namesgen.Generate(),
+		},
+		Status: users.EnabledStatus,
 	}
 
 	_, err := repo.Save(context.Background(), user)
@@ -365,13 +411,13 @@ func TestRetrieveAll(t *testing.T) {
 				Username: namesgen.Generate(),
 				Secret:   "",
 			},
-			Metadata:  users.Metadata{},
-			Status:    users.EnabledStatus,
-			Tags:      []string{"tag1"},
-			CreatedAt: baseTime.Add(time.Duration(i) * time.Millisecond),
+			PublicMetadata: users.Metadata{},
+			Status:         users.EnabledStatus,
+			Tags:           []string{"tag1"},
+			CreatedAt:      baseTime.Add(time.Duration(i) * time.Millisecond),
 		}
 		if i%50 == 0 {
-			user.Metadata = map[string]any{
+			user.PublicMetadata = map[string]any{
 				"key": "value",
 			}
 			user.Role = users.AdminRole
@@ -395,19 +441,19 @@ func TestRetrieveAll(t *testing.T) {
 			desc: "retrieve first page of users",
 			pageMeta: users.Page{
 				Offset: 0,
-				Limit:  50,
+				Limit:  1,
 				Role:   users.AllRole,
 				Status: users.AllStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
 					Total:  200,
 					Offset: 0,
-					Limit:  50,
+					Limit:  1,
 				},
-				Users: items[0:50],
+				Users: items[0:1],
 			},
 			err: nil,
 		},
@@ -418,8 +464,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:  200,
 				Role:   users.AllRole,
 				Status: users.AllStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -438,8 +484,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:  50,
 				Role:   users.AllRole,
 				Status: users.AllStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -475,8 +521,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:  1000,
 				Role:   users.AllRole,
 				Status: users.AllStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -509,8 +555,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:  3,
 				Role:   users.AllRole,
 				Status: users.AllStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -549,8 +595,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:     3,
 				Role:      users.AllRole,
 				Status:    users.AllStatus,
-				Order:     "created_at",
-				Dir:       "asc",
+				Order:     defOrder,
+				Dir:       defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -570,8 +616,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:    3,
 				Role:     users.AllRole,
 				Status:   users.AllStatus,
-				Order:    "created_at",
-				Dir:      "asc",
+				Order:    defOrder,
+				Dir:      defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -590,8 +636,8 @@ func TestRetrieveAll(t *testing.T) {
 				Offset: 0,
 				Limit:  200,
 				Role:   users.AllRole,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -610,8 +656,8 @@ func TestRetrieveAll(t *testing.T) {
 				Offset: 0,
 				Limit:  200,
 				Role:   users.AllRole,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -629,8 +675,8 @@ func TestRetrieveAll(t *testing.T) {
 				Offset: 0,
 				Limit:  200,
 				Role:   users.AllRole,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -679,7 +725,7 @@ func TestRetrieveAll(t *testing.T) {
 			},
 		},
 		{
-			desc: "retrieve with metadata",
+			desc: "retrieve with public metadata",
 			pageMeta: users.Page{
 				Metadata: map[string]any{
 					"key": "value",
@@ -688,8 +734,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:  200,
 				Role:   users.AllRole,
 				Status: users.AllStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -729,8 +775,8 @@ func TestRetrieveAll(t *testing.T) {
 				Offset: 0,
 				Limit:  200,
 				Status: users.AllStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -794,7 +840,8 @@ func TestSearch(t *testing.T) {
 			Credentials: users.Credentials{
 				Username: user.Credentials.Username,
 			},
-			CreatedAt: user.CreatedAt,
+			PublicMetadata: user.PublicMetadata,
+			CreatedAt:      user.CreatedAt,
 		})
 	}
 
@@ -840,8 +887,8 @@ func TestSearch(t *testing.T) {
 			desc: "with limit only",
 			page: users.Page{
 				Limit: 10,
-				Order: "name",
-				Dir:   "asc",
+				Order: defOrder,
+				Dir:   defDir,
 			},
 			response: users.UsersPage{
 				Users: expectedUsers[0:10],
@@ -857,15 +904,17 @@ func TestSearch(t *testing.T) {
 			desc: "retrieve all users",
 			page: users.Page{
 				Offset: 0,
-				Limit:  nUsers,
+				Limit:  10,
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			response: users.UsersPage{
 				Page: users.Page{
 					Total:  nUsers,
 					Offset: 0,
-					Limit:  nUsers,
+					Limit:  10,
 				},
-				Users: expectedUsers,
+				Users: expectedUsers[:10],
 			},
 		},
 		{
@@ -873,8 +922,8 @@ func TestSearch(t *testing.T) {
 			page: users.Page{
 				Offset: 10,
 				Limit:  10,
-				Order:  "name",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			response: users.UsersPage{
 				Users: expectedUsers[10:20],
@@ -906,8 +955,8 @@ func TestSearch(t *testing.T) {
 			page: users.Page{
 				Offset: 190,
 				Limit:  50,
-				Order:  "name",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			response: users.UsersPage{
 				Page: users.Page{
@@ -925,7 +974,7 @@ func TestSearch(t *testing.T) {
 				Offset:    0,
 				Limit:     10,
 				Order:     "first_name",
-				Dir:       "asc",
+				Dir:       defDir,
 			},
 			response: users.UsersPage{
 				Users: findUsers(expectedUsers, expectedUsers[0].FirstName[:4], 0, 10),
@@ -978,7 +1027,7 @@ func TestSearch(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 				Order:  "first_name",
-				Dir:    "asc",
+				Dir:    defDir,
 			},
 			response: users.UsersPage{
 				Users: findUsers(expectedUsers, expectedUsers[0].FirstName[:4], 0, 10),
@@ -1045,7 +1094,7 @@ func TestSearch(t *testing.T) {
 			desc: "with name in asc order",
 			page: users.Page{
 				Order:     "first_name",
-				Dir:       "asc",
+				Dir:       defDir,
 				FirstName: expectedUsers[0].FirstName[:1],
 				Offset:    0,
 				Limit:     10,
@@ -1070,7 +1119,7 @@ func TestSearch(t *testing.T) {
 			page: users.Page{
 				LastName: expectedUsers[0].LastName[:1],
 				Order:    "last_name",
-				Dir:      "asc",
+				Dir:      defDir,
 			},
 			response: users.UsersPage{
 				Users: []users.User{expectedUsers[0]},
@@ -1087,7 +1136,7 @@ func TestSearch(t *testing.T) {
 			page: users.Page{
 				Username: expectedUsers[0].Credentials.Username[:1],
 				Order:    "username",
-				Dir:      "asc",
+				Dir:      defDir,
 			},
 			response: users.UsersPage{
 				Users: []users.User{expectedUsers[0]},
@@ -1111,7 +1160,7 @@ func TestSearch(t *testing.T) {
 				assert.Equal(t, c.response.Total, response.Total)
 				assert.Equal(t, c.response.Limit, response.Limit)
 				assert.Equal(t, c.response.Offset, response.Offset)
-				assert.ElementsMatch(t, response.Users, c.response.Users)
+				assert.ElementsMatch(t, response.Users, c.response.Users, fmt.Sprintf("expected %v got %v\n", c.response.Users, response.Users))
 			default:
 				assert.True(t, errors.Contains(err, c.err), fmt.Sprintf("expected %s to contain %s\n", err, c.err))
 			}
@@ -1289,44 +1338,86 @@ func TestUpdate(t *testing.T) {
 		err     error
 	}{
 		{
-			desc:   "update metadata for enabled user",
-			update: "metadata",
+			desc:   "update public metadata for enabled user",
+			update: "public_metadata",
 			userID: user1.ID,
 			userReq: users.UserReq{
-				Metadata: &updatedMetadata,
+				PublicMetadata: &updatedMetadata,
 			},
 			userRes: users.User{
-				Metadata: updatedMetadata,
+				PublicMetadata: updatedMetadata,
 			},
 			err: nil,
 		},
 		{
-			desc:   "update malformed metadata for enabled user",
-			update: "metadata",
+			desc:   "update malformed public metadata for enabled user",
+			update: "public_metadata",
 			userID: user1.ID,
 			userReq: users.UserReq{
-				Metadata: &malformedMetadata,
+				PublicMetadata: &malformedMetadata,
 			},
 			err: repoerr.ErrUpdateEntity,
 		},
 		{
-			desc:   "update empty metadata for enabled user",
-			update: "metadata",
+			desc:   "update empty public metadata for enabled user",
+			update: "public_metadata",
 			userID: user3.ID,
 			userReq: users.UserReq{
-				Metadata: &users.Metadata{},
+				PublicMetadata: &users.Metadata{},
 			},
 			userRes: users.User{
-				Metadata: users.Metadata{},
+				PublicMetadata: users.Metadata{},
 			},
 			err: nil,
 		},
 		{
-			desc:   "update metadata for disabled user",
-			update: "metadata",
+			desc:   "update public metadata for disabled user",
+			update: "public_metadata",
 			userID: user2.ID,
 			userReq: users.UserReq{
-				Metadata: &updatedMetadata,
+				PublicMetadata: &updatedMetadata,
+			},
+			err: repoerr.ErrNotFound,
+		},
+		{
+			desc:   "update private metadata for enabled user",
+			update: "private_metadata",
+			userID: user1.ID,
+			userReq: users.UserReq{
+				PrivateMetadata: &updatedMetadata,
+			},
+			userRes: users.User{
+				PrivateMetadata: updatedMetadata,
+			},
+			err: nil,
+		},
+		{
+			desc:   "update malformed private metadata for enabled user",
+			update: "private_metadata",
+			userID: user1.ID,
+			userReq: users.UserReq{
+				PrivateMetadata: &malformedMetadata,
+			},
+			err: repoerr.ErrUpdateEntity,
+		},
+		{
+			desc:   "update empty private metadata for enabled user",
+			update: "private_metadata",
+			userID: user3.ID,
+			userReq: users.UserReq{
+				PrivateMetadata: &users.Metadata{},
+			},
+			userRes: users.User{
+				PrivateMetadata: users.Metadata{},
+			},
+			err: nil,
+		},
+		{
+			desc:   "update private metadata for disabled user",
+			update: "private_metadata",
+			userID: user2.ID,
+			userReq: users.UserReq{
+				PrivateMetadata: &updatedMetadata,
 			},
 			err: repoerr.ErrNotFound,
 		},
@@ -1362,11 +1453,11 @@ func TestUpdate(t *testing.T) {
 			err: repoerr.ErrNotFound,
 		},
 		{
-			desc:   "update metadata for invalid user",
-			update: "metadata",
+			desc:   "update public metadata for invalid user",
+			update: "public_metadata",
 			userID: testsutil.GenerateUUID(t),
 			userReq: users.UserReq{
-				Metadata: &updatedMetadata,
+				PublicMetadata: &updatedMetadata,
 			},
 			err: repoerr.ErrNotFound,
 		},
@@ -1509,8 +1600,10 @@ func TestUpdate(t *testing.T) {
 			assert.True(t, errors.Contains(err, c.err), fmt.Sprintf("expected %s to contain %s\n", err, c.err))
 			if err == nil {
 				switch c.update {
-				case "metadata":
-					assert.Equal(t, c.userRes.Metadata, expected.Metadata)
+				case "public_metadata":
+					assert.Equal(t, c.userRes.PublicMetadata, expected.PublicMetadata)
+				case "private_metadata":
+					assert.Equal(t, c.userRes.PrivateMetadata, expected.PrivateMetadata)
 				case "first_name":
 					assert.Equal(t, c.userRes.FirstName, expected.FirstName)
 				case "last_name":
@@ -1786,6 +1879,7 @@ func TestRetrieveByIDs(t *testing.T) {
 	baseTime := time.Now().UTC().Truncate(time.Millisecond)
 	for i := 0; i < num; i++ {
 		user := generateUserWithTime(t, users.EnabledStatus, repo, baseTime.Add(time.Duration(i)*time.Millisecond))
+		user.PrivateMetadata = nil
 		items = append(items, user)
 	}
 
@@ -1805,8 +1899,8 @@ func TestRetrieveByIDs(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 				IDs:    getIDs(items[0:3]),
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			response: users.UsersPage{
 				Page: users.Page{
@@ -1839,8 +1933,8 @@ func TestRetrieveByIDs(t *testing.T) {
 			page: users.Page{
 				Offset: 10,
 				IDs:    getIDs(items[0:20]),
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			response: users.UsersPage{
 				Page: users.Page{
@@ -1857,8 +1951,8 @@ func TestRetrieveByIDs(t *testing.T) {
 			page: users.Page{
 				Limit: 10,
 				IDs:   getIDs(items[0:20]),
-				Order: "created_at",
-				Dir:   "asc",
+				Order: defOrder,
+				Dir:   defDir,
 			},
 			response: users.UsersPage{
 				Page: users.Page{
@@ -1893,8 +1987,8 @@ func TestRetrieveByIDs(t *testing.T) {
 				Offset: 15,
 				Limit:  10,
 				IDs:    getIDs(items[0:20]),
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			response: users.UsersPage{
 				Page: users.Page{
@@ -1930,8 +2024,8 @@ func TestRetrieveByIDs(t *testing.T) {
 				Limit:     10,
 				FirstName: items[0].FirstName,
 				IDs:       getIDs(items[0:20]),
-				Order:     "created_at",
-				Dir:       "asc",
+				Order:     defOrder,
+				Dir:       defDir,
 			},
 			response: users.UsersPage{
 				Page: users.Page{
@@ -1948,7 +2042,7 @@ func TestRetrieveByIDs(t *testing.T) {
 			page: users.Page{
 				Offset:   0,
 				Limit:    10,
-				Metadata: items[0].Metadata,
+				Metadata: items[0].PublicMetadata,
 				IDs:      getIDs(items[0:20]),
 			},
 			response: users.UsersPage{
@@ -1979,21 +2073,23 @@ func TestRetrieveByIDs(t *testing.T) {
 				},
 				Users: []users.User(nil),
 			},
-			err: errors.ErrMalformedEntity,
+			err: repoerr.ErrViewEntity,
 		},
 	}
 
 	for _, c := range cases {
-		switch response, err := repo.RetrieveAllByIDs(context.Background(), c.page); {
-		case err == nil:
-			assert.Nil(t, err, fmt.Sprintf("%s: expected %s got %s\n", c.desc, c.err, err))
-			assert.Equal(t, c.response.Total, response.Total)
-			assert.Equal(t, c.response.Limit, response.Limit)
-			assert.Equal(t, c.response.Offset, response.Offset)
-			assert.ElementsMatch(t, response.Users, c.response.Users)
-		default:
-			assert.True(t, errors.Contains(err, c.err), fmt.Sprintf("expected %s to contain %s\n", err, c.err))
-		}
+		t.Run(c.desc, func(t *testing.T) {
+			switch response, err := repo.RetrieveAllByIDs(context.Background(), c.page); {
+			case err == nil:
+				assert.Nil(t, err, fmt.Sprintf("%s: expected %s got %s\n", c.desc, c.err, err))
+				assert.Equal(t, c.response.Total, response.Total)
+				assert.Equal(t, c.response.Limit, response.Limit)
+				assert.Equal(t, c.response.Offset, response.Offset)
+				assert.ElementsMatch(t, response.Users, c.response.Users, fmt.Sprintf("expected %v got %v\n", c.response.Users, response.Users))
+			default:
+				assert.True(t, errors.Contains(err, c.err), fmt.Sprintf("expected %s to contain %s\n", err, c.err))
+			}
+		})
 	}
 }
 
@@ -2039,7 +2135,7 @@ func TestRetrieveByEmail(t *testing.T) {
 				assert.Equal(t, user.ID, usr.ID)
 				assert.Equal(t, user.FirstName, usr.FirstName)
 				assert.Equal(t, user.LastName, usr.LastName)
-				assert.Equal(t, user.Metadata, usr.Metadata)
+				assert.Equal(t, user.PublicMetadata, usr.PublicMetadata)
 				assert.Equal(t, user.Email, usr.Email)
 				assert.Equal(t, user.Credentials.Username, usr.Credentials.Username)
 				assert.Equal(t, user.Status, usr.Status)
@@ -2090,7 +2186,7 @@ func TestRetrieveByUsername(t *testing.T) {
 				assert.Equal(t, user.ID, usr.ID)
 				assert.Equal(t, user.FirstName, usr.FirstName)
 				assert.Equal(t, user.LastName, usr.LastName)
-				assert.Equal(t, user.Metadata, usr.Metadata)
+				assert.Equal(t, user.PublicMetadata, usr.PublicMetadata)
 				assert.Equal(t, user.Email, usr.Email)
 				assert.Equal(t, user.Credentials.Username, usr.Credentials.Username)
 				assert.Equal(t, user.Status, usr.Status)
@@ -2133,8 +2229,11 @@ func generateUserWithTime(t *testing.T, status users.Status, repo users.Reposito
 			Secret:   testsutil.GenerateUUID(t),
 		},
 		Tags: namesgen.GenerateMultiple(5),
-		Metadata: users.Metadata{
-			"name": namesgen.Generate(),
+		PublicMetadata: users.Metadata{
+			"organization": namesgen.Generate(),
+		},
+		PrivateMetadata: users.Metadata{
+			"address": namesgen.Generate(),
 		},
 		Status:    status,
 		CreatedAt: createdAt,
