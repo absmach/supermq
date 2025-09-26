@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -734,7 +735,7 @@ func TestListClients(t *testing.T) {
 				},
 				Clients: []clients.Client{client},
 			},
-			query:  "metadata=%7B%22domain%22%3A%20%22example.com%22%7D&",
+			query:  fmt.Sprintf("metadata=%s", url.PathEscape(`{"domain": "example.com"}`)),
 			status: http.StatusOK,
 			err:    nil,
 		},
@@ -752,7 +753,7 @@ func TestListClients(t *testing.T) {
 			domainID: domainID,
 			token:    validToken,
 			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
-			query:    "metadata=%7B%22domain%22%3A%20%22example.com%22%7D&metadata=%7B%22domain%22%3A%20%22example.com%22%7D",
+			query:    fmt.Sprintf("metadata=%s&metadata=%s", url.PathEscape(`{"domain": "example.com"}`), url.PathEscape(`{"domain": "example.com"}`)),
 			status:   http.StatusBadRequest,
 			err:      apiutil.ErrInvalidQueryParams,
 		},
