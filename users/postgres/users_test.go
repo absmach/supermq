@@ -2150,7 +2150,7 @@ func generateUser(t *testing.T, status users.Status, repo users.Repository) user
 			"name": namesgen.Generate(),
 		},
 		Status:    status,
-		CreatedAt: time.Now().UTC().Truncate(time.Millisecond),
+		CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
 	}
 	user, err := repo.Save(context.Background(), usr)
 	require.Nil(t, err, fmt.Sprintf("add new user: expected nil got %s\n", err))
