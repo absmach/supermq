@@ -31,7 +31,7 @@ type Service interface {
 	// service map of subscriptions under given ID.
 	Subscribe(ctx context.Context, key, domainID, chanID, subtopic string, c Client) error
 
-	// Unsubscribe method is used to stop observing resource.
+	// Unsubscribe methdod is used to stop observing resource.
 	Unsubscribe(ctx context.Context, key, domainID, chanID, subptopic, token string) error
 
 	// DisconnectHandler method is used to disconnected the client
@@ -73,21 +73,6 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 	if topicType == messaging.HealthType {
 		return nil
 	}
-
-	authzRes, err := svc.channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
-		DomainId:   msg.GetDomain(),
-		ClientId:   authnRes.GetId(),
-		ClientType: policies.ClientType,
-		Type:       uint32(connections.Publish),
-		ChannelId:  msg.GetChannel(),
-	})
-	if err != nil {
-		return errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-	if !authzRes.Authorized {
-		return svcerr.ErrAuthorization
-	}
-
 	msg.Publisher = authnRes.GetId()
 
 	return svc.pubsub.Publish(ctx, messaging.EncodeMessageTopic(msg), msg)
@@ -105,19 +90,6 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, domainID, chanID,
 	}
 
 	clientID := authnRes.GetId()
-	authzRes, err := svc.channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
-		DomainId:   domainID,
-		ClientId:   clientID,
-		ClientType: policies.ClientType,
-		Type:       uint32(connections.Subscribe),
-		ChannelId:  chanID,
-	})
-	if err != nil {
-		return errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-	if !authzRes.Authorized {
-		return svcerr.ErrAuthorization
-	}
 
 	subject := messaging.EncodeTopic(domainID, chanID, subtopic)
 	authzc := newAuthzClient(clientID, domainID, chanID, subtopic, svc.channels, c)
