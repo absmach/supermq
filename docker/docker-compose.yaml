@@ -1129,7 +1129,6 @@ services:
     container_name: supermq-mqtt
     depends_on:
       - clients
-      - rabbitmq
       - nats
     restart: on-failure
     environment:
@@ -1564,27 +1563,6 @@ services:
         target: /domains-grpc-server-ca${SMQ_DOMAINS_GRPC_SERVER_CA_CERTS:+.crt}
         bind:
           create_host_path: true
-
-  rabbitmq:
-    image: rabbitmq:4.0.5-management-alpine
-    container_name: supermq-rabbitmq
-    restart: on-failure
-    environment:
-      RABBITMQ_ERLANG_COOKIE: ${SMQ_RABBITMQ_COOKIE}
-      RABBITMQ_DEFAULT_USER: ${SMQ_RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASS: ${SMQ_RABBITMQ_PASS}
-      RABBITMQ_DEFAULT_VHOST: ${SMQ_RABBITMQ_VHOST}
-      RABBITMQ_CONFIG_FILES: /etc/rabbitmq/conf.d/
-    ports:
-      - ${SMQ_RABBITMQ_PORT}:${SMQ_RABBITMQ_PORT}
-      - ${SMQ_RABBITMQ_HTTP_PORT}:${SMQ_RABBITMQ_HTTP_PORT}
-      - ${SMQ_RABBITMQ_WS_PORT}:${SMQ_RABBITMQ_WS_PORT}
-    volumes:
-      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
-      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/conf.d/10-defaults.conf
-      - supermq-mqtt-broker-volume:/var/lib/rabbitmq
-    networks:
-      - supermq-base-net
 
   nats:
     image: nats:2.10.25-alpine
