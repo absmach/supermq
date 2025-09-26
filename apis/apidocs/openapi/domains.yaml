@@ -24,7 +24,7 @@ tags:
     description: CRUD operations for your domains
     externalDocs:
       description: Find out more about domains
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
   - name: Roles
     description: All operations involving roles for domains
     externalDocs:
@@ -39,7 +39,7 @@ tags:
     description: Service health check endpoint.
     externalDocs:
       description: Find out more about health check
-      url: https://docs.magistrala.abstractmachines.fr/
+      url: https://docs.supermq.abstractmachines.fr/
 
 paths:
   /domains:
