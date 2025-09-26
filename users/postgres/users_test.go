@@ -20,7 +20,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const maxNameSize = 254
+const (
+	maxNameSize = 254
+	defOrder    = "created_at"
+	defDir      = "asc"
+)
 
 var (
 	invalidName = strings.Repeat("m", maxNameSize+10)
@@ -323,7 +327,7 @@ func TestRetrieveAll(t *testing.T) {
 			Metadata:  users.Metadata{},
 			Status:    users.EnabledStatus,
 			Tags:      []string{"tag1"},
-			CreatedAt: time.Now().UTC().Truncate(time.Millisecond),
+			CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
 		}
 		if i%50 == 0 {
 			user.Metadata = map[string]any{
@@ -356,8 +360,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:  50,
 				Role:   users.AllRole,
 				Status: users.AllStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -376,8 +380,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:  200,
 				Role:   users.AllRole,
 				Status: users.AllStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -396,8 +400,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:  50,
 				Role:   users.AllRole,
 				Status: users.AllStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -433,8 +437,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:  1000,
 				Role:   users.AllRole,
 				Status: users.AllStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -467,8 +471,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:  3,
 				Role:   users.AllRole,
 				Status: users.AllStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -507,8 +511,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:     3,
 				Role:      users.AllRole,
 				Status:    users.AllStatus,
-				Order:     "created_at",
-				Dir:       "asc",
+				Order:     defOrder,
+				Dir:       defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -528,8 +532,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:    3,
 				Role:     users.AllRole,
 				Status:   users.AllStatus,
-				Order:    "created_at",
-				Dir:      "asc",
+				Order:    defOrder,
+				Dir:      defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -548,8 +552,8 @@ func TestRetrieveAll(t *testing.T) {
 				Offset: 0,
 				Limit:  200,
 				Role:   users.AllRole,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -568,8 +572,8 @@ func TestRetrieveAll(t *testing.T) {
 				Offset: 0,
 				Limit:  200,
 				Role:   users.AllRole,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -587,8 +591,8 @@ func TestRetrieveAll(t *testing.T) {
 				Offset: 0,
 				Limit:  200,
 				Role:   users.AllRole,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -703,8 +707,8 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:  200,
 				Role:   users.AllRole,
 				Status: users.AllStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -744,8 +748,8 @@ func TestRetrieveAll(t *testing.T) {
 				Offset: 0,
 				Limit:  200,
 				Status: users.AllStatus,
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			page: users.UsersPage{
 				Page: users.Page{
@@ -855,7 +859,7 @@ func TestSearch(t *testing.T) {
 			page: users.Page{
 				Limit: 10,
 				Order: "name",
-				Dir:   "asc",
+				Dir:   defDir,
 			},
 			response: users.UsersPage{
 				Users: expectedUsers[0:10],
@@ -888,7 +892,7 @@ func TestSearch(t *testing.T) {
 				Offset: 10,
 				Limit:  10,
 				Order:  "name",
-				Dir:    "asc",
+				Dir:    defDir,
 			},
 			response: users.UsersPage{
 				Users: expectedUsers[10:20],
@@ -921,7 +925,7 @@ func TestSearch(t *testing.T) {
 				Offset: 190,
 				Limit:  50,
 				Order:  "name",
-				Dir:    "asc",
+				Dir:    defDir,
 			},
 			response: users.UsersPage{
 				Page: users.Page{
@@ -939,7 +943,7 @@ func TestSearch(t *testing.T) {
 				Offset:    0,
 				Limit:     10,
 				Order:     "first_name",
-				Dir:       "asc",
+				Dir:       defDir,
 			},
 			response: users.UsersPage{
 				Users: findUsers(expectedUsers, expectedUsers[0].FirstName[:4], 0, 10),
@@ -992,7 +996,7 @@ func TestSearch(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 				Order:  "first_name",
-				Dir:    "asc",
+				Dir:    defDir,
 			},
 			response: users.UsersPage{
 				Users: findUsers(expectedUsers, expectedUsers[0].FirstName[:4], 0, 10),
@@ -1059,7 +1063,7 @@ func TestSearch(t *testing.T) {
 			desc: "with name in asc order",
 			page: users.Page{
 				Order:     "first_name",
-				Dir:       "asc",
+				Dir:       defDir,
 				FirstName: expectedUsers[0].FirstName[:1],
 				Offset:    0,
 				Limit:     10,
@@ -1084,7 +1088,7 @@ func TestSearch(t *testing.T) {
 			page: users.Page{
 				LastName: expectedUsers[0].LastName[:1],
 				Order:    "last_name",
-				Dir:      "asc",
+				Dir:      defDir,
 			},
 			response: users.UsersPage{
 				Users: []users.User{expectedUsers[0]},
@@ -1101,7 +1105,7 @@ func TestSearch(t *testing.T) {
 			page: users.Page{
 				Username: expectedUsers[0].Credentials.Username[:1],
 				Order:    "username",
-				Dir:      "asc",
+				Dir:      defDir,
 			},
 			response: users.UsersPage{
 				Users: []users.User{expectedUsers[0]},
@@ -1818,8 +1822,8 @@ func TestRetrieveByIDs(t *testing.T) {
 				Offset: 0,
 				Limit:  10,
 				IDs:    getIDs(items[0:3]),
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			response: users.UsersPage{
 				Page: users.Page{
@@ -1852,8 +1856,8 @@ func TestRetrieveByIDs(t *testing.T) {
 			page: users.Page{
 				Offset: 10,
 				IDs:    getIDs(items[0:20]),
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			response: users.UsersPage{
 				Page: users.Page{
@@ -1870,8 +1874,8 @@ func TestRetrieveByIDs(t *testing.T) {
 			page: users.Page{
 				Limit: 10,
 				IDs:   getIDs(items[0:20]),
-				Order: "created_at",
-				Dir:   "asc",
+				Order: defOrder,
+				Dir:   defDir,
 			},
 			response: users.UsersPage{
 				Page: users.Page{
@@ -1906,8 +1910,8 @@ func TestRetrieveByIDs(t *testing.T) {
 				Offset: 15,
 				Limit:  10,
 				IDs:    getIDs(items[0:20]),
-				Order:  "created_at",
-				Dir:    "asc",
+				Order:  defOrder,
+				Dir:    defDir,
 			},
 			response: users.UsersPage{
 				Page: users.Page{
@@ -1943,8 +1947,8 @@ func TestRetrieveByIDs(t *testing.T) {
 				Limit:     10,
 				FirstName: items[0].FirstName,
 				IDs:       getIDs(items[0:20]),
-				Order:     "created_at",
-				Dir:       "asc",
+				Order:     defOrder,
+				Dir:       defDir,
 			},
 			response: users.UsersPage{
 				Page: users.Page{
