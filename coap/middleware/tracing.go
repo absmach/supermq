@@ -28,13 +28,8 @@ type tracingServiceMiddleware struct {
 	svc    coap.Service
 }
 
-<<<<<<<< HEAD:coap/middleware/tracing.go
 // NewTracing creates a new instance of TracingServiceMiddleware that wraps an existing CoAP service with tracing capabilities.
 func NewTracing(tracer trace.Tracer, svc coap.Service) coap.Service {
-========
-// TracingMiddleware creates a new instance of TracingServiceMiddleware that wraps an existing CoAP service with tracing capabilities.
-func TracingMiddleware(tracer trace.Tracer, svc coap.Service) coap.Service {
->>>>>>>> 1227888b6 (feat: use mgate to proxy coap with dtls):coap/middleware/tracing.go.go
 	return &tracingServiceMiddleware{
 		tracer: tracer,
 		svc:    svc,
