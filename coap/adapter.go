@@ -31,7 +31,7 @@ type Service interface {
 	// service map of subscriptions under given ID.
 	Subscribe(ctx context.Context, key, domainID, chanID, subtopic string, c Client) error
 
-	// Unsubscribe methdod is used to stop observing resource.
+	// Unsubscribe method is used to stop observing resource.
 	Unsubscribe(ctx context.Context, key, domainID, chanID, subptopic, token string) error
 
 	// DisconnectHandler method is used to disconnected the client
