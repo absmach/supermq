@@ -111,4 +111,7 @@ var (
 
 	// ErrExternalAuthProviderCouldNotChangePassword indicates that password cannot be reset for users authenticated via external provider.
 	ErrExternalAuthProviderCouldNotChangePassword = errors.New("password cannot be reset for users authenticated via external provider")
+
+	// ErrUpdateEmail indicates that the current email is the same as the update requested email.
+	ErrUpdateSameEmail = errors.New("current email is same as update requested email")
 )

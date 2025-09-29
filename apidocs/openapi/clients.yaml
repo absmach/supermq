@@ -1129,7 +1129,7 @@ components:
         private_metadata:
           type: object
           example: { "role": "general" }
-          description: Arbitrary, object-encoded client's data, priavet to the client.
+          description: Arbitrary, object-encoded client's data, private to the client.
       required:
         - name
         - public_metadata
