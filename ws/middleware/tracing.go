@@ -32,11 +32,11 @@ func NewTracing(tracer trace.Tracer, svc ws.Service) ws.Service {
 }
 
 // Subscribe traces the "Subscribe" operation of the wrapped ws.Service.
-func (tm *tracingMiddleware) Subscribe(ctx context.Context, sessionID, clientKey, domainID, chanID, subtopic string, topicType messaging.TopicType, client *ws.Client) error {
+func (tm *tracingMiddleware) Subscribe(ctx context.Context, sessionID, username, password, domainID, chanID, subtopic string, topicType messaging.TopicType, client *ws.Client) error {
 	ctx, span := tm.tracer.Start(ctx, subscribeOP)
 	defer span.End()
 
-	return tm.svc.Subscribe(ctx, sessionID, clientKey, domainID, chanID, subtopic, topicType, client)
+	return tm.svc.Subscribe(ctx, sessionID, username, password, domainID, chanID, subtopic, topicType, client)
 }
 
 func (tm *tracingMiddleware) Unsubscribe(ctx context.Context, sessionID, domainID, chanID, subtopic string, topicType messaging.TopicType) error {

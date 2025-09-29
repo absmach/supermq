@@ -5,6 +5,7 @@ package ws_test
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"strings"
@@ -82,15 +83,36 @@ func TestAuthPublish(t *testing.T) {
 	clientKeySession := session.Session{
 		Password: []byte("Client " + clientKey),
 	}
+	unauthorizedKeySession := session.Session{
+		Password: []byte("Client " + clientKey),
+	}
 	invalidClientKeySession := session.Session{
 		Password: []byte("Client " + invalidKey),
 	}
-
 	tokenSession := session.Session{
 		Password: []byte(apiutil.BearerPrefix + validToken),
 	}
 	invalidTokenSession := session.Session{
 		Password: []byte(apiutil.BearerPrefix + invalidToken),
+	}
+	basicAuthSession := session.Session{
+		Username: clientID,
+		Password: []byte(clientKey),
+	}
+	invalidBasicAuthSession := session.Session{
+		Username: clientID,
+		Password: []byte(invalidValue),
+	}
+	creds := base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", clientID, clientKey)))
+	encodedCredsSession := session.Session{
+		Password: []byte(apiutil.BasicAuthPrefix + creds),
+	}
+	invalidCreds := base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", clientID, invalidValue)))
+	invalidEncodedCredsSession := session.Session{
+		Password: []byte(apiutil.BasicAuthPrefix + invalidCreds),
+	}
+	hcClientKeySession := session.Session{
+		Password: []byte("Client " + clientKey),
 	}
 
 	tests := []struct {
@@ -104,6 +126,7 @@ func TestAuthPublish(t *testing.T) {
 		chanID     string
 		domainID   string
 		clientID   string
+		authNToken string
 		authNRes   *grpcClientsV1.AuthnRes
 		authNRes1  smqauthn.Session
 		authNErr   error
@@ -122,6 +145,7 @@ func TestAuthPublish(t *testing.T) {
 			chanID:     chanID,
 			domainID:   domainID,
 			clientID:   clientID,
+			authNToken: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey),
 			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			authNErr:   nil,
 			authZRes:   &grpcChannelsV1.AuthzRes{Authorized: true},
@@ -137,9 +161,10 @@ func TestAuthPublish(t *testing.T) {
 			chanID:     chanID,
 			domainID:   domainID,
 			clientID:   clientID,
+			authNToken: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, invalidKey),
 			authNRes:   &grpcClientsV1.AuthnRes{Authenticated: false},
 			status:     http.StatusUnauthorized,
-			err:        svcerr.ErrAuthentication,
+			err:        errors.Wrap(svcerr.ErrAuthentication, svcerr.ErrAuthentication),
 		},
 		{
 			desc:    "publish with nil session",
@@ -159,7 +184,7 @@ func TestAuthPublish(t *testing.T) {
 		},
 		{
 			desc:       "publish with unauthorized client key",
-			session:    &clientKeySession,
+			session:    &unauthorizedKeySession,
 			topic:      &topic,
 			authKey:    clientKey,
 			payload:    &payload,
@@ -167,6 +192,7 @@ func TestAuthPublish(t *testing.T) {
 			chanID:     chanID,
 			domainID:   domainID,
 			clientID:   clientID,
+			authNToken: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey),
 			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			authNErr:   nil,
 			authZRes:   &grpcChannelsV1.AuthzRes{Authorized: false},
@@ -202,10 +228,10 @@ func TestAuthPublish(t *testing.T) {
 			authNRes1:  smqauthn.Session{},
 			authNErr:   svcerr.ErrAuthentication,
 			status:     http.StatusUnauthorized,
-			err:        svcerr.ErrAuthentication,
+			err:        errors.Wrap(svcerr.ErrAuthentication, svcerr.ErrAuthentication),
 		},
 		{
-			desc:       "publish with unauthorized client key",
+			desc:       "publish with unauthorized token",
 			session:    &tokenSession,
 			topic:      &topic,
 			authKey:    token,
@@ -221,8 +247,70 @@ func TestAuthPublish(t *testing.T) {
 			err:        svcerr.ErrAuthentication,
 		},
 		{
+			desc:       "publish with basic auth successfully",
+			session:    &basicAuthSession,
+			topic:      &topic,
+			payload:    &payload,
+			status:     http.StatusOK,
+			clientType: policies.ClientType,
+			chanID:     chanID,
+			domainID:   domainID,
+			clientID:   clientID,
+			authNToken: smqauthn.AuthPack(smqauthn.BasicAuth, clientID, clientKey),
+			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
+			authNErr:   nil,
+			authZRes:   &grpcChannelsV1.AuthzRes{Authorized: true},
+			err:        nil,
+		},
+		{
+			desc:       "publish with invalid basic auth",
+			session:    &invalidBasicAuthSession,
+			topic:      &topic,
+			payload:    &payload,
+			authKey:    invalidValue,
+			clientType: policies.ClientType,
+			chanID:     chanID,
+			domainID:   domainID,
+			clientID:   clientID,
+			authNToken: smqauthn.AuthPack(smqauthn.BasicAuth, clientID, invalidValue),
+			authNRes:   &grpcClientsV1.AuthnRes{Authenticated: false},
+			status:     http.StatusUnauthorized,
+			err:        errors.Wrap(svcerr.ErrAuthentication, svcerr.ErrAuthentication),
+		},
+		{
+			desc:       "publish with b64 encoded credentials",
+			session:    &encodedCredsSession,
+			topic:      &topic,
+			payload:    &payload,
+			status:     http.StatusOK,
+			clientType: policies.ClientType,
+			chanID:     chanID,
+			domainID:   domainID,
+			clientID:   clientID,
+			authNToken: smqauthn.AuthPack(smqauthn.BasicAuth, clientID, clientKey),
+			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
+			authNErr:   nil,
+			authZRes:   &grpcChannelsV1.AuthzRes{Authorized: true},
+			err:        nil,
+		},
+		{
+			desc:       "publish with invalid b64 encoded credentials",
+			session:    &invalidEncodedCredsSession,
+			topic:      &topic,
+			payload:    &payload,
+			authKey:    invalidValue,
+			clientType: policies.ClientType,
+			chanID:     chanID,
+			domainID:   domainID,
+			clientID:   clientID,
+			authNToken: smqauthn.AuthPack(smqauthn.BasicAuth, clientID, invalidValue),
+			authNRes:   &grpcClientsV1.AuthnRes{Authenticated: false},
+			status:     http.StatusUnauthorized,
+			err:        errors.Wrap(svcerr.ErrAuthentication, svcerr.ErrAuthentication),
+		},
+		{
 			desc:       "publish with health check topic successfully",
-			session:    &clientKeySession,
+			session:    &hcClientKeySession,
 			topic:      &hcTopic,
 			authKey:    clientKey,
 			payload:    &payload,
@@ -231,12 +319,13 @@ func TestAuthPublish(t *testing.T) {
 			chanID:     "",
 			domainID:   domainID,
 			clientID:   userID,
+			authNToken: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey),
 			authNRes:   &grpcClientsV1.AuthnRes{Authenticated: true},
 			authNErr:   nil,
 		},
 		{
 			desc:       "publish with invalid health check topic",
-			session:    &clientKeySession,
+			session:    &hcClientKeySession,
 			topic:      &invalidHCTopic,
 			authKey:    clientKey,
 			payload:    &payload,
@@ -256,7 +345,7 @@ func TestAuthPublish(t *testing.T) {
 			if tc.session != nil && strings.HasPrefix(string(tc.session.Password), apiutil.BearerPrefix) {
 				tc.clientType = policies.UserType
 			}
-			clientsCall := clients.On("Authenticate", ctx, &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, tc.authKey)}).Return(tc.authNRes, tc.authNErr)
+			clientsCall := clients.On("Authenticate", ctx, &grpcClientsV1.AuthnReq{Token: tc.authNToken}).Return(tc.authNRes, tc.authNErr)
 			authCall := authn.On("Authenticate", ctx, mock.Anything).Return(tc.authNRes1, tc.authNErr)
 			channelsCall := channels.On("Authorize", mock.Anything, &grpcChannelsV1.AuthzReq{
 				ClientType: tc.clientType,
@@ -284,15 +373,36 @@ func TestAuthSubscribe(t *testing.T) {
 	clientKeySession := session.Session{
 		Password: []byte("Client " + clientKey),
 	}
+	unauthorizedKeySession := session.Session{
+		Password: []byte("Client " + clientKey),
+	}
 	invalidClientKeySession := session.Session{
 		Password: []byte("Client " + invalidKey),
 	}
-
 	tokenSession := session.Session{
 		Password: []byte(apiutil.BearerPrefix + validToken),
 	}
 	invalidTokenSession := session.Session{
 		Password: []byte(apiutil.BearerPrefix + invalidToken),
+	}
+	basicAuthSession := session.Session{
+		Username: clientID,
+		Password: []byte(clientKey),
+	}
+	invalidBasicAuthSession := session.Session{
+		Username: clientID,
+		Password: []byte(invalidValue),
+	}
+	creds := base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", clientID, clientKey)))
+	encodedCredsSession := session.Session{
+		Password: []byte(apiutil.BasicAuthPrefix + creds),
+	}
+	invalidCreds := base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", clientID, invalidValue)))
+	invalidEncodedCredsSession := session.Session{
+		Password: []byte(apiutil.BasicAuthPrefix + invalidCreds),
+	}
+	hcClientKeySession := session.Session{
+		Password: []byte("Client " + clientKey),
 	}
 
 	tests := []struct {
@@ -305,6 +415,7 @@ func TestAuthSubscribe(t *testing.T) {
 		chanID     string
 		domainID   string
 		clientID   string
+		authNToken string
 		authNRes   *grpcClientsV1.AuthnRes
 		authNRes1  smqauthn.Session
 		authNErr   error
@@ -322,6 +433,7 @@ func TestAuthSubscribe(t *testing.T) {
 			chanID:     chanID,
 			domainID:   domainID,
 			clientID:   clientID,
+			authNToken: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey),
 			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			authNErr:   nil,
 			authZRes:   &grpcChannelsV1.AuthzRes{Authorized: true},
@@ -336,9 +448,10 @@ func TestAuthSubscribe(t *testing.T) {
 			chanID:     chanID,
 			domainID:   domainID,
 			clientID:   clientID,
+			authNToken: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, invalidKey),
 			authNRes:   &grpcClientsV1.AuthnRes{Authenticated: false},
 			status:     http.StatusUnauthorized,
-			err:        svcerr.ErrAuthentication,
+			err:        errors.Wrap(svcerr.ErrAuthentication, svcerr.ErrAuthentication),
 		},
 		{
 			desc:    "subscribe with empty topics",
@@ -358,13 +471,14 @@ func TestAuthSubscribe(t *testing.T) {
 		},
 		{
 			desc:       "subscribe with unauthorized client key",
-			session:    &clientKeySession,
+			session:    &unauthorizedKeySession,
 			topics:     &topics,
 			authKey:    clientKey,
 			clientType: policies.ClientType,
 			chanID:     chanID,
 			domainID:   domainID,
 			clientID:   clientID,
+			authNToken: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey),
 			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			authNErr:   nil,
 			authZRes:   &grpcChannelsV1.AuthzRes{Authorized: false},
@@ -398,10 +512,10 @@ func TestAuthSubscribe(t *testing.T) {
 			authNRes1:  smqauthn.Session{},
 			authNErr:   svcerr.ErrAuthentication,
 			status:     http.StatusUnauthorized,
-			err:        svcerr.ErrAuthentication,
+			err:        errors.Wrap(svcerr.ErrAuthentication, svcerr.ErrAuthentication),
 		},
 		{
-			desc:       "subscribe with unauthorized client key",
+			desc:       "subscribe with unauthorized token",
 			session:    &tokenSession,
 			topics:     &topics,
 			authKey:    token,
@@ -416,8 +530,66 @@ func TestAuthSubscribe(t *testing.T) {
 			err:        svcerr.ErrAuthentication,
 		},
 		{
+			desc:       "subscribe with basic auth successfully",
+			session:    &basicAuthSession,
+			topics:     &topics,
+			status:     http.StatusOK,
+			clientType: policies.ClientType,
+			chanID:     chanID,
+			domainID:   domainID,
+			clientID:   clientID,
+			authNToken: smqauthn.AuthPack(smqauthn.BasicAuth, clientID, clientKey),
+			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
+			authNErr:   nil,
+			authZRes:   &grpcChannelsV1.AuthzRes{Authorized: true},
+			err:        nil,
+		},
+		{
+			desc:       "subscribe with invalid basic auth",
+			session:    &invalidBasicAuthSession,
+			topics:     &topics,
+			authKey:    invalidValue,
+			clientType: policies.ClientType,
+			chanID:     chanID,
+			domainID:   domainID,
+			clientID:   clientID,
+			authNToken: smqauthn.AuthPack(smqauthn.BasicAuth, clientID, invalidValue),
+			authNRes:   &grpcClientsV1.AuthnRes{Authenticated: false},
+			status:     http.StatusUnauthorized,
+			err:        errors.Wrap(svcerr.ErrAuthentication, svcerr.ErrAuthentication),
+		},
+		{
+			desc:       "publish with b64 encoded credentials",
+			session:    &encodedCredsSession,
+			topics:     &topics,
+			status:     http.StatusOK,
+			clientType: policies.ClientType,
+			chanID:     chanID,
+			domainID:   domainID,
+			clientID:   clientID,
+			authNToken: smqauthn.AuthPack(smqauthn.BasicAuth, clientID, clientKey),
+			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
+			authNErr:   nil,
+			authZRes:   &grpcChannelsV1.AuthzRes{Authorized: true},
+			err:        nil,
+		},
+		{
+			desc:       "publish with invalid b64 encoded credentials",
+			session:    &invalidEncodedCredsSession,
+			topics:     &topics,
+			authKey:    invalidValue,
+			clientType: policies.ClientType,
+			chanID:     chanID,
+			domainID:   domainID,
+			clientID:   clientID,
+			authNToken: smqauthn.AuthPack(smqauthn.BasicAuth, clientID, invalidValue),
+			authNRes:   &grpcClientsV1.AuthnRes{Authenticated: false},
+			status:     http.StatusUnauthorized,
+			err:        errors.Wrap(svcerr.ErrAuthentication, svcerr.ErrAuthentication),
+		},
+		{
 			desc:       "subscribe with health check topic successfully",
-			session:    &clientKeySession,
+			session:    &hcClientKeySession,
 			topics:     &[]string{hcTopic},
 			authKey:    clientKey,
 			status:     http.StatusOK,
@@ -425,12 +597,13 @@ func TestAuthSubscribe(t *testing.T) {
 			chanID:     chanID,
 			domainID:   domainID,
 			clientID:   clientID,
+			authNToken: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey),
 			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			err:        nil,
 		},
 		{
 			desc:       "subscribe with invalid health check topic",
-			session:    &clientKeySession,
+			session:    &hcClientKeySession,
 			topics:     &[]string{invalidHCTopic},
 			authKey:    clientKey,
 			status:     http.StatusBadRequest,
@@ -449,7 +622,7 @@ func TestAuthSubscribe(t *testing.T) {
 			if tc.session != nil && strings.HasPrefix(string(tc.session.Password), apiutil.BearerPrefix) {
 				tc.clientType = policies.UserType
 			}
-			clientsCall := clients.On("Authenticate", ctx, &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, tc.authKey)}).Return(tc.authNRes, tc.authNErr)
+			clientsCall := clients.On("Authenticate", ctx, &grpcClientsV1.AuthnReq{Token: tc.authNToken}).Return(tc.authNRes, tc.authNErr)
 			authCall := authn.On("Authenticate", ctx, mock.Anything).Return(tc.authNRes1, tc.authNErr)
 			channelsCall := channels.On("Authorize", mock.Anything, &grpcChannelsV1.AuthzReq{
 				ClientType: tc.clientType,
