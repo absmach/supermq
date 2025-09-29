@@ -102,4 +102,7 @@ var (
 
 	// ErrUserVerificationExpired indicates user verification is expired.
 	ErrUserVerificationExpired = errors.New("verification expired, please generate new verification")
+
+	// ErrUpdateEmail indicates that the current email is the same as the update requested email.
+	ErrUpdateSameEmail = errors.New("current email is same as update requested email")
 )

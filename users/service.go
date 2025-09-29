@@ -5,7 +5,6 @@ package users
 
 import (
 	"context"
-	"fmt"
 	"net/mail"
 	"time"
 
@@ -219,10 +218,11 @@ func (svc service) View(ctx context.Context, session authn.Session, id string) (
 	if session.UserID != id {
 		if err := svc.checkSuperAdmin(ctx, session); err != nil {
 			return User{
-				FirstName:   user.FirstName,
-				LastName:    user.LastName,
-				ID:          user.ID,
-				Credentials: Credentials{Username: user.Credentials.Username},
+				FirstName:      user.FirstName,
+				LastName:       user.LastName,
+				ID:             user.ID,
+				PublicMetadata: user.PublicMetadata,
+				Credentials:    Credentials{Username: user.Credentials.Username},
 			}, nil
 		}
 	}
@@ -340,7 +340,7 @@ func (svc service) UpdateEmail(ctx context.Context, session authn.Session, userI
 		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	if oldUsr.Email == email {
-		return User{}, fmt.Errorf("current email is same as update requested email")
+		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, svcerr.ErrUpdateSameEmail)
 	}
 
 	usr := User{
