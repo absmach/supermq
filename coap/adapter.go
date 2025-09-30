@@ -112,21 +112,6 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, key, domainID, chanI
 	if !authnRes.Authenticated {
 		return svcerr.ErrAuthentication
 	}
-
-	authzRes, err := svc.channels.Authorize(ctx, &grpcChannelsV1.AuthzReq{
-		DomainId:   domainID,
-		ClientId:   authnRes.GetId(),
-		ClientType: policies.ClientType,
-		Type:       uint32(connections.Subscribe),
-		ChannelId:  chanID,
-	})
-	if err != nil {
-		return errors.Wrap(svcerr.ErrAuthorization, err)
-	}
-	if !authzRes.Authorized {
-		return svcerr.ErrAuthorization
-	}
-
 	subject := messaging.EncodeTopic(domainID, chanID, subtopic)
 
 	return svc.pubsub.Unsubscribe(ctx, token, subject)
