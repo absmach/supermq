@@ -231,8 +231,8 @@ func (lge listGroupEvent) Encode() (map[string]any, error) {
 	if lge.Name != "" {
 		val["name"] = lge.Name
 	}
-	if lge.Tag != "" {
-		val["tag"] = lge.Tag
+	if len(lge.Tags.Elements) > 0 {
+		val["tag"] = lge.Tags.Elements
 	}
 	if lge.Metadata != nil {
 		val["metadata"] = lge.Metadata
@@ -269,8 +269,8 @@ func (luge listUserGroupEvent) Encode() (map[string]any, error) {
 	if luge.Name != "" {
 		val["name"] = luge.Name
 	}
-	if luge.Tag != "" {
-		val["tag"] = luge.Tag
+	if len(luge.Tags.Elements) > 0 {
+		val["tag"] = luge.Tags.Elements
 	}
 	if luge.Metadata != nil {
 		val["metadata"] = luge.Metadata
@@ -464,8 +464,8 @@ func (vcge listChildrenGroupsEvent) Encode() (map[string]any, error) {
 	if vcge.Name != "" {
 		val["name"] = vcge.Name
 	}
-	if vcge.Tag != "" {
-		val["tag"] = vcge.Tag
+	if len(vcge.Tags.Elements) > 0 {
+		val["tag"] = vcge.Tags.Elements
 	}
 	if vcge.Metadata != nil {
 		val["metadata"] = vcge.Metadata
