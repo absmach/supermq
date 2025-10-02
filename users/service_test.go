@@ -1796,15 +1796,20 @@ func TestOAuthCallback(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			repoCall := cRepo.On("RetrieveByEmail", context.Background(), tc.user.Email).Return(tc.retrieveByEmailResponse, tc.retrieveByEmailErr)
 			repoCall1 := cRepo.On("Save", context.Background(), mock.Anything).Return(tc.saveResponse, nil)
-			repocall2 := cRepo.On("UpdateVerifiedAt", context.Background(), mock.Anything).Return(tc.retrieveByEmailResponse, nil)
+			repoCall2 := cRepo.On("UpdateVerifiedAt", context.Background(), mock.MatchedBy(func(u users.User) bool {
+				assert.NotEmpty(t, u.ID, "UpdateVerifiedAt must be called with non-empty user ID")
+				return u.ID != ""
+			})).Maybe().Return(tc.retrieveByEmailResponse, nil)
 			policyCall := policies.On("AddPolicies", context.Background(), mock.Anything).Return(tc.addPoliciesErr)
 			_, err := svc.OAuthCallback(context.Background(), tc.user)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 			repoCall.Parent.AssertCalled(t, "RetrieveByEmail", context.Background(), tc.user.Email)
 			repoCall.Unset()
 			repoCall1.Unset()
-			repocall2.Unset()
 			policyCall.Unset()
+			_ = repoCall2
+			cRepo.ExpectedCalls = nil
+			policies.ExpectedCalls = nil
 		})
 	}
 }
