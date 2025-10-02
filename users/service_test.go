@@ -1745,8 +1745,9 @@ func TestOAuthCallback(t *testing.T) {
 				Email: "test@example.com",
 			},
 			retrieveByEmailResponse: users.User{
-				ID:   testsutil.GenerateUUID(t),
-				Role: users.UserRole,
+				ID:         testsutil.GenerateUUID(t),
+				Role:       users.UserRole,
+				VerifiedAt: time.Now(),
 			},
 			err: nil,
 		},
@@ -1795,12 +1796,14 @@ func TestOAuthCallback(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			repoCall := cRepo.On("RetrieveByEmail", context.Background(), tc.user.Email).Return(tc.retrieveByEmailResponse, tc.retrieveByEmailErr)
 			repoCall1 := cRepo.On("Save", context.Background(), mock.Anything).Return(tc.saveResponse, nil)
+			repocall2 := cRepo.On("UpdateVerifiedAt", context.Background(), mock.Anything).Return(tc.retrieveByEmailResponse, nil)
 			policyCall := policies.On("AddPolicies", context.Background(), mock.Anything).Return(tc.addPoliciesErr)
 			_, err := svc.OAuthCallback(context.Background(), tc.user)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 			repoCall.Parent.AssertCalled(t, "RetrieveByEmail", context.Background(), tc.user.Email)
 			repoCall.Unset()
 			repoCall1.Unset()
+			repocall2.Unset()
 			policyCall.Unset()
 		})
 	}
