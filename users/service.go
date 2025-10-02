@@ -568,6 +568,7 @@ func (svc service) OAuthCallback(ctx context.Context, user User) (User, error) {
 	}
 
 	if u.VerifiedAt.IsZero() {
+		user.ID = u.ID
 		user.VerifiedAt = time.Now()
 		u, err = svc.users.UpdateVerifiedAt(ctx, user)
 		if err != nil {
