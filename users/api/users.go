@@ -589,6 +589,7 @@ func oauth2CallbackHandler(oauth oauth2.Provider, svc users.Service, tokenClient
 				UserId:   user.ID,
 				Type:     uint32(smqauth.AccessKey),
 				UserRole: uint32(smqauth.UserRole),
+				Verified: !user.VerifiedAt.IsZero(),
 			})
 			if err != nil {
 				http.Redirect(w, r, oauth.ErrorURL()+"?error="+err.Error(), http.StatusSeeOther)

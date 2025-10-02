@@ -553,17 +553,18 @@ func (svc *service) checkSuperAdmin(ctx context.Context, session authn.Session) 
 
 func (svc service) OAuthCallback(ctx context.Context, user User) (User, error) {
 	u, err := svc.users.RetrieveByEmail(ctx, user.Email)
-	if err != nil {
-		switch errors.Contains(err, repoerr.ErrNotFound) {
-		case true:
-			user.VerifiedAt = time.Now()
-			u, err = svc.Register(ctx, authn.Session{}, user, true)
-			if err != nil {
-				return User{}, err
-			}
-		default:
+
+	if errors.Contains(err, repoerr.ErrNotFound) {
+		user.VerifiedAt = time.Now()
+		u, err = svc.Register(ctx, authn.Session{}, user, true)
+		if err != nil {
 			return User{}, err
 		}
+		return User{ID: u.ID, Role: u.Role, VerifiedAt: u.VerifiedAt}, nil
+	}
+
+	if err != nil {
+		return User{}, err
 	}
 
 	if u.VerifiedAt.IsZero() {
@@ -574,10 +575,7 @@ func (svc service) OAuthCallback(ctx context.Context, user User) (User, error) {
 		}
 	}
 
-	return User{
-		ID:   u.ID,
-		Role: u.Role,
-	}, nil
+	return User{ID: u.ID, Role: u.Role, VerifiedAt: u.VerifiedAt}, nil
 }
 
 func (svc service) OAuthAddUserPolicy(ctx context.Context, user User) error {
