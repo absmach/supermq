@@ -571,6 +571,23 @@ func (svc service) OAuthCallback(ctx context.Context, user User) (User, error) {
 		user.VerifiedAt = time.Now()
 		u, err = svc.users.UpdateVerifiedAt(ctx, user)
 		if err != nil {
+	if err != nil {
+		switch errors.Contains(err, repoerr.ErrNotFound) {
+		case true:
+			user.VerifiedAt = time.Now()
+			u, err = svc.Register(ctx, authn.Session{}, user, true)
+			if err != nil {
+				return User{}, err
+			}
+		default:
+			return User{}, err
+		}
+	}
+
+	if u.VerifiedAt.IsZero() {
+		user.VerifiedAt = time.Now()
+		u, err = svc.users.UpdateVerifiedAt(ctx, user)
+		if err != nil {
 			return User{}, err
 		}
 	}
