@@ -95,8 +95,3 @@ func validateUser(user normalizedUser) error {
 	}
 	return nil
 }
-
-// {"time":"2025-10-04T01:49:45.022963204Z","level":"WARN","msg":"Create domain failed","duration":"10.300227ms","request_id":"09f9b3f6-5be5-4d80-b5db-f037bf90e1ac","domain":{"id":"","name":"d1","route":"d1"},"error":"failed to create entity : entity already exists : ERROR: duplicate key value violates unique constraint \"domains_alias_key\" (SQLSTATE 23505)"}
-// {"time":"2025-10-04T01:51:00.207623315Z","level":"WARN","msg":"Register user failed","duration":"706.493278ms","request_id":"aec54295-bac9-4006-9710-7922f6492934","user":{"username":"arvindh","first_name":"Arvindh","last_name":"M"},"error":"failed to create entity : entity already exists : ERROR: duplicate key value violates unique constraint \"clients_identity_key\" (SQLSTATE 23505)"}
-// {"time":"2025-10-04T01:52:56.130021294Z","level":"WARN","msg":"Register user failed","duration":"609.641056ms","request_id":"bedb4805-10ec-4811-b90a-44345cbd7392","user":{"username":"arvindh","first_name":"Arvindh","last_name":"M"},"error":"failed to create entity : entity already exists : ERROR: duplicate key value violates unique constraint \"clients_username_key\" (SQLSTATE 23505)"}
-// 2025/10/04 01:51:08 traces export: Post "http://mg-jaeger-collector:4318/v1/traces": processor export timeout
