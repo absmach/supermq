@@ -4,8 +4,6 @@
 package postgres
 
 import (
-	"fmt"
-
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -40,8 +38,6 @@ func (eh errHandler) HandleError(wrapper, err error) error {
 		switch pqErr.Code {
 		case errDuplicate:
 			if knownErr, ok := eh.duplicateErrors.GetError(pqErr.ConstraintName); ok {
-				fmt.Printf("knownErr type %T\n", knownErr)
-				fmt.Printf("wrapper Error type %T\n", errors.Wrap(wrapper, knownErr))
 				return errors.Wrap(wrapper, knownErr)
 			}
 			return errors.Wrap(repoerr.ErrConflict, err)
