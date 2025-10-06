@@ -184,6 +184,21 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		return
 	}
 
+	switch retErr := err.(type) {
+	case errors.RequestError:
+		w.WriteHeader(http.StatusBadRequest)
+		if err := json.NewEncoder(w).Encode(retErr); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	case errors.AuthNError, errors.AuthZError:
+		w.WriteHeader(http.StatusUnauthorized)
+		if err := json.NewEncoder(w).Encode(retErr); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
 	var wrapper error
 	if errors.Contains(err, apiutil.ErrValidation) {
 		wrapper, err = errors.Unwrap(err)

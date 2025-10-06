@@ -90,6 +90,11 @@ func Wrap(wrapper, err error) error {
 	if wrapper == nil || err == nil {
 		return wrapper
 	}
+
+	if ne, ok := err.(NewError); ok {
+		return ne.Wrap(wrapper)
+	}
+
 	if w, ok := wrapper.(Error); ok {
 		return &customError{
 			msg: w.Msg(),

@@ -52,10 +52,10 @@ var (
 	ErrInvalidIDFormat = errors.New("invalid id format provided")
 
 	// ErrNameSize indicates that name size exceeds the max.
-	ErrNameSize = errors.New("invalid name size")
+	ErrNameSize = errors.NewRequestError("invalid name size")
 
 	// ErrEmailSize indicates that email size exceeds the max.
-	ErrEmailSize = errors.New("invalid email size")
+	ErrEmailSize = errors.NewRequestError("invalid email size")
 
 	// ErrInvalidRole indicates that an invalid role.
 	ErrInvalidRole = errors.New("invalid client role")
@@ -124,7 +124,7 @@ var (
 	ErrInvalidContact = errors.New("invalid Subscription contact")
 
 	// ErrMissingEmail indicates missing email.
-	ErrMissingEmail = errors.New("missing email")
+	ErrMissingEmail = errors.NewRequestError("missing email")
 
 	// ErrInvalidEmail indicates missing email.
 	ErrInvalidEmail = errors.New("invalid email")
@@ -169,16 +169,16 @@ var (
 	ErrMissingIdentity = errors.New("missing entity identity")
 
 	// ErrMissingSecret indicates missing secret.
-	ErrMissingSecret = errors.New("missing secret")
+	ErrMissingSecret = errors.NewRequestError("missing secret")
 
 	// ErrPasswordFormat indicates weak password.
-	ErrPasswordFormat = errors.New("password does not meet the requirements")
+	ErrPasswordFormat = errors.NewRequestError("password does not meet the requirements")
 
 	// ErrMissingName indicates missing identity name.
-	ErrMissingName = errors.New("missing identity name")
+	ErrMissingName = errors.NewRequestError("missing identity name")
 
 	// ErrMissingRoute indicates missing route.
-	ErrMissingRoute = errors.New("missing route")
+	ErrMissingRoute = errors.NewRequestError("missing route")
 
 	// ErrInvalidLevel indicates an invalid group level.
 	ErrInvalidLevel = errors.New("invalid group level (should be between 0 and 5)")
@@ -211,37 +211,37 @@ var (
 	ErrMissingTo = errors.New("missing to time value")
 
 	// ErrEmptyMessage indicates empty message.
-	ErrEmptyMessage = errors.New("empty message")
+	ErrEmptyMessage = errors.NewRequestError("empty message")
 
 	// ErrMissingEntityType indicates missing entity type.
-	ErrMissingEntityType = errors.New("missing entity type")
+	ErrMissingEntityType = errors.NewRequestError("missing entity type")
 
 	// ErrInvalidEntityType indicates invalid entity type.
-	ErrInvalidEntityType = errors.New("invalid entity type")
+	ErrInvalidEntityType = errors.NewRequestError("invalid entity type")
 
 	// ErrInvalidTimeFormat indicates invalid time format i.e not unix time.
-	ErrInvalidTimeFormat = errors.New("invalid time format use unix time")
+	ErrInvalidTimeFormat = errors.NewRequestError("invalid time format use unix time")
 
 	// ErrEmptySearchQuery indicates search query should not be empty.
-	ErrEmptySearchQuery = errors.New("search query must not be empty")
+	ErrEmptySearchQuery = errors.NewRequestError("search query must not be empty")
 
 	// ErrLenSearchQuery indicates search query length.
-	ErrLenSearchQuery = errors.New("search query must be at least 3 characters")
+	ErrLenSearchQuery = errors.NewRequestError("search query must be at least 3 characters")
 
 	// ErrMissingDomainID indicates missing domainID.
-	ErrMissingDomainID = errors.New("missing domainID")
+	ErrMissingDomainID = errors.NewRequestError("missing domainID")
 
 	// ErrMissingUsername indicates missing user name.
-	ErrMissingUsername = errors.New("missing username")
+	ErrMissingUsername = errors.NewRequestError("missing username")
 
 	// ErrInvalidUsername indicates invalid user name.
-	ErrInvalidUsername = errors.New("invalid username")
+	ErrInvalidUsername = errors.NewRequestError("invalid username")
 
 	// ErrMissingFirstName indicates missing first name.
-	ErrMissingFirstName = errors.New("missing first name")
+	ErrMissingFirstName = errors.NewRequestError("missing first name")
 
 	// ErrMissingLastName indicates missing last name.
-	ErrMissingLastName = errors.New("missing last name")
+	ErrMissingLastName = errors.NewRequestError("missing last name")
 
 	// ErrInvalidProfilePictureURL indicates that the profile picture url is invalid.
 	ErrInvalidProfilePictureURL = errors.New("invalid profile picture url")
@@ -255,23 +255,23 @@ var (
 	ErrUnsupportedTokenType = errors.New("unsupported content token type")
 
 	// ErrMissingUserID indicates missing user ID.
-	ErrMissingUserID = errors.New("missing user id")
+	ErrMissingUserID = errors.NewRequestError("missing user id")
 
 	// ErrMissingPATID indicates missing pat ID.
 	ErrMissingPATID = errors.New("missing pat id")
 
 	// ErrInvalidNameFormat indicates invalid name format.
-	ErrInvalidNameFormat = errors.New("invalid name format")
+	ErrInvalidNameFormat = errors.NewRequestError("invalid name format")
 
 	// ErrInvalidRouteFormat indicates invalid route format.
-	ErrInvalidRouteFormat = errors.New("invalid route format")
+	ErrInvalidRouteFormat = errors.NewRequestError("invalid route format")
 
 	// ErrMissingUsernameEmail indicates missing user name / email.
-	ErrMissingUsernameEmail = errors.New("missing username / email")
+	ErrMissingUsernameEmail = errors.NewRequestError("missing username / email")
 
 	// ErrInvalidVerification indicates invalid email verification.
-	ErrInvalidVerification = errors.New("invalid verification")
+	ErrInvalidVerification = errors.NewRequestError("invalid verification")
 
 	// ErrEmailNotVerified indicates invalid email not verified.
-	ErrEmailNotVerified = errors.New("email not verified")
+	ErrEmailNotVerified = errors.NewRequestError("email not verified")
 )
