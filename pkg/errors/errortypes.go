@@ -3,136 +3,137 @@
 
 package errors
 
-import (
-	"encoding/json"
-	"errors"
-)
-
-type NewError interface {
-	// Error implements the error interface.
-	Error() string
-
-	// Msg returns error message.
-	Msg() string
-
-	// Err returns wrapped error.
-	Unwrap() error
-
+type TypedError interface {
+	Error
 	Wrap(e error) error
-
-	// MarshalJSON returns a marshaled error.
-	MarshalJSON() ([]byte, error)
 }
 
-// NewError specifies an that request could be processed and error which should be addressed by user.
-type newError struct {
-	Err     error  // Contains other internal details and errors as wrapped error
-	Message string // Message for end users returned by API layer or other end layer
-}
-
-func (e newError) Error() string {
-	if e.Err == nil {
-		return e.Message
-	}
-	return e.Message + " : " + e.Err.Error()
-}
-
-func (e newError) Unwrap() error {
-	return e.Err
-}
-
-func (e newError) Msg() string {
-	return e.Message
-}
-
-func (e newError) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&struct {
-		Err string `json:"error"`
-	}{
-		Err: e.Message,
-	})
-}
-
-var _ NewError = (*RequestError)(nil)
+var _ TypedError = (*RequestError)(nil)
 
 type RequestError struct {
-	newError
+	customError
 }
 
-func (e RequestError) Wrap(err error) error {
-	e.Err = errors.Join(err, e.Err)
-	return e
+func wrap(wrapper error, err Error) Error {
+	if wrapper == nil || err == nil {
+		return cast(wrapper)
+	}
+	return &customError{
+		msg: wrapper.Error(),
+		err: cast(err),
+	}
+}
+
+func (e *RequestError) Wrap(err error) error {
+	e.err = wrap(err, e.err)
+	return &RequestError{
+		customError: e.customError,
+	}
 }
 
 func NewRequestError(message string) error {
-	return RequestError{
-		newError: newError{
-			Message: message,
+	return &RequestError{
+		customError: customError{
+			msg: message,
 		},
 	}
 }
 
 func NewRequestErrorWithErr(message string, err error) error {
-	return RequestError{
-		newError: newError{
-			Message: message,
-			Err:     err,
+	return &RequestError{
+		customError: customError{
+			msg: message,
+			err: cast(err),
 		},
 	}
 }
 
-var _ NewError = (*AuthNError)(nil)
+var _ TypedError = (*AuthNError)(nil)
 
 type AuthNError struct {
-	newError
+	customError
 }
 
-func (e AuthNError) Wrap(err error) error {
-	e.Err = errors.Join(err, e.Err)
-	return e
+func (e *AuthNError) Wrap(err error) error {
+	e.err = wrap(err, e.err)
+	return &AuthNError{
+		customError: e.customError,
+	}
 }
 
 func NewAuthNError(message string) error {
-	return AuthNError{
-		newError: newError{
-			Message: message,
+	return &AuthNError{
+		customError: customError{
+			msg: message,
 		},
 	}
 }
 
 func NewAuthNErrorWithErr(message string, err error) error {
-	return AuthNError{
-		newError: newError{
-			Message: message,
-			Err:     err,
+	return &AuthNError{
+		customError: customError{
+			msg: message,
+			err: cast(err),
 		},
 	}
 }
 
-var _ NewError = (*AuthZError)(nil)
+var _ TypedError = (*AuthZError)(nil)
 
 type AuthZError struct {
-	newError
+	customError
 }
 
-func (e AuthZError) Wrap(err error) error {
-	e.Err = errors.Join(err, e.Err)
-	return e
+func (e *AuthZError) Wrap(err error) error {
+	e.err = wrap(err, e.err)
+	return &AuthZError{
+		customError: e.customError,
+	}
 }
 
 func NewAuthZError(message string) error {
-	return AuthZError{
-		newError: newError{
-			Message: message,
+	return &AuthZError{
+		customError: customError{
+			msg: message,
 		},
 	}
 }
 
 func NewAuthZErrorWithErr(message string, err error) error {
-	return AuthZError{
-		newError: newError{
-			Message: message,
-			Err:     err,
+	return &AuthZError{
+		customError: customError{
+			msg: message,
+			err: cast(err),
+		},
+	}
+}
+
+var _ TypedError = (*InternalError)(nil)
+
+type InternalError struct {
+	customError
+}
+
+func (e *InternalError) Wrap(err error) error {
+	e.err = wrap(err, e.err)
+	return &InternalError{
+		customError: e.customError,
+	}
+}
+
+func NewInternalError() error {
+	return &InternalError{
+		customError: customError{
+			msg: "internal server error",
+		},
+	}
+}
+
+func NewInternalErrorWithErr(err error) error {
+	return &AuthZError{
+		customError: customError{
+			msg: "internal server error",
+			err: cast(err),
 		},
 	}
 }

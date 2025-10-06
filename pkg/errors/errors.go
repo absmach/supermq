@@ -91,7 +91,7 @@ func Wrap(wrapper, err error) error {
 		return wrapper
 	}
 
-	if ne, ok := err.(NewError); ok {
+	if ne, ok := err.(TypedError); ok {
 		return ne.Wrap(wrapper)
 	}
 

@@ -185,14 +185,20 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 	}
 
 	switch retErr := err.(type) {
-	case errors.RequestError:
+	case *errors.RequestError:
 		w.WriteHeader(http.StatusBadRequest)
 		if err := json.NewEncoder(w).Encode(retErr); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
-	case errors.AuthNError, errors.AuthZError:
+	case *errors.AuthNError, *errors.AuthZError:
 		w.WriteHeader(http.StatusUnauthorized)
+		if err := json.NewEncoder(w).Encode(retErr); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	case *errors.InternalError:
+		w.WriteHeader(http.StatusInternalServerError)
 		if err := json.NewEncoder(w).Encode(retErr); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}

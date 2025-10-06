@@ -59,28 +59,28 @@ func NewService(token grpcTokenV1.TokenServiceClient, urepo Repository, policySe
 func (svc service) Register(ctx context.Context, session authn.Session, u User, selfRegister bool) (uc User, err error) {
 	if !selfRegister {
 		if err := svc.checkSuperAdmin(ctx, session); err != nil {
-			return User{}, err
+			return User{}, errors.NewAuthNErrorWithErr("not authorized to register user", errors.Wrap(svcerr.ErrRegisterUser, err))
 		}
 	}
 
 	userID, err := svc.idProvider.ID()
 	if err != nil {
-		return User{}, err
+		return User{}, errors.NewInternalErrorWithErr(errors.Wrap(svcerr.ErrRegisterUser, err))
 	}
 
 	if u.Credentials.Secret != "" {
 		hash, err := svc.hasher.Hash(u.Credentials.Secret)
 		if err != nil {
-			return User{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
+			return User{}, errors.NewInternalErrorWithErr(errors.Wrap(svcerr.ErrRegisterUser, err))
 		}
 		u.Credentials.Secret = hash
 	}
 
 	if u.Status != DisabledStatus && u.Status != EnabledStatus {
-		return User{}, errors.Wrap(svcerr.ErrMalformedEntity, svcerr.ErrInvalidStatus)
+		return User{}, errors.NewRequestErrorWithErr(svcerr.ErrInvalidStatus.Msg(), svcerr.ErrRegisterUser)
 	}
 	if u.Role != UserRole && u.Role != AdminRole {
-		return User{}, errors.Wrap(svcerr.ErrMalformedEntity, svcerr.ErrInvalidRole)
+		return User{}, errors.NewRequestErrorWithErr(svcerr.ErrInvalidRole.Msg(), svcerr.ErrRegisterUser)
 	}
 	u.ID = userID
 	u.CreatedAt = time.Now().UTC()
@@ -97,7 +97,7 @@ func (svc service) Register(ctx context.Context, session authn.Session, u User, 
 	}()
 	user, err := svc.users.Save(ctx, u)
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrCreateEntity, err)
+		return User{}, errors.Wrap(svcerr.ErrRegisterUser, err)
 	}
 	return user, nil
 }
