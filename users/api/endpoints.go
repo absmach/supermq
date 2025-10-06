@@ -6,8 +6,10 @@ package api
 import (
 	"context"
 
+	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/users"
 	"github.com/go-kit/kit/endpoint"
 )
@@ -16,7 +18,7 @@ func registrationEndpoint(svc users.Service, selfRegister bool) endpoint.Endpoin
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(createUserReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 		session := authn.Session{}
 
@@ -24,7 +26,7 @@ func registrationEndpoint(svc users.Service, selfRegister bool) endpoint.Endpoin
 		if !selfRegister {
 			session, ok = ctx.Value(authn.SessionKey).(authn.Session)
 			if !ok {
-				return nil, errors.ErrAuthentication
+				return nil, svcerr.ErrAuthentication
 			}
 		}
 
@@ -46,7 +48,7 @@ func sendVerificationEndpoint(svc users.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
-			return nil, errors.ErrAuthentication
+			return nil, svcerr.ErrAuthentication
 		}
 
 		if err := svc.SendVerification(ctx, session); err != nil {
@@ -61,7 +63,7 @@ func verifyEmailEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(verifyEmailReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		if _, err := svc.VerifyEmail(ctx, req.token); err != nil {
@@ -76,12 +78,12 @@ func viewEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(viewUserReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
-			return nil, errors.ErrAuthentication
+			return nil, svcerr.ErrAuthentication
 		}
 		user, err := svc.View(ctx, session, req.id)
 		if err != nil {
@@ -96,7 +98,7 @@ func viewProfileEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
-			return nil, errors.ErrAuthentication
+			return nil, svcerr.ErrAuthentication
 		}
 		client, err := svc.ViewProfile(ctx, session)
 		if err != nil {
@@ -111,12 +113,12 @@ func listUsersEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(listUsersReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
-			return nil, errors.ErrAuthentication
+			return nil, svcerr.ErrAuthentication
 		}
 
 		pm := users.Page{
@@ -160,7 +162,7 @@ func searchUsersEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(searchUsersReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		pm := users.Page{
@@ -198,12 +200,12 @@ func updateEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(updateUserReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
-			return nil, errors.ErrAuthentication
+			return nil, svcerr.ErrAuthentication
 		}
 
 		usr := users.UserReq{
@@ -225,12 +227,12 @@ func updateTagsEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(updateUserTagsReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
-			return nil, errors.ErrAuthentication
+			return nil, svcerr.ErrAuthentication
 		}
 
 		usr := users.UserReq{
@@ -250,12 +252,12 @@ func updateEmailEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(updateEmailReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
-			return nil, errors.ErrAuthentication
+			return nil, svcerr.ErrAuthentication
 		}
 
 		user, err := svc.UpdateEmail(ctx, session, req.id, req.Email)
@@ -281,7 +283,7 @@ func passwordResetRequestEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(passResetReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		if err := svc.SendPasswordReset(ctx, req.Email); err != nil {
@@ -299,12 +301,12 @@ func passwordResetEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(resetTokenReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
-			return nil, errors.ErrAuthentication
+			return nil, svcerr.ErrAuthentication
 		}
 		if err := svc.ResetSecret(ctx, session, req.Password); err != nil {
 			return nil, err
@@ -318,12 +320,12 @@ func updateSecretEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(updateUserSecretReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
-			return nil, errors.ErrAuthentication
+			return nil, svcerr.ErrAuthentication
 		}
 		user, err := svc.UpdateSecret(ctx, session, req.OldSecret, req.NewSecret)
 		if err != nil {
@@ -338,12 +340,12 @@ func updateUsernameEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(updateUsernameReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
-			return nil, errors.ErrAuthentication
+			return nil, svcerr.ErrAuthorization
 		}
 
 		user, err := svc.UpdateUsername(ctx, session, req.id, req.Username)
@@ -359,7 +361,7 @@ func updateProfilePictureEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(updateProfilePictureReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		usr := users.UserReq{
@@ -368,7 +370,7 @@ func updateProfilePictureEndpoint(svc users.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
-			return nil, errors.ErrAuthentication
+			return nil, svcerr.ErrAuthorization
 		}
 
 		user, err := svc.UpdateProfilePicture(ctx, session, req.id, usr)
@@ -384,7 +386,7 @@ func updateRoleEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(updateUserRoleReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		user := users.User{
@@ -394,7 +396,7 @@ func updateRoleEndpoint(svc users.Service) endpoint.Endpoint {
 
 		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
-			return nil, errors.ErrAuthentication
+			return nil, svcerr.ErrAuthentication
 		}
 
 		user, err := svc.UpdateRole(ctx, session, user)
@@ -410,7 +412,7 @@ func issueTokenEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(loginUserReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		token, err := svc.IssueToken(ctx, req.Username, req.Password)
@@ -430,12 +432,12 @@ func refreshTokenEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(tokenReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
-			return nil, errors.ErrAuthentication
+			return nil, svcerr.ErrAuthentication
 		}
 
 		token, err := svc.RefreshToken(ctx, session, req.RefreshToken)
@@ -455,12 +457,12 @@ func enableEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(changeUserStatusReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
-			return nil, errors.ErrAuthentication
+			return nil, svcerr.ErrAuthentication
 		}
 
 		user, err := svc.Enable(ctx, session, req.id)
@@ -476,12 +478,12 @@ func disableEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(changeUserStatusReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
-			return nil, errors.ErrAuthentication
+			return nil, svcerr.ErrAuthentication
 		}
 
 		user, err := svc.Disable(ctx, session, req.id)
@@ -497,12 +499,12 @@ func deleteEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(changeUserStatusReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.Wrap(apiutil.ErrValidation, err)
 		}
 
 		session, ok := ctx.Value(authn.SessionKey).(authn.Session)
 		if !ok {
-			return nil, errors.ErrAuthentication
+			return nil, svcerr.ErrAuthentication
 		}
 
 		if err := svc.Delete(ctx, session, req.id); err != nil {

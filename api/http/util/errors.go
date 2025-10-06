@@ -52,10 +52,10 @@ var (
 	ErrInvalidIDFormat = errors.New("invalid id format provided")
 
 	// ErrNameSize indicates that name size exceeds the max.
-	ErrNameSize = errors.NewRequestError("invalid name size")
+	ErrNameSize = errors.New("invalid name size")
 
 	// ErrEmailSize indicates that email size exceeds the max.
-	ErrEmailSize = errors.NewRequestError("invalid email size")
+	ErrEmailSize = errors.New("invalid email size")
 
 	// ErrInvalidRole indicates that an invalid role.
 	ErrInvalidRole = errors.New("invalid client role")
