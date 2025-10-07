@@ -555,15 +555,13 @@ func (svc service) OAuthCallback(ctx context.Context, user User) (User, error) {
 	u, err := svc.users.RetrieveByEmail(ctx, user.Email)
 
 	if errors.Contains(err, repoerr.ErrNotFound) {
-		user.VerifiedAt = time.Now()
 		u, err = svc.Register(ctx, authn.Session{}, user, true)
 		if err != nil {
 			return User{}, err
 		}
-		return User{ID: u.ID, Role: u.Role, VerifiedAt: u.VerifiedAt}, nil
 	}
 
-	if err != nil {
+	if err != nil && !errors.Contains(err, repoerr.ErrNotFound) {
 		return User{}, err
 	}
 
