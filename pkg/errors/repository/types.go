@@ -39,16 +39,4 @@ var (
 
 	// ErrMissingNames indicates missing first and last names.
 	ErrMissingNames = errors.New("missing first or last name")
-
-	// ErrEmailAlreadyExists indicates that the email id already exists.
-	ErrEmailAlreadyExists = errors.New("email id already exists")
-
-	// ErrUsernameNotAvailable indicates that the username is not available.
-	ErrUsernameNotAvailable = errors.New("username not available")
-
-	// ErrDomainRouteNotAvailable indicates that the domain route is not available.
-	ErrDomainRouteNotAvailable = errors.New("domain route not available")
-
-	// ErrChannelRouteNotAvailable indicates that the channel route is not available.
-	ErrChannelRouteNotAvailable = errors.New("channel route not available")
 )

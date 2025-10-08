@@ -69,9 +69,9 @@ func handleSaveError(wrapper, err error) error {
 	if pqErr, ok := err.(*pgconn.PgError); ok && pqErr.Code == pgDuplicateErrCode {
 		switch pqErr.ConstraintName {
 		case "clients_email_key":
-			return errors.Wrap(repoerr.ErrEmailAlreadyExists, wrapper)
+			return errors.ErrEmailAlreadyExists
 		case "clients_username_key":
-			return errors.Wrap(repoerr.ErrUsernameNotAvailable, wrapper)
+			return errors.ErrUsernameNotAvailable
 		}
 	}
 	return postgres.HandleError(wrapper, err)

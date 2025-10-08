@@ -33,4 +33,16 @@ var (
 
 	// ErrMissingMember indicates member is not found.
 	ErrMissingMember = New("member id is not found")
+
+	// ErrEmailAlreadyExists indicates that the email id already exists.
+	ErrEmailAlreadyExists = New("email id already exists")
+
+	// ErrUsernameNotAvailable indicates that the username is not available.
+	ErrUsernameNotAvailable = New("username not available")
+
+	// ErrDomainRouteNotAvailable indicates that the domain route is not available.
+	ErrDomainRouteNotAvailable = New("domain route not available")
+
+	// ErrChannelRouteNotAvailable indicates that the channel route is not available.
+	ErrChannelRouteNotAvailable = New("channel route not available")
 )
