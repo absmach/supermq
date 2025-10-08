@@ -5,9 +5,14 @@ package users
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"net/mail"
+	"regexp"
+	"strings"
 	"time"
+	"unicode"
 
 	"github.com/absmach/supermq"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
@@ -555,6 +560,7 @@ func (svc service) OAuthCallback(ctx context.Context, user User) (User, error) {
 	u, err := svc.users.RetrieveByEmail(ctx, user.Email)
 
 	if errors.Contains(err, repoerr.ErrNotFound) {
+		user.Credentials.Username = generateUsername(user.Email)
 		u, err = svc.Register(ctx, authn.Session{}, user, true)
 		if err != nil {
 			return User{}, err
@@ -672,4 +678,52 @@ func (svc service) updateUserPolicy(ctx context.Context, userID string, role Rol
 
 		return nil
 	}
+}
+
+func generateUsername(email string) string {
+	uniqueSuffix := generateRandomID()
+	emailPrefix := getEmailPrefix(email)
+	return fmt.Sprintf("%s_%s", emailPrefix, uniqueSuffix)
+}
+
+func getEmailPrefix(email string) string {
+	parts := strings.Split(email, "@")
+	if len(parts) == 0 {
+		return "user"
+	}
+
+	prefix := parts[0]
+	reg := regexp.MustCompile("[^a-zA-Z0-9]+")
+	cleaned := reg.ReplaceAllString(prefix, "")
+	cleaned = strings.ToLower(cleaned)
+
+	if len(cleaned) > 15 {
+		cleaned = cleaned[:15]
+	}
+
+	cleaned = removeSpecialChars(cleaned)
+	if cleaned == "" {
+		cleaned = "user"
+	}
+
+	return cleaned
+}
+
+func generateRandomID() string {
+	randomBytes := make([]byte, 16)
+	if _, err := rand.Read(randomBytes); err != nil {
+		return fmt.Sprintf("%x", time.Now().UnixNano())[:10]
+	}
+
+	return hex.EncodeToString(randomBytes)[:10]
+}
+
+// removeSpecialChars removes non-ASCII and special characters
+func removeSpecialChars(s string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsLetter(r) || unicode.IsNumber(r) {
+			return r
+		}
+		return -1
+	}, s)
 }
