@@ -22,11 +22,16 @@ import (
 
 type userRepo struct {
 	Repository users.UserRepository
+	eh         errors.Handler
 }
 
 func NewRepository(db postgres.Database) users.Repository {
+	errHandlerOptions := []errors.HandlerOption{
+		postgres.WithDuplicateErrors(NewDuplicateErrors()),
+	}
 	return &userRepo{
 		Repository: users.UserRepository{DB: db},
+		eh:         postgres.NewErrorHandler(errHandlerOptions...),
 	}
 }
 
@@ -42,7 +47,7 @@ func (repo *userRepo) Save(ctx context.Context, c users.User) (users.User, error
 
 	row, err := repo.Repository.DB.NamedQueryContext(ctx, q, dbu)
 	if err != nil {
-		return users.User{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
+		return users.User{}, repo.eh.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
 	defer row.Close()
@@ -232,7 +237,7 @@ func (repo *userRepo) update(ctx context.Context, user users.User, query string)
 
 	row, err := repo.Repository.DB.NamedQueryContext(ctx, query, dbu)
 	if err != nil {
-		return users.User{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
+		return users.User{}, repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	defer row.Close()
 
