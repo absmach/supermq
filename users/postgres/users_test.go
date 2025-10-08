@@ -80,7 +80,7 @@ func TestUsersSave(t *testing.T) {
 				Metadata: users.Metadata{},
 				Status:   users.EnabledStatus,
 			},
-			err: repoerr.ErrConflict,
+			err: errors.ErrEmailAlreadyExists,
 		},
 		{
 			desc: "add user with duplicate user name",
@@ -96,7 +96,7 @@ func TestUsersSave(t *testing.T) {
 				Metadata: users.Metadata{},
 				Status:   users.EnabledStatus,
 			},
-			err: repoerr.ErrConflict,
+			err: errors.ErrUsernameNotAvailable,
 		},
 		{
 			desc: "add user with invalid user id",
