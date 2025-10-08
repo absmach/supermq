@@ -118,6 +118,15 @@ func Migration() *migrate.MemoryMigrationSource {
 					`DROP TABLE users_verifications;`,
 				},
 			},
+			{
+				Id: "clients_08",
+				Up: []string{
+					`ALTER TABLE users RENAME CONSTRAINT clients_identity_key TO clients_email_key;`,
+				},
+				Down: []string{
+					`ALTER TABLE users RENAME CONSTRAINT clients_email_key TO clients_identity_key;`,
+				},
+			},
 		},
 	}
 }

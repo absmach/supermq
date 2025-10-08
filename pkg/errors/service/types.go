@@ -102,4 +102,7 @@ var (
 
 	// ErrUserVerificationExpired indicates user verification is expired.
 	ErrUserVerificationExpired = errors.New("verification expired, please generate new verification")
+
+	// ErrRegisterUser indicates error in register a user.
+	ErrRegisterUser = errors.New("failed to register user")
 )
