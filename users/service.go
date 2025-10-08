@@ -88,9 +88,18 @@ func (svc service) Register(ctx context.Context, session authn.Session, u User, 
 	}()
 	user, err := svc.users.Save(ctx, u)
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrCreateEntity, err)
+		return User{}, handleSaveError(svcerr.ErrCreateEntity, err)
 	}
 	return user, nil
+}
+func handleSaveError(wrapper, err error) error {
+	if errors.Contains(err, repoerr.ErrEmailAlreadyExists) {
+		return errors.Wrap(svcerr.ErrEmailAlreadyExists, wrapper)
+	}
+	if errors.Contains(err, repoerr.ErrUsernameNotAvailable) {
+		return errors.Wrap(svcerr.ErrUsernameNotAvailable, wrapper)
+	}
+	return errors.Wrap(wrapper, err)
 }
 
 func (svc service) SendVerification(ctx context.Context, session authn.Session) error {
