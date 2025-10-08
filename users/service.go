@@ -93,11 +93,8 @@ func (svc service) Register(ctx context.Context, session authn.Session, u User, 
 	return user, nil
 }
 func handleSaveError(wrapper, err error) error {
-	if errors.Contains(err, repoerr.ErrEmailAlreadyExists) {
-		return errors.Wrap(svcerr.ErrEmailAlreadyExists, wrapper)
-	}
-	if errors.Contains(err, repoerr.ErrUsernameNotAvailable) {
-		return errors.Wrap(svcerr.ErrUsernameNotAvailable, wrapper)
+	if errors.Contains(err, repoerr.ErrEmailAlreadyExists) || errors.Contains(err, repoerr.ErrUsernameNotAvailable) {
+		return errors.Wrap(err, wrapper)
 	}
 	return errors.Wrap(wrapper, err)
 }
