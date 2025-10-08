@@ -89,48 +89,79 @@ type MessagePageMetadata struct {
 	Protocol    string  `json:"protocol,omitempty"`
 }
 
+type Operator uint8
+
+const (
+	OrOp Operator = iota
+	AndOp
+)
+
+type TagsQuery struct {
+	Elements []string
+	Operator Operator
+}
+
+func ToTagsQuery(s string) TagsQuery {
+	switch {
+	case strings.Contains(s, "-"):
+		elements := strings.Split(s, "-")
+		for i := range elements {
+			elements[i] = strings.TrimSpace(elements[i])
+		}
+		return TagsQuery{Elements: elements, Operator: AndOp}
+	case strings.Contains(s, ","):
+		elements := strings.Split(s, ",")
+		for i := range elements {
+			elements[i] = strings.TrimSpace(elements[i])
+		}
+		return TagsQuery{Elements: elements, Operator: OrOp}
+	default:
+		return TagsQuery{Elements: []string{s}, Operator: OrOp}
+	}
+}
+
 type PageMetadata struct {
-	Total           uint64   `json:"total"`
-	Offset          uint64   `json:"offset"`
-	Limit           uint64   `json:"limit"`
-	Order           string   `json:"order,omitempty"`
-	Direction       string   `json:"direction,omitempty"`
-	Level           uint64   `json:"level,omitempty"`
-	Identity        string   `json:"identity,omitempty"`
-	Email           string   `json:"email,omitempty"`
-	Username        string   `json:"username,omitempty"`
-	LastName        string   `json:"last_name,omitempty"`
-	FirstName       string   `json:"first_name,omitempty"`
-	Name            string   `json:"name,omitempty"`
-	Type            string   `json:"type,omitempty"`
-	Metadata        Metadata `json:"metadata,omitempty"`
-	Status          string   `json:"status,omitempty"`
-	Action          string   `json:"action,omitempty"`
-	Subject         string   `json:"subject,omitempty"`
-	Object          string   `json:"object,omitempty"`
-	Permission      string   `json:"permission,omitempty"`
-	Tag             string   `json:"tag,omitempty"`
-	Owner           string   `json:"owner,omitempty"`
-	SharedBy        string   `json:"shared_by,omitempty"`
-	Visibility      string   `json:"visibility,omitempty"`
-	OwnerID         string   `json:"owner_id,omitempty"`
-	Topic           string   `json:"topic,omitempty"`
-	Contact         string   `json:"contact,omitempty"`
-	State           string   `json:"state,omitempty"`
-	ListPermissions string   `json:"list_perms,omitempty"`
-	InvitedBy       string   `json:"invited_by,omitempty"`
-	UserID          string   `json:"user_id,omitempty"`
-	DomainID        string   `json:"domain_id,omitempty"`
-	Relation        string   `json:"relation,omitempty"`
-	Operation       string   `json:"operation,omitempty"`
-	From            int64    `json:"from,omitempty"`
-	To              int64    `json:"to,omitempty"`
-	WithMetadata    bool     `json:"with_metadata,omitempty"`
-	WithAttributes  bool     `json:"with_attributes,omitempty"`
-	ID              string   `json:"id,omitempty"`
-	Tree            bool     `json:"tree,omitempty"`
-	StartLevel      int64    `json:"start_level,omitempty"`
-	EndLevel        int64    `json:"end_level,omitempty"`
+	Total           uint64    `json:"total"`
+	Offset          uint64    `json:"offset"`
+	Limit           uint64    `json:"limit"`
+	Order           string    `json:"order,omitempty"`
+	Direction       string    `json:"direction,omitempty"`
+	Level           uint64    `json:"level,omitempty"`
+	Identity        string    `json:"identity,omitempty"`
+	Email           string    `json:"email,omitempty"`
+	Username        string    `json:"username,omitempty"`
+	LastName        string    `json:"last_name,omitempty"`
+	FirstName       string    `json:"first_name,omitempty"`
+	Name            string    `json:"name,omitempty"`
+	Type            string    `json:"type,omitempty"`
+	Metadata        Metadata  `json:"metadata,omitempty"`
+	Status          string    `json:"status,omitempty"`
+	Action          string    `json:"action,omitempty"`
+	Subject         string    `json:"subject,omitempty"`
+	Object          string    `json:"object,omitempty"`
+	Permission      string    `json:"permission,omitempty"`
+	Tags            TagsQuery `json:"tags,omitempty"`
+	Owner           string    `json:"owner,omitempty"`
+	SharedBy        string    `json:"shared_by,omitempty"`
+	Visibility      string    `json:"visibility,omitempty"`
+	OwnerID         string    `json:"owner_id,omitempty"`
+	Topic           string    `json:"topic,omitempty"`
+	Contact         string    `json:"contact,omitempty"`
+	State           string    `json:"state,omitempty"`
+	ListPermissions string    `json:"list_perms,omitempty"`
+	InvitedBy       string    `json:"invited_by,omitempty"`
+	UserID          string    `json:"user_id,omitempty"`
+	DomainID        string    `json:"domain_id,omitempty"`
+	Relation        string    `json:"relation,omitempty"`
+	Operation       string    `json:"operation,omitempty"`
+	From            int64     `json:"from,omitempty"`
+	To              int64     `json:"to,omitempty"`
+	WithMetadata    bool      `json:"with_metadata,omitempty"`
+	WithAttributes  bool      `json:"with_attributes,omitempty"`
+	ID              string    `json:"id,omitempty"`
+	Tree            bool      `json:"tree,omitempty"`
+	StartLevel      int64     `json:"start_level,omitempty"`
+	EndLevel        int64     `json:"end_level,omitempty"`
 }
 
 type Role struct {
@@ -1619,8 +1650,15 @@ func (pm PageMetadata) query() (string, error) {
 	if pm.Object != "" {
 		q.Add("object", pm.Object)
 	}
-	if pm.Tag != "" {
-		q.Add("tag", pm.Tag)
+	if len(pm.Tags.Elements) > 0 {
+		switch pm.Tags.Operator {
+		case AndOp:
+			str := strings.Join(pm.Tags.Elements, "-")
+			q.Add("tags", str)
+		default:
+			str := strings.Join(pm.Tags.Elements, ",")
+			q.Add("tags", str)
+		}
 	}
 	if pm.Owner != "" {
 		q.Add("owner", pm.Owner)

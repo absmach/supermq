@@ -127,7 +127,7 @@ func listUsersEndpoint(svc users.Service) endpoint.Endpoint {
 			Limit:     req.limit,
 			OnlyTotal: req.onlyTotal,
 			Username:  req.userName,
-			Tag:       req.tag,
+			Tags:      req.tags,
 			Metadata:  req.metadata,
 			FirstName: req.firstName,
 			LastName:  req.lastName,

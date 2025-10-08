@@ -221,8 +221,8 @@ func (lce listChannelEvent) Encode() (map[string]any, error) {
 	if lce.Metadata != nil {
 		val["metadata"] = lce.Metadata
 	}
-	if lce.Tag != "" {
-		val["tag"] = lce.Tag
+	if len(lce.Tags.Elements) > 0 {
+		val["tag"] = lce.Tags.Elements
 	}
 	if lce.Status.String() != "" {
 		val["status"] = lce.Status.String()
@@ -270,8 +270,8 @@ func (luce listUserChannelsEvent) Encode() (map[string]any, error) {
 	if luce.Domain != "" {
 		val["domain"] = luce.Domain
 	}
-	if luce.Tag != "" {
-		val["tag"] = luce.Tag
+	if len(luce.Tags.Elements) > 0 {
+		val["tag"] = luce.Tags.Elements
 	}
 	if luce.Status.String() != "" {
 		val["status"] = luce.Status.String()

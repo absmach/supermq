@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -833,6 +834,7 @@ func TestListGroups(t *testing.T) {
 		domainID           string
 		token              string
 		session            smqauthn.Session
+		pageMeta           groups.PageMeta
 		listGroupsResponse groups.Page
 		status             int
 		authnErr           error
@@ -843,6 +845,13 @@ func TestListGroups(t *testing.T) {
 			domainID: validID,
 			token:    validToken,
 			status:   http.StatusOK,
+			pageMeta: groups.PageMeta{
+				Offset:  0,
+				Limit:   10,
+				Order:   api.DefOrder,
+				Dir:     api.DefDir,
+				Actions: []string{},
+			},
 			listGroupsResponse: groups.Page{
 				PageMeta: groups.PageMeta{
 					Total: 1,
@@ -870,6 +879,13 @@ func TestListGroups(t *testing.T) {
 			desc:     "list groups with offset",
 			domainID: validID,
 			token:    validToken,
+			pageMeta: groups.PageMeta{
+				Offset:  1,
+				Limit:   10,
+				Order:   api.DefOrder,
+				Dir:     api.DefDir,
+				Actions: []string{},
+			},
 			listGroupsResponse: groups.Page{
 				PageMeta: groups.PageMeta{
 					Total: 1,
@@ -892,6 +908,13 @@ func TestListGroups(t *testing.T) {
 			desc:     "list groups with limit",
 			domainID: validID,
 			token:    validToken,
+			pageMeta: groups.PageMeta{
+				Offset:  0,
+				Limit:   1,
+				Order:   api.DefOrder,
+				Dir:     api.DefDir,
+				Actions: []string{},
+			},
 			listGroupsResponse: groups.Page{
 				PageMeta: groups.PageMeta{
 					Total: 1,
@@ -922,6 +945,14 @@ func TestListGroups(t *testing.T) {
 			desc:     "list groups with name",
 			domainID: validID,
 			token:    validToken,
+			pageMeta: groups.PageMeta{
+				Offset:  0,
+				Limit:   10,
+				Order:   api.DefOrder,
+				Dir:     api.DefDir,
+				Actions: []string{},
+				Name:    "clientname",
+			},
 			listGroupsResponse: groups.Page{
 				PageMeta: groups.PageMeta{
 					Total: 1,
@@ -931,14 +962,6 @@ func TestListGroups(t *testing.T) {
 			query:  "name=clientname",
 			status: http.StatusOK,
 			err:    nil,
-		},
-		{
-			desc:     "list groups with invalid name",
-			domainID: validID,
-			token:    validToken,
-			query:    "name=invalid",
-			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
 		},
 		{
 			desc:     "list groups with duplicate name",
@@ -952,6 +975,14 @@ func TestListGroups(t *testing.T) {
 			desc:     "list groups with status",
 			domainID: validID,
 			token:    validToken,
+			pageMeta: groups.PageMeta{
+				Offset:  0,
+				Limit:   10,
+				Order:   api.DefOrder,
+				Dir:     api.DefDir,
+				Actions: []string{},
+				Status:  groups.EnabledStatus,
+			},
 			listGroupsResponse: groups.Page{
 				PageMeta: groups.PageMeta{
 					Total: 1,
@@ -979,32 +1010,76 @@ func TestListGroups(t *testing.T) {
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
-			desc:     "list groups with tags",
+			desc:     "list groups with single tag",
 			domainID: validID,
 			token:    validToken,
+			pageMeta: groups.PageMeta{
+				Offset:  0,
+				Limit:   10,
+				Order:   api.DefOrder,
+				Dir:     api.DefDir,
+				Actions: []string{},
+				Tags:    groups.TagsQuery{Elements: []string{"tag1"}, Operator: groups.OrOp},
+			},
 			listGroupsResponse: groups.Page{
 				PageMeta: groups.PageMeta{
 					Total: 1,
 				},
 				Groups: []groups.Group{validGroupResp},
 			},
-			query:  "tag=tag1,tag2",
+			query:  "tags=tag1",
 			status: http.StatusOK,
 			err:    nil,
 		},
 		{
-			desc:     "list groups with invalid tags",
+			desc:     "list groups with multiple tags and OR operator",
 			domainID: validID,
 			token:    validToken,
-			query:    "tag=invalid",
-			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			pageMeta: groups.PageMeta{
+				Offset:  0,
+				Limit:   10,
+				Order:   api.DefOrder,
+				Dir:     api.DefDir,
+				Actions: []string{},
+				Tags:    groups.TagsQuery{Elements: []string{"tag1", "tag2", "tag3"}, Operator: groups.OrOp},
+			},
+			listGroupsResponse: groups.Page{
+				PageMeta: groups.PageMeta{
+					Total: 1,
+				},
+				Groups: []groups.Group{validGroupResp},
+			},
+			query:  "tags=tag1,tag2,tag3",
+			status: http.StatusOK,
+			err:    nil,
+		},
+		{
+			desc:     "list groups with multiple tags and AND operator",
+			domainID: validID,
+			token:    validToken,
+			pageMeta: groups.PageMeta{
+				Offset:  0,
+				Limit:   10,
+				Order:   api.DefOrder,
+				Dir:     api.DefDir,
+				Actions: []string{},
+				Tags:    groups.TagsQuery{Elements: []string{"tag1", "tag2", "tag3"}, Operator: groups.AndOp},
+			},
+			listGroupsResponse: groups.Page{
+				PageMeta: groups.PageMeta{
+					Total: 1,
+				},
+				Groups: []groups.Group{validGroupResp},
+			},
+			query:  "tags=tag1-tag2-tag3",
+			status: http.StatusOK,
+			err:    nil,
 		},
 		{
 			desc:     "list groups with duplicate tags",
 			domainID: validID,
 			token:    validToken,
-			query:    "tag=tag1&tag=tag2",
+			query:    "tags=tag1&tags=tag2",
 			status:   http.StatusBadRequest,
 			err:      apiutil.ErrInvalidQueryParams,
 		},
@@ -1012,13 +1087,21 @@ func TestListGroups(t *testing.T) {
 			desc:     "list groups with metadata",
 			domainID: validID,
 			token:    validToken,
+			pageMeta: groups.PageMeta{
+				Offset:   0,
+				Limit:    10,
+				Order:    api.DefOrder,
+				Dir:      api.DefDir,
+				Actions:  []string{},
+				Metadata: map[string]any{"domain": "example.com"},
+			},
 			listGroupsResponse: groups.Page{
 				PageMeta: groups.PageMeta{
 					Total: 1,
 				},
 				Groups: []groups.Group{validGroupResp},
 			},
-			query:  "metadata=%7B%22domain%22%3A%20%22example.com%22%7D&",
+			query:  fmt.Sprintf("metadata=%s", url.PathEscape(`{"domain": "example.com"}`)),
 			status: http.StatusOK,
 			err:    nil,
 		},
@@ -1034,67 +1117,7 @@ func TestListGroups(t *testing.T) {
 			desc:     "list groups with duplicate metadata",
 			domainID: validID,
 			token:    validToken,
-			query:    "metadata=%7B%22domain%22%3A%20%22example.com%22%7D&metadata=%7B%22domain%22%3A%20%22example.com%22%7D",
-			status:   http.StatusBadRequest,
-			err:      apiutil.ErrInvalidQueryParams,
-		},
-		{
-			desc:     "list groups with permissions",
-			domainID: validID,
-			token:    validToken,
-			listGroupsResponse: groups.Page{
-				PageMeta: groups.PageMeta{
-					Total: 1,
-				},
-				Groups: []groups.Group{validGroupResp},
-			},
-			query:  "permission=view",
-			status: http.StatusOK,
-			err:    nil,
-		},
-		{
-			desc:     "list groups with invalid permissions",
-			domainID: validID,
-			token:    validToken,
-			query:    "permission=invalid",
-			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
-		},
-		{
-			desc:     "list groups with duplicate permissions",
-			domainID: validID,
-			token:    validToken,
-			query:    "permission=view&permission=view",
-			status:   http.StatusBadRequest,
-			err:      apiutil.ErrInvalidQueryParams,
-		},
-		{
-			desc:     "list groups with list perms",
-			domainID: validID,
-			token:    validToken,
-			listGroupsResponse: groups.Page{
-				PageMeta: groups.PageMeta{
-					Total: 1,
-				},
-				Groups: []groups.Group{validGroupResp},
-			},
-			query:  "list_perms=true",
-			status: http.StatusOK,
-			err:    nil,
-		},
-		{
-			desc:     "list groups with invalid list perms",
-			domainID: validID,
-			token:    validToken,
-			query:    "list_perms=invalid",
-			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
-		},
-		{
-			desc:     "list groups with duplicate list perms",
-			domainID: validID,
-			token:    validToken,
-			query:    "list_perms=true&listPerms=true",
+			query:    fmt.Sprintf("metadata=%s&metadata=%s", url.PathEscape(`{"domain": "example.com"}`), url.PathEscape(`{"domain": "example.com"}`)),
 			status:   http.StatusBadRequest,
 			err:      apiutil.ErrInvalidQueryParams,
 		},
@@ -1113,7 +1136,7 @@ func TestListGroups(t *testing.T) {
 				tc.session = smqauthn.Session{DomainUserID: validID + "_" + validID, UserID: validID, DomainID: validID}
 			}
 			authCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
-			svcCall := svc.On("ListGroups", mock.Anything, tc.session, mock.Anything).Return(tc.listGroupsResponse, tc.err)
+			svcCall := svc.On("ListGroups", mock.Anything, tc.session, tc.pageMeta).Return(tc.listGroupsResponse, tc.err)
 			res, err := req.make()
 			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 			var bodyRes respBody

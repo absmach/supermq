@@ -99,7 +99,7 @@ type listUsersReq struct {
 	limit     uint64
 	onlyTotal bool
 	userName  string
-	tag       string
+	tags      users.TagsQuery
 	firstName string
 	lastName  string
 	email     string
