@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/0x6flab/namegenerator v1.4.0
 	github.com/absmach/callhome v0.18.1
-	github.com/absmach/mgate v0.4.6-0.20250605150648-edf967fbb46a
+	github.com/absmach/mgate v0.4.6-0.20251003180939-e02b07f1b1d5
 	github.com/absmach/senml v1.0.8
 	github.com/authzed/authzed-go v1.6.0
 	github.com/authzed/grpcutil v0.0.0-20250221190651-1985b19b35b8
@@ -30,6 +30,7 @@ require (
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/ory/dockertest/v3 v3.12.0
 	github.com/pelletier/go-toml v1.9.5
+	github.com/pion/dtls/v3 v3.0.7
 	github.com/plgd-dev/go-coap/v3 v3.4.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/rabbitmq/amqp091-go v1.10.0
@@ -122,8 +123,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/opencontainers/runc v1.2.3 // indirect
-	github.com/pion/dtls/v3 v3.0.6 // indirect
-	github.com/pion/logging v0.2.3 // indirect
+	github.com/pion/logging v0.2.4 // indirect
 	github.com/pion/transport/v3 v3.0.7 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240917153116-6f2963f01587 // indirect

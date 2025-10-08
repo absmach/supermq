@@ -8,10 +8,15 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/url"
 	"os"
 
 	chclient "github.com/absmach/callhome/pkg/client"
+	"github.com/absmach/mgate"
+	mgatecoap "github.com/absmach/mgate/pkg/coap"
+	"github.com/absmach/mgate/pkg/session"
+	mgtls "github.com/absmach/mgate/pkg/tls"
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/coap"
 	httpapi "github.com/absmach/supermq/coap/api"
@@ -30,6 +35,7 @@ import (
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/caarlos0/env/v11"
+	"github.com/pion/dtls/v3"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -37,12 +43,15 @@ const (
 	svcName           = "coap_adapter"
 	envPrefix         = "SMQ_COAP_ADAPTER_"
 	envPrefixHTTP     = "SMQ_COAP_ADAPTER_HTTP_"
+	envPrefixDTLS     = "SMQ_COAP_ADAPTER_SERVER_"
 	envPrefixCache    = "SMQ_COAP_CACHE_"
 	envPrefixClients  = "SMQ_CLIENTS_GRPC_"
 	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
 	envPrefixDomains  = "SMQ_DOMAINS_GRPC_"
 	defSvcHTTPPort    = "5683"
 	defSvcCoAPPort    = "5683"
+	targetProtocol    = "coap"
+	targetCoapPort    = "5682"
 )
 
 type config struct {
@@ -90,6 +99,13 @@ func main() {
 	coapServerConfig := server.Config{Port: defSvcCoAPPort}
 	if err := env.ParseWithOptions(&coapServerConfig, env.Options{Prefix: envPrefix}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load %s CoAP server configuration : %s", svcName, err))
+		exitCode = 1
+		return
+	}
+
+	dtlsCfg, err := mgtls.NewConfig(env.Options{Prefix: envPrefixDTLS})
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to load %s DTLS configuration : %s", svcName, err))
 		exitCode = 1
 		return
 	}
@@ -196,7 +212,7 @@ func main() {
 		exitCode = 1
 		return
 	}
-	cs := coapserver.NewServer(ctx, cancel, svcName, coapServerConfig, httpapi.MakeCoAPHandler(svc, channelsClient, parser, logger), logger)
+	cs := coapserver.NewServer(ctx, cancel, svcName, server.Config{Host: coapServerConfig.Host, Port: targetCoapPort}, httpapi.MakeCoAPHandler(svc, channelsClient, parser, logger), logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, supermq.Version, logger, cancel)
@@ -207,7 +223,11 @@ func main() {
 		return hs.Start()
 	})
 	g.Go(func() error {
-		return cs.Start()
+		g.Go(func() error {
+			return cs.Start()
+		})
+		handler := coap.NewHandler(logger, clientsClient, channelsClient, parser)
+		return proxyCoAP(ctx, coapServerConfig, dtlsCfg, handler, logger)
 	})
 	g.Go(func() error {
 		return server.StopSignalHandler(ctx, cancel, logger, svcName, hs, cs)
@@ -215,5 +235,47 @@ func main() {
 
 	if err := g.Wait(); err != nil {
 		logger.Error(fmt.Sprintf("CoAP adapter service terminated: %s", err))
+	}
+}
+
+func proxyCoAP(ctx context.Context, cfg server.Config, dtlsCfg mgtls.Config, handler session.Handler, logger *slog.Logger) error {
+	var err error
+	config := mgate.Config{
+		Host:           "",
+		Port:           cfg.Port,
+		TargetProtocol: targetProtocol,
+		TargetHost:     cfg.Host,
+		TargetPort:     targetCoapPort,
+	}
+
+	mg := mgatecoap.NewProxy(config, handler, logger)
+
+	errCh := make(chan error)
+
+	config.DTLSConfig, err = mgtls.LoadTLSConfig(&dtlsCfg, &dtls.Config{})
+	if err != nil {
+		return err
+	}
+
+	switch {
+	case config.DTLSConfig != nil:
+		dltsCfg := config
+		mgDtls := mgatecoap.NewProxy(dltsCfg, handler, logger)
+		logger.Info(fmt.Sprintf("Starting COAP with DTLS proxy on port %s", cfg.Port))
+		go func() {
+			errCh <- mgDtls.Listen(ctx)
+		}()
+	default:
+		logger.Info(fmt.Sprintf("Starting COAP without DTLS proxy on port %s", cfg.Port))
+		go func() {
+			errCh <- mg.Listen(ctx)
+		}()
+	}
+	select {
+	case <-ctx.Done():
+		logger.Info(fmt.Sprintf("proxy COAP shutdown at %s:%s", config.Host, config.Port))
+		return nil
+	case err := <-errCh:
+		return err
 	}
 }
