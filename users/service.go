@@ -715,7 +715,7 @@ func getEmailPrefix(email string) string {
 }
 
 func generateRandomID() string {
-	randomBytes := make([]byte, 16)
+	randomBytes := make([]byte, 0, 16)
 	if _, err := rand.Read(randomBytes); err != nil {
 		return fmt.Sprintf("%x", time.Now().UnixNano())[:10]
 	}
@@ -730,7 +730,7 @@ func generateRandomID() string {
 	return hex.EncodeToString(randomBytes)[:10]
 }
 
-// removeSpecialChars removes non-ASCII and special characters
+// removeSpecialChars removes non-ASCII and special characters.
 func removeSpecialChars(s string) string {
 	return strings.Map(func(r rune) rune {
 		if unicode.IsLetter(r) || unicode.IsNumber(r) {
