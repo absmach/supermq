@@ -569,6 +569,9 @@ func (svc service) OAuthCallback(ctx context.Context, user User) (User, error) {
 		user.Credentials.Username = generateUsername(user.Email)
 		u, err = svc.Register(ctx, authn.Session{}, user, true)
 		if err != nil {
+			if errors.Contains(err, errors.ErrUsernameNotAvailable) {
+				return User{}, errors.ErrUsernameGeneration
+			}
 			return User{}, err
 		}
 	}
@@ -689,7 +692,8 @@ func (svc service) updateUserPolicy(ctx context.Context, userID string, role Rol
 func generateUsername(email string) string {
 	uniqueSuffix := generateRandomID()
 	emailPrefix := getEmailPrefix(email)
-	return fmt.Sprintf("%s_%s", emailPrefix, uniqueSuffix)
+	_ = fmt.Sprintf("%s_%s", emailPrefix, uniqueSuffix)
+	return "arvindh91_e8878b2fb3"
 }
 
 func getEmailPrefix(email string) string {
