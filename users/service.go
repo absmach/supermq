@@ -13,7 +13,6 @@ import (
 	"regexp"
 	"strings"
 	"time"
-	"unicode"
 
 	"github.com/absmach/supermq"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
@@ -691,11 +690,11 @@ func (svc service) updateUserPolicy(ctx context.Context, userID string, role Rol
 
 func generateUsername(email string) string {
 	uniqueSuffix := generateRandomID()
-	emailPrefix := getEmailPrefix(email)
+	emailPrefix := extractEmailPrefix(email)
 	return fmt.Sprintf("%s_%s", emailPrefix, uniqueSuffix)
 }
 
-func getEmailPrefix(email string) string {
+func extractEmailPrefix(email string) string {
 	parts := strings.Split(email, "@")
 	if len(parts) == 0 {
 		return defaultUsernamePrefix
@@ -703,13 +702,8 @@ func getEmailPrefix(email string) string {
 
 	prefix := parts[0]
 	cleaned := usernameRegExp.ReplaceAllString(prefix, "")
-	cleaned = strings.ToLower(cleaned)
 
-	if len(cleaned) > 15 {
-		cleaned = cleaned[:15]
-	}
-
-	cleaned = removeSpecialChars(cleaned)
+	cleaned = sanitizeForUsername(cleaned, 15)
 	if cleaned == "" {
 		cleaned = defaultUsernamePrefix
 	}
@@ -733,12 +727,51 @@ func generateRandomID() string {
 	return hex.EncodeToString(randomBytes)[:10]
 }
 
-// removeSpecialChars removes non-ASCII and special characters.
-func removeSpecialChars(s string) string {
-	return strings.Map(func(r rune) rune {
-		if unicode.IsLetter(r) || unicode.IsNumber(r) {
-			return r
+// sanitizeForUsername extracts and cleans a string for use in username generation.
+// As per the username requirements:
+// - It keeps only lowercase alphanumeric characters, hyphens, and underscores
+// - ensures valid boundaries (no hyphens/underscores at start/end)
+// - removes consecutive hyphens/underscores (to pass validation)
+// and finally limits the result to maxLen characters.
+func sanitizeForUsername(s string, maxLen int) string {
+	if s == "" {
+		return ""
+	}
+
+	// Convert to lowercase
+	s = strings.ToLower(s)
+
+	// Filter characters - keep only alphanumeric, hyphen, underscore
+	buf := make([]byte, 0, len(s))
+	var lastChar byte
+
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+
+		// Keep alphanumeric, hyphen, underscore
+		if (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_' {
+			// Skip if current char is hyphen/underscore and same as last char
+			if (c == '-' || c == '_') && c == lastChar {
+				continue // Skip consecutive hyphens or underscores
+			}
+			buf = append(buf, c)
+			lastChar = c
+		} else {
+			lastChar = 0 // Reset on special char
 		}
-		return -1
-	}, s)
+	}
+
+	cleaned := string(buf)
+
+	// Trim invalid boundary characters
+	cleaned = strings.Trim(cleaned, "-_")
+
+	// Limit length
+	if len(cleaned) > maxLen {
+		cleaned = cleaned[:maxLen]
+		// Re-trim in case truncation exposed hyphen/underscore at end
+		cleaned = strings.TrimRight(cleaned, "-_")
+	}
+
+	return cleaned
 }
