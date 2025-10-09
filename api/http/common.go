@@ -190,7 +190,7 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 	}
 
 	switch {
-	case errors.Contains(err, errors.ErrUsernameGeneration):
+	case errors.Contains(err, errors.ErrTryAgain):
 		w.WriteHeader(http.StatusUnprocessableEntity)
 	case errors.Contains(err, errors.ErrEmailAlreadyExists),
 		errors.Contains(err, errors.ErrUsernameNotAvailable),
