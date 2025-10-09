@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	mrand "math/rand"
 	"net/mail"
 	"regexp"
 	"strings"
@@ -23,12 +24,17 @@ import (
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
+	"github.com/gofrs/uuid/v5"
 )
+
+const defaultUsernamePrefix = "user"
 
 var (
 	errIssueToken       = errors.New("failed to issue token")
 	errRecoveryToken    = errors.New("failed to generate password recovery token")
 	errLoginDisableUser = errors.New("failed to login in disabled user")
+
+	usernameRegExp = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{34}[a-z0-9]$`)
 )
 
 type service struct {
@@ -689,12 +695,11 @@ func generateUsername(email string) string {
 func getEmailPrefix(email string) string {
 	parts := strings.Split(email, "@")
 	if len(parts) == 0 {
-		return "user"
+		return defaultUsernamePrefix
 	}
 
 	prefix := parts[0]
-	reg := regexp.MustCompile("[^a-zA-Z0-9]+")
-	cleaned := reg.ReplaceAllString(prefix, "")
+	cleaned := usernameRegExp.ReplaceAllString(prefix, "")
 	cleaned = strings.ToLower(cleaned)
 
 	if len(cleaned) > 15 {
@@ -703,7 +708,7 @@ func getEmailPrefix(email string) string {
 
 	cleaned = removeSpecialChars(cleaned)
 	if cleaned == "" {
-		cleaned = "user"
+		cleaned = defaultUsernamePrefix
 	}
 
 	return cleaned
@@ -714,7 +719,14 @@ func generateRandomID() string {
 	if _, err := rand.Read(randomBytes); err != nil {
 		return fmt.Sprintf("%x", time.Now().UnixNano())[:10]
 	}
+	id, err := uuid.NewV4()
+	if err == nil {
+		randomBytes = append(randomBytes, id.Bytes()...)
+	}
 
+	mrand.Shuffle(len(randomBytes), func(i, j int) {
+		randomBytes[i], randomBytes[j] = randomBytes[j], randomBytes[i]
+	})
 	return hex.EncodeToString(randomBytes)[:10]
 }
 
