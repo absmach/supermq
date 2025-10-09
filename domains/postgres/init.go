@@ -89,6 +89,15 @@ func Migration() (*migrate.MemoryMigrationSource, error) {
 					`ALTER TABLE invitations ALTER COLUMN rejected_at TYPE TIMESTAMP;`,
 				},
 			},
+			{
+				Id: "domain_5",
+				Up: []string{
+					`ALTER TABLE domains RENAME CONSTRAINT domains_alias_key TO domains_route_key;`,
+				},
+				Down: []string{
+					`ALTER TABLE domains RENAME CONSTRAINT domains_route_key TO domains_alias_key;`,
+				},
+			},
 		},
 	}
 

@@ -192,6 +192,7 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
 	case errors.Contains(err, errors.ErrEmailAlreadyExists),
 		errors.Contains(err, errors.ErrUsernameNotAvailable),
+		errors.Contains(err, errors.ErrRouteNotAvailable),
 		errors.Contains(err, errors.ErrChannelRouteNotAvailable),
 		errors.Contains(err, errors.ErrDomainRouteNotAvailable):
 		w.WriteHeader(http.StatusBadRequest)

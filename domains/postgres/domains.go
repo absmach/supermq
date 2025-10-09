@@ -20,6 +20,7 @@ import (
 	"github.com/absmach/supermq/pkg/roles"
 	rolesPostgres "github.com/absmach/supermq/pkg/roles/repo/postgres"
 	"github.com/jackc/pgtype"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -30,6 +31,8 @@ const (
 	rolesTableNamePrefix = "domains"
 	entityTableName      = "domains"
 	entityIDColumnName   = "id"
+
+	pgDuplicateErrCode = "23505"
 )
 
 type domainRepo struct {
@@ -59,7 +62,7 @@ func (repo domainRepo) SaveDomain(ctx context.Context, d domains.Domain) (dd dom
 
 	row, err := repo.db.NamedQueryContext(ctx, q, dbd)
 	if err != nil {
-		return domains.Domain{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
+		return domains.Domain{}, handleSaveError(repoerr.ErrCreateEntity, err)
 	}
 	defer row.Close()
 
@@ -78,6 +81,16 @@ func (repo domainRepo) SaveDomain(ctx context.Context, d domains.Domain) (dd dom
 	}
 
 	return domain, nil
+}
+
+func handleSaveError(wrapper, err error) error {
+	if pqErr, ok := err.(*pgconn.PgError); ok && pqErr.Code == pgDuplicateErrCode {
+		switch pqErr.ConstraintName {
+		case "domains_route_key":
+			return errors.ErrRouteNotAvailable
+		}
+	}
+	return postgres.HandleError(wrapper, err)
 }
 
 // RetrieveDomainByIDWithRoles retrieves Domain by its unique ID along with member roles.
