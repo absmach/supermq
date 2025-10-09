@@ -78,6 +78,9 @@ func (svc service) CreateChannels(ctx context.Context, session authn.Session, ch
 
 	savedChs, err := svc.repo.Save(ctx, reChs...)
 	if err != nil {
+		if errors.Contains(err, errors.ErrRouteNotAvailable) {
+			return []Channel{}, []roles.RoleProvision{}, errors.ErrRouteNotAvailable
+		}
 		return []Channel{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 	chIDs := []string{}

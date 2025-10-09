@@ -66,6 +66,9 @@ func (svc service) CreateDomain(ctx context.Context, session authn.Session, d Do
 	// Domain is created in repo first, because Roles table have foreign key relation with Domain ID
 	dom, err := svc.repo.SaveDomain(ctx, d)
 	if err != nil {
+		if errors.Contains(err, errors.ErrRouteNotAvailable) {
+			return Domain{}, []roles.RoleProvision{}, errors.ErrRouteNotAvailable
+		}
 		return Domain{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 	defer func() {

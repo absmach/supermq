@@ -22,6 +22,7 @@ import (
 	"github.com/absmach/supermq/pkg/roles"
 	rolesPostgres "github.com/absmach/supermq/pkg/roles/repo/postgres"
 	"github.com/jackc/pgtype"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/lib/pq"
 )
 
@@ -29,6 +30,8 @@ const (
 	rolesTableNamePrefix = "channels"
 	entityTableName      = "channels"
 	entityIDColumnName   = "id"
+
+	pgDuplicateErrCode = "23505"
 )
 
 var _ channels.Repository = (*channelRepository)(nil)
@@ -64,7 +67,7 @@ func (cr *channelRepository) Save(ctx context.Context, chs ...channels.Channel) 
 
 	row, err := cr.db.NamedQueryContext(ctx, q, dbchs)
 	if err != nil {
-		return []channels.Channel{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
+		return []channels.Channel{}, handleSaveError(repoerr.ErrCreateEntity, err)
 	}
 
 	defer row.Close()
@@ -84,6 +87,16 @@ func (cr *channelRepository) Save(ctx context.Context, chs ...channels.Channel) 
 		reChs = append(reChs, ch)
 	}
 	return reChs, nil
+}
+
+func handleSaveError(wrapper, err error) error {
+	if pqErr, ok := err.(*pgconn.PgError); ok && pqErr.Code == pgDuplicateErrCode {
+		switch pqErr.ConstraintName {
+		case "unique_domain_route_not_null":
+			return errors.ErrRouteNotAvailable
+		}
+	}
+	return postgres.HandleError(wrapper, err)
 }
 
 func (cr *channelRepository) Update(ctx context.Context, channel channels.Channel) (channels.Channel, error) {
@@ -733,7 +746,7 @@ indirect_child_groups AS (
 		groups indirect_child_groups ON indirect_child_groups.path <@ dlgws.path
 	WHERE
 		indirect_child_groups.domain_id = '%s'
-		AND NOT EXISTS ( 
+		AND NOT EXISTS (
 			SELECT 1
 			FROM direct_groups_with_subgroup dgws
 			WHERE dgws.id = indirect_child_groups.id
