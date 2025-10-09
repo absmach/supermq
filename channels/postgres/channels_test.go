@@ -172,7 +172,7 @@ func TestSave(t *testing.T) {
 				Route:  duplicateRoute,
 			},
 			resp: []channels.Channel{},
-			err:  repoerr.ErrConflict,
+			err:  errors.ErrRouteNotAvailable,
 		},
 	}
 
