@@ -5,6 +5,7 @@ package http
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -26,19 +27,12 @@ import (
 
 var _ session.Handler = (*handler)(nil)
 
-type ctxKey string
-
-const (
-	protocol                = "http"
-	clientIDCtxKey   ctxKey = "client_id"
-	clientTypeCtxKey ctxKey = "client_type"
-)
+const protocol = "http"
 
 // Log message formats.
 const (
-	logInfoPublished         = "published with client_type %s client_id %s to the topic %s"
-	logInfoFailedAuthNToken  = "failed to authenticate token for topic %s with error %s"
-	logInfoFailedAuthNClient = "failed to authenticate client key %s for topic %s with error %s"
+	publishedInfoFmt = "published with client_type %s client_id %s to the topic %s"
+	failedAuthnFmt   = "failed to authenticate client_type %s for topic %s with error %s"
 )
 
 // Error wrappers for MQTT errors.
@@ -48,6 +42,8 @@ var (
 	errFailedPublishToMsgBroker = errors.New("failed to publish to supermq message broker")
 	errMalformedTopic           = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("malformed topic"))
 	errMissingTopicPub          = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("failed to publish due to missing topic"))
+	errInvalidAuthFormat        = errors.New("invalid basic auth format")
+	errInvalidClientType        = errors.New("invalid client type")
 )
 
 // Event implements events.Event interface.
@@ -118,37 +114,39 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		return errors.Wrap(errMalformedTopic, err)
 	}
 
-	var clientID, clientType string
+	var token, clientType string
+	pass := string(s.Password)
 	switch {
-	case strings.HasPrefix(string(s.Password), "Client"):
-		secret := strings.TrimPrefix(string(s.Password), apiutil.ClientPrefix)
-		authnRes, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, secret)})
-		if err != nil {
-			h.logger.Warn(fmt.Sprintf(logInfoFailedAuthNClient, secret, *topic, err))
-			return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
-		}
-		if !authnRes.Authenticated {
-			h.logger.Warn(fmt.Sprintf(logInfoFailedAuthNClient, secret, *topic, svcerr.ErrAuthentication))
-			return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
-		}
+	case s.Username != "" && pass != "":
+		token = smqauthn.AuthPack(smqauthn.BasicAuth, s.Username, pass)
 		clientType = policies.ClientType
-		clientID = authnRes.GetId()
-	case strings.HasPrefix(string(s.Password), apiutil.BearerPrefix):
-		token := strings.TrimPrefix(string(s.Password), apiutil.BearerPrefix)
-		authnSession, err := h.authn.Authenticate(ctx, token)
+	case strings.HasPrefix(pass, apiutil.BasicAuthPrefix):
+		username, password, err := decodeAuth(strings.TrimPrefix(pass, apiutil.BasicAuthPrefix))
 		if err != nil {
-			h.logger.Warn(fmt.Sprintf(logInfoFailedAuthNToken, *topic, err))
-			return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
+			h.logger.Warn(fmt.Sprintf(failedAuthnFmt, policies.ClientType, *topic, err))
+			return mgate.NewHTTPProxyError(http.StatusUnauthorized, err)
 		}
+		token = smqauthn.AuthPack(smqauthn.BasicAuth, username, password)
+		clientType = policies.ClientType
+	case strings.HasPrefix(pass, "Client"):
+		token = smqauthn.AuthPack(smqauthn.DomainAuth, domainID, strings.TrimPrefix(pass, apiutil.ClientPrefix))
+		clientType = policies.ClientType
+	case strings.HasPrefix(pass, apiutil.BearerPrefix):
+		token = strings.TrimPrefix(pass, apiutil.BearerPrefix)
 		clientType = policies.UserType
-		clientID = authnSession.UserID
 	default:
 		return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
 	}
 
+	id, err := h.authenticate(ctx, clientType, token)
+	if err != nil {
+		h.logger.Warn(fmt.Sprintf(failedAuthnFmt, clientType, *topic, err))
+		return mgate.NewHTTPProxyError(http.StatusUnauthorized, err)
+	}
+
 	// Health topics are not published to message broker.
 	if topicType == messaging.HealthType {
-		h.logger.Info(fmt.Sprintf(logInfoPublished, clientType, clientID, *topic))
+		h.logger.Info(fmt.Sprintf(publishedInfoFmt, clientType, id, *topic))
 		return nil
 	}
 
@@ -157,21 +155,21 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		Domain:    domainID,
 		Channel:   channelID,
 		Subtopic:  subtopic,
-		Publisher: clientID,
+		Publisher: id,
 		Payload:   *payload,
 		Created:   time.Now().UnixNano(),
 	}
 
 	ar := &grpcChannelsV1.AuthzReq{
 		DomainId:   domainID,
-		ClientId:   clientID,
+		ClientId:   id,
 		ClientType: clientType,
 		ChannelId:  msg.Channel,
 		Type:       uint32(connections.Publish),
 	}
 	res, err := h.channels.Authorize(ctx, ar)
 	if err != nil {
-		return mgate.NewHTTPProxyError(http.StatusBadRequest, err)
+		return mgate.NewHTTPProxyError(http.StatusUnauthorized, err)
 	}
 	if !res.GetAuthorized() {
 		return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthorization)
@@ -181,7 +179,7 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		return errors.Wrap(errFailedPublishToMsgBroker, err)
 	}
 
-	h.logger.Info(fmt.Sprintf(logInfoPublished, clientType, clientID, *topic))
+	h.logger.Info(fmt.Sprintf(publishedInfoFmt, clientType, id, *topic))
 
 	return nil
 }
@@ -199,4 +197,43 @@ func (h *handler) Unsubscribe(ctx context.Context, topics *[]string) error {
 // Disconnect - not used for HTTP.
 func (h *handler) Disconnect(ctx context.Context) error {
 	return nil
+}
+
+func (h *handler) authenticate(ctx context.Context, authType, token string) (string, error) {
+	switch authType {
+	case policies.UserType:
+		authnSession, err := h.authn.Authenticate(ctx, token)
+		if err != nil {
+			return "", err
+		}
+		return authnSession.UserID, nil
+	case policies.ClientType:
+		authnRes, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{Token: token})
+		if err != nil {
+			return "", errors.Wrap(svcerr.ErrAuthentication, err)
+		}
+		if !authnRes.Authenticated {
+			return "", svcerr.ErrAuthentication
+		}
+
+		return authnRes.GetId(), nil
+	default:
+		return "", errInvalidClientType
+	}
+}
+
+// decodeAuth decodes the base64 encoded string in the format "clientID:secret".
+func decodeAuth(s string) (string, string, error) {
+	db, err := base64.URLEncoding.DecodeString(s)
+	if err != nil {
+		return "", "", err
+	}
+	parts := strings.SplitN(string(db), ":", 2)
+	if len(parts) != 2 {
+		return "", "", errInvalidAuthFormat
+	}
+	clientID := parts[0]
+	secret := parts[1]
+
+	return clientID, secret, nil
 }

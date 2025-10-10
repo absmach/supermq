@@ -5,6 +5,7 @@ package ws
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -43,6 +44,8 @@ var (
 	errMissingTopicSub          = errors.New("failed to subscribe due to missing topic")
 	errFailedPublish            = errors.New("failed to publish")
 	errFailedPublishToMsgBroker = errors.New("failed to publish to supermq message broker")
+	errInvalidAuthFormat        = errors.New("invalid basic auth format")
+	errInvalidClientType        = errors.New("invalid client type")
 )
 
 // Event implements events.Event interface.
@@ -89,7 +92,7 @@ func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byt
 		return mgate.NewHTTPProxyError(http.StatusBadRequest, errors.Wrap(errFailedPublish, err))
 	}
 
-	clientID, err := h.authAccess(ctx, string(s.Password), domainID, channelID, connections.Publish, topicType)
+	clientID, err := h.authAccess(ctx, s.Username, string(s.Password), domainID, channelID, connections.Publish, topicType)
 	if err != nil {
 		return err
 	}
@@ -117,7 +120,7 @@ func (h *handler) AuthSubscribe(ctx context.Context, topics *[]string) error {
 		if err != nil {
 			return err
 		}
-		if _, err := h.authAccess(ctx, string(s.Password), domainID, channelID, connections.Subscribe, topicType); err != nil {
+		if _, err := h.authAccess(ctx, s.Username, string(s.Password), domainID, channelID, connections.Subscribe, topicType); err != nil {
 			return err
 		}
 	}
@@ -188,38 +191,41 @@ func (h *handler) Disconnect(ctx context.Context) error {
 	return nil
 }
 
-func (h *handler) authAccess(ctx context.Context, token, domainID, chanID string, msgType connections.ConnType, topicType messaging.TopicType) (string, error) {
-	var clientID, clientType string
+func (h *handler) authAccess(ctx context.Context, username, password, domainID, chanID string, msgType connections.ConnType, topicType messaging.TopicType) (string, error) {
+	var token, clientType string
+	var err error
 	switch {
-	case strings.HasPrefix(token, apiutil.BearerPrefix):
-		token := strings.TrimPrefix(token, apiutil.BearerPrefix)
-		authnSession, err := h.authn.Authenticate(ctx, token)
-		if err != nil {
-			return "", mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
-		}
+	case strings.HasPrefix(password, apiutil.BearerPrefix):
+		token = strings.TrimPrefix(password, apiutil.BearerPrefix)
 		clientType = policies.UserType
-		clientID = authnSession.UserID
-	default:
-		secret := strings.TrimPrefix(token, apiutil.ClientPrefix)
-		authnRes, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, secret)})
-		if err != nil {
-			return "", mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
-		}
-		if !authnRes.Authenticated {
-			return "", mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
-		}
+	case username != "" && password != "":
+		token = smqauthn.AuthPack(smqauthn.BasicAuth, username, password)
 		clientType = policies.ClientType
-		clientID = authnRes.GetId()
+	case strings.HasPrefix(password, apiutil.BasicAuthPrefix):
+		username, password, err := decodeAuth(strings.TrimPrefix(password, apiutil.BasicAuthPrefix))
+		if err != nil {
+			return "", errors.Wrap(svcerr.ErrAuthentication, err)
+		}
+		token = smqauthn.AuthPack(smqauthn.BasicAuth, username, password)
+		clientType = policies.ClientType
+	default:
+		token = smqauthn.AuthPack(smqauthn.DomainAuth, domainID, strings.TrimPrefix(password, apiutil.ClientPrefix))
+		clientType = policies.ClientType
+	}
+
+	id, err := h.authenticate(ctx, clientType, token)
+	if err != nil {
+		return "", mgate.NewHTTPProxyError(http.StatusUnauthorized, errors.Wrap(svcerr.ErrAuthentication, err))
 	}
 
 	// Health check topics do not require channel authorization.
 	if topicType == messaging.HealthType {
-		return clientID, nil
+		return id, nil
 	}
 
 	ar := &grpcChannelsV1.AuthzReq{
 		Type:       uint32(msgType),
-		ClientId:   clientID,
+		ClientId:   id,
 		ClientType: clientType,
 		ChannelId:  chanID,
 		DomainId:   domainID,
@@ -232,5 +238,44 @@ func (h *handler) authAccess(ctx context.Context, token, domainID, chanID string
 		return "", mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
 	}
 
-	return clientID, nil
+	return id, nil
+}
+
+func (h *handler) authenticate(ctx context.Context, authType, token string) (string, error) {
+	switch authType {
+	case policies.UserType:
+		authnSession, err := h.authn.Authenticate(ctx, token)
+		if err != nil {
+			return "", err
+		}
+		return authnSession.UserID, nil
+	case policies.ClientType:
+		authnRes, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{Token: token})
+		if err != nil {
+			return "", err
+		}
+		if !authnRes.Authenticated {
+			return "", svcerr.ErrAuthentication
+		}
+
+		return authnRes.GetId(), nil
+	default:
+		return "", errInvalidClientType
+	}
+}
+
+// decodeAuth decodes the base64 encoded string in the format "clientID:secret".
+func decodeAuth(s string) (string, string, error) {
+	db, err := base64.URLEncoding.DecodeString(s)
+	if err != nil {
+		return "", "", err
+	}
+	parts := strings.SplitN(string(db), ":", 2)
+	if len(parts) != 2 {
+		return "", "", errInvalidAuthFormat
+	}
+	clientID := parts[0]
+	secret := parts[1]
+
+	return clientID, secret, nil
 }

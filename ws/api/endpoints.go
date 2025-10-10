@@ -17,6 +17,11 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+const (
+	authzHeaderKey = "Authorization"
+	authzQueryKey  = "authorization"
+)
+
 var errGenSessionID = errors.New("failed to generate session id")
 
 func generateSessionID() (string, error) {
@@ -56,7 +61,7 @@ func handshake(ctx context.Context, svc ws.Service, resolver messaging.TopicReso
 
 		go client.Start(ctx)
 
-		if err := svc.Subscribe(ctx, sessionID, req.authKey, req.domainID, req.channelID, req.subtopic, topicType, client); err != nil {
+		if err := svc.Subscribe(ctx, sessionID, req.username, req.password, req.domainID, req.channelID, req.subtopic, topicType, client); err != nil {
 			conn.Close()
 			return
 		}
@@ -66,14 +71,17 @@ func handshake(ctx context.Context, svc ws.Service, resolver messaging.TopicReso
 }
 
 func decodeRequest(r *http.Request, resolver messaging.TopicResolver, logger *slog.Logger) (connReq, error) {
-	authKey := r.Header.Get("Authorization")
-	if authKey == "" {
-		authKeys := r.URL.Query()["authorization"]
-		if len(authKeys) == 0 {
+	username, password, ok := r.BasicAuth()
+	if !ok {
+		switch {
+		case r.URL.Query().Get(authzQueryKey) != "":
+			password = r.URL.Query().Get(authzQueryKey)
+		case r.Header.Get(authzHeaderKey) != "":
+			password = r.Header.Get(authzHeaderKey)
+		default:
 			logger.Debug("Missing authorization key.")
 			return connReq{}, errUnauthorizedAccess
 		}
-		authKey = authKeys[0]
 	}
 
 	domain := chi.URLParam(r, "domain")
@@ -85,7 +93,8 @@ func decodeRequest(r *http.Request, resolver messaging.TopicResolver, logger *sl
 	}
 
 	req := connReq{
-		authKey:   authKey,
+		username:  username,
+		password:  password,
 		channelID: channelID,
 		domainID:  domainID,
 	}
