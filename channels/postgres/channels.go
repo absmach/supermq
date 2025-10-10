@@ -1010,7 +1010,7 @@ func (cr *channelRepository) CheckConnection(ctx context.Context, conn channels.
 }
 
 func (cr *channelRepository) ClientAuthorize(ctx context.Context, conn channels.Connection) error {
-	query := `SELECT 1 FROM connections WHERE channel_id = :channel_id AND client_id = :client_id AND type = :type LIMIT 1`
+	query := `SELECT 1 FROM connections WHERE channel_id = :channel_id AND client_id = :client_id AND domain_id = :domain_id AND type = :type LIMIT 1`
 	dbConn := toDBConnection(conn)
 	rows, err := cr.db.NamedQueryContext(ctx, query, dbConn)
 	if err != nil {

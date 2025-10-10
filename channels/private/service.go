@@ -67,6 +67,7 @@ func (svc service) Authorize(ctx context.Context, req channels.AuthzReq) error {
 	case policies.ClientType:
 		// Optimization: Add cache
 		if err := svc.repo.ClientAuthorize(ctx, channels.Connection{
+			DomainID:  req.DomainID,
 			ChannelID: req.ChannelID,
 			ClientID:  req.ClientID,
 			Type:      req.Type,
