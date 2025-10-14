@@ -299,7 +299,9 @@ func (svc service) Update(ctx context.Context, session authn.Session, id string,
 		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	if u.AuthProvider != "" {
-		return User{}, svcerr.ErrExternalAuthProviderCouldNotUpdate
+		if usr.FirstName != nil || usr.LastName != nil || usr.ProfilePicture != nil {
+			return User{}, svcerr.ErrExternalAuthProviderCouldNotUpdate
+		}
 	}
 	updatedAt := time.Now().UTC()
 	usr.UpdatedAt = &updatedAt

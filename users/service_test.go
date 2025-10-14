@@ -519,6 +519,8 @@ func TestUpdateUser(t *testing.T) {
 		userReq            users.UserReq
 		session            authn.Session
 		updateResponse     users.User
+		retrieveByIDResp   users.User
+		retrieveByIDErr    error
 		token              string
 		updateErr          error
 		checkSuperAdminErr error
@@ -530,10 +532,11 @@ func TestUpdateUser(t *testing.T) {
 			userReq: users.UserReq{
 				FirstName: &updateFirstName,
 			},
-			session:        authn.Session{UserID: user1.ID},
-			updateResponse: user1,
-			token:          validToken,
-			err:            nil,
+			session:          authn.Session{UserID: user1.ID},
+			updateResponse:   user1,
+			retrieveByIDResp: user1,
+			token:            validToken,
+			err:              nil,
 		},
 		{
 			desc:   "update metadata successfully as normal user",
@@ -541,10 +544,11 @@ func TestUpdateUser(t *testing.T) {
 			userReq: users.UserReq{
 				Metadata: &updatedMetadata,
 			},
-			session:        authn.Session{UserID: user2.ID},
-			updateResponse: user2,
-			token:          validToken,
-			err:            nil,
+			session:          authn.Session{UserID: user2.ID},
+			updateResponse:   user2,
+			retrieveByIDResp: user2,
+			token:            validToken,
+			err:              nil,
 		},
 		{
 			desc:   "update user name as normal user with repo error on update",
@@ -552,11 +556,12 @@ func TestUpdateUser(t *testing.T) {
 			userReq: users.UserReq{
 				FirstName: &updateFirstName,
 			},
-			session:        authn.Session{UserID: user1.ID},
-			updateResponse: users.User{},
-			token:          validToken,
-			updateErr:      errors.ErrMalformedEntity,
-			err:            svcerr.ErrUpdateEntity,
+			session:          authn.Session{UserID: user1.ID},
+			updateResponse:   users.User{},
+			retrieveByIDResp: user1,
+			token:            validToken,
+			updateErr:        errors.ErrMalformedEntity,
+			err:              svcerr.ErrUpdateEntity,
 		},
 		{
 			desc:   "update user name as admin successfully",
@@ -564,10 +569,11 @@ func TestUpdateUser(t *testing.T) {
 			userReq: users.UserReq{
 				FirstName: &updateFirstName,
 			},
-			session:        authn.Session{UserID: adminID, SuperAdmin: true},
-			updateResponse: user1,
-			token:          validToken,
-			err:            nil,
+			session:          authn.Session{UserID: adminID, SuperAdmin: true},
+			updateResponse:   user1,
+			retrieveByIDResp: user1,
+			token:            validToken,
+			err:              nil,
 		},
 		{
 			desc:   "update user metadata as admin successfully",
@@ -575,10 +581,11 @@ func TestUpdateUser(t *testing.T) {
 			userReq: users.UserReq{
 				Metadata: &updatedMetadata,
 			},
-			session:        authn.Session{UserID: adminID, SuperAdmin: true},
-			updateResponse: user2,
-			token:          validToken,
-			err:            nil,
+			session:          authn.Session{UserID: adminID, SuperAdmin: true},
+			updateResponse:   user2,
+			retrieveByIDResp: user2,
+			token:            validToken,
+			err:              nil,
 		},
 		{
 			desc:   "update user with failed check on super admin",
@@ -597,26 +604,88 @@ func TestUpdateUser(t *testing.T) {
 			userReq: users.UserReq{
 				FirstName: &updateFirstName,
 			},
-			session:        authn.Session{UserID: adminID, SuperAdmin: true},
-			updateResponse: users.User{},
-			token:          validToken,
-			updateErr:      errors.ErrMalformedEntity,
-			err:            svcerr.ErrUpdateEntity,
+			session:          authn.Session{UserID: adminID, SuperAdmin: true},
+			updateResponse:   users.User{},
+			retrieveByIDResp: user1,
+			token:            validToken,
+			updateErr:        errors.ErrMalformedEntity,
+			err:              svcerr.ErrUpdateEntity,
+		},
+		{
+			desc:   "update user first name with external auth provider should fail",
+			userID: user1.ID,
+			userReq: users.UserReq{
+				FirstName: &updateFirstName,
+			},
+			session: authn.Session{UserID: user1.ID},
+			retrieveByIDResp: users.User{
+				ID:           user1.ID,
+				AuthProvider: "google",
+			},
+			token: validToken,
+			err:   svcerr.ErrExternalAuthProviderCouldNotUpdate,
+		},
+		{
+			desc:   "update user last name with external auth provider should fail",
+			userID: user1.ID,
+			userReq: users.UserReq{
+				LastName: &updateFirstName,
+			},
+			session: authn.Session{UserID: user1.ID},
+			retrieveByIDResp: users.User{
+				ID:           user1.ID,
+				AuthProvider: "google",
+			},
+			token: validToken,
+			err:   svcerr.ErrExternalAuthProviderCouldNotUpdate,
+		},
+		{
+			desc:   "update user metadata with external auth provider should succeed",
+			userID: user2.ID,
+			userReq: users.UserReq{
+				Metadata: &updatedMetadata,
+			},
+			session: authn.Session{UserID: user2.ID},
+			retrieveByIDResp: users.User{
+				ID:           user2.ID,
+				AuthProvider: "google",
+				Metadata:     updatedMetadata,
+			},
+			updateResponse: users.User{
+				ID:           user2.ID,
+				AuthProvider: "google",
+				Metadata:     updatedMetadata,
+			},
+			token: validToken,
+			err:   nil,
+		},
+		{
+			desc:   "update user with retrieve by id error",
+			userID: user1.ID,
+			userReq: users.UserReq{
+				FirstName: &updateFirstName,
+			},
+			session:         authn.Session{UserID: user1.ID},
+			retrieveByIDErr: repoerr.ErrNotFound,
+			token:           validToken,
+			err:             svcerr.ErrUpdateEntity,
 		},
 	}
 
 	for _, tc := range cases {
 		repoCall := cRepo.On("CheckSuperAdmin", context.Background(), mock.Anything).Return(tc.checkSuperAdminErr)
-		repoCall1 := cRepo.On("Update", context.Background(), tc.userID, mock.Anything).Return(tc.updateResponse, tc.err)
+		repoCall1 := cRepo.On("RetrieveByID", context.Background(), tc.userID).Return(tc.retrieveByIDResp, tc.retrieveByIDErr)
+		repoCall2 := cRepo.On("Update", context.Background(), tc.userID, mock.Anything).Return(tc.updateResponse, tc.updateErr)
 		updatedUser, err := svc.Update(context.Background(), tc.session, tc.userID, tc.userReq)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.updateResponse, updatedUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateResponse, updatedUser))
 		if tc.err == nil {
-			ok := repoCall1.Parent.AssertCalled(t, "Update", context.Background(), tc.userID, mock.Anything)
+			ok := repoCall2.Parent.AssertCalled(t, "Update", context.Background(), tc.userID, mock.Anything)
 			assert.True(t, ok, fmt.Sprintf("Update was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
+		repoCall2.Unset()
 	}
 }
 
@@ -1010,6 +1079,8 @@ func TestUpdateProfilePicture(t *testing.T) {
 		userReq                  users.UserReq
 		session                  authn.Session
 		updateProfilePicResponse users.User
+		retrieveByIDResp         users.User
+		retrieveByIDErr          error
 		updateProfilePicErr      error
 		checkSuperAdminErr       error
 		err                      error
@@ -1020,6 +1091,7 @@ func TestUpdateProfilePicture(t *testing.T) {
 			userReq:                  users.UserReq{ProfilePicture: &updatedPicture},
 			session:                  authn.Session{UserID: user.ID},
 			updateProfilePicResponse: user,
+			retrieveByIDResp:         user,
 			err:                      nil,
 		},
 		{
@@ -1028,15 +1100,17 @@ func TestUpdateProfilePicture(t *testing.T) {
 			userReq:                  users.UserReq{ProfilePicture: &updatedPicture},
 			session:                  authn.Session{UserID: user.ID},
 			updateProfilePicResponse: users.User{},
+			retrieveByIDResp:         user,
 			updateProfilePicErr:      errors.ErrMalformedEntity,
 			err:                      svcerr.ErrUpdateEntity,
 		},
 		{
-			desc:    "update profile picture as admin successfully",
-			userID:  user.ID,
-			userReq: users.UserReq{ProfilePicture: &updatedPicture},
-			session: authn.Session{UserID: adminID, SuperAdmin: true},
-			err:     nil,
+			desc:                 "update profile picture as admin successfully",
+			userID:               user.ID,
+			userReq:              users.UserReq{ProfilePicture: &updatedPicture},
+			session:              authn.Session{UserID: adminID, SuperAdmin: true},
+			retrieveByIDResp:     user,
+			err:                  nil,
 		},
 		{
 			desc:               "update profile picture as admin with failed check on super admin",
@@ -1052,23 +1126,45 @@ func TestUpdateProfilePicture(t *testing.T) {
 			userReq:                  users.UserReq{ProfilePicture: &updatedPicture},
 			session:                  authn.Session{UserID: adminID, SuperAdmin: true},
 			updateProfilePicResponse: users.User{},
+			retrieveByIDResp:         user,
 			updateProfilePicErr:      errors.ErrMalformedEntity,
 			err:                      svcerr.ErrUpdateEntity,
+		},
+		{
+			desc:    "update profile picture with external auth provider",
+			userID:  user.ID,
+			userReq: users.UserReq{ProfilePicture: &updatedPicture},
+			session: authn.Session{UserID: user.ID},
+			retrieveByIDResp: users.User{
+				ID:           user.ID,
+				AuthProvider: "google",
+			},
+			err: svcerr.ErrExternalAuthProviderCouldNotUpdate,
+		},
+		{
+			desc:            "update profile picture with retrieve by id error",
+			userID:          user.ID,
+			userReq:         users.UserReq{ProfilePicture: &updatedPicture},
+			session:         authn.Session{UserID: user.ID},
+			retrieveByIDErr: repoerr.ErrNotFound,
+			err:             svcerr.ErrUpdateEntity,
 		},
 	}
 
 	for _, tc := range cases {
 		repoCall := cRepo.On("CheckSuperAdmin", context.Background(), mock.Anything).Return(tc.checkSuperAdminErr)
-		repoCall1 := cRepo.On("Update", context.Background(), tc.userID, mock.Anything).Return(tc.updateProfilePicResponse, tc.updateProfilePicErr)
+		repoCall1 := cRepo.On("RetrieveByID", context.Background(), tc.userID).Return(tc.retrieveByIDResp, tc.retrieveByIDErr)
+		repoCall2 := cRepo.On("Update", context.Background(), tc.userID, mock.Anything).Return(tc.updateProfilePicResponse, tc.updateProfilePicErr)
 		updatedUser, err := svc.UpdateProfilePicture(context.Background(), tc.session, tc.userID, tc.userReq)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.updateProfilePicResponse, updatedUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.updateProfilePicResponse, updatedUser))
 		if tc.err == nil {
-			ok := repoCall1.Parent.AssertCalled(t, "Update", context.Background(), tc.userID, mock.Anything)
+			ok := repoCall2.Parent.AssertCalled(t, "Update", context.Background(), tc.userID, mock.Anything)
 			assert.True(t, ok, fmt.Sprintf("Update was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
+		repoCall2.Unset()
 	}
 }
 
