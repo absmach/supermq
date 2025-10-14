@@ -34,9 +34,9 @@ func NewRepository(db postgres.Database) users.Repository {
 }
 
 func (repo *userRepo) Save(ctx context.Context, c users.User) (users.User, error) {
-	q := `INSERT INTO users (id, tags, email, secret, metadata, created_at, status, role, first_name, last_name, username, profile_picture)
-        VALUES (:id, :tags, :email, :secret, :metadata, :created_at, :status, :role, :first_name, :last_name, :username, :profile_picture)
-        RETURNING id, tags, email, metadata, created_at, status, role, first_name, last_name, username, profile_picture, verified_at`
+	q := `INSERT INTO users (id, tags, email, secret, metadata, created_at, status, role, first_name, last_name, username, profile_picture, auth_provider)
+        VALUES (:id, :tags, :email, :secret, :metadata, :created_at, :status, :role, :first_name, :last_name, :username, :profile_picture, :auth_provider)
+        RETURNING id, tags, email, metadata, created_at, status, role, first_name, last_name, username, profile_picture, verified_at, auth_provider`
 
 	dbu, err := toDBUser(c)
 	if err != nil {
@@ -96,7 +96,7 @@ func (repo *userRepo) CheckSuperAdmin(ctx context.Context, adminID string) error
 }
 
 func (repo *userRepo) RetrieveByID(ctx context.Context, id string) (users.User, error) {
-	q := `SELECT id, tags, email, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, username, profile_picture, verified_at
+	q := `SELECT id, tags, email, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, username, profile_picture, verified_at, auth_provider
         FROM users WHERE id = :id`
 
 	dbu := DBUser{
@@ -431,7 +431,7 @@ func (repo *userRepo) RetrieveAllByIDs(ctx context.Context, pm users.Page) (user
 }
 
 func (repo *userRepo) RetrieveByEmail(ctx context.Context, email string) (users.User, error) {
-	q := `SELECT id, tags, email, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, username, verified_at
+	q := `SELECT id, tags, email, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, username, verified_at, auth_provider
         FROM users WHERE email = :email AND status = :status`
 
 	dbu := DBUser{
@@ -458,7 +458,7 @@ func (repo *userRepo) RetrieveByEmail(ctx context.Context, email string) (users.
 }
 
 func (repo *userRepo) RetrieveByUsername(ctx context.Context, username string) (users.User, error) {
-	q := `SELECT id, tags, email, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, username, verified_at
+	q := `SELECT id, tags, email, secret, metadata, created_at, updated_at, updated_by, status, role, first_name, last_name, username, verified_at, auth_provider
 		FROM users WHERE username = :username AND status = :status`
 
 	dbu := DBUser{
@@ -502,6 +502,7 @@ type DBUser struct {
 	ProfilePicture sql.NullString   `db:"profile_picture, omitempty"`
 	Email          string           `db:"email,omitempty"`
 	VerifiedAt     sql.NullTime     `db:"verified_at,omitempty"`
+	AuthProvider   sql.NullString   `db:"auth_provider,omitempty"`
 }
 
 func toDBUser(u users.User) (DBUser, error) {
@@ -530,6 +531,11 @@ func toDBUser(u users.User) (DBUser, error) {
 		verifiedAt = sql.NullTime{Time: u.VerifiedAt, Valid: true}
 	}
 
+	var authProvider sql.NullString
+	if u.AuthProvider != "" {
+		authProvider = sql.NullString{String: u.AuthProvider, Valid: true}
+	}
+
 	return DBUser{
 		ID:             u.ID,
 		Tags:           tags,
@@ -546,6 +552,7 @@ func toDBUser(u users.User) (DBUser, error) {
 		ProfilePicture: stringToNullString(u.ProfilePicture),
 		Email:          u.Email,
 		VerifiedAt:     verifiedAt,
+		AuthProvider:   authProvider,
 	}, nil
 }
 
@@ -573,6 +580,11 @@ func ToUser(dbu DBUser) (users.User, error) {
 		verifiedAt = dbu.VerifiedAt.Time.UTC()
 	}
 
+	var authProvider string
+	if dbu.AuthProvider.Valid {
+		authProvider = dbu.AuthProvider.String
+	}
+
 	user := users.User{
 		ID:        dbu.ID,
 		FirstName: nullStringString(dbu.FirstName),
@@ -590,6 +602,7 @@ func ToUser(dbu DBUser) (users.User, error) {
 		Tags:           tags,
 		ProfilePicture: nullStringString(dbu.ProfilePicture),
 		VerifiedAt:     verifiedAt,
+		AuthProvider:   authProvider,
 	}
 	if dbu.Role != nil {
 		user.Role = *dbu.Role

@@ -294,6 +294,13 @@ func (svc service) Update(ctx context.Context, session authn.Session, id string,
 			return User{}, err
 		}
 	}
+	u, err := svc.users.RetrieveByID(ctx, id)
+	if err != nil {
+		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+	}
+	if u.AuthProvider != "" {
+		return User{}, svcerr.ErrExternalAuthProviderCouldNotUpdate
+	}
 	updatedAt := time.Now().UTC()
 	usr.UpdatedAt = &updatedAt
 	usr.UpdatedBy = &session.UserID
@@ -331,6 +338,14 @@ func (svc service) UpdateProfilePicture(ctx context.Context, session authn.Sessi
 		}
 	}
 
+	u, err := svc.users.RetrieveByID(ctx, id)
+	if err != nil {
+		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+	}
+	if u.AuthProvider != "" {
+		return User{}, svcerr.ErrExternalAuthProviderCouldNotUpdate
+	}
+
 	updatedAt := time.Now().UTC()
 	usr.UpdatedAt = &updatedAt
 	usr.UpdatedBy = &session.UserID
@@ -352,6 +367,9 @@ func (svc service) UpdateEmail(ctx context.Context, session authn.Session, userI
 	oldUsr, err := svc.users.RetrieveByID(ctx, userID)
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+	}
+	if oldUsr.AuthProvider != "" {
+		return User{}, svcerr.ErrExternalAuthProviderCouldNotUpdate
 	}
 	if oldUsr.Email == email {
 		return User{}, fmt.Errorf("current email is same as update requested email")
@@ -377,6 +395,9 @@ func (svc service) SendPasswordReset(ctx context.Context, email string) error {
 	if err != nil {
 		return errors.Wrap(svcerr.ErrViewEntity, err)
 	}
+	if user.AuthProvider != "" {
+		return svcerr.ErrExternalAuthProviderCouldNotResetPassword
+	}
 	issueReq := &grpcTokenV1.IssueReq{
 		UserId:   user.ID,
 		UserRole: uint32(user.Role + 1),
@@ -394,6 +415,9 @@ func (svc service) ResetSecret(ctx context.Context, session authn.Session, secre
 	u, err := svc.users.RetrieveByID(ctx, session.UserID)
 	if err != nil {
 		return errors.Wrap(svcerr.ErrViewEntity, err)
+	}
+	if u.AuthProvider != "" {
+		return svcerr.ErrExternalAuthProviderCouldNotResetPassword
 	}
 
 	secret, err = svc.hasher.Hash(secret)
@@ -419,6 +443,9 @@ func (svc service) UpdateSecret(ctx context.Context, session authn.Session, oldS
 	dbUser, err := svc.users.RetrieveByID(ctx, session.UserID)
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
+	}
+	if dbUser.AuthProvider != "" {
+		return User{}, svcerr.ErrExternalAuthProviderCouldNotChangePassword
 	}
 	if _, err := svc.IssueToken(ctx, dbUser.Credentials.Username, oldSecret); err != nil {
 		return User{}, err

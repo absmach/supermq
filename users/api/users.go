@@ -575,6 +575,10 @@ func oauth2CallbackHandler(oauth oauth2.Provider, svc users.Service, tokenClient
 				return
 			}
 
+			user.AuthProvider = oauth.Name()
+			if user.AuthProvider == "" {
+				user.AuthProvider = "oauth"
+			}
 			user, err = svc.OAuthCallback(r.Context(), user)
 			if err != nil {
 				http.Redirect(w, r, oauth.ErrorURL()+"?error="+err.Error(), http.StatusSeeOther)

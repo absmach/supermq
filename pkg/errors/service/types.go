@@ -102,4 +102,13 @@ var (
 
 	// ErrUserVerificationExpired indicates user verification is expired.
 	ErrUserVerificationExpired = errors.New("verification expired, please generate new verification")
+
+	// ErrExternalAuthProviderCouldNotUpdate indicates that users authenticated via external provider cannot update their account details directly.
+	ErrExternalAuthProviderCouldNotUpdate = errors.New("account details can only be updated through your authentication provider's settings")
+
+	// ErrExternalAuthProviderCouldNotResetPassword indicates that password cannot be reset for users authenticated via external provider.
+	ErrExternalAuthProviderCouldNotResetPassword = errors.New("password cannot be reset for users authenticated via external provider")
+
+	// ErrExternalAuthProviderCouldNotChangePassword indicates that password cannot be reset for users authenticated via external provider.
+	ErrExternalAuthProviderCouldNotChangePassword = errors.New("password cannot be reset for users authenticated via external provider")
 )

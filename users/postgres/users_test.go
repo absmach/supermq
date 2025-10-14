@@ -45,6 +45,17 @@ func TestUsersSave(t *testing.T) {
 
 	email := first_name + "@example.com"
 
+	externalUser := users.User{
+		ID:        testsutil.GenerateUUID(t),
+		FirstName: namesgen.Generate(),
+		LastName:  namesgen.Generate(),
+		Metadata:  users.Metadata{},
+		Credentials: users.Credentials{
+			Username: namesgen.Generate(),
+		},
+		Email:        namesgen.Generate() + "@example.com",
+		AuthProvider: "external",
+	}
 	cases := []struct {
 		desc string
 		user users.User
@@ -66,6 +77,12 @@ func TestUsersSave(t *testing.T) {
 			},
 			err: nil,
 		},
+		{
+			desc: "add new external user successfully",
+			user: externalUser,
+			err:  nil,
+		},
+
 		{
 			desc: "add user with duplicate user email",
 			user: users.User{
@@ -272,14 +289,38 @@ func TestRetrieveByID(t *testing.T) {
 	_, err := repo.Save(context.Background(), user)
 	require.Nil(t, err, fmt.Sprintf("failed to save users %s", user.ID))
 
+	externalUser := users.User{
+		ID:        testsutil.GenerateUUID(t),
+		FirstName: namesgen.Generate(),
+		LastName:  namesgen.Generate(),
+		Metadata:  users.Metadata{},
+		Credentials: users.Credentials{
+			Username: namesgen.Generate(),
+		},
+		Email:        namesgen.Generate() + "@example.com",
+		AuthProvider: "external",
+	}
+
+	_, err = repo.Save(context.Background(), externalUser)
+	require.Nil(t, err, fmt.Sprintf("failed to save users %s", user.ID))
+
 	cases := []struct {
 		desc   string
 		userID string
+		user   users.User
 		err    error
 	}{
 		{
 			desc:   "retrieve existing user",
 			userID: user.ID,
+			user:   user,
+			err:    nil,
+		},
+
+		{
+			desc:   "retrieve existing oauth user",
+			userID: externalUser.ID,
+			user:   externalUser,
 			err:    nil,
 		},
 		{
@@ -295,8 +336,11 @@ func TestRetrieveByID(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, err := repo.RetrieveByID(context.Background(), tc.userID)
+		rUser, err := repo.RetrieveByID(context.Background(), tc.userID)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.err, err))
+		if err == nil {
+			assert.Equal(t, tc.user, rUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.user, rUser))
+		}
 	}
 }
 

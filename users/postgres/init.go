@@ -127,6 +127,15 @@ func Migration() *migrate.MemoryMigrationSource {
 					`ALTER TABLE users RENAME CONSTRAINT clients_email_key TO clients_identity_key;`,
 				},
 			},
+			{
+				Id: "clients_09",
+				Up: []string{
+					`ALTER TABLE users ADD COLUMN auth_provider VARCHAR(254);`,
+				},
+				Down: []string{
+					`ALTER TABLE users DROP COLUMN auth_provider`,
+				},
+			},
 		},
 	}
 }
