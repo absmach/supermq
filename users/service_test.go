@@ -1105,12 +1105,12 @@ func TestUpdateProfilePicture(t *testing.T) {
 			err:                      svcerr.ErrUpdateEntity,
 		},
 		{
-			desc:                 "update profile picture as admin successfully",
-			userID:               user.ID,
-			userReq:              users.UserReq{ProfilePicture: &updatedPicture},
-			session:              authn.Session{UserID: adminID, SuperAdmin: true},
-			retrieveByIDResp:     user,
-			err:                  nil,
+			desc:             "update profile picture as admin successfully",
+			userID:           user.ID,
+			userReq:          users.UserReq{ProfilePicture: &updatedPicture},
+			session:          authn.Session{UserID: adminID, SuperAdmin: true},
+			retrieveByIDResp: user,
+			err:              nil,
 		},
 		{
 			desc:               "update profile picture as admin with failed check on super admin",
