@@ -32,6 +32,7 @@ import (
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	authsvcAuthz "github.com/absmach/supermq/pkg/authz/authsvc"
 	"github.com/absmach/supermq/pkg/callout"
+	cotracing "github.com/absmach/supermq/pkg/callout/tracing"
 	dconsumer "github.com/absmach/supermq/pkg/domains/events/consumer"
 	domainsAuthz "github.com/absmach/supermq/pkg/domains/grpcclient"
 	"github.com/absmach/supermq/pkg/grpcclient"
@@ -178,8 +179,8 @@ func main() {
 	}
 	defer domainsHandler.Close()
 
-	callCfg := callout.Config{}
-	if err := env.ParseWithOptions(&callCfg, env.Options{Prefix: envPrefixGroupCallout}); err != nil {
+	coCfg := callout.Config{}
+	if err := env.ParseWithOptions(&coCfg, env.Options{Prefix: envPrefixGroupCallout}); err != nil {
 		logger.Error(fmt.Sprintf("failed to parse callout config : %s", err))
 		exitCode = 1
 		return
@@ -232,14 +233,17 @@ func main() {
 	defer clientsHandler.Close()
 	logger.Info("Clients gRPC client successfully connected to clients gRPC server " + clientsHandler.Secure())
 
-	callout, err := callout.New(callCfg)
+	co, err := callout.New(coCfg)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create new callout: %s", err))
 		exitCode = 1
 		return
 	}
+	if len(coCfg.URLs) > 0 {
+		co = cotracing.New(co, tracer)
+	}
 
-	svc, psvc, err := newService(ctx, authz, policyService, db, dbConfig, channelsClient, clientsClient, tracer, logger, cfg, callout)
+	svc, psvc, err := newService(ctx, authz, policyService, db, dbConfig, channelsClient, clientsClient, tracer, logger, cfg, co)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to setup service: %s", err))
 		exitCode = 1

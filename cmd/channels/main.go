@@ -35,6 +35,7 @@ import (
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	authsvcAuthz "github.com/absmach/supermq/pkg/authz/authsvc"
 	"github.com/absmach/supermq/pkg/callout"
+	cotracing "github.com/absmach/supermq/pkg/callout/tracing"
 	pkgDomains "github.com/absmach/supermq/pkg/domains"
 	dconsumer "github.com/absmach/supermq/pkg/domains/events/consumer"
 	domainsAuthz "github.com/absmach/supermq/pkg/domains/grpcclient"
@@ -195,8 +196,8 @@ func main() {
 	}
 	defer domainsHandler.Close()
 
-	callCfg := callout.Config{}
-	if err := env.ParseWithOptions(&callCfg, env.Options{Prefix: envPrefixChannelCallout}); err != nil {
+	coCfg := callout.Config{}
+	if err := env.ParseWithOptions(&coCfg, env.Options{Prefix: envPrefixChannelCallout}); err != nil {
 		logger.Error(fmt.Sprintf("failed to parse callout config : %s", err))
 		exitCode = 1
 		return
@@ -241,11 +242,14 @@ func main() {
 	defer groupsHandler.Close()
 	logger.Info("Groups gRPC client successfully connected to groups gRPC server " + groupsHandler.Secure())
 
-	callout, err := callout.New(callCfg)
+	co, err := callout.New(coCfg)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create new callout: %s", err))
 		exitCode = 1
 		return
+	}
+	if len(coCfg.URLs) > 0 {
+		co = cotracing.New(co, tracer)
 	}
 
 	cacheclient, err := redisclient.Connect(cfg.CacheURL)
@@ -259,7 +263,7 @@ func main() {
 
 	svc, psvc, err := newService(ctx, db, dbConfig, cache, authz, policyEvaluator, policyService,
 		cfg, tracer, clientsClient, groupsClient, domAuthz, logger,
-		callout)
+		co)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create services: %s", err))
 		exitCode = 1

@@ -31,6 +31,7 @@ import (
 	"github.com/absmach/supermq/pkg/authz"
 	authsvcAuthz "github.com/absmach/supermq/pkg/authz/authsvc"
 	"github.com/absmach/supermq/pkg/callout"
+	cotracing "github.com/absmach/supermq/pkg/callout/tracing"
 	domainsAuthz "github.com/absmach/supermq/pkg/domains/psvc"
 	"github.com/absmach/supermq/pkg/grpcclient"
 	"github.com/absmach/supermq/pkg/jaeger"
@@ -194,21 +195,24 @@ func main() {
 	}
 	logger.Info("Policy client successfully connected to spicedb gRPC server")
 
-	callCfg := callout.Config{}
-	if err := env.ParseWithOptions(&callCfg, env.Options{Prefix: envPrefixDomainCallout}); err != nil {
+	coCfg := callout.Config{}
+	if err := env.ParseWithOptions(&coCfg, env.Options{Prefix: envPrefixDomainCallout}); err != nil {
 		logger.Error(fmt.Sprintf("failed to parse callout config : %s", err))
 		exitCode = 1
 		return
 	}
 
-	call, err := callout.New(callCfg)
+	co, err := callout.New(coCfg)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create new callout: %s", err))
 		exitCode = 1
 		return
 	}
+	if len(coCfg.URLs) > 0 {
+		co = cotracing.New(co, tracer)
+	}
 
-	svc, err := newDomainService(ctx, domainsRepo, cache, tracer, cfg, authz, policyService, logger, call)
+	svc, err := newDomainService(ctx, domainsRepo, cache, tracer, cfg, authz, policyService, logger, co)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create %s service: %s", svcName, err.Error()))
 		exitCode = 1

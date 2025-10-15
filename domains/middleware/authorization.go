@@ -5,6 +5,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"maps"
 	"time"
 
@@ -62,6 +63,7 @@ func (am *authorizationMiddleware) CreateDomain(ctx context.Context, session aut
 	params := map[string]any{
 		"domain": d,
 	}
+	fmt.Println("callout", params)
 	if err := am.callOut(ctx, session, domains.OpCreateDomain.String(domains.OperationNames), params); err != nil {
 		return domains.Domain{}, nil, err
 	}
