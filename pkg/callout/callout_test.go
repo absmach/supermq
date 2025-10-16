@@ -34,7 +34,7 @@ const (
 
 var req = callout.Request{
 	Operation:  operation,
-	EntityType: entityType,
+	ObjectType: entityType,
 	Payload: map[string]any{
 		"sender": userID,
 		"time":   time.Now().UTC(),

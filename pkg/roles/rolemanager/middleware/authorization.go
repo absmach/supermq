@@ -505,7 +505,7 @@ func (ram RoleManagerAuthorizationMiddleware) callOut(ctx context.Context, sessi
 
 	req := callout.Request{
 		Operation:   op,
-		EntityType:  ram.entityType,
+		ObjectType:  ram.entityType,
 		SubjectID:   session.UserID,
 		SubjectType: policies.UserType,
 		Payload:     pld,

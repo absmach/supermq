@@ -651,7 +651,7 @@ func (am *authorizationMiddleware) callOut(ctx context.Context, session authn.Se
 	pld["domain"] = session.DomainID
 	req := callout.Request{
 		Operation:   op,
-		EntityType:  policies.ChannelType,
+		ObjectType:  policies.ChannelType,
 		SubjectID:   session.UserID,
 		SubjectType: policies.UserType,
 		Payload:     pld,

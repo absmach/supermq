@@ -24,7 +24,7 @@ type Request struct {
 	Operation   string         `json:"operation,omitempty"`
 	SubjectID   string         `json:"subject_id,omitempty"`
 	SubjectType string         `json:"subject_type,omitempty"`
-	EntityType  string         `json:"entity_type,omitempty"`
+	ObjectType  string         `json:"object_type,omitempty"`
 	Payload     map[string]any `json:"payload,omitempty"`
 }
 
@@ -135,7 +135,7 @@ func (c *callout) makeRequest(ctx context.Context, urlStr string, req Request) e
 		query.Set("operation", req.Operation)
 		query.Set("subject_id", req.SubjectID)
 		query.Set("subject_type", req.SubjectType)
-		query.Set("entity_type", req.EntityType)
+		query.Set("entity_type", req.ObjectType)
 		for key, value := range req.Payload {
 			query.Set(key, fmt.Sprintf("%v", value))
 		}

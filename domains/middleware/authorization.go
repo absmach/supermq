@@ -348,7 +348,7 @@ func (am *authorizationMiddleware) callOut(ctx context.Context, session authn.Se
 	pld["time"] = time.Now().UTC()
 	req := callout.Request{
 		Operation:   op,
-		EntityType:  policies.DomainType,
+		ObjectType:  policies.DomainType,
 		SubjectID:   session.UserID,
 		SubjectType: policies.UserType,
 		Payload:     pld,

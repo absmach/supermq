@@ -729,7 +729,7 @@ func (am *authorizationMiddleware) callOut(ctx context.Context, session authn.Se
 
 	req := callout.Request{
 		Operation:   op,
-		EntityType:  policies.GroupType,
+		ObjectType:  policies.GroupType,
 		SubjectID:   session.UserID,
 		SubjectType: policies.UserType,
 		Payload:     pld,
