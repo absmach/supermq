@@ -60,7 +60,7 @@ func NewAuthorization(entityType string, svc domains.Service, authz smqauthz.Aut
 
 func (am *authorizationMiddleware) CreateDomain(ctx context.Context, session authn.Session, d domains.Domain) (domains.Domain, []roles.RoleProvision, error) {
 	params := map[string]any{
-		"domain": d,
+		"domain": d.ID,
 	}
 	if err := am.callOut(ctx, session, domains.OpCreateDomain.String(domains.OperationNames), params); err != nil {
 		return domains.Domain{}, nil, err
