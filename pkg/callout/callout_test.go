@@ -32,12 +32,14 @@ const (
 	filePermission = 0o644
 )
 
-var pl = map[string]any{
-	"entity_type": entityType,
-	"sender":      userID,
-	"domain":      domainID,
-	"time":        time.Now().UTC(),
-	"operation":   operation,
+var req = callout.CallOutReq{
+	Operation:  operation,
+	EntityType: entityType,
+	Payload: map[string]any{
+		"sender": userID,
+		"time":   time.Now().UTC(),
+		"domain": domainID,
+	},
 }
 
 func TestNewCallout(t *testing.T) {
@@ -97,7 +99,8 @@ func TestNewCallout(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			if tc.desc == "successful callout creation with TLS" {
+			switch tc.desc {
+			case "successful callout creation with TLS":
 				generateAndWriteCertificates(t, tc.caPath, tc.certPath, tc.keyPath)
 
 				defer func() {
@@ -105,7 +108,7 @@ func TestNewCallout(t *testing.T) {
 					os.Remove(tc.keyPath)
 					os.Remove(tc.caPath)
 				}()
-			} else if tc.desc == "failed callout creation with invalid cert" {
+			case "failed callout creation with invalid cert":
 				writeFile(t, tc.certPath, []byte("invalid cert content"))
 				writeFile(t, tc.keyPath, []byte("invalid key content"))
 				writeFile(t, tc.caPath, []byte("invalid ca content"))
@@ -321,7 +324,7 @@ func TestCallout_MakeRequest(t *testing.T) {
 			assert.NoError(t, err)
 
 			ctx := tc.contextSetup()
-			err = cb.Callout(ctx, operation, pl)
+			err = cb.Callout(ctx, req)
 
 			if tc.expectError {
 				assert.Error(t, err)
@@ -339,43 +342,25 @@ func TestCallout_Operations(t *testing.T) {
 	cases := []struct {
 		desc         string
 		operations   []string
-		payload      map[string]any
+		request      callout.CallOutReq
 		serverCalled bool
 	}{
 		{
-			desc:       "matching operation is called",
-			operations: []string{operation},
-			payload: map[string]any{
-				"entity_type": entityType,
-				"sender":      userID,
-				"domain":      domainID,
-				"time":        time.Now().UTC(),
-				"operation":   operation,
-			},
+			desc:         "matching operation is called",
+			operations:   []string{operation},
+			request:      req,
 			serverCalled: true,
 		},
 		{
-			desc:       "non-matching operation is not called",
-			operations: []string{"other_operation"},
-			payload: map[string]any{
-				"entity_type": entityType,
-				"sender":      userID,
-				"domain":      domainID,
-				"time":        time.Now().UTC(),
-				"operation":   operation,
-			},
+			desc:         "non-matching operation is not called",
+			operations:   []string{"other_operation"},
+			request:      req,
 			serverCalled: false,
 		},
 		{
-			desc:       "empty operations list calls always",
-			operations: []string{},
-			payload: map[string]any{
-				"entity_type": entityType,
-				"sender":      userID,
-				"domain":      domainID,
-				"time":        time.Now().UTC(),
-				"operation":   operation,
-			},
+			desc:         "empty operations list calls always",
+			operations:   []string{},
+			request:      req,
 			serverCalled: false,
 		},
 	}
@@ -401,7 +386,7 @@ func TestCallout_Operations(t *testing.T) {
 			})
 			assert.NoError(t, err)
 
-			err = cb.Callout(context.Background(), operation, tc.payload)
+			err = cb.Callout(context.Background(), tc.request)
 			assert.NoError(t, err)
 			assert.Equal(t, tc.serverCalled, serverCalled, "Server call status does not match expected")
 		})
@@ -421,6 +406,6 @@ func TestCallout_NoURLs(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	err = cb.Callout(context.Background(), operation, pl)
+	err = cb.Callout(context.Background(), req)
 	assert.NoError(t, err, "No error should be returned when URL list is empty")
 }

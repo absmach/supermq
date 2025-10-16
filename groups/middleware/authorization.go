@@ -725,17 +725,30 @@ func (am *authorizationMiddleware) extAuthorize(ctx context.Context, extOp svcut
 }
 
 func (am *authorizationMiddleware) callOut(ctx context.Context, session authn.Session, op string, params map[string]any) error {
-	pl := map[string]any{
-		"entity_type":  policies.GroupType,
-		"subject_type": policies.UserType,
-		"subject_id":   session.UserID,
-		"domain":       session.DomainID,
-		"time":         time.Now().UTC(),
+	// pl := map[string]any{
+	// 	"entity_type":  policies.GroupType,
+	// 	"subject_type": policies.UserType,
+	// 	"subject_id":   session.UserID,
+	// 	"domain":       session.DomainID,
+	// 	"time":         time.Now().UTC(),
+	// }
+
+	// maps.Copy(params, pl)
+
+	req := callout.CallOutReq{
+		Operation:   op,
+		EntityType:  policies.GroupType,
+		SubjectID:   session.UserID,
+		SubjectType: policies.UserType,
+		Payload: map[string]any{
+			"domain": session.DomainID,
+			"time":   time.Now().UTC(),
+		},
 	}
 
-	maps.Copy(params, pl)
+	maps.Copy(req.Payload, params)
 
-	if err := am.callout.Callout(ctx, op, params); err != nil {
+	if err := am.callout.Callout(ctx, req); err != nil {
 		return err
 	}
 
