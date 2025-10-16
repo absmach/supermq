@@ -32,7 +32,7 @@ const (
 	filePermission = 0o644
 )
 
-var req = callout.CallOutReq{
+var req = callout.Request{
 	Operation:  operation,
 	EntityType: entityType,
 	Payload: map[string]any{
@@ -342,7 +342,7 @@ func TestCallout_Operations(t *testing.T) {
 	cases := []struct {
 		desc         string
 		operations   []string
-		request      callout.CallOutReq
+		request      callout.Request
 		serverCalled bool
 	}{
 		{

@@ -5,7 +5,6 @@ package middleware
 
 import (
 	"context"
-	"maps"
 	"time"
 
 	"github.com/absmach/supermq/auth"
@@ -345,25 +344,15 @@ func (am *authorizationMiddleware) extAuthorize(ctx context.Context, subj, perm,
 	return nil
 }
 
-func (am *authorizationMiddleware) callOut(ctx context.Context, session authn.Session, op string, params map[string]any) error {
-	// pl := map[string]any{
-	// 	"entity_type":  policies.DomainType,
-	// 	"subject_type": policies.UserType,
-	// 	"subject_id":   session.UserID,
-	// 	"time":         time.Now().UTC(),
-	// }
-	req := callout.CallOutReq{
+func (am *authorizationMiddleware) callOut(ctx context.Context, session authn.Session, op string, pld map[string]any) error {
+	pld["time"] = time.Now().UTC()
+	req := callout.Request{
 		Operation:   op,
 		EntityType:  policies.DomainType,
 		SubjectID:   session.UserID,
 		SubjectType: policies.UserType,
-		Payload: map[string]any{
-			"domain": session.DomainID,
-			"time":   time.Now().UTC(),
-		},
+		Payload:     pld,
 	}
-
-	maps.Copy(req.Payload, params)
 
 	if err := am.callout.Callout(ctx, req); err != nil {
 		return err

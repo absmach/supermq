@@ -20,6 +20,19 @@ import (
 
 var errFailedToRead = errors.New("failed to read callout response body")
 
+type Request struct {
+	Operation   string         `json:"operation,omitempty"`
+	SubjectID   string         `json:"subject_id,omitempty"`
+	SubjectType string         `json:"subject_type,omitempty"`
+	EntityType  string         `json:"entity_type,omitempty"`
+	Payload     map[string]any `json:"payload,omitempty"`
+}
+
+// Callout send request to an external service.
+type Callout interface {
+	Callout(ctx context.Context, req Request) error
+}
+
 type Config struct {
 	URLs            []string      `env:"URLS"             envDefault:"" envSeparator:","`
 	Method          string        `env:"METHOD"           envDefault:"POST"`
@@ -36,19 +49,6 @@ type callout struct {
 	urls             []string
 	method           string
 	allowedOperation map[string]struct{}
-}
-
-type CallOutReq struct {
-	Operation   string         `json:"operation,omitempty"`
-	SubjectID   string         `json:"subject_id,omitempty"`
-	SubjectType string         `json:"subject_type,omitempty"`
-	EntityType  string         `json:"entity_type,omitempty"`
-	Payload     map[string]any `json:"payload,omitempty"`
-}
-
-// Callout send request to an external service.
-type Callout interface {
-	Callout(ctx context.Context, req CallOutReq) error
 }
 
 // New creates a new instance of Callout.
@@ -75,7 +75,7 @@ func New(cfg Config) (Callout, error) {
 	}, nil
 }
 
-func (c *callout) Callout(ctx context.Context, req CallOutReq) error {
+func (c *callout) Callout(ctx context.Context, req Request) error {
 	if len(c.urls) == 0 {
 		return nil
 	}
@@ -97,9 +97,9 @@ func (c *callout) Callout(ctx context.Context, req CallOutReq) error {
 	return nil
 }
 
-func newCalloutClient(ctls bool, certPath, keyPath, caPath string, timeout time.Duration) (*http.Client, error) {
+func newCalloutClient(skipInsecure bool, certPath, keyPath, caPath string, timeout time.Duration) (*http.Client, error) {
 	tlsConfig := &tls.Config{
-		InsecureSkipVerify: !ctls,
+		InsecureSkipVerify: !skipInsecure,
 	}
 	if certPath != "" || keyPath != "" {
 		clientTLSCert, err := server.LoadX509KeyPair(certPath, keyPath)
@@ -125,16 +125,17 @@ func newCalloutClient(ctls bool, certPath, keyPath, caPath string, timeout time.
 	return httpClient, nil
 }
 
-func (c *callout) makeRequest(ctx context.Context, urlStr string, req CallOutReq) error {
+func (c *callout) makeRequest(ctx context.Context, urlStr string, req Request) error {
 	var r *http.Request
 	var err error
 
 	switch c.method {
 	case http.MethodGet:
 		query := url.Values{}
-		query.Add("operation", req.Operation)
-		query.Add("subject_id", req.SubjectID)
-		query.Add("subject_type", req.SubjectType)
+		query.Set("operation", req.Operation)
+		query.Set("subject_id", req.SubjectID)
+		query.Set("subject_type", req.SubjectType)
+		query.Set("entity_type", req.EntityType)
 		for key, value := range req.Payload {
 			query.Set(key, fmt.Sprintf("%v", value))
 		}

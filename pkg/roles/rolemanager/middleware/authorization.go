@@ -5,7 +5,6 @@ package middleware
 
 import (
 	"context"
-	"maps"
 	"time"
 
 	"github.com/absmach/supermq/pkg/authn"
@@ -500,27 +499,17 @@ func (ram RoleManagerAuthorizationMiddleware) validateMembers(ctx context.Contex
 	}
 }
 
-func (ram RoleManagerAuthorizationMiddleware) callOut(ctx context.Context, session authn.Session, op string, params map[string]any) error {
-	// pl := map[string]any{
-	// 	"entity_type":  ram.entityType,
-	// 	"subject_type": policies.UserType,
-	// 	"subject_id":   session.UserID,
-	// 	"domain":       session.DomainID,
-	// 	"time":         time.Now().UTC(),
-	// }
+func (ram RoleManagerAuthorizationMiddleware) callOut(ctx context.Context, session authn.Session, op string, pld map[string]any) error {
+	pld["time"] = time.Now().UTC()
+	pld["domain"] = session.DomainID
 
-	req := callout.CallOutReq{
+	req := callout.Request{
 		Operation:   op,
 		EntityType:  ram.entityType,
 		SubjectID:   session.UserID,
 		SubjectType: policies.UserType,
-		Payload: map[string]any{
-			"domain": session.DomainID,
-			"time":   time.Now().UTC(),
-		},
+		Payload:     pld,
 	}
-
-	maps.Copy(req.Payload, params)
 
 	if err := ram.callout.Callout(ctx, req); err != nil {
 		return err
