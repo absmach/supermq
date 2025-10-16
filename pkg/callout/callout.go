@@ -80,14 +80,12 @@ func (c *callout) Callout(ctx context.Context, req Request) error {
 		return nil
 	}
 
-	// Check if the operation is in the allowed list
-	// Otherwise, only call webhook if the operation is in the map
 	if _, exists := c.allowedOperation[req.Operation]; !exists {
 		return nil
 	}
 
-	// We iterate through all URLs in sequence
-	// if any request fails, we return the error immediately
+	// Make requests sequentially as they appear in the URL
+	// slice and fail fast as soon as any request fails.
 	for _, url := range c.urls {
 		if err := c.makeRequest(ctx, url, req); err != nil {
 			return err
@@ -135,7 +133,7 @@ func (c *callout) makeRequest(ctx context.Context, urlStr string, req Request) e
 		query.Set("operation", req.Operation)
 		query.Set("subject_id", req.SubjectID)
 		query.Set("subject_type", req.SubjectType)
-		query.Set("entity_type", req.ObjectType)
+		query.Set("object_type", req.ObjectType)
 		for key, value := range req.Payload {
 			query.Set(key, fmt.Sprintf("%v", value))
 		}
