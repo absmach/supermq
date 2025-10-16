@@ -5,7 +5,6 @@ package middleware
 
 import (
 	"context"
-	"time"
 
 	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/domains"
@@ -345,7 +344,6 @@ func (am *authorizationMiddleware) extAuthorize(ctx context.Context, subj, perm,
 }
 
 func (am *authorizationMiddleware) callOut(ctx context.Context, session authn.Session, op string, pld map[string]any) error {
-	pld["time"] = time.Now().UTC()
 	req := callout.Request{
 		Operation:   op,
 		ObjectType:  policies.DomainType,

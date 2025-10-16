@@ -28,7 +28,7 @@ type Request struct {
 	Payload     map[string]any `json:"payload,omitempty"`
 }
 
-// Callout send request to an external service.
+// Callout send a request to an external service.
 type Callout interface {
 	Callout(ctx context.Context, req Request) error
 }
@@ -144,7 +144,9 @@ func (c *callout) makeRequest(ctx context.Context, urlStr string, req Request) e
 			return jsonErr
 		}
 		r, err = http.NewRequestWithContext(ctx, c.method, urlStr, bytes.NewReader(data))
-		r.Header.Set("Content-Type", "application/json")
+		if err == nil {
+			r.Header.Set("Content-Type", "application/json")
+		}
 	}
 
 	if err != nil {

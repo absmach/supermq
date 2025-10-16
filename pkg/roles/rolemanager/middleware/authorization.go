@@ -5,7 +5,6 @@ package middleware
 
 import (
 	"context"
-	"time"
 
 	"github.com/absmach/supermq/pkg/authn"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
@@ -500,7 +499,6 @@ func (ram RoleManagerAuthorizationMiddleware) validateMembers(ctx context.Contex
 }
 
 func (ram RoleManagerAuthorizationMiddleware) callOut(ctx context.Context, session authn.Session, op string, pld map[string]any) error {
-	pld["time"] = time.Now().UTC()
 	pld["domain"] = session.DomainID
 
 	req := callout.Request{
