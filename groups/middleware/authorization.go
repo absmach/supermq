@@ -6,6 +6,7 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/groups"
@@ -732,6 +733,7 @@ func (am *authorizationMiddleware) callOut(ctx context.Context, session authn.Se
 			CallerID:   session.UserID,
 			CallerType: policies.UserType,
 			DomainID:   session.DomainID,
+			Time:       time.Now().UTC(),
 		},
 		Payload: pld,
 	}
