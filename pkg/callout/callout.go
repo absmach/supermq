@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"net/url"
 	"time"
@@ -35,6 +36,26 @@ type BaseRequest struct {
 type Request struct {
 	BaseRequest
 	Payload map[string]any `json:"payload,omitempty"`
+}
+
+func (r *Request) toURL() (string, error) {
+	baseBytes, err := json.Marshal(r.BaseRequest)
+	if err != nil {
+		return "", err
+	}
+	res := map[string]any{}
+	maps.Copy(res, r.Payload)
+
+	if err := json.Unmarshal(baseBytes, &res); err != nil {
+		return "", err
+	}
+
+	ret := url.Values{}
+	for k, v := range res {
+		ret.Set(k, fmt.Sprintf("%v", v))
+	}
+
+	return ret.Encode(), nil
 }
 
 // Callout send a request to an external service.
@@ -138,15 +159,12 @@ func (c *callout) makeRequest(ctx context.Context, urlStr string, req Request) e
 
 	switch c.method {
 	case http.MethodGet:
-		query := url.Values{}
-		query.Set("operation", req.Operation)
-		query.Set("subject_id", req.CallerID)
-		query.Set("subject_type", req.CallerType)
-		query.Set("object_type", req.EntityType)
-		for key, value := range req.Payload {
-			query.Set(key, fmt.Sprintf("%v", value))
+		var query string
+		query, err = req.toURL()
+		if err != nil {
+			return err
 		}
-		r, err = http.NewRequestWithContext(ctx, c.method, urlStr+"?"+query.Encode(), nil)
+		r, err = http.NewRequestWithContext(ctx, c.method, urlStr+"?"+query, nil)
 	case http.MethodPost:
 		data, jsonErr := json.Marshal(req)
 		if jsonErr != nil {
