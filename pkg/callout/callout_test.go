@@ -47,7 +47,7 @@ var req = callout.Request{
 func TestNewCallout(t *testing.T) {
 	cases := []struct {
 		desc       string
-		ctls       bool
+		withTLS    bool
 		certPath   string
 		keyPath    string
 		caPath     string
@@ -59,7 +59,7 @@ func TestNewCallout(t *testing.T) {
 	}{
 		{
 			desc:       "successful callout creation without TLS",
-			ctls:       false,
+			withTLS:    false,
 			timeout:    time.Second,
 			method:     http.MethodPost,
 			urls:       []string{"http://example.com"},
@@ -67,7 +67,7 @@ func TestNewCallout(t *testing.T) {
 		},
 		{
 			desc:       "successful callout creation with TLS",
-			ctls:       true,
+			withTLS:    true,
 			certPath:   "client.crt",
 			keyPath:    "client.key",
 			caPath:     "ca.crt",
@@ -78,7 +78,7 @@ func TestNewCallout(t *testing.T) {
 		},
 		{
 			desc:       "failed callout creation with invalid cert",
-			ctls:       true,
+			withTLS:    true,
 			certPath:   "invalid.crt",
 			keyPath:    "invalid.key",
 			caPath:     "invalid.ca",
@@ -86,11 +86,11 @@ func TestNewCallout(t *testing.T) {
 			method:     http.MethodPost,
 			urls:       []string{"http://example.com"},
 			operations: []string{},
-			err:        errors.New("failied to initialize http client: tls: failed to find any PEM data in certificate input"),
+			err:        errors.New("failed to initialize http client: tls: failed to find any PEM data in certificate input"),
 		},
 		{
 			desc:       "invalid method",
-			ctls:       false,
+			withTLS:    false,
 			timeout:    time.Second,
 			method:     "INVALID-METHOD",
 			urls:       []string{"http://example.com"},
@@ -123,7 +123,7 @@ func TestNewCallout(t *testing.T) {
 			}
 
 			client, err := callout.New(callout.Config{
-				TLSVerification: tc.ctls,
+				TLSVerification: tc.withTLS,
 				Cert:            tc.certPath,
 				Key:             tc.keyPath,
 				CACert:          tc.caPath,
