@@ -32,7 +32,7 @@ func (lm *loggingMiddleware) Issue(ctx context.Context, token string, key auth.K
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("key",
 				slog.String("subject", key.Subject),
-				slog.Any("type", key.Type),
+				slog.String("type", key.Type.String()),
 			),
 		}
 		if err != nil {
@@ -86,7 +86,7 @@ func (lm *loggingMiddleware) Identify(ctx context.Context, token string) (id aut
 			slog.String("duration", time.Since(begin).String()),
 			slog.Group("key",
 				slog.String("subject", id.Subject),
-				slog.Any("type", id.Type),
+				slog.String("type", id.Type.String()),
 			),
 		}
 		if err != nil {
