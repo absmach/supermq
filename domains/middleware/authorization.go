@@ -345,11 +345,13 @@ func (am *authorizationMiddleware) extAuthorize(ctx context.Context, subj, perm,
 
 func (am *authorizationMiddleware) callOut(ctx context.Context, session authn.Session, op string, pld map[string]any) error {
 	req := callout.Request{
-		Operation:   op,
-		ObjectType:  policies.DomainType,
-		SubjectID:   session.UserID,
-		SubjectType: policies.UserType,
-		Payload:     pld,
+		BaseRequest: callout.BaseRequest{
+			Operation:  op,
+			EntityType: policies.DomainType,
+			CallerID:   session.UserID,
+			CallerType: policies.UserType,
+		},
+		Payload: pld,
 	}
 
 	if err := am.callout.Callout(ctx, req); err != nil {

@@ -20,12 +20,20 @@ import (
 
 var errFailedToRead = errors.New("failed to read callout response body")
 
+// Can be used in the implementation of
+// callout service with structured payload.
+type BaseRequest struct {
+	Operation  string `json:"operation,omitempty"`
+	EntityType string `json:"entity_type,omitempty"`
+	EntityID   string `json:"entity_id,omitempty"`
+	CallerID   string `json:"caller_id,omitempty"`
+	CallerType string `json:"caller_type,omitempty"`
+	DomainID   string `json:"domain_id,omitempty"`
+}
+
 type Request struct {
-	Operation   string         `json:"operation,omitempty"`
-	SubjectID   string         `json:"subject_id,omitempty"`
-	SubjectType string         `json:"subject_type,omitempty"`
-	ObjectType  string         `json:"object_type,omitempty"`
-	Payload     map[string]any `json:"payload,omitempty"`
+	BaseRequest
+	Payload map[string]any `json:"payload,omitempty"`
 }
 
 // Callout send a request to an external service.
@@ -131,9 +139,9 @@ func (c *callout) makeRequest(ctx context.Context, urlStr string, req Request) e
 	case http.MethodGet:
 		query := url.Values{}
 		query.Set("operation", req.Operation)
-		query.Set("subject_id", req.SubjectID)
-		query.Set("subject_type", req.SubjectType)
-		query.Set("object_type", req.ObjectType)
+		query.Set("subject_id", req.CallerID)
+		query.Set("subject_type", req.CallerType)
+		query.Set("object_type", req.EntityType)
 		for key, value := range req.Payload {
 			query.Set(key, fmt.Sprintf("%v", value))
 		}

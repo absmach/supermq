@@ -33,8 +33,10 @@ const (
 )
 
 var req = callout.Request{
-	Operation:  operation,
-	ObjectType: entityType,
+	BaseRequest: callout.BaseRequest{
+		Operation:  operation,
+		EntityType: entityType,
+	},
 	Payload: map[string]any{
 		"sender": userID,
 		"time":   time.Now().UTC(),

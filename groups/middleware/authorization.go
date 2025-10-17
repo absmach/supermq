@@ -723,14 +723,15 @@ func (am *authorizationMiddleware) extAuthorize(ctx context.Context, extOp svcut
 }
 
 func (am *authorizationMiddleware) callOut(ctx context.Context, session authn.Session, op string, pld map[string]any) error {
-	pld["domain"] = session.DomainID
-
 	req := callout.Request{
-		Operation:   op,
-		ObjectType:  policies.GroupType,
-		SubjectID:   session.UserID,
-		SubjectType: policies.UserType,
-		Payload:     pld,
+		BaseRequest: callout.BaseRequest{
+			Operation:  op,
+			EntityType: policies.GroupType,
+			CallerID:   session.UserID,
+			CallerType: policies.UserType,
+			DomainID:   session.DomainID,
+		},
+		Payload: pld,
 	}
 
 	if err := am.callout.Callout(ctx, req); err != nil {
