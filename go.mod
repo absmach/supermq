@@ -4,7 +4,7 @@ go 1.25.3
 
 require (
 	github.com/0x6flab/namegenerator v1.4.0
-	github.com/absmach/callhome v0.18.1
+	github.com/absmach/callhome v0.18.2-0.20251020154744-4dd66476749a
 	github.com/absmach/mgate v0.4.6-0.20250605150648-edf967fbb46a
 	github.com/absmach/senml v1.0.8
 	github.com/authzed/authzed-go v1.6.0
@@ -98,6 +98,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.3 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/ip2location/ip2location-go/v9 v9.8.0 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
@@ -157,5 +158,6 @@ require (
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	lukechampine.com/uint128 v1.3.0 // indirect
 	sigs.k8s.io/controller-runtime v0.22.3 // indirect
 )

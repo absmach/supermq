@@ -169,6 +169,7 @@ func main() {
 		chc := chclient.New(svcName, supermq.Version, logger, cancel)
 		go chc.CallHome(ctx)
 	}
+
 	g.Go(func() error {
 		return gs.Start()
 	})
@@ -180,11 +181,6 @@ func main() {
 		return
 	}
 	hs := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, logger, cfg.InstanceID), logger)
-
-	if cfg.SendTelemetry {
-		chc := chclient.New(svcName, supermq.Version, logger, cancel)
-		go chc.CallHome(ctx)
-	}
 
 	g.Go(func() error {
 		return hs.Start()
