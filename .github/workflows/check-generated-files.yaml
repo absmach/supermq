@@ -72,8 +72,8 @@ jobs:
       - name: Set up protoc
         if: steps.changes.outputs.proto == 'true'
         run: |
-          PROTOC_VERSION=32.0
-          PROTOC_GEN_VERSION=v1.36.8
+          PROTOC_VERSION=33.0
+          PROTOC_GEN_VERSION=v1.36.10
           PROTOC_GRPC_VERSION=v1.5.1
 
           # Export the variables so they are available in future steps
