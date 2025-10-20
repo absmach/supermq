@@ -10,6 +10,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/absmach/supermq/pkg/callout"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -41,16 +42,16 @@ func (_m *Callout) EXPECT() *Callout_Expecter {
 }
 
 // Callout provides a mock function for the type Callout
-func (_mock *Callout) Callout(ctx context.Context, perm string, pl map[string]any) error {
-	ret := _mock.Called(ctx, perm, pl)
+func (_mock *Callout) Callout(ctx context.Context, req callout.Request) error {
+	ret := _mock.Called(ctx, req)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Callout")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, map[string]any) error); ok {
-		r0 = returnFunc(ctx, perm, pl)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, callout.Request) error); ok {
+		r0 = returnFunc(ctx, req)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -64,30 +65,24 @@ type Callout_Callout_Call struct {
 
 // Callout is a helper method to define mock.On call
 //   - ctx context.Context
-//   - perm string
-//   - pl map[string]any
-func (_e *Callout_Expecter) Callout(ctx interface{}, perm interface{}, pl interface{}) *Callout_Callout_Call {
-	return &Callout_Callout_Call{Call: _e.mock.On("Callout", ctx, perm, pl)}
+//   - req callout.Request
+func (_e *Callout_Expecter) Callout(ctx interface{}, req interface{}) *Callout_Callout_Call {
+	return &Callout_Callout_Call{Call: _e.mock.On("Callout", ctx, req)}
 }
 
-func (_c *Callout_Callout_Call) Run(run func(ctx context.Context, perm string, pl map[string]any)) *Callout_Callout_Call {
+func (_c *Callout_Callout_Call) Run(run func(ctx context.Context, req callout.Request)) *Callout_Callout_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 string
+		var arg1 callout.Request
 		if args[1] != nil {
-			arg1 = args[1].(string)
-		}
-		var arg2 map[string]any
-		if args[2] != nil {
-			arg2 = args[2].(map[string]any)
+			arg1 = args[1].(callout.Request)
 		}
 		run(
 			arg0,
 			arg1,
-			arg2,
 		)
 	})
 	return _c
@@ -98,7 +93,7 @@ func (_c *Callout_Callout_Call) Return(err error) *Callout_Callout_Call {
 	return _c
 }
 
-func (_c *Callout_Callout_Call) RunAndReturn(run func(ctx context.Context, perm string, pl map[string]any) error) *Callout_Callout_Call {
+func (_c *Callout_Callout_Call) RunAndReturn(run func(ctx context.Context, req callout.Request) error) *Callout_Callout_Call {
 	_c.Call.Return(run)
 	return _c
 }
