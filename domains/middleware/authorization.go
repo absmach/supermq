@@ -359,6 +359,7 @@ func (am *authorizationMiddleware) callOut(ctx context.Context, session authn.Se
 			EntityID:   entityID,
 			CallerID:   session.UserID,
 			CallerType: policies.UserType,
+			DomainID:   entityID,
 			Time:       time.Now().UTC(),
 		},
 		Payload: pld,
