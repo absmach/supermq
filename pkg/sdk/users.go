@@ -41,6 +41,7 @@ type User struct {
 	Status         string      `json:"status,omitempty"`
 	Role           string      `json:"role,omitempty"`
 	ProfilePicture string      `json:"profile_picture,omitempty"`
+	AuthProvider   string      `json:"auth_provider,omitempty"`
 }
 
 func (sdk mgSDK) CreateUser(ctx context.Context, user User, token string) (User, errors.SDKError) {
