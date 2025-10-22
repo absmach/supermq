@@ -299,7 +299,9 @@ func (svc service) Update(ctx context.Context, session authn.Session, id string,
 		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	if u.AuthProvider != "" {
-		if usr.FirstName != nil || usr.LastName != nil || usr.ProfilePicture != nil {
+		if changed(usr.FirstName, u.FirstName) ||
+			changed(usr.LastName, u.LastName) ||
+			changed(usr.ProfilePicture, u.ProfilePicture) {
 			return User{}, svcerr.ErrExternalAuthProviderCouldNotUpdate
 		}
 	}
@@ -803,4 +805,12 @@ func sanitizeForUsername(s string, maxLen int) string {
 	}
 
 	return cleaned
+}
+
+func changed(updated *string, old string) bool {
+	if updated == nil {
+		return false
+	}
+
+	return *updated != old
 }
