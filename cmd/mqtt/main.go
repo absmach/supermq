@@ -303,7 +303,7 @@ func proxyMQTT(ctx context.Context, cfg config, logger *slog.Logger, sessionHand
 func proxyWS(ctx context.Context, cfg config, logger *slog.Logger, sessionHandler session.Handler, interceptor session.Interceptor) error {
 	config := mgate.Config{
 		Port:           cfg.HTTPPort,
-		TargetProtocol: "http",
+		TargetProtocol: "ws",
 		TargetHost:     cfg.HTTPTargetHost,
 		TargetPort:     cfg.HTTPTargetPort,
 		TargetPath:     cfg.HTTPTargetPath,
