@@ -91,9 +91,9 @@ paths:
         - $ref: "#/components/parameters/ClientName"
         - $ref: "#/components/parameters/Tags"
         - $ref: "#/components/parameters/ID"
-        - $ref: "#/components/parameters/Actions"
-        - $ref: "#/components/parameters/RoleID"
-        - $ref: "#/components/parameters/RoleName"
+        - $ref: "./schemas/roles.yaml#/components/parameters/ActionsQuery"
+        - $ref: "./schemas/roles.yaml#/components/parameters/RoleIDQuery"
+        - $ref: "./schemas/roles.yaml#/components/parameters/RoleNameQuery"
         - $ref: "#/components/parameters/AccessType"
         - $ref: "#/components/parameters/OnlyTotal"
         - $ref: "#/components/parameters/Channel"
@@ -1281,34 +1281,6 @@ components:
         format: uuid
       required: false
       example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-
-    Actions:
-      name: actions
-      description: Lists clients that the user has the given actions on. Multiple actions can be specified separated by comma.
-      in: query
-      schema:
-        type: string
-      required: false
-      example: "action1,action2"
-
-    RoleID:
-      name: role_id
-      description: List clients that the user has the given role ID on.
-      in: query
-      schema:
-        type: string
-        format: uuid
-      required: false
-      example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-
-    RoleName:
-      name: role_name
-      description: List clients that the user has the given role name on.
-      in: query
-      schema:
-        type: string
-      required: false
-      example: admin
 
     AccessType:
       name: access_type

@@ -6,12 +6,12 @@ components:
     NewRole:
       type: object
       properties:
-        role_id:
+        id:
           type: string
           format: uuid
           example: bb7edb32-2eac-4aad-aebe-ed96fe073879
           description: Role unique identifier.
-        role_name:
+        name:
           type: string
           description: Role's name.
           example: "roleName"
@@ -44,12 +44,12 @@ components:
     Role:
       type: object
       properties:
-        role_id:
+        id:
           type: string
           format: uuid
           example: bb7edb32-2eac-4aad-aebe-ed96fe073879
           description: Role unique identifier.
-        role_name:
+        name:
           type: string
           description: Role's name.
           example: "roleName"
@@ -82,7 +82,7 @@ components:
     CreateRoleObj:
       type: object
       properties:
-        role_name:
+        name:
           type: string
           description: Role's name.
           example: "roleName"
@@ -270,6 +270,31 @@ components:
         type: string
       required: true
       example: "roleID"
+    RoleIDQuery:
+      name: role_id
+      description: Filter by role ID.
+      in: query
+      schema:
+        type: string
+        format: uuid
+      required: false
+      example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+    RoleNameQuery:
+      name: role_name
+      description: Filter by role name.
+      in: query
+      schema:
+        type: string
+      required: false
+      example: admin
+    ActionsQuery:
+      name: actions
+      description: Filter by actions. Multiple actions can be specified separated by comma.
+      in: query
+      schema:
+        type: string
+      required: false
+      example: "action1,action2"
 
   requestBodies:
     CreateRoleReq:
