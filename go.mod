@@ -5,7 +5,7 @@ go 1.25.3
 require (
 	github.com/0x6flab/namegenerator v1.4.0
 	github.com/absmach/callhome v0.18.2
-	github.com/absmach/mgate v0.4.6-0.20251029115037-0b6c48517f0b
+	github.com/absmach/mgate v0.5.0
 	github.com/absmach/senml v1.0.8
 	github.com/authzed/authzed-go v1.6.0
 	github.com/authzed/grpcutil v0.0.0-20250221190651-1985b19b35b8
