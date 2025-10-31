@@ -18,6 +18,7 @@ import (
 	"github.com/absmach/supermq"
 	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
+	grpcUsersV1 "github.com/absmach/supermq/api/grpc/users/v1"
 	"github.com/absmach/supermq/internal/email"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
@@ -35,10 +36,12 @@ import (
 	pgclient "github.com/absmach/supermq/pkg/postgres"
 	"github.com/absmach/supermq/pkg/prometheus"
 	"github.com/absmach/supermq/pkg/server"
+	grpcserver "github.com/absmach/supermq/pkg/server/grpc"
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/absmach/supermq/users"
 	httpapi "github.com/absmach/supermq/users/api"
+	usersgrpcapi "github.com/absmach/supermq/users/api/grpc"
 	"github.com/absmach/supermq/users/emailer"
 	"github.com/absmach/supermq/users/events"
 	"github.com/absmach/supermq/users/hasher"
@@ -53,17 +56,20 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/reflection"
 )
 
 const (
 	svcName          = "users"
 	envPrefixDB      = "SMQ_USERS_DB_"
 	envPrefixHTTP    = "SMQ_USERS_HTTP_"
+	envPrefixGRPC    = "SMQ_USERS_GRPC_"
 	envPrefixAuth    = "SMQ_AUTH_GRPC_"
 	envPrefixDomains = "SMQ_DOMAINS_GRPC_"
 	envPrefixGoogle  = "SMQ_GOOGLE_"
 	defDB            = "users"
 	defSvcHTTPPort   = "9002"
+	defSvcGRPCPort   = "7002"
 )
 
 type config struct {
@@ -234,6 +240,19 @@ func main() {
 		return
 	}
 
+	grpcServerConfig := server.Config{Port: defSvcGRPCPort}
+	if err := env.ParseWithOptions(&grpcServerConfig, env.Options{Prefix: envPrefixGRPC}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load %s gRPC server configuration : %s", svcName, err.Error()))
+		exitCode = 1
+		return
+	}
+	registerUsersServiceServer := func(srv *grpc.Server) {
+		reflection.Register(srv)
+		grpcUsersV1.RegisterUsersServiceServer(srv, usersgrpcapi.NewUsersServer(csvc))
+	}
+
+	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerUsersServiceServer, logger)
+
 	httpServerConfig := server.Config{Port: defSvcHTTPPort}
 	if err := env.ParseWithOptions(&httpServerConfig, env.Options{Prefix: envPrefixHTTP}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err.Error()))
@@ -259,11 +278,15 @@ func main() {
 	}
 
 	g.Go(func() error {
+		return gs.Start()
+	})
+
+	g.Go(func() error {
 		return httpSrv.Start()
 	})
 
 	g.Go(func() error {
-		return server.StopSignalHandler(ctx, cancel, logger, svcName, httpSrv)
+		return server.StopSignalHandler(ctx, cancel, logger, svcName, httpSrv, gs)
 	})
 
 	if err := g.Wait(); err != nil {

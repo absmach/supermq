@@ -521,3 +521,22 @@ func (lm *loggingMiddleware) OAuthAddUserPolicy(ctx context.Context, user users.
 	}(time.Now())
 	return lm.svc.OAuthAddUserPolicy(ctx, user)
 }
+
+// SendEmail logs the send_email request. It logs the recipients and the time it took to complete the request.
+func (lm *loggingMiddleware) SendEmail(ctx context.Context, to []string, from, subject, header, user, content, footer string) (err error) {
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+			slog.String("request_id", middleware.GetReqID(ctx)),
+			slog.Any("to", to),
+			slog.String("subject", subject),
+		}
+		if err != nil {
+			args = append(args, slog.String("error", err.Error()))
+			lm.logger.Warn("Send email failed", args...)
+			return
+		}
+		lm.logger.Info("Send email completed successfully", args...)
+	}(time.Now())
+	return lm.svc.SendEmail(ctx, to, from, subject, header, user, content, footer)
+}
