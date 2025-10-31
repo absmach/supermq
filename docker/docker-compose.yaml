@@ -258,6 +258,11 @@ services:
       SMQ_AUTH_GRPC_CLIENT_CERT: ${SMQ_AUTH_GRPC_CLIENT_CERT:+/auth-grpc-client.crt}
       SMQ_AUTH_GRPC_CLIENT_KEY: ${SMQ_AUTH_GRPC_CLIENT_KEY:+/auth-grpc-client.key}
       SMQ_AUTH_GRPC_SERVER_CA_CERTS: ${SMQ_AUTH_GRPC_SERVER_CA_CERTS:+/auth-grpc-server-ca.crt}
+      SMQ_USERS_GRPC_URL: ${SMQ_USERS_GRPC_URL}
+      SMQ_USERS_GRPC_TIMEOUT: ${SMQ_USERS_GRPC_TIMEOUT}
+      SMQ_USERS_GRPC_CLIENT_CERT: ${SMQ_USERS_GRPC_CLIENT_CERT:+/users-grpc-client.crt}
+      SMQ_USERS_GRPC_CLIENT_KEY: ${SMQ_USERS_GRPC_CLIENT_KEY:+/users-grpc-client.key}
+      SMQ_USERS_GRPC_SERVER_CA_CERTS: ${SMQ_USERS_GRPC_SERVER_CA_CERTS:+/users-grpc-server-ca.crt}
       SMQ_GROUPS_GRPC_URL: ${SMQ_GROUPS_GRPC_URL}
       SMQ_GROUPS_GRPC_TIMEOUT: ${SMQ_GROUPS_GRPC_TIMEOUT}
       SMQ_GROUPS_GRPC_CLIENT_CERT: ${SMQ_GROUPS_GRPC_CLIENT_CERT:+/groups-grpc-client.crt}
@@ -830,6 +835,8 @@ services:
       - users-db
       - auth
       - nats
+    expose:
+      - ${SMQ_USERS_GRPC_PORT}
     restart: on-failure
     environment:
       SMQ_USERS_LOG_LEVEL: ${SMQ_USERS_LOG_LEVEL}
@@ -846,6 +853,12 @@ services:
       SMQ_USERS_HTTP_PORT: ${SMQ_USERS_HTTP_PORT}
       SMQ_USERS_HTTP_SERVER_CERT: ${SMQ_USERS_HTTP_SERVER_CERT}
       SMQ_USERS_HTTP_SERVER_KEY: ${SMQ_USERS_HTTP_SERVER_KEY}
+      SMQ_USERS_GRPC_HOST: ${SMQ_USERS_GRPC_HOST}
+      SMQ_USERS_GRPC_PORT: ${SMQ_USERS_GRPC_PORT}
+      SMQ_USERS_GRPC_SERVER_CERT: ${SMQ_USERS_GRPC_SERVER_CERT:+/users-grpc-server.crt}
+      SMQ_USERS_GRPC_SERVER_KEY: ${SMQ_USERS_GRPC_SERVER_KEY:+/users-grpc-server.key}
+      SMQ_USERS_GRPC_SERVER_CA_CERTS: ${SMQ_USERS_GRPC_SERVER_CA_CERTS:+/users-grpc-server-ca.crt}
+      SMQ_USERS_GRPC_CLIENT_CA_CERTS: ${SMQ_USERS_GRPC_CLIENT_CA_CERTS:+/users-grpc-client-ca.crt}
       SMQ_USERS_DB_HOST: ${SMQ_USERS_DB_HOST}
       SMQ_USERS_DB_PORT: ${SMQ_USERS_DB_PORT}
       SMQ_USERS_DB_USER: ${SMQ_USERS_DB_USER}
@@ -899,6 +912,7 @@ services:
     volumes:
       - ./templates/${SMQ_PASSWORD_RESET_EMAIL_TEMPLATE}:/${SMQ_PASSWORD_RESET_EMAIL_TEMPLATE}
       - ./templates/${SMQ_VERIFICATION_EMAIL_TEMPLATE}:/${SMQ_VERIFICATION_EMAIL_TEMPLATE}
+      - ./templates/${SMQ_EMAIL_TEMPLATE}:/${SMQ_EMAIL_TEMPLATE}
       # Auth gRPC client certificates
       - type: bind
         source: ${SMQ_AUTH_GRPC_CLIENT_CERT:-ssl/certs/dummy/client_cert}

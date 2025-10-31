@@ -814,3 +814,21 @@ func changed(updated *string, old string) bool {
 
 	return *updated != old
 }
+
+func (svc service) SendEmailWithUserId(ctx context.Context, userIds []string, from, subject, header, user, content, footer string) error {
+	for i, userId := range userIds {
+		u, err := svc.users.RetrieveByID(ctx, userId)
+		if err != nil {
+			return errors.Wrap(svcerr.ErrViewEntity, err)
+		}
+
+		userIds[i] = u.Email
+	}
+
+	inviter, err := svc.users.RetrieveByID(ctx, from)
+	if err != nil {
+		return err
+	}
+
+	return svc.email.SendCustom(userIds, inviter.FirstName+" "+inviter.LastName, subject, header, user, content, footer)
+}

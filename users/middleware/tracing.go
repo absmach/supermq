@@ -248,3 +248,14 @@ func (tm *tracingMiddleware) OAuthAddUserPolicy(ctx context.Context, user users.
 
 	return tm.svc.OAuthAddUserPolicy(ctx, user)
 }
+
+// SendEmailWithUserId traces the "SendEmailWithUserId" operation of the wrapped users.Service.
+func (tm *tracingMiddleware) SendEmailWithUserId(ctx context.Context, to []string, from, subject, header, user, content, footer string) error {
+	ctx, span := tracing.StartSpan(ctx, tm.tracer, "svc_send_email", trace.WithAttributes(
+		attribute.StringSlice("to", to),
+		attribute.String("subject", subject),
+	))
+	defer span.End()
+
+	return tm.svc.SendEmailWithUserId(ctx, to, from, subject, header, user, content, footer)
+}

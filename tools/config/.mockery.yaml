@@ -52,6 +52,11 @@ packages:
           dir: "./pkg/sdk/mocks"
           structname: "SDK"
           filename: "sdk.go"
+  github.com/absmach/supermq/api/grpc/users/v1:
+    interfaces:
+      UsersServiceClient:
+        config:
+          dir: "./users/mocks"
   github.com/absmach/supermq/auth:
     interfaces:
       Authz:
