@@ -335,8 +335,8 @@ func (am *authorizationMiddleware) OAuthAddUserPolicy(ctx context.Context, user 
 	return am.svc.OAuthAddUserPolicy(ctx, user)
 }
 
-func (am *authorizationMiddleware) SendEmail(ctx context.Context, to []string, from, subject, header, user, content, footer string) error {
-	return am.svc.SendEmail(ctx, to, from, subject, header, user, content, footer)
+func (am *authorizationMiddleware) SendEmailWithUserId(ctx context.Context, to []string, from, subject, header, user, content, footer string) error {
+	return am.svc.SendEmailWithUserId(ctx, to, from, subject, header, user, content, footer)
 }
 
 func (am *authorizationMiddleware) checkSuperAdmin(ctx context.Context, session authn.Session) error {

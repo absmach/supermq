@@ -246,11 +246,11 @@ func (ms *metricsMiddleware) OAuthAddUserPolicy(ctx context.Context, user users.
 	return ms.svc.OAuthAddUserPolicy(ctx, user)
 }
 
-// SendEmail instruments SendEmail method with metrics.
-func (ms *metricsMiddleware) SendEmail(ctx context.Context, to []string, from, subject, header, user, content, footer string) error {
+// SendEmailWithUserId instruments SendEmail method with metrics.
+func (ms *metricsMiddleware) SendEmailWithUserId(ctx context.Context, to []string, from, subject, header, user, content, footer string) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "send_email").Add(1)
 		ms.latency.With("method", "send_email").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.SendEmail(ctx, to, from, subject, header, user, content, footer)
+	return ms.svc.SendEmailWithUserId(ctx, to, from, subject, header, user, content, footer)
 }

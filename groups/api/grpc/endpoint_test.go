@@ -25,7 +25,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-const port = 7004
+const port = 0
 
 var (
 	validID        = testsutil.GenerateUUID(&testing.T{})
@@ -48,24 +48,27 @@ var (
 	}
 )
 
-func startGRPCServer(svc *prmocks.Service, port int) {
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	if err != nil {
-		panic(fmt.Sprintf("failed to obtain port: %s", err))
-	}
-	server := grpc.NewServer()
-	grpcGroupsV1.RegisterGroupsServiceServer(server, grpcapi.NewServer(svc))
-	go func() {
-		if err := server.Serve(listener); err != nil {
-			panic(fmt.Sprintf("failed to serve: %s", err))
-		}
-	}()
+func startGRPCServer(svc *prmocks.Service) (*grpc.Server, int) {
+    listener, err := net.Listen("tcp", ":0")
+    if err != nil {
+        panic(fmt.Sprintf("failed to obtain port: %s", err))
+    }
+    server := grpc.NewServer()
+    grpcGroupsV1.RegisterGroupsServiceServer(server, grpcapi.NewServer(svc))
+    go func() {
+        if err := server.Serve(listener); err != nil {
+            panic(fmt.Sprintf("failed to serve: %s", err))
+        }
+    }()
+    p := listener.Addr().(*net.TCPAddr).Port
+    return server, p
 }
 
 func TestRetrieveEntityEndpoint(t *testing.T) {
-	svc := new(prmocks.Service)
-	startGRPCServer(svc, port)
-	grpAddr := fmt.Sprintf("localhost:%d", port)
+    svc := new(prmocks.Service)
+    server, p := startGRPCServer(svc)
+    defer server.GracefulStop()
+    grpAddr := fmt.Sprintf("localhost:%d", p)
 	conn, _ := grpc.NewClient(grpAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	client := grpcapi.NewClient(conn, time.Second)
 

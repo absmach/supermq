@@ -867,12 +867,12 @@ func (_c *Service_SearchUsers_Call) RunAndReturn(run func(ctx context.Context, p
 	return _c
 }
 
-// SendEmail provides a mock function for the type Service
-func (_mock *Service) SendEmail(ctx context.Context, to []string, from string, subject string, header string, user string, content string, footer string) error {
+// SendEmailWithUserId provides a mock function for the type Service
+func (_mock *Service) SendEmailWithUserId(ctx context.Context, to []string, from string, subject string, header string, user string, content string, footer string) error {
 	ret := _mock.Called(ctx, to, from, subject, header, user, content, footer)
 
 	if len(ret) == 0 {
-		panic("no return value specified for SendEmail")
+		panic("no return value specified for SendEmailWithUserId")
 	}
 
 	var r0 error
@@ -884,12 +884,12 @@ func (_mock *Service) SendEmail(ctx context.Context, to []string, from string, s
 	return r0
 }
 
-// Service_SendEmail_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SendEmail'
-type Service_SendEmail_Call struct {
+// Service_SendEmailWithUserId_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SendEmailWithUserId'
+type Service_SendEmailWithUserId_Call struct {
 	*mock.Call
 }
 
-// SendEmail is a helper method to define mock.On call
+// SendEmailWithUserId is a helper method to define mock.On call
 //   - ctx context.Context
 //   - to []string
 //   - from string
@@ -898,11 +898,11 @@ type Service_SendEmail_Call struct {
 //   - user string
 //   - content string
 //   - footer string
-func (_e *Service_Expecter) SendEmail(ctx interface{}, to interface{}, from interface{}, subject interface{}, header interface{}, user interface{}, content interface{}, footer interface{}) *Service_SendEmail_Call {
-	return &Service_SendEmail_Call{Call: _e.mock.On("SendEmail", ctx, to, from, subject, header, user, content, footer)}
+func (_e *Service_Expecter) SendEmailWithUserId(ctx interface{}, to interface{}, from interface{}, subject interface{}, header interface{}, user interface{}, content interface{}, footer interface{}) *Service_SendEmailWithUserId_Call {
+	return &Service_SendEmailWithUserId_Call{Call: _e.mock.On("SendEmailWithUserId", ctx, to, from, subject, header, user, content, footer)}
 }
 
-func (_c *Service_SendEmail_Call) Run(run func(ctx context.Context, to []string, from string, subject string, header string, user string, content string, footer string)) *Service_SendEmail_Call {
+func (_c *Service_SendEmailWithUserId_Call) Run(run func(ctx context.Context, to []string, from string, subject string, header string, user string, content string, footer string)) *Service_SendEmailWithUserId_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -950,12 +950,12 @@ func (_c *Service_SendEmail_Call) Run(run func(ctx context.Context, to []string,
 	return _c
 }
 
-func (_c *Service_SendEmail_Call) Return(err error) *Service_SendEmail_Call {
+func (_c *Service_SendEmailWithUserId_Call) Return(err error) *Service_SendEmailWithUserId_Call {
 	_c.Call.Return(err)
 	return _c
 }
 
-func (_c *Service_SendEmail_Call) RunAndReturn(run func(ctx context.Context, to []string, from string, subject string, header string, user string, content string, footer string) error) *Service_SendEmail_Call {
+func (_c *Service_SendEmailWithUserId_Call) RunAndReturn(run func(ctx context.Context, to []string, from string, subject string, header string, user string, content string, footer string) error) *Service_SendEmailWithUserId_Call {
 	_c.Call.Return(run)
 	return _c
 }
