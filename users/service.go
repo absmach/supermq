@@ -814,3 +814,7 @@ func changed(updated *string, old string) bool {
 
 	return *updated != old
 }
+
+func (svc service) SendEmail(ctx context.Context, to []string, from, subject, header, user, content, footer string) error {
+	return svc.email.Send(to, from, subject, header, user, content, footer)
+}

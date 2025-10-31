@@ -63,6 +63,7 @@ const (
 	envPrefixGrpc          = "SMQ_DOMAINS_GRPC_"
 	envPrefixDB            = "SMQ_DOMAINS_DB_"
 	envPrefixAuth          = "SMQ_AUTH_GRPC_"
+	envPrefixUsers         = "SMQ_USERS_GRPC_"
 	envPrefixDomainCallout = "SMQ_DOMAINS_CALLOUT_"
 	defDB                  = "domains"
 	defSvcHTTPPort         = "9004"
@@ -160,6 +161,22 @@ func main() {
 	defer authnHandler.Close()
 	logger.Info("Authn successfully connected to auth gRPC server " + authnHandler.Secure())
 	authnMiddleware := smqauthn.NewAuthNMiddleware(authn)
+
+	usersClientConfig := grpcclient.Config{}
+	if err := env.ParseWithOptions(&usersClientConfig, env.Options{Prefix: envPrefixUsers}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load users gRPC client configuration : %s", err))
+		exitCode = 1
+		return
+	}
+
+	_, usersHandler, err := grpcclient.SetupUsersClient(ctx, usersClientConfig)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to connect to users gRPC server : %s", err.Error()))
+		exitCode = 1
+		return
+	}
+	defer usersHandler.Close()
+	logger.Info("Users client successfully connected to users gRPC server " + usersHandler.Secure())
 
 	database := postgres.NewDatabase(db, dbConfig, tracer)
 	domainsRepo := dpostgres.NewRepository(database)
