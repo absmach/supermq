@@ -522,8 +522,8 @@ func (lm *loggingMiddleware) OAuthAddUserPolicy(ctx context.Context, user users.
 	return lm.svc.OAuthAddUserPolicy(ctx, user)
 }
 
-// SendEmail logs the send_email request. It logs the recipients and the time it took to complete the request.
-func (lm *loggingMiddleware) SendEmail(ctx context.Context, to []string, from, subject, header, user, content, footer string) (err error) {
+// SendEmailWithUserId logs the send_email request. It logs the recipients and the time it took to complete the request.
+func (lm *loggingMiddleware) SendEmailWithUserId(ctx context.Context, to []string, from, subject, header, user, content, footer string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -538,5 +538,5 @@ func (lm *loggingMiddleware) SendEmail(ctx context.Context, to []string, from, s
 		}
 		lm.logger.Info("Send email completed successfully", args...)
 	}(time.Now())
-	return lm.svc.SendEmail(ctx, to, from, subject, header, user, content, footer)
+	return lm.svc.SendEmailWithUserId(ctx, to, from, subject, header, user, content, footer)
 }

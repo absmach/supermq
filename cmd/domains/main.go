@@ -15,6 +15,7 @@ import (
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/supermq"
 	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
+	grpcUsersV1 "github.com/absmach/supermq/api/grpc/users/v1"
 	"github.com/absmach/supermq/domains"
 	domainsSvc "github.com/absmach/supermq/domains"
 	domainsgrpcapi "github.com/absmach/supermq/domains/api/grpc"
@@ -169,7 +170,7 @@ func main() {
 		return
 	}
 
-	_, usersHandler, err := grpcclient.SetupUsersClient(ctx, usersClientConfig)
+	usersClient, usersHandler, err := grpcclient.SetupUsersClient(ctx, usersClientConfig)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to connect to users gRPC server : %s", err.Error()))
 		exitCode = 1
@@ -225,7 +226,7 @@ func main() {
 		return
 	}
 
-	svc, err := newDomainService(ctx, domainsRepo, cache, tracer, cfg, authz, policyService, logger, call)
+	svc, err := newDomainService(ctx, domainsRepo, cache, tracer, cfg, authz, policyService, logger, call, usersClient)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create %s service: %s", svcName, err.Error()))
 		exitCode = 1
@@ -277,7 +278,7 @@ func main() {
 	}
 }
 
-func newDomainService(ctx context.Context, domainsRepo domainsSvc.Repository, cache domainsSvc.Cache, tracer trace.Tracer, cfg config, authz authz.Authorization, policiessvc policies.Service, logger *slog.Logger, callout callout.Callout) (domains.Service, error) {
+func newDomainService(ctx context.Context, domainsRepo domainsSvc.Repository, cache domainsSvc.Cache, tracer trace.Tracer, cfg config, authz authz.Authorization, policiessvc policies.Service, logger *slog.Logger, callout callout.Callout, usersClient grpcUsersV1.UsersServiceClient) (domains.Service, error) {
 	idProvider := uuid.New()
 	sidProvider, err := sid.New()
 	if err != nil {
@@ -289,7 +290,7 @@ func newDomainService(ctx context.Context, domainsRepo domainsSvc.Repository, ca
 		return nil, err
 	}
 
-	svc, err := domainsSvc.New(domainsRepo, cache, policiessvc, idProvider, sidProvider, availableActions, builtInRoles)
+	svc, err := domainsSvc.New(domainsRepo, cache, policiessvc, idProvider, sidProvider, availableActions, builtInRoles, usersClient)
 	if err != nil {
 		return nil, fmt.Errorf("failed to init domain service: %w", err)
 	}

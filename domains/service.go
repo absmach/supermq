@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/absmach/supermq"
+	grpcUsersV1 "github.com/absmach/supermq/api/grpc/users/v1"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
@@ -22,16 +23,17 @@ var (
 )
 
 type service struct {
-	repo       Repository
-	cache      Cache
-	policy     policies.Service
-	idProvider supermq.IDProvider
+	repo        Repository
+	cache       Cache
+	policy      policies.Service
+	idProvider  supermq.IDProvider
+	usersClient grpcUsersV1.UsersServiceClient
 	roles.ProvisionManageService
 }
 
 var _ Service = (*service)(nil)
 
-func New(repo Repository, cache Cache, policy policies.Service, idProvider supermq.IDProvider, sidProvider supermq.IDProvider, availableActions []roles.Action, builtInRoles map[roles.BuiltInRoleName][]roles.Action) (Service, error) {
+func New(repo Repository, cache Cache, policy policies.Service, idProvider supermq.IDProvider, sidProvider supermq.IDProvider, availableActions []roles.Action, builtInRoles map[roles.BuiltInRoleName][]roles.Action, usersClient grpcUsersV1.UsersServiceClient) (Service, error) {
 	rpms, err := roles.NewProvisionManageService(policies.DomainType, repo, policy, sidProvider, availableActions, builtInRoles)
 	if err != nil {
 		return nil, err
@@ -42,6 +44,7 @@ func New(repo Repository, cache Cache, policy policies.Service, idProvider super
 		cache:                  cache,
 		policy:                 policy,
 		idProvider:             idProvider,
+		usersClient:            usersClient,
 		ProvisionManageService: rpms,
 	}, nil
 }
@@ -205,6 +208,13 @@ func (svc *service) SendInvitation(ctx context.Context, session authn.Session, i
 	if err := svc.repo.SaveInvitation(ctx, invitation); err != nil {
 		return errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
+
+	svc.usersClient.SendEmailWithUserId(ctx, &grpcUsersV1.SendEmailWithUserIdReq{
+		Users:   []string{invitation.InviteeUserID},
+		Subject: "Invitation to join Domain",
+		From:    invitation.InvitedBy,
+	})
+
 	return nil
 }
 

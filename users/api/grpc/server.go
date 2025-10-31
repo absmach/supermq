@@ -31,9 +31,9 @@ func NewUsersServer(svc users.Service) grpcUsersV1.UsersServiceServer {
 }
 
 func decodeSendEmailRequest(_ context.Context, grpcReq any) (any, error) {
-	req := grpcReq.(*grpcUsersV1.SendEmailReq)
+	req := grpcReq.(*grpcUsersV1.SendEmailWithUserIdReq)
 	return sendEmailReq{
-		to:      req.GetTo(),
+		to:      req.GetUsers(),
 		from:    req.GetFrom(),
 		subject: req.GetSubject(),
 		header:  req.GetHeader(),
@@ -48,7 +48,7 @@ func encodeSendEmailResponse(_ context.Context, grpcRes any) (any, error) {
 	return &grpcUsersV1.SendEmailRes{Sent: res.sent}, nil
 }
 
-func (s *usersGrpcServer) SendEmail(ctx context.Context, req *grpcUsersV1.SendEmailReq) (*grpcUsersV1.SendEmailRes, error) {
+func (s *usersGrpcServer) SendEmail(ctx context.Context, req *grpcUsersV1.SendEmailWithUserIdReq) (*grpcUsersV1.SendEmailRes, error) {
 	_, res, err := s.sendEmail.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, grpcapi.EncodeError(err)

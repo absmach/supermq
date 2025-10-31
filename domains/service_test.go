@@ -21,6 +21,7 @@ import (
 	"github.com/absmach/supermq/pkg/roles"
 	"github.com/absmach/supermq/pkg/sid"
 	"github.com/absmach/supermq/pkg/uuid"
+	uMocks "github.com/absmach/supermq/users/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -82,9 +83,10 @@ var (
 )
 
 var (
-	drepo  *mocks.Repository
-	dcache *mocks.Cache
-	policy *policiesMocks.Service
+	drepo       *mocks.Repository
+	dcache      *mocks.Cache
+	policy      *policiesMocks.Service
+	usersClient *uMocks.UsersServiceClient
 )
 
 func newService() domains.Service {
@@ -93,11 +95,12 @@ func newService() domains.Service {
 	idProvider := uuid.NewMock()
 	sidProvider := sid.NewMock()
 	policy = new(policiesMocks.Service)
+	usersClient = &uMocks.UsersServiceClient{}
 	availableActions := []roles.Action{}
 	builtInRoles := map[roles.BuiltInRoleName][]roles.Action{
 		groups.BuiltInRoleAdmin: availableActions,
 	}
-	ds, _ := domains.New(drepo, dcache, policy, idProvider, sidProvider, availableActions, builtInRoles)
+	ds, _ := domains.New(drepo, dcache, policy, idProvider, sidProvider, availableActions, builtInRoles, usersClient)
 	return ds
 }
 
@@ -699,12 +702,14 @@ func TestSendInvitation(t *testing.T) {
 			repoCall1 := drepo.On("SaveInvitation", context.Background(), mock.Anything).Return(tc.createInvitationErr)
 			repoCall2 := drepo.On("RetrieveInvitation", context.Background(), tc.req.InviteeUserID, tc.req.DomainID).Return(tc.retrieveInvRes, tc.retrieveInvErr)
 			repoCall3 := drepo.On("UpdateRejection", context.Background(), mock.Anything).Return(tc.updateRejectionErr)
+			usersClientCall := usersClient.On("SendEmailWithUserId", mock.Anything, mock.Anything).Return(nil, nil)
 			err := svc.SendInvitation(context.Background(), tc.session, tc.req)
 			assert.True(t, errors.Contains(err, tc.err))
 			repoCall.Unset()
 			repoCall1.Unset()
 			repoCall2.Unset()
 			repoCall3.Unset()
+			usersClientCall.Unset()
 		})
 	}
 }

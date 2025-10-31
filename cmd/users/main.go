@@ -95,6 +95,7 @@ type config struct {
 	SpicedbPreSharedKey        string        `env:"SMQ_SPICEDB_PRE_SHARED_KEY"            envDefault:"12345678"`
 	PasswordResetURLPrefix     string        `env:"SMQ_PASSWORD_RESET_URL_PREFIX"         envDefault:"http://localhost/password/reset"`
 	PasswordResetEmailTemplate string        `env:"SMQ_PASSWORD_RESET_EMAIL_TEMPLATE"     envDefault:"reset-password-email.tmpl"`
+	EmailTemplate              string        `env:"SM_EMAIL_TEMPLATE"                     envDefault:"email.tmpl"`
 	VerificationURLPrefix      string        `env:"SMQ_VERIFICATION_URL_PREFIX"           envDefault:"http://localhost/verify-email"`
 	VerificationEmailTemplate  string        `env:"SMQ_VERIFICATION_EMAIL_TEMPLATE"       envDefault:"verification-email.tmpl"`
 	PassRegex                  *regexp.Regexp
@@ -145,6 +146,14 @@ func main() {
 		return
 	}
 	verificationEmailConfig.Template = cfg.VerificationEmailTemplate
+
+	customEmailConfig := email.Config{}
+	if err := env.Parse(&customEmailConfig); err != nil {
+		logger.Error(fmt.Sprintf("failed to load custom email configuration : %s", err.Error()))
+		exitCode = 1
+		return
+	}
+	customEmailConfig.Template = cfg.EmailTemplate
 
 	dbConfig := pgclient.Config{Name: defDB}
 	if err := env.ParseWithOptions(&dbConfig, env.Options{Prefix: envPrefixDB}); err != nil {
@@ -233,7 +242,7 @@ func main() {
 	}
 	logger.Info("Policy client successfully connected to spicedb gRPC server")
 
-	csvc, err := newService(ctx, authz, tokenClient, policyService, domainsClient, db, dbConfig, tracer, cfg, resetPasswordEmailConfig, verificationEmailConfig, logger)
+	csvc, err := newService(ctx, authz, tokenClient, policyService, domainsClient, db, dbConfig, tracer, cfg, resetPasswordEmailConfig, verificationEmailConfig, customEmailConfig, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to setup service: %s", err))
 		exitCode = 1
@@ -294,7 +303,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, authz smqauthz.Authorization, token grpcTokenV1.TokenServiceClient, policyService policies.Service, domainsClient grpcDomainsV1.DomainsServiceClient, db *sqlx.DB, dbConfig pgclient.Config, tracer trace.Tracer, c config, resetPasswordEmailConfig, verificationEmailConfig email.Config, logger *slog.Logger) (users.Service, error) {
+func newService(ctx context.Context, authz smqauthz.Authorization, token grpcTokenV1.TokenServiceClient, policyService policies.Service, domainsClient grpcDomainsV1.DomainsServiceClient, db *sqlx.DB, dbConfig pgclient.Config, tracer trace.Tracer, c config, resetPasswordEmailConfig, verificationEmailConfig, customEmailConfig email.Config, logger *slog.Logger) (users.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	idp := uuid.New()
 	hsr := hasher.New()
@@ -307,6 +316,7 @@ func newService(ctx context.Context, authz smqauthz.Authorization, token grpcTok
 		c.VerificationURLPrefix,
 		&resetPasswordEmailConfig,
 		&verificationEmailConfig,
+		&customEmailConfig,
 	)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to configure e-mailing util: %s", err.Error()))

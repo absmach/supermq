@@ -912,6 +912,7 @@ services:
     volumes:
       - ./templates/${SMQ_PASSWORD_RESET_EMAIL_TEMPLATE}:/${SMQ_PASSWORD_RESET_EMAIL_TEMPLATE}
       - ./templates/${SMQ_VERIFICATION_EMAIL_TEMPLATE}:/${SMQ_VERIFICATION_EMAIL_TEMPLATE}
+      - ./templates/${SMQ_EMAIL_TEMPLATE}:/${SMQ_EMAIL_TEMPLATE}
       # Auth gRPC client certificates
       - type: bind
         source: ${SMQ_AUTH_GRPC_CLIENT_CERT:-ssl/certs/dummy/client_cert}

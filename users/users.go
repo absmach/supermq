@@ -244,6 +244,6 @@ type Service interface {
 	// OAuthAddUserPolicy adds a policy to the user for an OAuth request.
 	OAuthAddUserPolicy(ctx context.Context, user User) error
 
-	// SendEmail sends an email using the email agent.
-	SendEmail(ctx context.Context, to []string, from, subject, header, user, content, footer string) error
+	// SendEmailWithUserId sends an email using the email agent.
+	SendEmailWithUserId(ctx context.Context, to []string, from, subject, header, user, content, footer string) error
 }

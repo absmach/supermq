@@ -18,7 +18,7 @@ func sendEmailEndpoint(svc users.Service) endpoint.Endpoint {
 			return sendEmailRes{}, err
 		}
 
-		if err := svc.SendEmail(ctx, req.to, req.from, req.subject, req.header, req.user, req.content, req.footer); err != nil {
+		if err := svc.SendEmailWithUserId(ctx, req.to, req.from, req.subject, req.header, req.user, req.content, req.footer); err != nil {
 			return sendEmailRes{}, err
 		}
 

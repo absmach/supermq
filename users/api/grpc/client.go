@@ -38,12 +38,12 @@ func NewUsersClient(conn *grpc.ClientConn, timeout time.Duration) grpcUsersV1.Us
 	}
 }
 
-func (client usersGrpcClient) SendEmail(ctx context.Context, in *grpcUsersV1.SendEmailReq, opts ...grpc.CallOption) (*grpcUsersV1.SendEmailRes, error) {
+func (client usersGrpcClient) SendEmailWithUserId(ctx context.Context, in *grpcUsersV1.SendEmailWithUserIdReq, opts ...grpc.CallOption) (*grpcUsersV1.SendEmailRes, error) {
 	ctx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
 
 	res, err := client.sendEmail(ctx, sendEmailClientReq{
-		to:      in.GetTo(),
+		to:      in.GetUsers(),
 		from:    in.GetFrom(),
 		subject: in.GetSubject(),
 		header:  in.GetHeader(),
@@ -66,8 +66,8 @@ func decodeSendEmailClientResponse(_ context.Context, grpcRes any) (any, error) 
 
 func encodeSendEmailClientRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(sendEmailClientReq)
-	return &grpcUsersV1.SendEmailReq{
-		To:      req.to,
+	return &grpcUsersV1.SendEmailWithUserIdReq{
+		Users:   req.to,
 		From:    req.from,
 		Subject: req.subject,
 		Header:  req.header,
