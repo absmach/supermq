@@ -33,8 +33,8 @@ github.com/authzed/cel-go v0.20.2 h1:GlmLecGry7Z8HU0k+hmaHHUV05ZHrsFxduXHtIePvck
 github.com/authzed/cel-go v0.20.2/go.mod h1:pJHVFWbqUHV1J+klQoZubdKswlbxcsbojda3mye9kiU=
 github.com/authzed/grpcutil v0.0.0-20250221190651-1985b19b35b8 h1:y17oq4U8n+k1OcIGGDsjYdIdp4QywGcE7ZphIvtfEbo=
 github.com/authzed/grpcutil v0.0.0-20250221190651-1985b19b35b8/go.mod h1:Pf1ZSi41EePvx1GC1DeEJw5dn35iUcxZHqpHuG1Rpic=
-github.com/authzed/spicedb v1.46.0 h1:KrU3o5jbD69Pk+P/0g3gtk7zVwYU8wd50alCNgjZ8ik=
-github.com/authzed/spicedb v1.46.0/go.mod h1:77bJvn5NXvflLUu8VvIB5obTvut95GrPPdidkZR5riU=
+github.com/authzed/spicedb v1.47.0 h1:bKByowBzEzF/kZ/mHeWNdFtojwRdepjPvaR+JY7sH1w=
+github.com/authzed/spicedb v1.47.0/go.mod h1:lBoGeNThuWDtOJmbDnkydWMwmV2jjnosFJY0T0K1wAk=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
