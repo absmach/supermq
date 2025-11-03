@@ -9,9 +9,9 @@ import (
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
 	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
+	grpcEmailsV1 "github.com/absmach/supermq/api/grpc/emails/v1"
 	grpcGroupsV1 "github.com/absmach/supermq/api/grpc/groups/v1"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
-	grpcUsersV1 "github.com/absmach/supermq/api/grpc/users/v1"
 	tokengrpc "github.com/absmach/supermq/auth/api/grpc/token"
 	channelsgrpc "github.com/absmach/supermq/channels/api/grpc"
 	clientsauth "github.com/absmach/supermq/clients/api/grpc"
@@ -105,7 +105,7 @@ func SetupGroupsClient(ctx context.Context, cfg Config) (grpcGroupsV1.GroupsServ
 // For example:
 //
 // usersClient, usersHandler, err := grpcclient.SetupUsersClient(ctx, grpcclient.Config{}).
-func SetupUsersClient(ctx context.Context, cfg Config) (grpcUsersV1.UsersServiceClient, Handler, error) {
+func SetupUsersClient(ctx context.Context, cfg Config) (grpcEmailsV1.EmailServiceClient, Handler, error) {
 	client, err := NewHandler(cfg)
 	if err != nil {
 		return nil, nil, err

@@ -17,8 +17,8 @@ import (
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/supermq"
 	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
+	grpcEmailsV1 "github.com/absmach/supermq/api/grpc/emails/v1"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
-	grpcUsersV1 "github.com/absmach/supermq/api/grpc/users/v1"
 	"github.com/absmach/supermq/internal/email"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
@@ -257,7 +257,7 @@ func main() {
 	}
 	registerUsersServiceServer := func(srv *grpc.Server) {
 		reflection.Register(srv)
-		grpcUsersV1.RegisterUsersServiceServer(srv, usersgrpcapi.NewUsersServer(csvc))
+		grpcEmailsV1.RegisterEmailServiceServer(srv, usersgrpcapi.NewUsersServer(csvc))
 	}
 
 	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerUsersServiceServer, logger)

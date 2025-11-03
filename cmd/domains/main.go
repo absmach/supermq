@@ -15,7 +15,7 @@ import (
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/supermq"
 	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
-	grpcUsersV1 "github.com/absmach/supermq/api/grpc/users/v1"
+	grpcEmailsV1 "github.com/absmach/supermq/api/grpc/emails/v1"
 	"github.com/absmach/supermq/domains"
 	domainsSvc "github.com/absmach/supermq/domains"
 	domainsgrpcapi "github.com/absmach/supermq/domains/api/grpc"
@@ -278,7 +278,7 @@ func main() {
 	}
 }
 
-func newDomainService(ctx context.Context, domainsRepo domainsSvc.Repository, cache domainsSvc.Cache, tracer trace.Tracer, cfg config, authz authz.Authorization, policiessvc policies.Service, logger *slog.Logger, callout callout.Callout, usersClient grpcUsersV1.UsersServiceClient) (domains.Service, error) {
+func newDomainService(ctx context.Context, domainsRepo domainsSvc.Repository, cache domainsSvc.Cache, tracer trace.Tracer, cfg config, authz authz.Authorization, policiessvc policies.Service, logger *slog.Logger, callout callout.Callout, emailClient grpcEmailsV1.EmailServiceClient) (domains.Service, error) {
 	idProvider := uuid.New()
 	sidProvider, err := sid.New()
 	if err != nil {
@@ -290,7 +290,7 @@ func newDomainService(ctx context.Context, domainsRepo domainsSvc.Repository, ca
 		return nil, err
 	}
 
-	svc, err := domainsSvc.New(domainsRepo, cache, policiessvc, idProvider, sidProvider, availableActions, builtInRoles, usersClient)
+	svc, err := domainsSvc.New(domainsRepo, cache, policiessvc, idProvider, sidProvider, availableActions, builtInRoles, emailClient)
 	if err != nil {
 		return nil, fmt.Errorf("failed to init domain service: %w", err)
 	}

@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	grpcUsersV1 "github.com/absmach/supermq/api/grpc/users/v1"
+	grpcUsersV1 "github.com/absmach/supermq/api/grpc/emails/v1"
 	grpcapi "github.com/absmach/supermq/auth/api/grpc"
 	"github.com/go-kit/kit/endpoint"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
@@ -16,7 +16,7 @@ import (
 
 const usersSvcName = "users.v1.UsersService"
 
-var _ grpcUsersV1.UsersServiceClient = (*usersGrpcClient)(nil)
+var _ grpcUsersV1.EmailServiceClient = (*usersGrpcClient)(nil)
 
 type usersGrpcClient struct {
 	sendEmail endpoint.Endpoint
@@ -24,7 +24,7 @@ type usersGrpcClient struct {
 }
 
 // NewUsersClient returns new users gRPC client instance.
-func NewUsersClient(conn *grpc.ClientConn, timeout time.Duration) grpcUsersV1.UsersServiceClient {
+func NewUsersClient(conn *grpc.ClientConn, timeout time.Duration) grpcUsersV1.EmailServiceClient {
 	return &usersGrpcClient{
 		sendEmail: kitgrpc.NewClient(
 			conn,
@@ -38,42 +38,52 @@ func NewUsersClient(conn *grpc.ClientConn, timeout time.Duration) grpcUsersV1.Us
 	}
 }
 
-func (client usersGrpcClient) SendEmailWithUserId(ctx context.Context, in *grpcUsersV1.SendEmailWithUserIdReq, opts ...grpc.CallOption) (*grpcUsersV1.SendEmailRes, error) {
+func (client usersGrpcClient) SendEmail(ctx context.Context, in *grpcUsersV1.EmailReq, opts ...grpc.CallOption) (*grpcUsersV1.SendEmailRes, error) {
 	ctx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
 
+	options := in.GetOptions()
 	res, err := client.sendEmail(ctx, sendEmailClientReq{
-		to:      in.GetUsers(),
+		to:      in.GetTos(),
 		from:    in.GetFrom(),
 		subject: in.GetSubject(),
-		header:  in.GetHeader(),
-		user:    in.GetUser(),
+		header:  options["header"],
+		user:    options["user"],
 		content: in.GetContent(),
-		footer:  in.GetFooter(),
+		footer:  options["footer"],
 	})
 	if err != nil {
 		return &grpcUsersV1.SendEmailRes{}, grpcapi.DecodeError(err)
 	}
 
 	ser := res.(sendEmailClientRes)
-	return &grpcUsersV1.SendEmailRes{Sent: ser.sent}, nil
+	errMsg := ""
+	if !ser.sent {
+		errMsg = "failed to send email"
+	}
+	return &grpcUsersV1.SendEmailRes{Error: errMsg}, nil
 }
 
 func decodeSendEmailClientResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(*grpcUsersV1.SendEmailRes)
-	return sendEmailClientRes{sent: res.GetSent()}, nil
+	sent := res.GetError() == ""
+	return sendEmailClientRes{sent: sent}, nil
 }
 
 func encodeSendEmailClientRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(sendEmailClientReq)
-	return &grpcUsersV1.SendEmailWithUserIdReq{
-		Users:   req.to,
-		From:    req.from,
-		Subject: req.subject,
-		Header:  req.header,
-		User:    req.user,
-		Content: req.content,
-		Footer:  req.footer,
+	return &grpcUsersV1.EmailReq{
+		Tos:      req.to,
+		ToType:   grpcUsersV1.ContactType_ID,
+		From:     req.from,
+		FromType: grpcUsersV1.ContactType_ID,
+		Subject:  req.subject,
+		Content:  req.content,
+		Options: map[string]string{
+			"header": req.header,
+			"user":   req.user,
+			"footer": req.footer,
+		},
 	}, nil
 }
 

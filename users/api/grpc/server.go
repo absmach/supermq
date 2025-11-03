@@ -6,21 +6,21 @@ package grpc
 import (
 	"context"
 
-	grpcUsersV1 "github.com/absmach/supermq/api/grpc/users/v1"
+	grpcUsersV1 "github.com/absmach/supermq/api/grpc/emails/v1"
 	grpcapi "github.com/absmach/supermq/auth/api/grpc"
 	"github.com/absmach/supermq/users"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 )
 
-var _ grpcUsersV1.UsersServiceServer = (*usersGrpcServer)(nil)
+var _ grpcUsersV1.EmailServiceServer = (*usersGrpcServer)(nil)
 
 type usersGrpcServer struct {
-	grpcUsersV1.UnimplementedUsersServiceServer
+	grpcUsersV1.UnimplementedEmailServiceServer
 	sendEmail kitgrpc.Handler
 }
 
 // NewUsersServer creates a new users gRPC server.
-func NewUsersServer(svc users.Service) grpcUsersV1.UsersServiceServer {
+func NewUsersServer(svc users.Service) grpcUsersV1.EmailServiceServer {
 	return &usersGrpcServer{
 		sendEmail: kitgrpc.NewServer(
 			sendEmailEndpoint(svc),
@@ -31,24 +31,29 @@ func NewUsersServer(svc users.Service) grpcUsersV1.UsersServiceServer {
 }
 
 func decodeSendEmailRequest(_ context.Context, grpcReq any) (any, error) {
-	req := grpcReq.(*grpcUsersV1.SendEmailWithUserIdReq)
+	req := grpcReq.(*grpcUsersV1.EmailReq)
+	opts := req.GetOptions()
 	return sendEmailReq{
-		to:      req.GetUsers(),
+		to:      req.GetTos(),
 		from:    req.GetFrom(),
 		subject: req.GetSubject(),
-		header:  req.GetHeader(),
-		user:    req.GetUser(),
+		header:  opts["header"],
+		user:    opts["user"],
 		content: req.GetContent(),
-		footer:  req.GetFooter(),
+		footer:  opts["footer"],
 	}, nil
 }
 
 func encodeSendEmailResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(sendEmailRes)
-	return &grpcUsersV1.SendEmailRes{Sent: res.sent}, nil
+	errMsg := ""
+	if !res.sent {
+		errMsg = "failed to send email"
+	}
+	return &grpcUsersV1.SendEmailRes{Error: errMsg}, nil
 }
 
-func (s *usersGrpcServer) SendEmail(ctx context.Context, req *grpcUsersV1.SendEmailWithUserIdReq) (*grpcUsersV1.SendEmailRes, error) {
+func (s *usersGrpcServer) SendEmail(ctx context.Context, req *grpcUsersV1.EmailReq) (*grpcUsersV1.SendEmailRes, error) {
 	_, res, err := s.sendEmail.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, grpcapi.EncodeError(err)

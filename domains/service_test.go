@@ -86,7 +86,7 @@ var (
 	drepo       *mocks.Repository
 	dcache      *mocks.Cache
 	policy      *policiesMocks.Service
-	usersClient *uMocks.UsersServiceClient
+	usersClient *uMocks.EmailServiceClient
 )
 
 func newService() domains.Service {
@@ -95,7 +95,7 @@ func newService() domains.Service {
 	idProvider := uuid.NewMock()
 	sidProvider := sid.NewMock()
 	policy = new(policiesMocks.Service)
-	usersClient = &uMocks.UsersServiceClient{}
+	usersClient = &uMocks.EmailServiceClient{}
 	availableActions := []roles.Action{}
 	builtInRoles := map[roles.BuiltInRoleName][]roles.Action{
 		groups.BuiltInRoleAdmin: availableActions,
@@ -702,7 +702,7 @@ func TestSendInvitation(t *testing.T) {
 			repoCall1 := drepo.On("SaveInvitation", context.Background(), mock.Anything).Return(tc.createInvitationErr)
 			repoCall2 := drepo.On("RetrieveInvitation", context.Background(), tc.req.InviteeUserID, tc.req.DomainID).Return(tc.retrieveInvRes, tc.retrieveInvErr)
 			repoCall3 := drepo.On("UpdateRejection", context.Background(), mock.Anything).Return(tc.updateRejectionErr)
-			usersClientCall := usersClient.On("SendEmailWithUserId", mock.Anything, mock.Anything).Return(nil, nil)
+			usersClientCall := usersClient.On("SendEmail", mock.Anything, mock.Anything).Return(nil, nil)
 			err := svc.SendInvitation(context.Background(), tc.session, tc.req)
 			assert.True(t, errors.Contains(err, tc.err))
 			repoCall.Unset()
