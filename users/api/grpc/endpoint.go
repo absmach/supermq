@@ -4,7 +4,9 @@
 package grpc
 
 import (
+	"bytes"
 	"context"
+	"text/template"
 
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/absmach/supermq/users"
@@ -27,13 +29,16 @@ func sendEmailEndpoint(svc users.Service) endpoint.Endpoint {
 }
 
 type sendEmailReq struct {
-	to      []string
-	from    string
-	subject string
-	header  string
-	user    string
-	content string
-	footer  string
+	to           []string
+	from         string
+	subject      string
+	header       string
+	user         string
+	content      string
+	footer       string
+	Template     string
+	templateFile string
+	Options      map[string]string
 }
 
 func (req sendEmailReq) validate() error {
@@ -43,6 +48,18 @@ func (req sendEmailReq) validate() error {
 	if req.subject == "" {
 		return errors.ErrMalformedEntity
 	}
+
+	if req.Template != "" {
+		t, err := template.New("body").Parse(req.Template)
+		if err != nil {
+			return err
+		}
+		buff := new(bytes.Buffer)
+		if err := t.Execute(buff, req.Options); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

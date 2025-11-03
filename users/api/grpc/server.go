@@ -33,14 +33,28 @@ func NewUsersServer(svc users.Service) grpcUsersV1.EmailServiceServer {
 func decodeSendEmailRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(*grpcUsersV1.EmailReq)
 	opts := req.GetOptions()
+
+	tmpl := ""
+	if req.Template != nil {
+		tmpl = *req.Template
+	}
+
+	templateFile := ""
+	if req.TemplateFile != nil {
+		templateFile = *req.TemplateFile
+	}
+
 	return sendEmailReq{
-		to:      req.GetTos(),
-		from:    req.GetFrom(),
-		subject: req.GetSubject(),
-		header:  opts["header"],
-		user:    opts["user"],
-		content: req.GetContent(),
-		footer:  opts["footer"],
+		to:           req.GetTos(),
+		from:         req.GetFrom(),
+		subject:      req.GetSubject(),
+		header:       opts["header"],
+		user:         opts["user"],
+		content:      req.GetContent(),
+		footer:       opts["footer"],
+		Template:     tmpl,
+		templateFile: templateFile,
+		Options:      opts,
 	}, nil
 }
 

@@ -13,20 +13,21 @@ service EmailService {
 }
 
 enum ContactType {
-  ID = 0;
-  Email = 1;
+  CONTACT_TYPE_UNSPECIFIED = 0;
+  CONTACT_TYPE_ID = 1;
+  CONTACT_TYPE_EMAIL = 2;
 }
 
 message EmailReq {
   string from = 1;                    // Sender
-  ContactType fromType = 2;           // indicate sender id or email
+  ContactType from_type = 2;          // indicate sender id or email
   repeated string tos = 3;            // recipients
-  ContactType toType = 4;             //  indicate recipient id or email
+  ContactType to_type = 4;            // indicate recipient id or email
   string subject = 5;                 // Email subject
-  string content = 6;                 // Email content/URL  
-  optional string template = 10;      // the whole template to be parsed by emailer
-  optional string template_file = 11; // template file name to be parsed by emailer
-  map<string, string> options = 12;   // map that can be used in template
+  string content = 6;                 // Email content/URL
+  optional string template = 10;      // whole template for emailer
+  optional string template_file = 11; // template file for emailer
+  map<string, string> options = 12;   // map for template
 }
 
 message SendEmailRes {

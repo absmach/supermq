@@ -74,9 +74,9 @@ func encodeSendEmailClientRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(sendEmailClientReq)
 	return &grpcUsersV1.EmailReq{
 		Tos:      req.to,
-		ToType:   grpcUsersV1.ContactType_ID,
+		ToType:   grpcUsersV1.ContactType_CONTACT_TYPE_ID,
 		From:     req.from,
-		FromType: grpcUsersV1.ContactType_ID,
+		FromType: grpcUsersV1.ContactType_CONTACT_TYPE_ID,
 		Subject:  req.subject,
 		Content:  req.content,
 		Options: map[string]string{

@@ -27,19 +27,22 @@ const (
 type ContactType int32
 
 const (
-	ContactType_ID    ContactType = 0
-	ContactType_Email ContactType = 1
+	ContactType_CONTACT_TYPE_UNSPECIFIED ContactType = 0
+	ContactType_CONTACT_TYPE_ID          ContactType = 1
+	ContactType_CONTACT_TYPE_EMAIL       ContactType = 2
 )
 
 // Enum value maps for ContactType.
 var (
 	ContactType_name = map[int32]string{
-		0: "ID",
-		1: "Email",
+		0: "CONTACT_TYPE_UNSPECIFIED",
+		1: "CONTACT_TYPE_ID",
+		2: "CONTACT_TYPE_EMAIL",
 	}
 	ContactType_value = map[string]int32{
-		"ID":    0,
-		"Email": 1,
+		"CONTACT_TYPE_UNSPECIFIED": 0,
+		"CONTACT_TYPE_ID":          1,
+		"CONTACT_TYPE_EMAIL":       2,
 	}
 )
 
@@ -73,14 +76,14 @@ func (ContactType) EnumDescriptor() ([]byte, []int) {
 type EmailReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	From          string                 `protobuf:"bytes,1,opt,name=from,proto3" json:"from,omitempty"`                                                                                  // Sender
-	FromType      ContactType            `protobuf:"varint,2,opt,name=fromType,proto3,enum=emails.v1.ContactType" json:"fromType,omitempty"`                                              // indicate sender id or email
+	FromType      ContactType            `protobuf:"varint,2,opt,name=from_type,json=fromType,proto3,enum=emails.v1.ContactType" json:"from_type,omitempty"`                              // indicate sender id or email
 	Tos           []string               `protobuf:"bytes,3,rep,name=tos,proto3" json:"tos,omitempty"`                                                                                    // recipients
-	ToType        ContactType            `protobuf:"varint,4,opt,name=toType,proto3,enum=emails.v1.ContactType" json:"toType,omitempty"`                                                  //  indicate recipient id or email
+	ToType        ContactType            `protobuf:"varint,4,opt,name=to_type,json=toType,proto3,enum=emails.v1.ContactType" json:"to_type,omitempty"`                                    // indicate recipient id or email
 	Subject       string                 `protobuf:"bytes,5,opt,name=subject,proto3" json:"subject,omitempty"`                                                                            // Email subject
 	Content       string                 `protobuf:"bytes,6,opt,name=content,proto3" json:"content,omitempty"`                                                                            // Email content/URL
-	Template      *string                `protobuf:"bytes,10,opt,name=template,proto3,oneof" json:"template,omitempty"`                                                                   // the whole template to be parsed by emailer
-	TemplateFile  *string                `protobuf:"bytes,11,opt,name=template_file,json=templateFile,proto3,oneof" json:"template_file,omitempty"`                                       // template file name to be parsed by emailer
-	Options       map[string]string      `protobuf:"bytes,12,rep,name=options,proto3" json:"options,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // map that can be used in template
+	Template      *string                `protobuf:"bytes,10,opt,name=template,proto3,oneof" json:"template,omitempty"`                                                                   // whole template for emailer
+	TemplateFile  *string                `protobuf:"bytes,11,opt,name=template_file,json=templateFile,proto3,oneof" json:"template_file,omitempty"`                                       // template file for emailer
+	Options       map[string]string      `protobuf:"bytes,12,rep,name=options,proto3" json:"options,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // map for template
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -126,7 +129,7 @@ func (x *EmailReq) GetFromType() ContactType {
 	if x != nil {
 		return x.FromType
 	}
-	return ContactType_ID
+	return ContactType_CONTACT_TYPE_UNSPECIFIED
 }
 
 func (x *EmailReq) GetTos() []string {
@@ -140,7 +143,7 @@ func (x *EmailReq) GetToType() ContactType {
 	if x != nil {
 		return x.ToType
 	}
-	return ContactType_ID
+	return ContactType_CONTACT_TYPE_UNSPECIFIED
 }
 
 func (x *EmailReq) GetSubject() string {
@@ -226,12 +229,12 @@ var File_emails_v1_emails_proto protoreflect.FileDescriptor
 
 const file_emails_v1_emails_proto_rawDesc = "" +
 	"\n" +
-	"\x16emails/v1/emails.proto\x12\temails.v1\"\xaa\x03\n" +
+	"\x16emails/v1/emails.proto\x12\temails.v1\"\xac\x03\n" +
 	"\bEmailReq\x12\x12\n" +
-	"\x04from\x18\x01 \x01(\tR\x04from\x122\n" +
-	"\bfromType\x18\x02 \x01(\x0e2\x16.emails.v1.ContactTypeR\bfromType\x12\x10\n" +
-	"\x03tos\x18\x03 \x03(\tR\x03tos\x12.\n" +
-	"\x06toType\x18\x04 \x01(\x0e2\x16.emails.v1.ContactTypeR\x06toType\x12\x18\n" +
+	"\x04from\x18\x01 \x01(\tR\x04from\x123\n" +
+	"\tfrom_type\x18\x02 \x01(\x0e2\x16.emails.v1.ContactTypeR\bfromType\x12\x10\n" +
+	"\x03tos\x18\x03 \x03(\tR\x03tos\x12/\n" +
+	"\ato_type\x18\x04 \x01(\x0e2\x16.emails.v1.ContactTypeR\x06toType\x12\x18\n" +
 	"\asubject\x18\x05 \x01(\tR\asubject\x12\x18\n" +
 	"\acontent\x18\x06 \x01(\tR\acontent\x12\x1f\n" +
 	"\btemplate\x18\n" +
@@ -244,10 +247,11 @@ const file_emails_v1_emails_proto_rawDesc = "" +
 	"\t_templateB\x10\n" +
 	"\x0e_template_file\"$\n" +
 	"\fSendEmailRes\x12\x14\n" +
-	"\x05error\x18\x01 \x01(\tR\x05error* \n" +
-	"\vContactType\x12\x06\n" +
-	"\x02ID\x10\x00\x12\t\n" +
-	"\x05Email\x10\x012K\n" +
+	"\x05error\x18\x01 \x01(\tR\x05error*X\n" +
+	"\vContactType\x12\x1c\n" +
+	"\x18CONTACT_TYPE_UNSPECIFIED\x10\x00\x12\x13\n" +
+	"\x0fCONTACT_TYPE_ID\x10\x01\x12\x16\n" +
+	"\x12CONTACT_TYPE_EMAIL\x10\x022K\n" +
 	"\fEmailService\x12;\n" +
 	"\tSendEmail\x12\x13.emails.v1.EmailReq\x1a\x17.emails.v1.SendEmailRes\"\x00B/Z-github.com/absmach/supermq/api/grpc/emails/v1b\x06proto3"
 
@@ -272,8 +276,8 @@ var file_emails_v1_emails_proto_goTypes = []any{
 	nil,                  // 3: emails.v1.EmailReq.OptionsEntry
 }
 var file_emails_v1_emails_proto_depIdxs = []int32{
-	0, // 0: emails.v1.EmailReq.fromType:type_name -> emails.v1.ContactType
-	0, // 1: emails.v1.EmailReq.toType:type_name -> emails.v1.ContactType
+	0, // 0: emails.v1.EmailReq.from_type:type_name -> emails.v1.ContactType
+	0, // 1: emails.v1.EmailReq.to_type:type_name -> emails.v1.ContactType
 	3, // 2: emails.v1.EmailReq.options:type_name -> emails.v1.EmailReq.OptionsEntry
 	1, // 3: emails.v1.EmailService.SendEmail:input_type -> emails.v1.EmailReq
 	2, // 4: emails.v1.EmailService.SendEmail:output_type -> emails.v1.SendEmailRes
