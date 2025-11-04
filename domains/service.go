@@ -212,7 +212,7 @@ func (svc *service) SendInvitation(ctx context.Context, session authn.Session, i
 	if _, err := svc.usersClient.SendEmail(ctx, &grpcEmailsV1.EmailReq{
 		Tos:      []string{invitation.InviteeUserID},
 		ToType:   grpcEmailsV1.ContactType_CONTACT_TYPE_ID,
-		Subject:  "Invitation to join Domain",
+		Subject:  "Invitation",
 		From:     invitation.InvitedBy,
 		FromType: grpcEmailsV1.ContactType_CONTACT_TYPE_ID,
 	}); err != nil {
