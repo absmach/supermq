@@ -26,6 +26,7 @@ var (
 	errAddConnectionsClients    = errors.New("failed to add connections in clients service")
 	errRemoveConnectionsClients = errors.New("failed to remove connections from clients service")
 	errSetParentGroup           = errors.New("channel already have parent")
+	errSetSameParentGroup       = errors.New("channel already assigned to the parent group")
 )
 
 type service struct {
@@ -421,7 +422,12 @@ func (svc service) SetParentGroup(ctx context.Context, session authn.Session, pa
 	}
 
 	var pols []policies.Policy
-	if ch.ParentGroup != "" {
+	switch ch.ParentGroup {
+	case parentGroupID:
+		return errors.Wrap(svcerr.ErrConflict, errSetSameParentGroup)
+	case "":
+		// No action needed, proceed to next code after switch
+	default:
 		return errors.Wrap(svcerr.ErrConflict, errSetParentGroup)
 	}
 	pols = append(pols, policies.Policy{
