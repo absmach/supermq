@@ -61,8 +61,8 @@ func decodeSendEmailRequest(_ context.Context, grpcReq any) (any, error) {
 func encodeSendEmailResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(sendEmailRes)
 	errMsg := ""
-	if !res.sent {
-		errMsg = "failed to send email"
+	if !res.sent && res.err != nil {
+		errMsg = res.err.Error()
 	}
 	return &grpcUsersV1.SendEmailRes{Error: errMsg}, nil
 }

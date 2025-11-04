@@ -17,14 +17,20 @@ func sendEmailEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
 		req := request.(sendEmailReq)
 		if err := req.validate(); err != nil {
-			return sendEmailRes{}, err
+			return sendEmailRes{
+				err: err,
+			}, err
 		}
 
 		if err := svc.SendEmailWithUserId(ctx, req.to, req.from, req.subject, req.header, req.user, req.content, req.footer); err != nil {
-			return sendEmailRes{}, err
+			return sendEmailRes{
+				err: err,
+			}, err
 		}
 
-		return sendEmailRes{sent: true}, nil
+		return sendEmailRes{
+			sent: true,
+		}, nil
 	}
 }
 
@@ -65,4 +71,5 @@ func (req sendEmailReq) validate() error {
 
 type sendEmailRes struct {
 	sent bool
+	err  error
 }
