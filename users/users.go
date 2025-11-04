@@ -31,7 +31,7 @@ type User struct {
 	UpdatedAt       time.Time   `json:"updated_at,omitempty"`
 	UpdatedBy       string      `json:"updated_by,omitempty"`
 	VerifiedAt      time.Time   `json:"verified_at,omitempty"`
-	AuthProvider   string      `json:"auth_provider,omitempty"`
+	AuthProvider    string      `json:"auth_provider,omitempty"`
 }
 
 type Credentials struct {

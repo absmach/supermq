@@ -137,7 +137,7 @@ func Migration() *migrate.MemoryMigrationSource {
 				},
 			},
 			{
-				Id: "clients_08",
+				Id: "clients_10",
 				Up: []string{
 					`ALTER TABLE users RENAME COLUMN metadata TO private_metadata;`,
 					`ALTER TABLE users ADD COLUMN public_metadata JSONB;`,

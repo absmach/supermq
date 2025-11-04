@@ -507,7 +507,7 @@ type DBUser struct {
 	ProfilePicture  sql.NullString   `db:"profile_picture, omitempty"`
 	Email           string           `db:"email,omitempty"`
 	VerifiedAt      sql.NullTime     `db:"verified_at,omitempty"`
-	AuthProvider   sql.NullString   `db:"auth_provider,omitempty"`
+	AuthProvider    sql.NullString   `db:"auth_provider,omitempty"`
 }
 
 func toDBUser(u users.User) (DBUser, error) {
@@ -566,7 +566,7 @@ func toDBUser(u users.User) (DBUser, error) {
 		ProfilePicture:  stringToNullString(u.ProfilePicture),
 		Email:           u.Email,
 		VerifiedAt:      verifiedAt,
-		AuthProvider:   authProvider,
+		AuthProvider:    authProvider,
 	}, nil
 }
 
@@ -622,7 +622,7 @@ func ToUser(dbu DBUser) (users.User, error) {
 		Tags:            tags,
 		ProfilePicture:  nullStringString(dbu.ProfilePicture),
 		VerifiedAt:      verifiedAt,
-		AuthProvider:   authProvider,
+		AuthProvider:    authProvider,
 	}
 	if dbu.Role != nil {
 		user.Role = *dbu.Role
