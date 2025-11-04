@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
-	"time"
 
 	"github.com/absmach/mgate/pkg/session"
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
@@ -158,44 +157,11 @@ func (h *handler) Connect(ctx context.Context) error {
 
 // Publish - after client successfully published.
 func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) error {
-	s, ok := session.FromContext(ctx)
-	if !ok {
-		return errors.Wrap(ErrFailedPublish, ErrClientNotInitialized)
-	}
-	h.logger.Info(fmt.Sprintf(LogInfoPublished, s.ID, *topic))
-
-	domainID, chanID, subTopic, topicType, err := h.parser.ParsePublishTopic(ctx, *topic, false)
-	if err != nil {
-		return errors.Wrap(ErrFailedPublish, err)
-	}
-
-	msg := messaging.Message{
-		Protocol:  protocol,
-		Domain:    domainID,
-		Channel:   chanID,
-		Subtopic:  subTopic,
-		Publisher: s.Username,
-		Payload:   *payload,
-		Created:   time.Now().UnixNano(),
-	}
-
-	if topicType == messaging.MessageType {
-		if err := h.publisher.Publish(ctx, messaging.EncodeMessageTopic(&msg), &msg); err != nil {
-			return errors.Wrap(ErrFailedPublishToMsgBroker, err)
-		}
-	}
-
 	return nil
 }
 
 // Subscribe - after client successfully subscribed.
 func (h *handler) Subscribe(ctx context.Context, topics *[]string) error {
-	s, ok := session.FromContext(ctx)
-	if !ok {
-		return errors.Wrap(ErrFailedSubscribe, ErrClientNotInitialized)
-	}
-	h.logger.Info(fmt.Sprintf(LogInfoSubscribed, s.ID, strings.Join(*topics, ",")))
-
 	return nil
 }
 
