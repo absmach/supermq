@@ -2096,35 +2096,35 @@ func TestSendEmail(t *testing.T) {
 	}
 
 	cases := []struct {
-		desc                string
-		to                  []string
-		toType              grpcEmailsV1.ContactType
-		from                string
-		fromType            grpcEmailsV1.ContactType
-		retrieveRecipientID string
-		retrieveRecipient   users.User
+		desc                 string
+		to                   []string
+		toType               grpcEmailsV1.ContactType
+		from                 string
+		fromType             grpcEmailsV1.ContactType
+		retrieveRecipientID  string
+		retrieveRecipient    users.User
 		retrieveRecipientErr error
-		retrieveSenderID    string
-		retrieveSender      users.User
-		retrieveSenderErr   error
-		expectedEmails      []string
-		expectedSenderName  string
-		sendCustomErr       error
-		err                 error
+		retrieveSenderID     string
+		retrieveSender       users.User
+		retrieveSenderErr    error
+		expectedEmails       []string
+		expectedSenderName   string
+		sendCustomErr        error
+		err                  error
 	}{
 		{
-			desc:               "send email with ID contact types successfully",
-			to:                 []string{recipientID},
-			toType:             grpcEmailsV1.ContactType_CONTACT_TYPE_ID,
-			from:               senderID,
-			fromType:           grpcEmailsV1.ContactType_CONTACT_TYPE_ID,
+			desc:                "send email with ID contact types successfully",
+			to:                  []string{recipientID},
+			toType:              grpcEmailsV1.ContactType_CONTACT_TYPE_ID,
+			from:                senderID,
+			fromType:            grpcEmailsV1.ContactType_CONTACT_TYPE_ID,
 			retrieveRecipientID: recipientID,
-			retrieveRecipient:  recipientUser,
-			retrieveSenderID:   senderID,
-			retrieveSender:     senderUser,
-			expectedEmails:     []string{recipientEmail},
-			expectedSenderName: "Sender User",
-			err:                nil,
+			retrieveRecipient:   recipientUser,
+			retrieveSenderID:    senderID,
+			retrieveSender:      senderUser,
+			expectedEmails:      []string{recipientEmail},
+			expectedSenderName:  "Sender User",
+			err:                 nil,
 		},
 		{
 			desc:               "send email with EMAIL contact types successfully",
@@ -2137,16 +2137,16 @@ func TestSendEmail(t *testing.T) {
 			err:                nil,
 		},
 		{
-			desc:               "send email with mixed contact types (to: ID, from: EMAIL)",
-			to:                 []string{recipientID},
-			toType:             grpcEmailsV1.ContactType_CONTACT_TYPE_ID,
-			from:               senderEmail,
-			fromType:           grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL,
+			desc:                "send email with mixed contact types (to: ID, from: EMAIL)",
+			to:                  []string{recipientID},
+			toType:              grpcEmailsV1.ContactType_CONTACT_TYPE_ID,
+			from:                senderEmail,
+			fromType:            grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL,
 			retrieveRecipientID: recipientID,
-			retrieveRecipient:  recipientUser,
-			expectedEmails:     []string{recipientEmail},
-			expectedSenderName: senderEmail,
-			err:                nil,
+			retrieveRecipient:   recipientUser,
+			expectedEmails:      []string{recipientEmail},
+			expectedSenderName:  senderEmail,
+			err:                 nil,
 		},
 		{
 			desc:               "send email with mixed contact types (to: EMAIL, from: ID)",
@@ -2199,16 +2199,16 @@ func TestSendEmail(t *testing.T) {
 			err:      svcerr.ErrMalformedEntity,
 		},
 		{
-			desc:               "send email with multiple recipients using IDs",
-			to:                 []string{recipientID, recipientID},
-			toType:             grpcEmailsV1.ContactType_CONTACT_TYPE_ID,
-			from:               senderEmail,
-			fromType:           grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL,
+			desc:                "send email with multiple recipients using IDs",
+			to:                  []string{recipientID, recipientID},
+			toType:              grpcEmailsV1.ContactType_CONTACT_TYPE_ID,
+			from:                senderEmail,
+			fromType:            grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL,
 			retrieveRecipientID: recipientID,
-			retrieveRecipient:  recipientUser,
-			expectedEmails:     []string{recipientEmail, recipientEmail},
-			expectedSenderName: senderEmail,
-			err:                nil,
+			retrieveRecipient:   recipientUser,
+			expectedEmails:      []string{recipientEmail, recipientEmail},
+			expectedSenderName:  senderEmail,
+			err:                 nil,
 		},
 		{
 			desc:               "send email fails when email sending fails",
