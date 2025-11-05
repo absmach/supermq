@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	grpcEmailsV1 "github.com/absmach/supermq/api/grpc/emails/v1"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/users"
@@ -246,11 +247,11 @@ func (ms *metricsMiddleware) OAuthAddUserPolicy(ctx context.Context, user users.
 	return ms.svc.OAuthAddUserPolicy(ctx, user)
 }
 
-// SendEmailWithUserId instruments SendEmail method with metrics.
-func (ms *metricsMiddleware) SendEmailWithUserId(ctx context.Context, to []string, from, subject, header, user, content, footer string) error {
+// SendEmail instruments SendEmail method with metrics.
+func (ms *metricsMiddleware) SendEmail(ctx context.Context, to []string, toType grpcEmailsV1.ContactType, from string, fromType grpcEmailsV1.ContactType, subject, header, user, content, footer string) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "send_email").Add(1)
 		ms.latency.With("method", "send_email").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.SendEmailWithUserId(ctx, to, from, subject, header, user, content, footer)
+	return ms.svc.SendEmail(ctx, to, toType, from, fromType, subject, header, user, content, footer)
 }

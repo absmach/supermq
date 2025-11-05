@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	grpcEmailsV1 "github.com/absmach/supermq/api/grpc/emails/v1"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	smqauth "github.com/absmach/supermq/auth"
 	authmocks "github.com/absmach/supermq/auth/mocks"
@@ -2063,6 +2064,193 @@ func TestVerifyEmail(t *testing.T) {
 			repoCall.Unset()
 			repoCall1.Unset()
 			repoCall2.Unset()
+		})
+	}
+}
+
+func TestSendEmail(t *testing.T) {
+	svc, _, cRepo, _, e := newService()
+
+	recipientID := "d4ebb847-5d0e-4e46-bdd9-b6aceaaa3a22"
+	senderID := "e5fcc958-6e1f-5f57-cee0-c7bdfbbb4a33"
+	recipientEmail := "recipient@example.com"
+	senderEmail := "sender@example.com"
+	subject := "Test Subject"
+	header := "Test Header"
+	userField := "Test User"
+	content := "Test Content"
+	footer := "Test Footer"
+
+	recipientUser := users.User{
+		ID:        recipientID,
+		Email:     recipientEmail,
+		FirstName: "Recipient",
+		LastName:  "User",
+	}
+
+	senderUser := users.User{
+		ID:        senderID,
+		Email:     senderEmail,
+		FirstName: "Sender",
+		LastName:  "User",
+	}
+
+	cases := []struct {
+		desc                string
+		to                  []string
+		toType              grpcEmailsV1.ContactType
+		from                string
+		fromType            grpcEmailsV1.ContactType
+		retrieveRecipientID string
+		retrieveRecipient   users.User
+		retrieveRecipientErr error
+		retrieveSenderID    string
+		retrieveSender      users.User
+		retrieveSenderErr   error
+		expectedEmails      []string
+		expectedSenderName  string
+		sendCustomErr       error
+		err                 error
+	}{
+		{
+			desc:               "send email with ID contact types successfully",
+			to:                 []string{recipientID},
+			toType:             grpcEmailsV1.ContactType_CONTACT_TYPE_ID,
+			from:               senderID,
+			fromType:           grpcEmailsV1.ContactType_CONTACT_TYPE_ID,
+			retrieveRecipientID: recipientID,
+			retrieveRecipient:  recipientUser,
+			retrieveSenderID:   senderID,
+			retrieveSender:     senderUser,
+			expectedEmails:     []string{recipientEmail},
+			expectedSenderName: "Sender User",
+			err:                nil,
+		},
+		{
+			desc:               "send email with EMAIL contact types successfully",
+			to:                 []string{recipientEmail},
+			toType:             grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL,
+			from:               senderEmail,
+			fromType:           grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL,
+			expectedEmails:     []string{recipientEmail},
+			expectedSenderName: senderEmail,
+			err:                nil,
+		},
+		{
+			desc:               "send email with mixed contact types (to: ID, from: EMAIL)",
+			to:                 []string{recipientID},
+			toType:             grpcEmailsV1.ContactType_CONTACT_TYPE_ID,
+			from:               senderEmail,
+			fromType:           grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL,
+			retrieveRecipientID: recipientID,
+			retrieveRecipient:  recipientUser,
+			expectedEmails:     []string{recipientEmail},
+			expectedSenderName: senderEmail,
+			err:                nil,
+		},
+		{
+			desc:               "send email with mixed contact types (to: EMAIL, from: ID)",
+			to:                 []string{recipientEmail},
+			toType:             grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL,
+			from:               senderID,
+			fromType:           grpcEmailsV1.ContactType_CONTACT_TYPE_ID,
+			retrieveSenderID:   senderID,
+			retrieveSender:     senderUser,
+			expectedEmails:     []string{recipientEmail},
+			expectedSenderName: "Sender User",
+			err:                nil,
+		},
+		{
+			desc:                 "send email fails when recipient ID not found",
+			to:                   []string{recipientID},
+			toType:               grpcEmailsV1.ContactType_CONTACT_TYPE_ID,
+			from:                 senderEmail,
+			fromType:             grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL,
+			retrieveRecipientID:  recipientID,
+			retrieveRecipientErr: repoerr.ErrNotFound,
+			err:                  svcerr.ErrViewEntity,
+		},
+		{
+			desc:              "send email fails when sender ID not found",
+			to:                []string{recipientEmail},
+			toType:            grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL,
+			from:              senderID,
+			fromType:          grpcEmailsV1.ContactType_CONTACT_TYPE_ID,
+			retrieveSenderID:  senderID,
+			retrieveSenderErr: repoerr.ErrNotFound,
+			err:               svcerr.ErrViewEntity,
+		},
+		{
+			desc:               "send email fails with invalid recipient contact type",
+			to:                 []string{recipientID},
+			toType:             grpcEmailsV1.ContactType_CONTACT_TYPE_UNSPECIFIED,
+			from:               senderEmail,
+			fromType:           grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL,
+			expectedEmails:     []string{},
+			expectedSenderName: "",
+			err:                svcerr.ErrMalformedEntity,
+		},
+		{
+			desc:     "send email fails with invalid sender contact type",
+			to:       []string{recipientEmail},
+			toType:   grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL,
+			from:     senderID,
+			fromType: grpcEmailsV1.ContactType_CONTACT_TYPE_UNSPECIFIED,
+			err:      svcerr.ErrMalformedEntity,
+		},
+		{
+			desc:               "send email with multiple recipients using IDs",
+			to:                 []string{recipientID, recipientID},
+			toType:             grpcEmailsV1.ContactType_CONTACT_TYPE_ID,
+			from:               senderEmail,
+			fromType:           grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL,
+			retrieveRecipientID: recipientID,
+			retrieveRecipient:  recipientUser,
+			expectedEmails:     []string{recipientEmail, recipientEmail},
+			expectedSenderName: senderEmail,
+			err:                nil,
+		},
+		{
+			desc:               "send email fails when email sending fails",
+			to:                 []string{recipientEmail},
+			toType:             grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL,
+			from:               senderEmail,
+			fromType:           grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL,
+			expectedEmails:     []string{recipientEmail},
+			expectedSenderName: senderEmail,
+			sendCustomErr:      errors.New("email sending failed"),
+			err:                errors.New("email sending failed"),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			var repoCall, repoCall1 *mock.Call
+
+			if tc.retrieveRecipientID != "" {
+				repoCall = cRepo.On("RetrieveByID", context.Background(), tc.retrieveRecipientID).Return(tc.retrieveRecipient, tc.retrieveRecipientErr)
+			}
+			if tc.retrieveSenderID != "" {
+				repoCall1 = cRepo.On("RetrieveByID", context.Background(), tc.retrieveSenderID).Return(tc.retrieveSender, tc.retrieveSenderErr)
+			}
+
+			if tc.err == nil || (tc.retrieveRecipientErr == nil && tc.retrieveSenderErr == nil) {
+				if len(tc.expectedEmails) > 0 {
+					e.On("SendCustom", tc.expectedEmails, tc.expectedSenderName, subject, header, userField, content, footer).Return(tc.sendCustomErr)
+				}
+			}
+
+			err := svc.SendEmail(context.Background(), tc.to, tc.toType, tc.from, tc.fromType, subject, header, userField, content, footer)
+
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+
+			if repoCall != nil {
+				repoCall.Unset()
+			}
+			if repoCall1 != nil {
+				repoCall1.Unset()
+			}
+			e.Mock = mock.Mock{}
 		})
 	}
 }

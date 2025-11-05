@@ -6,6 +6,7 @@ package events
 import (
 	"context"
 
+	grpcEmailsV1 "github.com/absmach/supermq/api/grpc/emails/v1"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/events"
@@ -445,6 +446,6 @@ func (es *eventStore) OAuthAddUserPolicy(ctx context.Context, user users.User) e
 	return es.Publish(ctx, addPolicyStream, event)
 }
 
-func (es *eventStore) SendEmailWithUserId(ctx context.Context, to []string, from, subject, header, user, content, footer string) error {
-	return es.svc.SendEmailWithUserId(ctx, to, from, subject, header, user, content, footer)
+func (es *eventStore) SendEmail(ctx context.Context, to []string, toType grpcEmailsV1.ContactType, from string, fromType grpcEmailsV1.ContactType, subject, header, user, content, footer string) error {
+	return es.svc.SendEmail(ctx, to, toType, from, fromType, subject, header, user, content, footer)
 }

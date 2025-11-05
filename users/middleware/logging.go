@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"time"
 
+	grpcEmailsV1 "github.com/absmach/supermq/api/grpc/emails/v1"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/users"
@@ -522,13 +523,16 @@ func (lm *loggingMiddleware) OAuthAddUserPolicy(ctx context.Context, user users.
 	return lm.svc.OAuthAddUserPolicy(ctx, user)
 }
 
-// SendEmailWithUserId logs the send_email request. It logs the recipients and the time it took to complete the request.
-func (lm *loggingMiddleware) SendEmailWithUserId(ctx context.Context, to []string, from, subject, header, user, content, footer string) (err error) {
+// SendEmail logs the send_email request. It logs the recipients and the time it took to complete the request.
+func (lm *loggingMiddleware) SendEmail(ctx context.Context, to []string, toType grpcEmailsV1.ContactType, from string, fromType grpcEmailsV1.ContactType, subject, header, user, content, footer string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.String("request_id", middleware.GetReqID(ctx)),
 			slog.Any("to", to),
+			slog.String("to_type", toType.String()),
+			slog.String("from", from),
+			slog.String("from_type", fromType.String()),
 			slog.String("subject", subject),
 		}
 		if err != nil {
@@ -538,5 +542,5 @@ func (lm *loggingMiddleware) SendEmailWithUserId(ctx context.Context, to []strin
 		}
 		lm.logger.Info("Send email completed successfully", args...)
 	}(time.Now())
-	return lm.svc.SendEmailWithUserId(ctx, to, from, subject, header, user, content, footer)
+	return lm.svc.SendEmail(ctx, to, toType, from, fromType, subject, header, user, content, footer)
 }

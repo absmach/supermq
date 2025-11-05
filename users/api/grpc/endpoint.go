@@ -8,6 +8,7 @@ import (
 	"context"
 	"text/template"
 
+	grpcUsersV1 "github.com/absmach/supermq/api/grpc/emails/v1"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/absmach/supermq/users"
 	"github.com/go-kit/kit/endpoint"
@@ -22,7 +23,7 @@ func sendEmailEndpoint(svc users.Service) endpoint.Endpoint {
 			}, err
 		}
 
-		if err := svc.SendEmailWithUserId(ctx, req.to, req.from, req.subject, req.header, req.user, req.content, req.footer); err != nil {
+		if err := svc.SendEmail(ctx, req.to, req.toType, req.from, req.fromType, req.subject, req.header, req.user, req.content, req.footer); err != nil {
 			return sendEmailRes{
 				err: err,
 			}, err
@@ -36,7 +37,9 @@ func sendEmailEndpoint(svc users.Service) endpoint.Endpoint {
 
 type sendEmailReq struct {
 	to           []string
+	toType       grpcUsersV1.ContactType
 	from         string
+	fromType     grpcUsersV1.ContactType
 	subject      string
 	header       string
 	user         string

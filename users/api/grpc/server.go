@@ -46,7 +46,9 @@ func decodeSendEmailRequest(_ context.Context, grpcReq any) (any, error) {
 
 	return sendEmailReq{
 		to:           req.GetTos(),
+		toType:       req.GetToType(),
 		from:         req.GetFrom(),
+		fromType:     req.GetFromType(),
 		subject:      req.GetSubject(),
 		header:       opts["header"],
 		user:         opts["user"],

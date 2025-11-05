@@ -8,6 +8,7 @@ import (
 	"net/mail"
 	"time"
 
+	grpcEmailsV1 "github.com/absmach/supermq/api/grpc/emails/v1"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
@@ -244,6 +245,7 @@ type Service interface {
 	// OAuthAddUserPolicy adds a policy to the user for an OAuth request.
 	OAuthAddUserPolicy(ctx context.Context, user User) error
 
-	// SendEmailWithUserId sends an email using the email agent.
-	SendEmailWithUserId(ctx context.Context, to []string, from, subject, header, user, content, footer string) error
+	// SendEmail sends an email using the email agent.
+	// fromType and toType indicate whether from and to are IDs or emails (ContactType enum).
+	SendEmail(ctx context.Context, to []string, toType grpcEmailsV1.ContactType, from string, fromType grpcEmailsV1.ContactType, subject, header, user, content, footer string) error
 }

@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/absmach/supermq"
+	grpcEmailsV1 "github.com/absmach/supermq/api/grpc/emails/v1"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	smqauth "github.com/absmach/supermq/auth"
@@ -815,20 +816,38 @@ func changed(updated *string, old string) bool {
 	return *updated != old
 }
 
-func (svc service) SendEmailWithUserId(ctx context.Context, userIds []string, from, subject, header, user, content, footer string) error {
-	for i, userId := range userIds {
-		u, err := svc.users.RetrieveByID(ctx, userId)
+func (svc service) SendEmail(ctx context.Context, to []string, toType grpcEmailsV1.ContactType, from string, fromType grpcEmailsV1.ContactType, subject, header, user, content, footer string) error {
+	// Convert recipients based on contact type
+	emails := make([]string, len(to))
+	for i, contact := range to {
+		switch toType {
+		case grpcEmailsV1.ContactType_CONTACT_TYPE_ID:
+			u, err := svc.users.RetrieveByID(ctx, contact)
+			if err != nil {
+				return errors.Wrap(svcerr.ErrViewEntity, err)
+			}
+			emails[i] = u.Email
+		case grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL:
+			emails[i] = contact
+		default:
+			return errors.Wrap(svcerr.ErrMalformedEntity, errors.New("invalid contact type for recipients"))
+		}
+	}
+
+	// Convert sender based on contact type
+	var senderName string
+	switch fromType {
+	case grpcEmailsV1.ContactType_CONTACT_TYPE_ID:
+		inviter, err := svc.users.RetrieveByID(ctx, from)
 		if err != nil {
 			return errors.Wrap(svcerr.ErrViewEntity, err)
 		}
-
-		userIds[i] = u.Email
+		senderName = inviter.FirstName + " " + inviter.LastName
+	case grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL:
+		senderName = from
+	default:
+		return errors.Wrap(svcerr.ErrMalformedEntity, errors.New("invalid contact type for sender"))
 	}
 
-	inviter, err := svc.users.RetrieveByID(ctx, from)
-	if err != nil {
-		return err
-	}
-
-	return svc.email.SendCustom(userIds, inviter.FirstName+" "+inviter.LastName, subject, header, user, content, footer)
+	return svc.email.SendCustom(emails, senderName, subject, header, user, content, footer)
 }
