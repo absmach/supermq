@@ -711,10 +711,14 @@ components:
           required:
             - username
             - secret
-        metadata:
+        public_metadata:
           type: object
           example: { "domain": "example.com" }
           description: Arbitrary, object-encoded user's data.
+        private_metadata:
+          type: object
+          example: { "domain": "example.com" }
+          description: Arbitrary, object-encoded user's data private to the user.
         profile_picture:
           type: string
           example: "https://example.com/profile.jpg"
@@ -767,10 +771,14 @@ components:
               type: string
               example: john_doe
               description: User's username for example john_doe for Mr John Doe.
-        metadata:
+        public_metadata:
           type: object
           example: { "address": "example" }
           description: Arbitrary, object-encoded user's data.
+        private_metadata:
+          type: object
+          example: { "address": "example" }
+          description: Arbitrary, object-encoded user's data private to the user.
         profile_picture:
           type: string
           example: "https://example.com/profile.jpg"
@@ -891,14 +899,19 @@ components:
           type: string
           example: lastName
           description: User's last name.
-        metadata:
+        public_metadata:
           type: object
           example: { "role": "general" }
           description: Arbitrary, object-encoded user's data.
+        private_metadata:
+          type: object
+          example: { "role": "general" }
+          description: Arbitrary, object-encoded user's data, private to the user.
       required:
         - first_name
         - last_name
-        - metadata
+        - public_metadata
+        - private_metadata
 
     UserTags:
       type: object
@@ -1257,7 +1270,7 @@ components:
 
     Metadata:
       name: metadata
-      description: Metadata filter. Filtering is performed matching the parameter with metadata on top level. Parameter is json.
+      description: Metadata filter. Filtering is performed matching the parameter with public metadata on top level. Parameter is json.
       in: query
       schema:
         type: object
@@ -1339,7 +1352,7 @@ components:
             $ref: "#/components/schemas/UserReqObj"
 
     UserUpdateReq:
-      description: JSON-formated document describing the metadata and name of user to be update
+      description: JSON-formated document describing the name, public and private metadata of user to be update
       required: true
       content:
         application/json:

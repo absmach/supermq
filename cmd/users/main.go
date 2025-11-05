@@ -335,7 +335,7 @@ func createAdmin(ctx context.Context, c config, repo users.Repository, hsr users
 			Username: "admin",
 			Secret:   hash,
 		},
-		Metadata: users.Metadata{
+		PrivateMetadata: users.Metadata{
 			"role": "admin",
 		},
 		CreatedAt: time.Now().UTC(),

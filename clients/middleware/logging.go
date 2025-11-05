@@ -126,7 +126,7 @@ func (lm *loggingMiddleware) Update(ctx context.Context, session authn.Session, 
 			slog.Group("client",
 				slog.String("id", client.ID),
 				slog.String("name", client.Name),
-				slog.Any("metadata", client.Metadata),
+				slog.Any("public_metadata", client.PublicMetadata),
 			),
 		}
 		if err != nil {
