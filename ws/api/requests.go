@@ -4,7 +4,8 @@
 package api
 
 type connReq struct {
-	authKey   string
+	username  string
+	password  string
 	channelID string
 	domainID  string
 	subtopic  string
