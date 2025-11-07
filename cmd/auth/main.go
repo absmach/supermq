@@ -5,6 +5,9 @@ package main
 
 import (
 	"context"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"log"
 	"log/slog"
@@ -75,6 +78,7 @@ type config struct {
 	ESURL               string        `env:"SMQ_ES_URL"                        envDefault:"nats://localhost:4222"`
 	CacheURL            string        `env:"SMQ_AUTH_CACHE_URL"                envDefault:"redis://localhost:6379/0"`
 	CacheKeyDuration    time.Duration `env:"SMQ_AUTH_CACHE_KEY_DURATION"       envDefault:"10m"`
+	PrivateKeyPath      string        `env:"MG_AUTH_PRIVATE_KEY_PATH"        envDefault:"./keys/private.key"`
 }
 
 func main() {
@@ -237,13 +241,38 @@ func newService(db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.
 	pEvaluator := spicedb.NewPolicyEvaluator(spicedbClient, logger)
 	pService := spicedb.NewPolicyService(spicedbClient, logger)
 
-	t := jwt.New([]byte(cfg.SecretKey))
+	privateKey, err := loadPrivateKey(cfg.PrivateKeyPath)
+	if err != nil {
+		return nil, err
+	}
+	tokenizer := jwt.New(privateKey)
 
-	svc := auth.New(keysRepo, patsRepo, nil, hasher, idProvider, t, pEvaluator, pService, cfg.AccessDuration, cfg.RefreshDuration, cfg.InvitationDuration)
+	svc := auth.New(keysRepo, patsRepo, nil, hasher, idProvider, tokenizer, pEvaluator, pService, cfg.AccessDuration, cfg.RefreshDuration, cfg.InvitationDuration)
 	svc = middleware.NewLogging(svc, logger)
 	counter, latency := prometheus.MakeMetrics("auth", "api")
 	svc = middleware.NewMetrics(svc, counter, latency)
 	svc = middleware.NewTracing(svc, tracer)
 
 	return svc, nil
+}
+
+func loadPrivateKey(privateKeyPath string) (*rsa.PrivateKey, error) {
+	privKeyBytes, err := os.ReadFile(privateKeyPath)
+	if err != nil {
+		return nil, err
+	}
+	block, _ := pem.Decode(privKeyBytes)
+	if block == nil || block.Type != "PRIVATE KEY" {
+		return nil, err
+	}
+	privKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+	rsaKey, ok := privKey.(*rsa.PrivateKey)
+	if !ok {
+		return nil, err
+	}
+
+	return rsaKey, nil
 }

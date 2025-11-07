@@ -69,3 +69,19 @@ func (res revokeKeyRes) Headers() map[string]string {
 func (res revokeKeyRes) Empty() bool {
 	return true
 }
+
+type retrieveJWKSRes struct {
+	auth.JWKS
+}
+
+func (res retrieveJWKSRes) Code() int {
+	return http.StatusOK
+}
+
+func (res retrieveJWKSRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res retrieveJWKSRes) Empty() bool {
+	return false
+}

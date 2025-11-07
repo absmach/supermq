@@ -10,4 +10,7 @@ type Tokenizer interface {
 
 	// Parse extracts API Key data from string token.
 	Parse(token string) (key Key, err error)
+
+	// RetrieveJWKS returns the JSON Web Key Set.
+	RetrieveJWKS() (JWKS, error)
 }
