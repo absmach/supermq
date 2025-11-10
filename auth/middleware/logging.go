@@ -12,6 +12,7 @@ import (
 
 	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/pkg/policies"
+	"github.com/lestrrat-go/jwx/v2/jwk"
 )
 
 var _ auth.Service = (*loggingMiddleware)(nil)
@@ -98,6 +99,16 @@ func (lm *loggingMiddleware) Identify(ctx context.Context, token string) (id aut
 	}(time.Now())
 
 	return lm.svc.Identify(ctx, token)
+}
+
+func (lm *loggingMiddleware) RetrieveJWKS() (jwks jwk.Set) {
+	defer func(begin time.Time) {
+		args := []any{
+			slog.String("duration", time.Since(begin).String()),
+		}
+		lm.logger.Info("Retrieve JWKS completed successfully", args...)
+	}(time.Now())
+	return lm.svc.RetrieveJWKS()
 }
 
 func (lm *loggingMiddleware) Authorize(ctx context.Context, pr policies.Policy) (err error) {

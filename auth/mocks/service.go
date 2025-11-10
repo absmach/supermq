@@ -14,6 +14,7 @@ import (
 
 	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/pkg/policies"
+	"github.com/lestrrat-go/jwx/v2/jwk"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -1024,6 +1025,61 @@ func (_c *Service_ResetPATSecret_Call) Return(pAT auth.PAT, err error) *Service_
 }
 
 func (_c *Service_ResetPATSecret_Call) RunAndReturn(run func(ctx context.Context, token string, patID string, duration time.Duration) (auth.PAT, error)) *Service_ResetPATSecret_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RetrieveJWKS provides a mock function for the type Service
+func (_mock *Service) RetrieveJWKS() (jwk.Set, error) {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveJWKS")
+	}
+
+	var r0 jwk.Set
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func() (jwk.Set, error)); ok {
+		return returnFunc()
+	}
+	if returnFunc, ok := ret.Get(0).(func() jwk.Set); ok {
+		r0 = returnFunc()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(jwk.Set)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func() error); ok {
+		r1 = returnFunc()
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Service_RetrieveJWKS_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RetrieveJWKS'
+type Service_RetrieveJWKS_Call struct {
+	*mock.Call
+}
+
+// RetrieveJWKS is a helper method to define mock.On call
+func (_e *Service_Expecter) RetrieveJWKS() *Service_RetrieveJWKS_Call {
+	return &Service_RetrieveJWKS_Call{Call: _e.mock.On("RetrieveJWKS")}
+}
+
+func (_c *Service_RetrieveJWKS_Call) Run(run func()) *Service_RetrieveJWKS_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *Service_RetrieveJWKS_Call) Return(set jwk.Set, err error) *Service_RetrieveJWKS_Call {
+	_c.Call.Return(set, err)
+	return _c
+}
+
+func (_c *Service_RetrieveJWKS_Call) RunAndReturn(run func() (jwk.Set, error)) *Service_RetrieveJWKS_Call {
 	_c.Call.Return(run)
 	return _c
 }

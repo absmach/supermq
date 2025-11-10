@@ -19,17 +19,6 @@ type Token struct {
 	AccessType   string // AccessType is the specific type of access token issued. It can be Bearer, Client or Basic.
 }
 
-type JWK struct {
-	Kty string `json:"kty"`
-	Kid string `json:"kid"`
-	N   string `json:"n"`
-	E   string `json:"e"`
-}
-
-type JWKS struct {
-	Keys []JWK `json:"keys"`
-}
-
 type KeyType uint32
 
 const (

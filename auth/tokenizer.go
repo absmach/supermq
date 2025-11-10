@@ -3,6 +3,8 @@
 
 package auth
 
+import "github.com/lestrrat-go/jwx/v2/jwk"
+
 // Tokenizer specifies API for encoding and decoding between string and Key.
 type Tokenizer interface {
 	// Issue converts API Key to its string representation.
@@ -12,5 +14,5 @@ type Tokenizer interface {
 	Parse(token string) (key Key, err error)
 
 	// RetrieveJWKS returns the JSON Web Key Set.
-	RetrieveJWKS() (JWKS, error)
+	RetrieveJWKS() jwk.Set
 }

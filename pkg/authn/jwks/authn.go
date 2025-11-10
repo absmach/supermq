@@ -5,10 +5,7 @@ package jwks
 
 import (
 	"context"
-	"crypto/rsa"
-	"encoding/base64"
-	"encoding/json"
-	"math/big"
+	"io"
 	"net/http"
 	"time"
 
@@ -16,7 +13,7 @@ import (
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
-	"github.com/lestrrat-go/jwx/v2/jwa"
+	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
@@ -28,13 +25,15 @@ const (
 var (
 	// errJWTExpiryKey is used to check if the token is expired.
 	errJWTExpiryKey = errors.New(`"exp" not satisfied`)
+	// errFetchJWKS indicates an error fetching JWKS from URL.
+	errFetchJWKS = errors.New("failed to fetch jwks")
 	// errInvalidIssuer indicates an invalid issuer value.
 	errInvalidIssuer = errors.New("invalid token issuer value")
 	// ErrValidateJWTToken indicates a failure to validate JWT token.
 	errValidateJWTToken = errors.New("failed to validate jwt token")
 
 	jwksCache = struct {
-		jwks     smqauth.JWKS
+		jwks     jwk.Set
 		cachedAt time.Time
 	}{}
 )
@@ -57,12 +56,7 @@ func (a authentication) Authenticate(ctx context.Context, token string) (authn.S
 		return authn.Session{}, err
 	}
 
-	publicKey, err := decodeJWK(jwks.Keys[0])
-	if err != nil {
-		return authn.Session{}, err
-	}
-
-	tkn, err := validateToken(token, publicKey)
+	tkn, err := validateToken(token, jwks)
 	if err != nil {
 		return authn.Session{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
@@ -79,39 +73,43 @@ func (a authentication) Authenticate(ctx context.Context, token string) (authn.S
 	return res, nil
 }
 
-func (a authentication) fetchJWKS() (smqauth.JWKS, error) {
+func (a authentication) fetchJWKS() (jwk.Set, error) {
 	req, err := http.NewRequest("GET", a.jwksURL, nil)
 	if err != nil {
-		return smqauth.JWKS{}, err
+		return nil, err
 	}
 	req.Header.Set("Accept", "application/json")
 
 	httpClient := &http.Client{}
-	if time.Since(jwksCache.cachedAt) < cacheDuration && jwksCache.jwks.Keys != nil {
+	if time.Since(jwksCache.cachedAt) < cacheDuration && jwksCache.jwks.Len() > 0 {
 		return jwksCache.jwks, nil
 	}
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return smqauth.JWKS{}, err
+		return nil, err
 	}
 	defer resp.Body.Close()
-
-	var jwks smqauth.JWKS
-	if err := json.NewDecoder(resp.Body).Decode(&jwks); err != nil {
-		return smqauth.JWKS{}, err
+	if resp.StatusCode != http.StatusOK {
+		return nil, errFetchJWKS
 	}
-	jwksCache.jwks = jwks
+
+	data, _ := io.ReadAll(resp.Body)
+	set, err := jwk.Parse(data)
+	if err != nil {
+		return nil, err
+	}
+	jwksCache.jwks = set
 	jwksCache.cachedAt = time.Now()
 
-	return jwks, nil
+	return set, nil
 }
 
-func validateToken(token string, publicKey *rsa.PublicKey) (jwt.Token, error) {
+func validateToken(token string, jwks jwk.Set) (jwt.Token, error) {
 	tkn, err := jwt.Parse(
 		[]byte(token),
 		jwt.WithValidate(true),
-		jwt.WithKey(jwa.RS256, publicKey),
+		jwt.WithKeySet(jwks),
 	)
 	if err != nil {
 		if errors.Contains(err, errJWTExpiryKey) {
@@ -131,25 +129,4 @@ func validateToken(token string, publicKey *rsa.PublicKey) (jwt.Token, error) {
 	}
 
 	return tkn, nil
-}
-
-func decodeJWK(jwk smqauth.JWK) (*rsa.PublicKey, error) {
-	nBytes, err := base64.RawURLEncoding.DecodeString(jwk.N)
-	if err != nil {
-		return nil, err
-	}
-	eBytes, err := base64.RawURLEncoding.DecodeString(jwk.E)
-	if err != nil {
-		return nil, err
-	}
-
-	n := new(big.Int).SetBytes(nBytes)
-	e := new(big.Int).SetBytes(eBytes)
-
-	publicKey := &rsa.PublicKey{
-		N: n,
-		E: int(e.Int64()),
-	}
-
-	return publicKey, nil
 }

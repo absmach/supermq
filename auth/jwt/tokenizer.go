@@ -5,16 +5,12 @@ package jwt
 
 import (
 	"context"
-	"crypto/rsa"
-	"encoding/base64"
 	"encoding/json"
-	"math/big"
 
 	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
-	"github.com/absmach/supermq/pkg/uuid"
-	"github.com/lestrrat-go/jwx/v2/jwa"
+	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
@@ -29,6 +25,8 @@ var (
 	errInvalidVerified = errors.New("invalid verified")
 	// errJWTExpiryKey is used to check if the token is expired.
 	errJWTExpiryKey = errors.New(`"exp" not satisfied`)
+	// errLoadJWKS is returned when there is an error loading JWKS from key.
+	errLoadJWKS = errors.New("failed to load JWKS from key")
 	// ErrSignJWT indicates an error in signing jwt token.
 	ErrSignJWT = errors.New("failed to sign jwt token")
 	// ErrValidateJWTToken indicates a failure to validate JWT token.
@@ -42,22 +40,18 @@ const (
 	tokenType     = "type"
 	RoleField     = "role"
 	VerifiedField = "verified"
-	rsaKeyType    = "RSA"
 )
 
 type tokenizer struct {
-	privateKey *rsa.PrivateKey
-	publicKey  *rsa.PublicKey
+	keyManager auth.KeyManager
 }
 
 var _ auth.Tokenizer = (*tokenizer)(nil)
 
 // New instantiates an implementation of Tokenizer service.
-func New(privateKey *rsa.PrivateKey) auth.Tokenizer {
-	publicKey := privateKey.Public().(*rsa.PublicKey)
+func New(keyManager auth.KeyManager) auth.Tokenizer {
 	return &tokenizer{
-		privateKey: privateKey,
-		publicKey:  publicKey,
+		keyManager: keyManager,
 	}
 }
 
@@ -80,7 +74,7 @@ func (tok *tokenizer) Issue(key auth.Key) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(svcerr.ErrAuthentication, err)
 	}
-	signedTkn, err := jwt.Sign(tkn, jwt.WithKey(jwa.RS256, tok.privateKey))
+	signedTkn, err := tok.keyManager.SignJWT(tkn)
 	if err != nil {
 		return "", errors.Wrap(ErrSignJWT, err)
 	}
@@ -102,11 +96,7 @@ func (tok *tokenizer) Parse(token string) (auth.Key, error) {
 }
 
 func (tok *tokenizer) validateToken(token string) (jwt.Token, error) {
-	tkn, err := jwt.Parse(
-		[]byte(token),
-		jwt.WithValidate(true),
-		jwt.WithKey(jwa.RS256, tok.publicKey),
-	)
+	tkn, err := tok.keyManager.ParseJWT(token)
 	if err != nil {
 		if errors.Contains(err, errJWTExpiryKey) {
 			return nil, auth.ErrExpiry
@@ -127,22 +117,8 @@ func (tok *tokenizer) validateToken(token string) (jwt.Token, error) {
 	return tkn, nil
 }
 
-func (tok *tokenizer) RetrieveJWKS() (auth.JWKS, error) {
-	keyID, err := uuid.New().ID()
-	if err != nil {
-		return auth.JWKS{}, err
-	}
-	jwk := auth.JWK{
-		Kty: rsaKeyType,
-		Kid: keyID,
-		N:   base64.RawURLEncoding.EncodeToString(tok.publicKey.N.Bytes()),
-		E:   base64.RawURLEncoding.EncodeToString(big.NewInt(int64(tok.publicKey.E)).Bytes()),
-	}
-	jwks := auth.JWKS{
-		Keys: []auth.JWK{jwk},
-	}
-
-	return jwks, nil
+func (tok *tokenizer) RetrieveJWKS() jwk.Set {
+	return tok.keyManager.PublicJWKS()
 }
 
 func toKey(tkn jwt.Token) (auth.Key, error) {

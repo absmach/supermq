@@ -113,7 +113,7 @@ services:
       SMQ_AUTH_ACCESS_TOKEN_DURATION: ${SMQ_AUTH_ACCESS_TOKEN_DURATION}
       SMQ_AUTH_REFRESH_TOKEN_DURATION: ${SMQ_AUTH_REFRESH_TOKEN_DURATION}
       SMQ_AUTH_INVITATION_DURATION: ${SMQ_AUTH_INVITATION_DURATION}
-      SMQ_AUTH_SECRET_KEY: ${SMQ_AUTH_SECRET_KEY}
+      SMQ_AUTH_PRIVATE_KEY_PATH: ${SMQ_AUTH_PRIVATE_KEY_PATH}
       SMQ_AUTH_HTTP_HOST: ${SMQ_AUTH_HTTP_HOST}
       SMQ_AUTH_HTTP_PORT: ${SMQ_AUTH_HTTP_PORT}
       SMQ_AUTH_HTTP_SERVER_CERT: ${SMQ_AUTH_HTTP_SERVER_CERT}
@@ -185,6 +185,11 @@ services:
       - type: bind
         source: ${SMQ_AUTH_CALLOUT_CLIENT_CA_CERTS:-ssl/certs/dummy/client_ca_certs}
         target: /auth-callout-client-ca${SMQ_AUTH_CALLOUT_CLIENT_CA_CERTS:+.crt}
+        bind:
+          create_host_path: true
+      - type: bind
+        source: ssl/certs/private/private.key
+        target: /auth-private-key.key
         bind:
           create_host_path: true
 

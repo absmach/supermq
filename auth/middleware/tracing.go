@@ -10,6 +10,7 @@ import (
 
 	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/pkg/policies"
+	"github.com/lestrrat-go/jwx/v2/jwk"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -59,6 +60,10 @@ func (tm *tracingMiddleware) Identify(ctx context.Context, token string) (auth.K
 	defer span.End()
 
 	return tm.svc.Identify(ctx, token)
+}
+
+func (tm *tracingMiddleware) RetrieveJWKS() jwk.Set {
+	return tm.svc.RetrieveJWKS()
 }
 
 func (tm *tracingMiddleware) Authorize(ctx context.Context, pr policies.Policy) error {

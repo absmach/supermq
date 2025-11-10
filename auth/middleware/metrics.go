@@ -12,6 +12,7 @@ import (
 	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/go-kit/kit/metrics"
+	"github.com/lestrrat-go/jwx/v2/jwk"
 )
 
 var _ auth.Service = (*metricsMiddleware)(nil)
@@ -65,6 +66,14 @@ func (ms *metricsMiddleware) Identify(ctx context.Context, token string) (auth.K
 	}(time.Now())
 
 	return ms.svc.Identify(ctx, token)
+}
+
+func (ms *metricsMiddleware) RetrieveJWKS() jwk.Set {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "retrieve_jwks").Add(1)
+		ms.latency.With("method", "retrieve_jwks").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.RetrieveJWKS()
 }
 
 func (ms *metricsMiddleware) Authorize(ctx context.Context, pr policies.Policy) error {

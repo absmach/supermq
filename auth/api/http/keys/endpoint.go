@@ -87,11 +87,8 @@ func revokeEndpoint(svc auth.Service) endpoint.Endpoint {
 }
 
 func retrieveJWKSEndpoint(svc auth.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		jwks, err := svc.RetrieveJWKS()
-		if err != nil {
-			return nil, err
-		}
+	return func(ctx context.Context, request any) (any, error) {
+		jwks := svc.RetrieveJWKS()
 
 		return retrieveJWKSRes{jwks}, nil
 	}
