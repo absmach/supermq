@@ -2241,17 +2241,17 @@ func TestSendEmail(t *testing.T) {
 			}
 
 			req := users.EmailReq{
-			To:       tc.to,
-			ToType:   tc.toType,
-			From:     tc.from,
-			FromType: tc.fromType,
-			Subject:  subject,
-			Header:   header,
-			User:     userField,
-			Content:  content,
-			Footer:   footer,
-		}
-		err := svc.SendEmail(context.Background(), req)
+				To:       tc.to,
+				ToType:   tc.toType,
+				From:     tc.from,
+				FromType: tc.fromType,
+				Subject:  subject,
+				Header:   header,
+				User:     userField,
+				Content:  content,
+				Footer:   footer,
+			}
+			err := svc.SendEmail(context.Background(), req)
 
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 

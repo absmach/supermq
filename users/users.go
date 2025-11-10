@@ -59,18 +59,18 @@ type UserReq struct {
 
 // EmailReq represents an email request, similar to the protobuf EmailReq message.
 type EmailReq struct {
-	From         string                     `json:"from"`
-	FromType     grpcEmailsV1.ContactType   `json:"from_type"`
-	To           []string                   `json:"to"`
-	ToType       grpcEmailsV1.ContactType   `json:"to_type"`
-	Subject      string                     `json:"subject"`
-	Content      string                     `json:"content"`
-	Header       string                     `json:"header,omitempty"`
-	Footer       string                     `json:"footer,omitempty"`
-	User         string                     `json:"user,omitempty"`
-	Template     string                     `json:"template,omitempty"`
-	TemplateFile string                     `json:"template_file,omitempty"`
-	Options      map[string]string          `json:"options,omitempty"`
+	From         string                   `json:"from"`
+	FromType     grpcEmailsV1.ContactType `json:"from_type"`
+	To           []string                 `json:"to"`
+	ToType       grpcEmailsV1.ContactType `json:"to_type"`
+	Subject      string                   `json:"subject"`
+	Content      string                   `json:"content"`
+	Header       string                   `json:"header,omitempty"`
+	Footer       string                   `json:"footer,omitempty"`
+	User         string                   `json:"user,omitempty"`
+	Template     string                   `json:"template,omitempty"`
+	TemplateFile string                   `json:"template_file,omitempty"`
+	Options      map[string]string        `json:"options,omitempty"`
 }
 
 // MembersPage contains page related metadata as well as list of members that
