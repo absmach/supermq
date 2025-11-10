@@ -43,7 +43,7 @@ jobs:
           protolint .
 
       - name: Run linters
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
           version: v2.4.0
           args: --config ./tools/config/.golangci.yaml
