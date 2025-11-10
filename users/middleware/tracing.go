@@ -6,7 +6,6 @@ package middleware
 import (
 	"context"
 
-	grpcEmailsV1 "github.com/absmach/supermq/api/grpc/emails/v1"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/tracing"
@@ -251,15 +250,15 @@ func (tm *tracingMiddleware) OAuthAddUserPolicy(ctx context.Context, user users.
 }
 
 // SendEmail traces the "SendEmail" operation of the wrapped users.Service.
-func (tm *tracingMiddleware) SendEmail(ctx context.Context, to []string, toType grpcEmailsV1.ContactType, from string, fromType grpcEmailsV1.ContactType, subject, header, user, content, footer string) error {
+func (tm *tracingMiddleware) SendEmail(ctx context.Context, req users.EmailReq) error {
 	ctx, span := tracing.StartSpan(ctx, tm.tracer, "svc_send_email", trace.WithAttributes(
-		attribute.StringSlice("to", to),
-		attribute.String("to_type", toType.String()),
-		attribute.String("from", from),
-		attribute.String("from_type", fromType.String()),
-		attribute.String("subject", subject),
+		attribute.StringSlice("to", req.To),
+		attribute.String("to_type", req.ToType.String()),
+		attribute.String("from", req.From),
+		attribute.String("from_type", req.FromType.String()),
+		attribute.String("subject", req.Subject),
 	))
 	defer span.End()
 
-	return tm.svc.SendEmail(ctx, to, toType, from, fromType, subject, header, user, content, footer)
+	return tm.svc.SendEmail(ctx, req)
 }

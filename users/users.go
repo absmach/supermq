@@ -57,6 +57,22 @@ type UserReq struct {
 	UpdatedAt      *time.Time `json:"updated_at,omitempty"`
 }
 
+// EmailReq represents an email request, similar to the protobuf EmailReq message.
+type EmailReq struct {
+	From         string                     `json:"from"`
+	FromType     grpcEmailsV1.ContactType   `json:"from_type"`
+	To           []string                   `json:"to"`
+	ToType       grpcEmailsV1.ContactType   `json:"to_type"`
+	Subject      string                     `json:"subject"`
+	Content      string                     `json:"content"`
+	Header       string                     `json:"header,omitempty"`
+	Footer       string                     `json:"footer,omitempty"`
+	User         string                     `json:"user,omitempty"`
+	Template     string                     `json:"template,omitempty"`
+	TemplateFile string                     `json:"template_file,omitempty"`
+	Options      map[string]string          `json:"options,omitempty"`
+}
+
 // MembersPage contains page related metadata as well as list of members that
 // belong to this page.
 type MembersPage struct {
@@ -247,5 +263,5 @@ type Service interface {
 
 	// SendEmail sends an email using the email agent.
 	// fromType and toType indicate whether from and to are IDs or emails (ContactType enum).
-	SendEmail(ctx context.Context, to []string, toType grpcEmailsV1.ContactType, from string, fromType grpcEmailsV1.ContactType, subject, header, user, content, footer string) error
+	SendEmail(ctx context.Context, req EmailReq) error
 }

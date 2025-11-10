@@ -23,7 +23,22 @@ func sendEmailEndpoint(svc users.Service) endpoint.Endpoint {
 			}, err
 		}
 
-		if err := svc.SendEmail(ctx, req.to, req.toType, req.from, req.fromType, req.subject, req.header, req.user, req.content, req.footer); err != nil {
+		emailReq := users.EmailReq{
+			To:           req.to,
+			ToType:       req.toType,
+			From:         req.from,
+			FromType:     req.fromType,
+			Subject:      req.subject,
+			Header:       req.header,
+			User:         req.user,
+			Content:      req.content,
+			Footer:       req.footer,
+			Template:     req.Template,
+			TemplateFile: req.templateFile,
+			Options:      req.Options,
+		}
+
+		if err := svc.SendEmail(ctx, emailReq); err != nil {
 			return sendEmailRes{
 				err: err,
 			}, err

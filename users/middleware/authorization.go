@@ -6,7 +6,6 @@ package middleware
 import (
 	"context"
 
-	grpcEmailsV1 "github.com/absmach/supermq/api/grpc/emails/v1"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	smqauth "github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/pkg/authn"
@@ -336,8 +335,8 @@ func (am *authorizationMiddleware) OAuthAddUserPolicy(ctx context.Context, user 
 	return am.svc.OAuthAddUserPolicy(ctx, user)
 }
 
-func (am *authorizationMiddleware) SendEmail(ctx context.Context, to []string, toType grpcEmailsV1.ContactType, from string, fromType grpcEmailsV1.ContactType, subject, header, user, content, footer string) error {
-	return am.svc.SendEmail(ctx, to, toType, from, fromType, subject, header, user, content, footer)
+func (am *authorizationMiddleware) SendEmail(ctx context.Context, req users.EmailReq) error {
+	return am.svc.SendEmail(ctx, req)
 }
 
 func (am *authorizationMiddleware) checkSuperAdmin(ctx context.Context, session authn.Session) error {

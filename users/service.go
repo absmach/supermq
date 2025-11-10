@@ -816,11 +816,11 @@ func changed(updated *string, old string) bool {
 	return *updated != old
 }
 
-func (svc service) SendEmail(ctx context.Context, to []string, toType grpcEmailsV1.ContactType, from string, fromType grpcEmailsV1.ContactType, subject, header, user, content, footer string) error {
+func (svc service) SendEmail(ctx context.Context, req EmailReq) error {
 	// Convert recipients based on contact type
-	emails := make([]string, len(to))
-	for i, contact := range to {
-		switch toType {
+	emails := make([]string, len(req.To))
+	for i, contact := range req.To {
+		switch req.ToType {
 		case grpcEmailsV1.ContactType_CONTACT_TYPE_ID:
 			u, err := svc.users.RetrieveByID(ctx, contact)
 			if err != nil {
@@ -836,18 +836,18 @@ func (svc service) SendEmail(ctx context.Context, to []string, toType grpcEmails
 
 	// Convert sender based on contact type
 	var senderName string
-	switch fromType {
+	switch req.FromType {
 	case grpcEmailsV1.ContactType_CONTACT_TYPE_ID:
-		inviter, err := svc.users.RetrieveByID(ctx, from)
+		inviter, err := svc.users.RetrieveByID(ctx, req.From)
 		if err != nil {
 			return errors.Wrap(svcerr.ErrViewEntity, err)
 		}
 		senderName = inviter.FirstName + " " + inviter.LastName
 	case grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL:
-		senderName = from
+		senderName = req.From
 	default:
 		return errors.Wrap(svcerr.ErrMalformedEntity, errors.New("invalid contact type for sender"))
 	}
 
-	return svc.email.SendCustom(emails, senderName, subject, header, user, content, footer)
+	return svc.email.Send(emails, senderName, req.Subject, req.Header, req.User, req.Content, req.Footer)
 }

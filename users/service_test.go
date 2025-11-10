@@ -2236,11 +2236,22 @@ func TestSendEmail(t *testing.T) {
 
 			if tc.err == nil || (tc.retrieveRecipientErr == nil && tc.retrieveSenderErr == nil) {
 				if len(tc.expectedEmails) > 0 {
-					e.On("SendCustom", tc.expectedEmails, tc.expectedSenderName, subject, header, userField, content, footer).Return(tc.sendCustomErr)
+					e.On("Send", tc.expectedEmails, tc.expectedSenderName, subject, header, userField, content, footer).Return(tc.sendCustomErr)
 				}
 			}
 
-			err := svc.SendEmail(context.Background(), tc.to, tc.toType, tc.from, tc.fromType, subject, header, userField, content, footer)
+			req := users.EmailReq{
+			To:       tc.to,
+			ToType:   tc.toType,
+			From:     tc.from,
+			FromType: tc.fromType,
+			Subject:  subject,
+			Header:   header,
+			User:     userField,
+			Content:  content,
+			Footer:   footer,
+		}
+		err := svc.SendEmail(context.Background(), req)
 
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 

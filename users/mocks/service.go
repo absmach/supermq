@@ -11,7 +11,6 @@ package mocks
 import (
 	"context"
 
-	v10 "github.com/absmach/supermq/api/grpc/emails/v1"
 	"github.com/absmach/supermq/api/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/users"
@@ -869,16 +868,16 @@ func (_c *Service_SearchUsers_Call) RunAndReturn(run func(ctx context.Context, p
 }
 
 // SendEmail provides a mock function for the type Service
-func (_mock *Service) SendEmail(ctx context.Context, to []string, toType v10.ContactType, from string, fromType v10.ContactType, subject string, header string, user string, content string, footer string) error {
-	ret := _mock.Called(ctx, to, toType, from, fromType, subject, header, user, content, footer)
+func (_mock *Service) SendEmail(ctx context.Context, req users.EmailReq) error {
+	ret := _mock.Called(ctx, req)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SendEmail")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, []string, v10.ContactType, string, v10.ContactType, string, string, string, string, string) error); ok {
-		r0 = returnFunc(ctx, to, toType, from, fromType, subject, header, user, content, footer)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, users.EmailReq) error); ok {
+		r0 = returnFunc(ctx, req)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -892,72 +891,24 @@ type Service_SendEmail_Call struct {
 
 // SendEmail is a helper method to define mock.On call
 //   - ctx context.Context
-//   - to []string
-//   - toType v10.ContactType
-//   - from string
-//   - fromType v10.ContactType
-//   - subject string
-//   - header string
-//   - user string
-//   - content string
-//   - footer string
-func (_e *Service_Expecter) SendEmail(ctx interface{}, to interface{}, toType interface{}, from interface{}, fromType interface{}, subject interface{}, header interface{}, user interface{}, content interface{}, footer interface{}) *Service_SendEmail_Call {
-	return &Service_SendEmail_Call{Call: _e.mock.On("SendEmail", ctx, to, toType, from, fromType, subject, header, user, content, footer)}
+//   - req users.EmailReq
+func (_e *Service_Expecter) SendEmail(ctx interface{}, req interface{}) *Service_SendEmail_Call {
+	return &Service_SendEmail_Call{Call: _e.mock.On("SendEmail", ctx, req)}
 }
 
-func (_c *Service_SendEmail_Call) Run(run func(ctx context.Context, to []string, toType v10.ContactType, from string, fromType v10.ContactType, subject string, header string, user string, content string, footer string)) *Service_SendEmail_Call {
+func (_c *Service_SendEmail_Call) Run(run func(ctx context.Context, req users.EmailReq)) *Service_SendEmail_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 []string
+		var arg1 users.EmailReq
 		if args[1] != nil {
-			arg1 = args[1].([]string)
-		}
-		var arg2 v10.ContactType
-		if args[2] != nil {
-			arg2 = args[2].(v10.ContactType)
-		}
-		var arg3 string
-		if args[3] != nil {
-			arg3 = args[3].(string)
-		}
-		var arg4 v10.ContactType
-		if args[4] != nil {
-			arg4 = args[4].(v10.ContactType)
-		}
-		var arg5 string
-		if args[5] != nil {
-			arg5 = args[5].(string)
-		}
-		var arg6 string
-		if args[6] != nil {
-			arg6 = args[6].(string)
-		}
-		var arg7 string
-		if args[7] != nil {
-			arg7 = args[7].(string)
-		}
-		var arg8 string
-		if args[8] != nil {
-			arg8 = args[8].(string)
-		}
-		var arg9 string
-		if args[9] != nil {
-			arg9 = args[9].(string)
+			arg1 = args[1].(users.EmailReq)
 		}
 		run(
 			arg0,
 			arg1,
-			arg2,
-			arg3,
-			arg4,
-			arg5,
-			arg6,
-			arg7,
-			arg8,
-			arg9,
 		)
 	})
 	return _c
@@ -968,7 +919,7 @@ func (_c *Service_SendEmail_Call) Return(err error) *Service_SendEmail_Call {
 	return _c
 }
 
-func (_c *Service_SendEmail_Call) RunAndReturn(run func(ctx context.Context, to []string, toType v10.ContactType, from string, fromType v10.ContactType, subject string, header string, user string, content string, footer string) error) *Service_SendEmail_Call {
+func (_c *Service_SendEmail_Call) RunAndReturn(run func(ctx context.Context, req users.EmailReq) error) *Service_SendEmail_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -57,11 +57,6 @@ func (e *emailer) SendVerification(to []string, user, verificationToken string) 
 }
 
 func (e *emailer) Send(to []string, from, subject, header, user, content, footer string) error {
-	// Use the reset agent as the default agent for custom emails
-	return e.resetAgent.Send(to, from, subject, header, user, content, footer)
-}
-
-func (e *emailer) SendCustom(to []string, from, subject, header, user, content, footer string) error {
 	// Use the custom agent for custom emails
 	return e.customAgent.Send(to, from, subject, header, user, content, footer)
 }
