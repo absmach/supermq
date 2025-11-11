@@ -62,7 +62,7 @@ func (tm *tracingMiddleware) Identify(ctx context.Context, token string) (auth.K
 	return tm.svc.Identify(ctx, token)
 }
 
-func (tm *tracingMiddleware) RetrieveJWKS() jwk.Set {
+func (tm *tracingMiddleware) RetrieveJWKS() []jwk.Key {
 	return tm.svc.RetrieveJWKS()
 }
 

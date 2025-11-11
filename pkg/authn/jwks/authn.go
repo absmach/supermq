@@ -10,15 +10,17 @@ import (
 	"time"
 
 	smqauth "github.com/absmach/supermq/auth"
+	smqjwt "github.com/absmach/supermq/auth/jwt"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/lestrrat-go/jwx/v2/jwk"
+	"github.com/lestrrat-go/jwx/v2/jws"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
 const (
-	issuerName    = "magistrala.auth"
+	issuerName    = "supermq.auth"
 	cacheDuration = 5 * time.Minute
 )
 
@@ -53,24 +55,23 @@ func NewAuthentication(jwksURL string) authn.Authentication {
 func (a authentication) Authenticate(ctx context.Context, token string) (authn.Session, error) {
 	jwks, err := a.fetchJWKS()
 	if err != nil {
-		return authn.Session{}, err
+		return authn.Session{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
-
 	tkn, err := validateToken(token, jwks)
 	if err != nil {
 		return authn.Session{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
-
-	res := authn.Session{DomainUserID: tkn.Subject()}
-	pc := tkn.PrivateClaims()
-	if pc["user"] != nil {
-		res.UserID = pc["user"].(string)
-	}
-	if pc["domain"] != nil {
-		res.DomainID = pc["domain"].(string)
+	key, err := smqjwt.ToKey(tkn)
+	if err != nil {
+		return authn.Session{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
 
-	return res, nil
+	return authn.Session{
+		Type:     authn.AccessToken,
+		UserID:   key.Subject,
+		Role:     authn.Role(key.Role),
+		Verified: key.Verified,
+	}, nil
 }
 
 func (a authentication) fetchJWKS() (jwk.Set, error) {
@@ -109,7 +110,7 @@ func validateToken(token string, jwks jwk.Set) (jwt.Token, error) {
 	tkn, err := jwt.Parse(
 		[]byte(token),
 		jwt.WithValidate(true),
-		jwt.WithKeySet(jwks),
+		jwt.WithKeySet(jwks, jws.WithInferAlgorithmFromKey(true)),
 	)
 	if err != nil {
 		if errors.Contains(err, errJWTExpiryKey) {

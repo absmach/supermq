@@ -72,7 +72,7 @@ func (res revokeKeyRes) Empty() bool {
 }
 
 type retrieveJWKSRes struct {
-	jwk.Set
+	Keys []jwk.Key `json:"keys"`
 }
 
 func (res retrieveJWKSRes) Code() int {

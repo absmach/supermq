@@ -25,8 +25,6 @@ var (
 	errInvalidVerified = errors.New("invalid verified")
 	// errJWTExpiryKey is used to check if the token is expired.
 	errJWTExpiryKey = errors.New(`"exp" not satisfied`)
-	// errLoadJWKS is returned when there is an error loading JWKS from key.
-	errLoadJWKS = errors.New("failed to load JWKS from key")
 	// ErrSignJWT indicates an error in signing jwt token.
 	ErrSignJWT = errors.New("failed to sign jwt token")
 	// ErrValidateJWTToken indicates a failure to validate JWT token.
@@ -87,7 +85,7 @@ func (tok *tokenizer) Parse(token string) (auth.Key, error) {
 		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
 
-	key, err := toKey(tkn)
+	key, err := ToKey(tkn)
 	if err != nil {
 		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
@@ -117,11 +115,11 @@ func (tok *tokenizer) validateToken(token string) (jwt.Token, error) {
 	return tkn, nil
 }
 
-func (tok *tokenizer) RetrieveJWKS() jwk.Set {
+func (tok *tokenizer) RetrieveJWKS() []jwk.Key {
 	return tok.keyManager.PublicJWKS()
 }
 
-func toKey(tkn jwt.Token) (auth.Key, error) {
+func ToKey(tkn jwt.Token) (auth.Key, error) {
 	data, err := json.Marshal(tkn.PrivateClaims())
 	if err != nil {
 		return auth.Key{}, errors.Wrap(ErrJSONHandle, err)

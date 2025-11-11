@@ -101,7 +101,7 @@ func (lm *loggingMiddleware) Identify(ctx context.Context, token string) (id aut
 	return lm.svc.Identify(ctx, token)
 }
 
-func (lm *loggingMiddleware) RetrieveJWKS() (jwks jwk.Set) {
+func (lm *loggingMiddleware) RetrieveJWKS() (jwks []jwk.Key) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),

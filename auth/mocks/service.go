@@ -1030,31 +1030,22 @@ func (_c *Service_ResetPATSecret_Call) RunAndReturn(run func(ctx context.Context
 }
 
 // RetrieveJWKS provides a mock function for the type Service
-func (_mock *Service) RetrieveJWKS() (jwk.Set, error) {
+func (_mock *Service) RetrieveJWKS() []jwk.Key {
 	ret := _mock.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for RetrieveJWKS")
 	}
 
-	var r0 jwk.Set
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func() (jwk.Set, error)); ok {
-		return returnFunc()
-	}
-	if returnFunc, ok := ret.Get(0).(func() jwk.Set); ok {
+	var r0 []jwk.Key
+	if returnFunc, ok := ret.Get(0).(func() []jwk.Key); ok {
 		r0 = returnFunc()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(jwk.Set)
+			r0 = ret.Get(0).([]jwk.Key)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func() error); ok {
-		r1 = returnFunc()
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
+	return r0
 }
 
 // Service_RetrieveJWKS_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RetrieveJWKS'
@@ -1074,12 +1065,12 @@ func (_c *Service_RetrieveJWKS_Call) Run(run func()) *Service_RetrieveJWKS_Call 
 	return _c
 }
 
-func (_c *Service_RetrieveJWKS_Call) Return(set jwk.Set, err error) *Service_RetrieveJWKS_Call {
-	_c.Call.Return(set, err)
+func (_c *Service_RetrieveJWKS_Call) Return(keys []jwk.Key) *Service_RetrieveJWKS_Call {
+	_c.Call.Return(keys)
 	return _c
 }
 
-func (_c *Service_RetrieveJWKS_Call) RunAndReturn(run func() (jwk.Set, error)) *Service_RetrieveJWKS_Call {
+func (_c *Service_RetrieveJWKS_Call) RunAndReturn(run func() []jwk.Key) *Service_RetrieveJWKS_Call {
 	_c.Call.Return(run)
 	return _c
 }

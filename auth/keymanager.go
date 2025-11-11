@@ -14,7 +14,7 @@ type KeyManager interface {
 
 	ParseJWT(token string) (jwt.Token, error)
 
-	PublicJWKS() jwk.Set
+	PublicJWKS() []jwk.Key
 
 	Rotate() error
 }

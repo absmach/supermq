@@ -14,5 +14,5 @@ type Tokenizer interface {
 	Parse(token string) (key Key, err error)
 
 	// RetrieveJWKS returns the JSON Web Key Set.
-	RetrieveJWKS() jwk.Set
+	RetrieveJWKS() []jwk.Key
 }
