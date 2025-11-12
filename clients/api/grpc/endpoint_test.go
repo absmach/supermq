@@ -25,8 +25,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-const port = 7006
-
 var (
 	validID       = testsutil.GenerateUUID(&testing.T{})
 	validSecret   = "validSecret"
@@ -38,8 +36,8 @@ var (
 	}
 )
 
-func startGRPCServer(svc *mocks.Service, port int) *grpc.Server {
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+func startGRPCServer(svc *mocks.Service) (*grpc.Server, int) {
+	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
 		panic(fmt.Sprintf("failed to obtain port: %s", err))
 	}
@@ -50,15 +48,15 @@ func startGRPCServer(svc *mocks.Service, port int) *grpc.Server {
 			panic(fmt.Sprintf("failed to serve: %s", err))
 		}
 	}()
-
-	return server
+	p := listener.Addr().(*net.TCPAddr).Port
+	return server, p
 }
 
 func TestAuthenticate(t *testing.T) {
 	svc := new(mocks.Service)
-	server := startGRPCServer(svc, port)
+	server, p := startGRPCServer(svc)
 	defer server.GracefulStop()
-	authAddr := fmt.Sprintf("localhost:%d", port)
+	authAddr := fmt.Sprintf("localhost:%d", p)
 	conn, _ := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	client := grpcapi.NewClient(conn, time.Second)
 
@@ -107,9 +105,9 @@ func TestAuthenticate(t *testing.T) {
 
 func TestRetrieveEntity(t *testing.T) {
 	svc := new(mocks.Service)
-	server := startGRPCServer(svc, port)
+	server, p := startGRPCServer(svc)
 	defer server.GracefulStop()
-	authAddr := fmt.Sprintf("localhost:%d", port)
+	authAddr := fmt.Sprintf("localhost:%d", p)
 	conn, _ := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	client := grpcapi.NewClient(conn, time.Second)
 
@@ -163,9 +161,9 @@ func TestRetrieveEntity(t *testing.T) {
 
 func TestRetrieveEntities(t *testing.T) {
 	svc := new(mocks.Service)
-	server := startGRPCServer(svc, port)
+	server, p := startGRPCServer(svc)
 	defer server.GracefulStop()
-	authAddr := fmt.Sprintf("localhost:%d", port)
+	authAddr := fmt.Sprintf("localhost:%d", p)
 	conn, _ := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	client := grpcapi.NewClient(conn, time.Second)
 
@@ -230,9 +228,9 @@ func TestRetrieveEntities(t *testing.T) {
 
 func TestAddConnections(t *testing.T) {
 	svc := new(mocks.Service)
-	server := startGRPCServer(svc, port)
+	server, p := startGRPCServer(svc)
 	defer server.GracefulStop()
-	authAddr := fmt.Sprintf("localhost:%d", port)
+	authAddr := fmt.Sprintf("localhost:%d", p)
 	conn, _ := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	client := grpcapi.NewClient(conn, time.Second)
 
@@ -285,9 +283,9 @@ func TestAddConnections(t *testing.T) {
 
 func TestRemoveConnections(t *testing.T) {
 	svc := new(mocks.Service)
-	server := startGRPCServer(svc, port)
+	server, p := startGRPCServer(svc)
 	defer server.GracefulStop()
-	authAddr := fmt.Sprintf("localhost:%d", port)
+	authAddr := fmt.Sprintf("localhost:%d", p)
 	conn, _ := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	client := grpcapi.NewClient(conn, time.Second)
 
@@ -340,9 +338,9 @@ func TestRemoveConnections(t *testing.T) {
 
 func TestRemoveChannelConnections(t *testing.T) {
 	svc := new(mocks.Service)
-	server := startGRPCServer(svc, port)
+	server, p := startGRPCServer(svc)
 	defer server.GracefulStop()
-	authAddr := fmt.Sprintf("localhost:%d", port)
+	authAddr := fmt.Sprintf("localhost:%d", p)
 	conn, _ := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	client := grpcapi.NewClient(conn, time.Second)
 
@@ -381,9 +379,9 @@ func TestRemoveChannelConnections(t *testing.T) {
 
 func TestUnsetParentGroupFromClient(t *testing.T) {
 	svc := new(mocks.Service)
-	server := startGRPCServer(svc, port)
+	server, p := startGRPCServer(svc)
 	defer server.GracefulStop()
-	authAddr := fmt.Sprintf("localhost:%d", port)
+	authAddr := fmt.Sprintf("localhost:%d", p)
 	conn, _ := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	client := grpcapi.NewClient(conn, time.Second)
 

@@ -29,8 +29,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-const port = 7005
-
 var (
 	validID      = testsutil.GenerateUUID(&testing.T{})
 	validChannel = ch.Channel{
@@ -40,8 +38,8 @@ var (
 	}
 )
 
-func startGRPCServer(svc *mocks.Service, port int) *grpc.Server {
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+func startGRPCServer(svc *mocks.Service) (*grpc.Server, int) {
+	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
 		panic(fmt.Sprintf("failed to obtain port: %s", err))
 	}
@@ -52,14 +50,15 @@ func startGRPCServer(svc *mocks.Service, port int) *grpc.Server {
 			panic(fmt.Sprintf("failed to serve: %s", err))
 		}
 	}()
-	return server
+	p := listener.Addr().(*net.TCPAddr).Port
+	return server, p
 }
 
 func TestAuthorize(t *testing.T) {
 	svc := new(mocks.Service)
-	server := startGRPCServer(svc, port)
+	server, p := startGRPCServer(svc)
 	defer server.GracefulStop()
-	authAddr := fmt.Sprintf("localhost:%d", port)
+	authAddr := fmt.Sprintf("localhost:%d", p)
 	conn, _ := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	client := grpcapi.NewClient(conn, time.Second)
 
@@ -135,9 +134,9 @@ func TestAuthorize(t *testing.T) {
 
 func TestRemoveClientConnections(t *testing.T) {
 	svc := new(mocks.Service)
-	server := startGRPCServer(svc, port)
+	server, p := startGRPCServer(svc)
 	defer server.GracefulStop()
-	authAddr := fmt.Sprintf("localhost:%d", port)
+	authAddr := fmt.Sprintf("localhost:%d", p)
 	conn, _ := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	client := grpcapi.NewClient(conn, time.Second)
 
@@ -174,9 +173,9 @@ func TestRemoveClientConnections(t *testing.T) {
 
 func TestUnsetParentGroupFromChannelsEndpoint(t *testing.T) {
 	svc := new(mocks.Service)
-	server := startGRPCServer(svc, port)
+	server, p := startGRPCServer(svc)
 	defer server.GracefulStop()
-	authAddr := fmt.Sprintf("localhost:%d", port)
+	authAddr := fmt.Sprintf("localhost:%d", p)
 	conn, _ := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	client := grpcapi.NewClient(conn, time.Second)
 
@@ -218,9 +217,9 @@ func TestUnsetParentGroupFromChannelsEndpoint(t *testing.T) {
 
 func TestRetrieveEntity(t *testing.T) {
 	svc := new(mocks.Service)
-	server := startGRPCServer(svc, port)
+	server, p := startGRPCServer(svc)
 	defer server.GracefulStop()
-	authAddr := fmt.Sprintf("localhost:%d", port)
+	authAddr := fmt.Sprintf("localhost:%d", p)
 	conn, _ := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	client := grpcapi.NewClient(conn, time.Second)
 
@@ -269,9 +268,9 @@ func TestRetrieveEntity(t *testing.T) {
 
 func TestRetrieveIDByRoute(t *testing.T) {
 	svc := new(mocks.Service)
-	server := startGRPCServer(svc, port)
+	server, p := startGRPCServer(svc)
 	defer server.GracefulStop()
-	authAddr := fmt.Sprintf("localhost:%d", port)
+	authAddr := fmt.Sprintf("localhost:%d", p)
 	conn, _ := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	client := grpcapi.NewClient(conn, time.Second)
 

@@ -15,6 +15,7 @@ import (
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/supermq"
 	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
+	grpcEmailsV1 "github.com/absmach/supermq/api/grpc/emails/v1"
 	"github.com/absmach/supermq/domains"
 	domainsSvc "github.com/absmach/supermq/domains"
 	domainsgrpcapi "github.com/absmach/supermq/domains/api/grpc"
@@ -63,6 +64,7 @@ const (
 	envPrefixGrpc          = "SMQ_DOMAINS_GRPC_"
 	envPrefixDB            = "SMQ_DOMAINS_DB_"
 	envPrefixAuth          = "SMQ_AUTH_GRPC_"
+	envPrefixUsers         = "SMQ_USERS_GRPC_"
 	envPrefixDomainCallout = "SMQ_DOMAINS_CALLOUT_"
 	defDB                  = "domains"
 	defSvcHTTPPort         = "9004"
@@ -161,6 +163,22 @@ func main() {
 	logger.Info("Authn successfully connected to auth gRPC server " + authnHandler.Secure())
 	authnMiddleware := smqauthn.NewAuthNMiddleware(authn)
 
+	usersClientConfig := grpcclient.Config{}
+	if err := env.ParseWithOptions(&usersClientConfig, env.Options{Prefix: envPrefixUsers}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load users gRPC client configuration : %s", err))
+		exitCode = 1
+		return
+	}
+
+	usersClient, usersHandler, err := grpcclient.SetupUsersClient(ctx, usersClientConfig)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to connect to users gRPC server : %s", err.Error()))
+		exitCode = 1
+		return
+	}
+	defer usersHandler.Close()
+	logger.Info("Users client successfully connected to users gRPC server " + usersHandler.Secure())
+
 	database := postgres.NewDatabase(db, dbConfig, tracer)
 	domainsRepo := dpostgres.NewRepository(database)
 
@@ -208,7 +226,7 @@ func main() {
 		return
 	}
 
-	svc, err := newDomainService(ctx, domainsRepo, cache, tracer, cfg, authz, policyService, logger, call)
+	svc, err := newDomainService(ctx, domainsRepo, cache, tracer, cfg, authz, policyService, logger, call, usersClient)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create %s service: %s", svcName, err.Error()))
 		exitCode = 1
@@ -260,7 +278,7 @@ func main() {
 	}
 }
 
-func newDomainService(ctx context.Context, domainsRepo domainsSvc.Repository, cache domainsSvc.Cache, tracer trace.Tracer, cfg config, authz authz.Authorization, policiessvc policies.Service, logger *slog.Logger, callout callout.Callout) (domains.Service, error) {
+func newDomainService(ctx context.Context, domainsRepo domainsSvc.Repository, cache domainsSvc.Cache, tracer trace.Tracer, cfg config, authz authz.Authorization, policiessvc policies.Service, logger *slog.Logger, callout callout.Callout, emailClient grpcEmailsV1.EmailServiceClient) (domains.Service, error) {
 	idProvider := uuid.New()
 	sidProvider, err := sid.New()
 	if err != nil {
@@ -272,7 +290,7 @@ func newDomainService(ctx context.Context, domainsRepo domainsSvc.Repository, ca
 		return nil, err
 	}
 
-	svc, err := domainsSvc.New(domainsRepo, cache, policiessvc, idProvider, sidProvider, availableActions, builtInRoles)
+	svc, err := domainsSvc.New(domainsRepo, cache, policiessvc, idProvider, sidProvider, availableActions, builtInRoles, emailClient)
 	if err != nil {
 		return nil, fmt.Errorf("failed to init domain service: %w", err)
 	}

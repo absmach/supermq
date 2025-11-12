@@ -248,3 +248,17 @@ func (tm *tracingMiddleware) OAuthAddUserPolicy(ctx context.Context, user users.
 
 	return tm.svc.OAuthAddUserPolicy(ctx, user)
 }
+
+// SendEmail traces the "SendEmail" operation of the wrapped users.Service.
+func (tm *tracingMiddleware) SendEmail(ctx context.Context, req users.EmailReq) error {
+	ctx, span := tracing.StartSpan(ctx, tm.tracer, "svc_send_email", trace.WithAttributes(
+		attribute.StringSlice("to", req.To),
+		attribute.String("to_type", req.ToType.String()),
+		attribute.String("from", req.From),
+		attribute.String("from_type", req.FromType.String()),
+		attribute.String("subject", req.Subject),
+	))
+	defer span.End()
+
+	return tm.svc.SendEmail(ctx, req)
+}

@@ -1,0 +1,35 @@
+// Copyright (c) Abstract Machines
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+package emails.v1;
+option go_package = "github.com/absmach/supermq/api/grpc/emails/v1";
+
+// EmailService is a service that provides email-related functionalities
+// for SuperMQ services.
+service EmailService {
+  rpc SendEmail(EmailReq) returns (SendEmailRes) {}
+}
+
+enum ContactType {
+  CONTACT_TYPE_UNSPECIFIED = 0;
+  CONTACT_TYPE_ID = 1;
+  CONTACT_TYPE_EMAIL = 2;
+}
+
+message EmailReq {
+  string from = 1;                    // Sender
+  ContactType from_type = 2;          // indicate sender id or email
+  repeated string tos = 3;            // recipients
+  ContactType to_type = 4;            // indicate recipient id or email
+  string subject = 5;                 // Email subject
+  string content = 6;                 // Email content/URL
+  optional string template = 10;      // whole template for emailer
+  optional string template_file = 11; // template file for emailer
+  map<string, string> options = 12;   // map for template
+}
+
+message SendEmailRes {
+  string error = 1;
+}

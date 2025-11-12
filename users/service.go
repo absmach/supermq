@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/absmach/supermq"
+	grpcEmailsV1 "github.com/absmach/supermq/api/grpc/emails/v1"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	apiutil "github.com/absmach/supermq/api/http/util"
 	smqauth "github.com/absmach/supermq/auth"
@@ -813,4 +814,40 @@ func changed(updated *string, old string) bool {
 	}
 
 	return *updated != old
+}
+
+func (svc service) SendEmail(ctx context.Context, req EmailReq) error {
+	// Convert recipients based on contact type
+	emails := make([]string, len(req.To))
+	for i, contact := range req.To {
+		switch req.ToType {
+		case grpcEmailsV1.ContactType_CONTACT_TYPE_ID:
+			u, err := svc.users.RetrieveByID(ctx, contact)
+			if err != nil {
+				return errors.Wrap(svcerr.ErrViewEntity, err)
+			}
+			emails[i] = u.Email
+		case grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL:
+			emails[i] = contact
+		default:
+			return errors.Wrap(svcerr.ErrMalformedEntity, errors.New("invalid contact type for recipients"))
+		}
+	}
+
+	// Convert sender based on contact type
+	var senderName string
+	switch req.FromType {
+	case grpcEmailsV1.ContactType_CONTACT_TYPE_ID:
+		inviter, err := svc.users.RetrieveByID(ctx, req.From)
+		if err != nil {
+			return errors.Wrap(svcerr.ErrViewEntity, err)
+		}
+		senderName = inviter.FirstName + " " + inviter.LastName
+	case grpcEmailsV1.ContactType_CONTACT_TYPE_EMAIL:
+		senderName = req.From
+	default:
+		return errors.Wrap(svcerr.ErrMalformedEntity, errors.New("invalid contact type for sender"))
+	}
+
+	return svc.email.Send(emails, senderName, req.Subject, req.Header, req.User, req.Content, req.Footer)
 }

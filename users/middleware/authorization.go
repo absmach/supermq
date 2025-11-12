@@ -335,6 +335,10 @@ func (am *authorizationMiddleware) OAuthAddUserPolicy(ctx context.Context, user 
 	return am.svc.OAuthAddUserPolicy(ctx, user)
 }
 
+func (am *authorizationMiddleware) SendEmail(ctx context.Context, req users.EmailReq) error {
+	return am.svc.SendEmail(ctx, req)
+}
+
 func (am *authorizationMiddleware) checkSuperAdmin(ctx context.Context, session authn.Session) error {
 	if session.Role != authn.AdminRole {
 		return svcerr.ErrSuperAdminAction

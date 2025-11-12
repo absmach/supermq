@@ -8,6 +8,7 @@ import (
 	"net/mail"
 	"time"
 
+	grpcEmailsV1 "github.com/absmach/supermq/api/grpc/emails/v1"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
@@ -54,6 +55,22 @@ type UserReq struct {
 	ProfilePicture *string    `json:"profile_picture,omitempty"`
 	UpdatedBy      *string    `json:"updated_by,omitempty"`
 	UpdatedAt      *time.Time `json:"updated_at,omitempty"`
+}
+
+// EmailReq represents an email request, similar to the protobuf EmailReq message.
+type EmailReq struct {
+	From         string                   `json:"from"`
+	FromType     grpcEmailsV1.ContactType `json:"from_type"`
+	To           []string                 `json:"to"`
+	ToType       grpcEmailsV1.ContactType `json:"to_type"`
+	Subject      string                   `json:"subject"`
+	Content      string                   `json:"content"`
+	Header       string                   `json:"header,omitempty"`
+	Footer       string                   `json:"footer,omitempty"`
+	User         string                   `json:"user,omitempty"`
+	Template     string                   `json:"template,omitempty"`
+	TemplateFile string                   `json:"template_file,omitempty"`
+	Options      map[string]string        `json:"options,omitempty"`
 }
 
 // MembersPage contains page related metadata as well as list of members that
@@ -243,4 +260,8 @@ type Service interface {
 
 	// OAuthAddUserPolicy adds a policy to the user for an OAuth request.
 	OAuthAddUserPolicy(ctx context.Context, user User) error
+
+	// SendEmail sends an email using the email agent.
+	// fromType and toType indicate whether from and to are IDs or emails (ContactType enum).
+	SendEmail(ctx context.Context, req EmailReq) error
 }

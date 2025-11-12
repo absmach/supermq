@@ -444,3 +444,7 @@ func (es *eventStore) OAuthAddUserPolicy(ctx context.Context, user users.User) e
 
 	return es.Publish(ctx, addPolicyStream, event)
 }
+
+func (es *eventStore) SendEmail(ctx context.Context, req users.EmailReq) error {
+	return es.svc.SendEmail(ctx, req)
+}

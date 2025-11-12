@@ -17,6 +17,7 @@ import (
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/supermq"
 	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
+	grpcEmailsV1 "github.com/absmach/supermq/api/grpc/emails/v1"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	"github.com/absmach/supermq/internal/email"
 	smqlog "github.com/absmach/supermq/logger"
@@ -35,10 +36,12 @@ import (
 	pgclient "github.com/absmach/supermq/pkg/postgres"
 	"github.com/absmach/supermq/pkg/prometheus"
 	"github.com/absmach/supermq/pkg/server"
+	grpcserver "github.com/absmach/supermq/pkg/server/grpc"
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/absmach/supermq/users"
 	httpapi "github.com/absmach/supermq/users/api"
+	usersgrpcapi "github.com/absmach/supermq/users/api/grpc"
 	"github.com/absmach/supermq/users/emailer"
 	"github.com/absmach/supermq/users/events"
 	"github.com/absmach/supermq/users/hasher"
@@ -53,17 +56,20 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/reflection"
 )
 
 const (
 	svcName          = "users"
 	envPrefixDB      = "SMQ_USERS_DB_"
 	envPrefixHTTP    = "SMQ_USERS_HTTP_"
+	envPrefixGRPC    = "SMQ_USERS_GRPC_"
 	envPrefixAuth    = "SMQ_AUTH_GRPC_"
 	envPrefixDomains = "SMQ_DOMAINS_GRPC_"
 	envPrefixGoogle  = "SMQ_GOOGLE_"
 	defDB            = "users"
 	defSvcHTTPPort   = "9002"
+	defSvcGRPCPort   = "7002"
 )
 
 type config struct {
@@ -89,6 +95,7 @@ type config struct {
 	SpicedbPreSharedKey        string        `env:"SMQ_SPICEDB_PRE_SHARED_KEY"            envDefault:"12345678"`
 	PasswordResetURLPrefix     string        `env:"SMQ_PASSWORD_RESET_URL_PREFIX"         envDefault:"http://localhost/password/reset"`
 	PasswordResetEmailTemplate string        `env:"SMQ_PASSWORD_RESET_EMAIL_TEMPLATE"     envDefault:"reset-password-email.tmpl"`
+	EmailTemplate              string        `env:"SM_EMAIL_TEMPLATE"                     envDefault:"email.tmpl"`
 	VerificationURLPrefix      string        `env:"SMQ_VERIFICATION_URL_PREFIX"           envDefault:"http://localhost/verify-email"`
 	VerificationEmailTemplate  string        `env:"SMQ_VERIFICATION_EMAIL_TEMPLATE"       envDefault:"verification-email.tmpl"`
 	PassRegex                  *regexp.Regexp
@@ -139,6 +146,14 @@ func main() {
 		return
 	}
 	verificationEmailConfig.Template = cfg.VerificationEmailTemplate
+
+	customEmailConfig := email.Config{}
+	if err := env.Parse(&customEmailConfig); err != nil {
+		logger.Error(fmt.Sprintf("failed to load custom email configuration : %s", err.Error()))
+		exitCode = 1
+		return
+	}
+	customEmailConfig.Template = cfg.EmailTemplate
 
 	dbConfig := pgclient.Config{Name: defDB}
 	if err := env.ParseWithOptions(&dbConfig, env.Options{Prefix: envPrefixDB}); err != nil {
@@ -227,12 +242,25 @@ func main() {
 	}
 	logger.Info("Policy client successfully connected to spicedb gRPC server")
 
-	csvc, err := newService(ctx, authz, tokenClient, policyService, domainsClient, db, dbConfig, tracer, cfg, resetPasswordEmailConfig, verificationEmailConfig, logger)
+	csvc, err := newService(ctx, authz, tokenClient, policyService, domainsClient, db, dbConfig, tracer, cfg, resetPasswordEmailConfig, verificationEmailConfig, customEmailConfig, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to setup service: %s", err))
 		exitCode = 1
 		return
 	}
+
+	grpcServerConfig := server.Config{Port: defSvcGRPCPort}
+	if err := env.ParseWithOptions(&grpcServerConfig, env.Options{Prefix: envPrefixGRPC}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load %s gRPC server configuration : %s", svcName, err.Error()))
+		exitCode = 1
+		return
+	}
+	registerUsersServiceServer := func(srv *grpc.Server) {
+		reflection.Register(srv)
+		grpcEmailsV1.RegisterEmailServiceServer(srv, usersgrpcapi.NewUsersServer(csvc))
+	}
+
+	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerUsersServiceServer, logger)
 
 	httpServerConfig := server.Config{Port: defSvcHTTPPort}
 	if err := env.ParseWithOptions(&httpServerConfig, env.Options{Prefix: envPrefixHTTP}); err != nil {
@@ -259,11 +287,15 @@ func main() {
 	}
 
 	g.Go(func() error {
+		return gs.Start()
+	})
+
+	g.Go(func() error {
 		return httpSrv.Start()
 	})
 
 	g.Go(func() error {
-		return server.StopSignalHandler(ctx, cancel, logger, svcName, httpSrv)
+		return server.StopSignalHandler(ctx, cancel, logger, svcName, httpSrv, gs)
 	})
 
 	if err := g.Wait(); err != nil {
@@ -271,7 +303,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, authz smqauthz.Authorization, token grpcTokenV1.TokenServiceClient, policyService policies.Service, domainsClient grpcDomainsV1.DomainsServiceClient, db *sqlx.DB, dbConfig pgclient.Config, tracer trace.Tracer, c config, resetPasswordEmailConfig, verificationEmailConfig email.Config, logger *slog.Logger) (users.Service, error) {
+func newService(ctx context.Context, authz smqauthz.Authorization, token grpcTokenV1.TokenServiceClient, policyService policies.Service, domainsClient grpcDomainsV1.DomainsServiceClient, db *sqlx.DB, dbConfig pgclient.Config, tracer trace.Tracer, c config, resetPasswordEmailConfig, verificationEmailConfig, customEmailConfig email.Config, logger *slog.Logger) (users.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	idp := uuid.New()
 	hsr := hasher.New()
@@ -284,6 +316,7 @@ func newService(ctx context.Context, authz smqauthz.Authorization, token grpcTok
 		c.VerificationURLPrefix,
 		&resetPasswordEmailConfig,
 		&verificationEmailConfig,
+		&customEmailConfig,
 	)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to configure e-mailing util: %s", err.Error()))

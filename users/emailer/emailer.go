@@ -17,10 +17,11 @@ type emailer struct {
 	verificationURL string
 	resetAgent      *email.Agent
 	verifyAgent     *email.Agent
+	customAgent     *email.Agent
 }
 
 // New creates new emailer utility.
-func New(resetURL, verificationURL string, resetConfig, verifyConfig *email.Config) (users.Emailer, error) {
+func New(resetURL, verificationURL string, resetConfig, verifyConfig, customEmailConfig *email.Config) (users.Emailer, error) {
 	resetAgent, err := email.New(resetConfig)
 	if err != nil {
 		return nil, err
@@ -31,11 +32,17 @@ func New(resetURL, verificationURL string, resetConfig, verifyConfig *email.Conf
 		return nil, err
 	}
 
+	customAgent, err := email.New(customEmailConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	return &emailer{
 		resetURL:        resetURL,
 		verificationURL: verificationURL,
 		resetAgent:      resetAgent,
 		verifyAgent:     verifyAgent,
+		customAgent:     customAgent,
 	}, nil
 }
 
@@ -47,4 +54,9 @@ func (e *emailer) SendPasswordReset(to []string, user, token string) error {
 func (e *emailer) SendVerification(to []string, user, verificationToken string) error {
 	url := fmt.Sprintf("%s?token=%s", e.verificationURL, verificationToken)
 	return e.verifyAgent.Send(to, "", "Email Verification", "", user, url, "")
+}
+
+func (e *emailer) Send(to []string, from, subject, header, user, content, footer string) error {
+	// Use the custom agent for custom emails
+	return e.customAgent.Send(to, from, subject, header, user, content, footer)
 }
