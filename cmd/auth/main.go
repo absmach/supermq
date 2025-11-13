@@ -55,6 +55,7 @@ const (
 	envPrefixHTTP  = "SMQ_AUTH_HTTP_"
 	envPrefixGrpc  = "SMQ_AUTH_GRPC_"
 	envPrefixDB    = "SMQ_AUTH_DB_"
+	envPrefixKeys  = "SMQ_AUTH_KEYS_"
 	defDB          = "auth"
 	defSvcHTTPPort = "8189"
 	defSvcGRPCPort = "8181"
@@ -77,7 +78,6 @@ type config struct {
 	ESURL               string        `env:"SMQ_ES_URL"                        envDefault:"nats://localhost:4222"`
 	CacheURL            string        `env:"SMQ_AUTH_CACHE_URL"                envDefault:"redis://localhost:6379/0"`
 	CacheKeyDuration    time.Duration `env:"SMQ_AUTH_CACHE_KEY_DURATION"       envDefault:"10m"`
-	PrivateKeyPath      string        `env:"SMQ_AUTH_PRIVATE_KEY_PATH"        envDefault:"./keys/private.key"`
 }
 
 func main() {
@@ -147,7 +147,12 @@ func main() {
 		return
 	}
 
-	keyManager, err := keymanager.NewKeyManager(ctx, ulid.New())
+	keyManagerCfg := keymanager.KeyManagerConfig{LoginDuration: cfg.AccessDuration}
+	if err := env.ParseWithOptions(&keyManagerCfg, env.Options{Prefix: envPrefixKeys}); err != nil {
+		log.Fatalf("failed to load key manager %s configuration : %s", svcName, err.Error())
+	}
+
+	keyManager, err := keymanager.NewKeyManager(ctx, keyManagerCfg, ulid.New())
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to init key manager : %s\n", err.Error()))
 		exitCode = 1

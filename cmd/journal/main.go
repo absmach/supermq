@@ -21,7 +21,7 @@ import (
 	journalpg "github.com/absmach/supermq/journal/postgres"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
-	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
+	jwksAuthn "github.com/absmach/supermq/pkg/authn/jwks"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	authsvcAuthz "github.com/absmach/supermq/pkg/authz/authsvc"
 	domainsAuthz "github.com/absmach/supermq/pkg/domains/grpcclient"
@@ -48,6 +48,7 @@ const (
 	envPrefixDomains = "SMQ_DOMAINS_GRPC_"
 	defDB            = "journal"
 	defSvcHTTPPort   = "9021"
+	jwksURL          = "http://auth:9001/keys/jwks"
 )
 
 type config struct {
@@ -105,14 +106,8 @@ func main() {
 		return
 	}
 
-	authn, authnHandler, err := authsvcAuthn.NewAuthentication(ctx, authClientCfg)
-	if err != nil {
-		logger.Error(err.Error())
-		exitCode = 1
-		return
-	}
-	defer authnHandler.Close()
-	logger.Info("AuthN successfully connected to auth gRPC server " + authnHandler.Secure())
+	authn := jwksAuthn.NewAuthentication(jwksURL)
+	logger.Info("AuthN successfully set up jwks authentication on " + jwksURL)
 	authnMiddleware := smqauthn.NewAuthNMiddleware(authn)
 
 	domsGrpcCfg := grpcclient.Config{}

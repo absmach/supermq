@@ -31,7 +31,7 @@ import (
 	redisclient "github.com/absmach/supermq/internal/clients/redis"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
-	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
+	jwksAuthn "github.com/absmach/supermq/pkg/authn/jwks"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	authsvcAuthz "github.com/absmach/supermq/pkg/authz/authsvc"
 	"github.com/absmach/supermq/pkg/callout"
@@ -78,6 +78,7 @@ const (
 	defDB                  = "clients"
 	defSvcHTTPPort         = "9000"
 	defSvcAuthGRPCPort     = "7000"
+	jwksURL                = "http://auth:9001/keys/jwks"
 )
 
 type config struct {
@@ -182,14 +183,9 @@ func main() {
 		exitCode = 1
 		return
 	}
-	authn, authnClient, err := authsvcAuthn.NewAuthentication(ctx, grpcCfg)
-	if err != nil {
-		logger.Error(err.Error())
-		exitCode = 1
-		return
-	}
-	defer authnClient.Close()
-	logger.Info("AuthN  successfully connected to auth gRPC server " + authnClient.Secure())
+
+	authn := jwksAuthn.NewAuthentication(jwksURL)
+	logger.Info("AuthN successfully set up jwks authentication on " + jwksURL)
 	authnMiddleware := smqauthn.NewAuthNMiddleware(authn)
 
 	domsGrpcCfg := grpcclient.Config{}
@@ -220,7 +216,7 @@ func main() {
 		return
 	}
 	defer authzClient.Close()
-	logger.Info("AuthZ  successfully connected to auth gRPC server " + authnClient.Secure())
+	logger.Info("AuthZ  successfully connected to auth gRPC server " + authzClient.Secure())
 
 	chgrpccfg := grpcclient.Config{}
 	if err := env.ParseWithOptions(&chgrpccfg, env.Options{Prefix: envPrefixChannels}); err != nil {

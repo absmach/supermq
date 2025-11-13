@@ -64,7 +64,7 @@ const (
 	envPrefixGoogle  = "SMQ_GOOGLE_"
 	defDB            = "users"
 	defSvcHTTPPort   = "9002"
-	jwksURL = "http://auth:9001/keys/jwks"
+	jwksURL          = "http://auth:9001/keys/jwks"
 )
 
 type config struct {
@@ -188,7 +188,6 @@ func main() {
 
 	authn := jwksAuthn.NewAuthentication(jwksURL)
 	logger.Info("AuthN successfully set up jwks authentication on " + jwksURL)
-
 	authnMiddleware := smqauthn.NewAuthNMiddleware(authn)
 
 	domsGrpcCfg := grpcclient.Config{}

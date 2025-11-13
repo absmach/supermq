@@ -21,7 +21,7 @@ import (
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/authn"
-	"github.com/absmach/supermq/pkg/authn/authsvc"
+	"github.com/absmach/supermq/pkg/authn/jwks"
 	domainsAuthz "github.com/absmach/supermq/pkg/domains/grpcclient"
 	"github.com/absmach/supermq/pkg/grpcclient"
 	jaegerclient "github.com/absmach/supermq/pkg/jaeger"
@@ -53,6 +53,7 @@ const (
 	targetWSProtocol  = "http"
 	targetWSHost      = "localhost"
 	targetWSPort      = "8191"
+	jwksURL           = "http://auth:9001/keys/jwks"
 )
 
 type config struct {
@@ -158,14 +159,8 @@ func main() {
 		return
 	}
 
-	authn, authnHandler, err := authsvc.NewAuthentication(ctx, authnCfg)
-	if err != nil {
-		logger.Error(err.Error())
-		exitCode = 1
-		return
-	}
-	defer authnHandler.Close()
-	logger.Info("authn successfully connected to auth gRPC server " + authnHandler.Secure())
+	authn := jwks.NewAuthentication(jwksURL)
+	logger.Info("AuthN successfully set up jwks authentication on " + jwksURL)
 
 	tp, err := jaegerclient.NewProvider(ctx, svcName, cfg.JaegerURL, cfg.InstanceID, cfg.TraceRatio)
 	if err != nil {

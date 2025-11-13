@@ -24,13 +24,6 @@ import (
 )
 
 const (
-	secret          = "secret"
-	email           = "test@example.com"
-	id              = "testID"
-	groupName       = "smqx"
-	description     = "Description"
-	memberRelation  = "member"
-	authoritiesObj  = "authorities"
 	loginDuration   = 30 * time.Minute
 	refreshDuration = 24 * time.Hour
 	invalidDuration = 7 * 24 * time.Hour
@@ -53,6 +46,7 @@ var (
 	patsrepo   *mocks.PATSRepository
 	cache      *mocks.Cache
 	hasher     *mocks.Hasher
+	keyManager *mocks.KeyManager
 )
 
 func newService() (auth.Service, string) {
@@ -63,8 +57,9 @@ func newService() (auth.Service, string) {
 	patsrepo = new(mocks.PATSRepository)
 	hasher = new(mocks.Hasher)
 	idProvider := uuid.NewMock()
+	keyManager = new(mocks.KeyManager)
 
-	t := jwt.New([]byte(secret))
+	t := jwt.New(keyManager)
 	key := auth.Key{
 		IssuedAt:  time.Now(),
 		ExpiresAt: time.Now().Add(refreshDuration),
@@ -80,7 +75,7 @@ func newService() (auth.Service, string) {
 func TestIssue(t *testing.T) {
 	svc, accessToken := newService()
 
-	n := jwt.New([]byte(secret))
+	n := jwt.New(keyManager)
 
 	apikey := auth.Key{
 		IssuedAt:  time.Now(),
@@ -469,7 +464,7 @@ func TestIdentify(t *testing.T) {
 	repoCall.Unset()
 	repoCall1.Unset()
 
-	te := jwt.New([]byte(secret))
+	te := jwt.New(keyManager)
 	key := auth.Key{
 		IssuedAt:  time.Now(),
 		ExpiresAt: time.Now().Add(refreshDuration),

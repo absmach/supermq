@@ -28,7 +28,7 @@ import (
 	pgroups "github.com/absmach/supermq/groups/private"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
-	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
+	jwksAuthn "github.com/absmach/supermq/pkg/authn/jwks"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	authsvcAuthz "github.com/absmach/supermq/pkg/authz/authsvc"
 	"github.com/absmach/supermq/pkg/callout"
@@ -73,6 +73,7 @@ const (
 	defDB                 = "groups"
 	defSvcHTTPPort        = "9004"
 	defSvcgRPCPort        = "7004"
+	jwksURL               = "http://auth:9001/keys/jwks"
 )
 
 type config struct {
@@ -154,14 +155,8 @@ func main() {
 		return
 	}
 
-	authn, authnHandler, err := authsvcAuthn.NewAuthentication(ctx, authClientConfig)
-	if err != nil {
-		logger.Error("failed to create authn " + err.Error())
-		exitCode = 1
-		return
-	}
-	defer authnHandler.Close()
-	logger.Info("Authn successfully connected to auth gRPC server " + authnHandler.Secure())
+	authn := jwksAuthn.NewAuthentication(jwksURL)
+	logger.Info("AuthN successfully set up jwks authentication on " + jwksURL)
 	authnMiddleware := smqauthn.NewAuthNMiddleware(authn)
 
 	domsGrpcCfg := grpcclient.Config{}

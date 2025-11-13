@@ -80,7 +80,8 @@ func newService() auth.Service {
 	idProvider := uuid.NewMock()
 	pService := new(policymocks.Service)
 	pEvaluator = new(policymocks.Evaluator)
-	t := jwt.New([]byte(secret))
+	keyManager := new(mocks.KeyManager)
+	t := jwt.New(keyManager)
 
 	return auth.New(krepo, pRepo, cache, hash, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration)
 }
