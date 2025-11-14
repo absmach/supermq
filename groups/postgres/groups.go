@@ -411,6 +411,10 @@ func (repo groupRepository) RetrieveByIDAndUser(ctx context.Context, domainID, u
 func (repo groupRepository) RetrieveAll(ctx context.Context, pm groups.PageMeta) (groups.Page, error) {
 	query := buildQuery(pm)
 
+	if pm.RootGroup {
+		query += " AND nlevel(g.path) = 1 "
+	}
+
 	orderClause := ""
 	var orderBy string
 	switch pm.Order {
@@ -843,6 +847,18 @@ func (repo groupRepository) RetrieveChildrenGroups(ctx context.Context, domainID
 
 func (repo groupRepository) RetrieveUserGroups(ctx context.Context, domainID, userID string, pm groups.PageMeta) (groups.Page, error) {
 	query := buildQuery(pm)
+	if pm.RootGroup {
+		query += (` AND
+			NOT EXISTS (
+			SELECT 1
+			FROM groups anc
+			JOIN final_groups fg
+				ON fg.id = anc.id
+			WHERE anc.domain_id = g.domain_id
+				AND anc.path @> g.path
+				AND anc.id <> g.id
+			)`)
+	}
 
 	return repo.retrieveGroups(ctx, domainID, userID, query, pm)
 }
@@ -1168,9 +1184,6 @@ func buildQuery(gm groups.PageMeta, ids ...string) string {
 	}
 	if len(gm.Metadata) > 0 {
 		queries = append(queries, "g.metadata @> :metadata")
-	}
-	if gm.RootGroup {
-		queries = append(queries, "nlevel(g.path) = 1")
 	}
 	if len(queries) > 0 {
 		return fmt.Sprintf("WHERE %s", strings.Join(queries, " AND "))
