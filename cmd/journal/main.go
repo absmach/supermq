@@ -48,7 +48,7 @@ const (
 	envPrefixDomains = "SMQ_DOMAINS_GRPC_"
 	defDB            = "journal"
 	defSvcHTTPPort   = "9021"
-	jwksURL          = "http://auth:9001/keys/jwks"
+	jwksURL          = "http://auth:9001/keys/.well-known/jwks.json"
 )
 
 type config struct {

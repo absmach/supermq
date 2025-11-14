@@ -57,7 +57,7 @@ const (
 	targetHTTPHost     = "localhost"
 	targetHTTPPort     = "81"
 	targetHTTPPath     = ""
-	jwksURL            = "http://auth:9001/keys/jwks"
+	jwksURL            = "http://auth:9001/keys/.well-known/jwks.json"
 )
 
 type config struct {

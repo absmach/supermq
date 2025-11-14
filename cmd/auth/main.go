@@ -149,7 +149,9 @@ func main() {
 
 	keyManagerCfg := keymanager.KeyManagerConfig{LoginDuration: cfg.AccessDuration}
 	if err := env.ParseWithOptions(&keyManagerCfg, env.Options{Prefix: envPrefixKeys}); err != nil {
-		log.Fatalf("failed to load key manager %s configuration : %s", svcName, err.Error())
+		logger.Error("failed to load key manager %s configuration : %s", svcName, err.Error())
+		exitCode = 1
+		return
 	}
 
 	keyManager, err := keymanager.NewKeyManager(ctx, keyManagerCfg, ulid.New())

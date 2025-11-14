@@ -27,9 +27,7 @@ const (
 	keysDir      = "keys"
 )
 
-var (
-	errEmptyKerDir = errors.New("key directory cannot be empty when saving to file")
-)
+var errEmptyKerDir = errors.New("key directory cannot be empty when saving to file")
 
 type keyPair struct {
 	privateKey jwk.Key
@@ -127,9 +125,12 @@ func NewKeyManager(ctx context.Context, cfg KeyManagerConfig, idProvider supermq
 		}
 	}
 
-	// Start rotation loop if interval > 0
 	if km.rotationInterval > 0 {
-		go km.rotateHandler(ctx)
+		go func() {
+			if err := km.rotateHandler(ctx); err != nil {
+				return
+			}
+		}()
 	}
 
 	return km, nil
@@ -148,11 +149,15 @@ func (km *manager) ParseJWT(token string) (jwt.Token, error) {
 	defer km.mu.RUnlock()
 
 	set := jwk.NewSet()
-	set.AddKey(km.keySet[km.activeID].publicKey)
+	if err := set.AddKey(km.keySet[km.activeID].publicKey); err != nil {
+		return nil, err
+	}
 	if km.retiredID != "" {
 		// Check if the retired key is still within the grace period
 		if time.Since(km.keySet[km.retiredID].retiredAt) <= km.gracePeriod {
-			set.AddKey(km.keySet[km.retiredID].publicKey)
+			if err := set.AddKey(km.keySet[km.retiredID].publicKey); err != nil {
+				return nil, err
+			}
 		}
 	}
 	tkn, err := jwt.Parse(
@@ -331,14 +336,20 @@ func generateKeyPair(kid string) (keyPair, error) {
 	if err != nil {
 		return keyPair{}, err
 	}
-	privateJwk.Set(jwk.KeyIDKey, kid)
+	if err := privateJwk.Set(jwk.KeyIDKey, kid); err != nil {
+		return keyPair{}, err
+	}
 
 	publicJwk, err := jwk.FromRaw(publicKey)
 	if err != nil {
 		return keyPair{}, err
 	}
-	publicJwk.Set(jwk.KeyIDKey, kid)
-	publicJwk.Set(jwk.KeyTypeKey, "RSA")
+	if err := publicJwk.Set(jwk.KeyIDKey, kid); err != nil {
+		return keyPair{}, err
+	}
+	if err := publicJwk.Set(jwk.KeyTypeKey, "RSA"); err != nil {
+		return keyPair{}, err
+	}
 
 	return keyPair{
 		privateKey: privateJwk,

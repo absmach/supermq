@@ -59,6 +59,7 @@ packages:
       Hasher:
       KeyRepository:
       KeyManager:
+      Tokenizer:
       PATS:
       PATSRepository:
       Service:

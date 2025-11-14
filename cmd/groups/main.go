@@ -73,7 +73,7 @@ const (
 	defDB                 = "groups"
 	defSvcHTTPPort        = "9004"
 	defSvcgRPCPort        = "7004"
-	jwksURL               = "http://auth:9001/keys/jwks"
+	jwksURL               = "http://auth:9001/keys/.well-known/jwks.json"
 )
 
 type config struct {

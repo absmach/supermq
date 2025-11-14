@@ -67,7 +67,7 @@ const (
 	defDB                  = "domains"
 	defSvcHTTPPort         = "9004"
 	defSvcGRPCPort         = "7004"
-	jwksURL                = "http://auth:9001/keys/jwks"
+	jwksURL                = "http://auth:9001/keys/.well-known/jwks.json"
 )
 
 type config struct {

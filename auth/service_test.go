@@ -5,12 +5,13 @@ package auth_test
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/absmach/supermq/auth"
-	"github.com/absmach/supermq/auth/jwt"
 	"github.com/absmach/supermq/auth/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/pkg/errors"
@@ -19,6 +20,8 @@ import (
 	"github.com/absmach/supermq/pkg/policies"
 	policymocks "github.com/absmach/supermq/pkg/policies/mocks"
 	"github.com/absmach/supermq/pkg/uuid"
+	"github.com/lestrrat-go/jwx/v2/jwa"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -28,15 +31,26 @@ const (
 	refreshDuration = 24 * time.Hour
 	invalidDuration = 7 * 24 * time.Hour
 	validID         = "d4ebb847-5d0e-4e46-bdd9-b6aceaaa3a22"
+	tokenType       = "type"
+	roleField       = "role"
+	VerifiedField   = "verified"
+	issuerName      = "supermq.auth"
 )
 
 var (
-	errIssueUser = errors.New("failed to issue new login key")
 	errRoleAuth  = errors.New("failed to authorize user role")
 	ErrExpiry    = errors.New("token is expired")
 	inValidToken = "invalid"
 	userID       = testsutil.GenerateUUID(&testing.T{})
 	domainID     = testsutil.GenerateUUID(&testing.T{})
+	accessKey    = auth.Key{
+		IssuedAt:  time.Now(),
+		ExpiresAt: time.Now().Add(refreshDuration),
+		Subject:   userID,
+		Type:      auth.AccessKey,
+		Role:      auth.UserRole,
+		Issuer:    issuerName,
+	}
 )
 
 var (
@@ -46,10 +60,10 @@ var (
 	patsrepo   *mocks.PATSRepository
 	cache      *mocks.Cache
 	hasher     *mocks.Hasher
-	keyManager *mocks.KeyManager
+	tokenizer  *mocks.Tokenizer
 )
 
-func newService() (auth.Service, string) {
+func newService(t *testing.T) (auth.Service, string) {
 	krepo = new(mocks.KeyRepository)
 	cache = new(mocks.Cache)
 	pService = new(policymocks.Service)
@@ -57,26 +71,25 @@ func newService() (auth.Service, string) {
 	patsrepo = new(mocks.PATSRepository)
 	hasher = new(mocks.Hasher)
 	idProvider := uuid.NewMock()
-	keyManager = new(mocks.KeyManager)
+	tokenizer = new(mocks.Tokenizer)
 
-	t := jwt.New(keyManager)
-	key := auth.Key{
+	token, _, err := signToken(issuerName, accessKey, false)
+	assert.Nil(t, err, fmt.Sprintf("Issuing access key expected to succeed: %s", err))
+
+	return auth.New(krepo, patsrepo, cache, hasher, idProvider, tokenizer, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration), token
+}
+
+func TestIssue(t *testing.T) {
+	svc, accessToken := newService(t)
+
+	accesskey := auth.Key{
 		IssuedAt:  time.Now(),
 		ExpiresAt: time.Now().Add(refreshDuration),
 		Subject:   userID,
 		Type:      auth.AccessKey,
 		Role:      auth.UserRole,
+		Issuer:    issuerName,
 	}
-	token, _ := t.Issue(key)
-
-	return auth.New(krepo, patsrepo, cache, hasher, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration), token
-}
-
-func TestIssue(t *testing.T) {
-	svc, accessToken := newService()
-
-	n := jwt.New(keyManager)
-
 	apikey := auth.Key{
 		IssuedAt:  time.Now(),
 		ExpiresAt: time.Now().Add(refreshDuration),
@@ -84,7 +97,7 @@ func TestIssue(t *testing.T) {
 		Type:      auth.APIKey,
 		Role:      auth.UserRole,
 	}
-	apiToken, err := n.Issue(apikey)
+	apiToken, _, err := signToken(issuerName, apikey, false)
 	assert.Nil(t, err, fmt.Sprintf("Issuing API key expected to succeed: %s", err))
 
 	refreshkey := auth.Key{
@@ -94,7 +107,7 @@ func TestIssue(t *testing.T) {
 		Type:      auth.RefreshKey,
 		Role:      auth.UserRole,
 	}
-	refreshToken, err := n.Issue(refreshkey)
+	refreshToken, _, err := signToken(issuerName, refreshkey, false)
 	assert.Nil(t, err, fmt.Sprintf("Issuing refresh key expected to succeed: %s", err))
 
 	cases := []struct {
@@ -102,6 +115,7 @@ func TestIssue(t *testing.T) {
 		key          auth.Key
 		token        string
 		roleCheckErr error
+		tokenizerErr error
 		err          error
 	}{
 		{
@@ -118,16 +132,20 @@ func TestIssue(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		policyCall := pEvaluator.On("CheckPolicy", mock.Anything, policies.Policy{
-			Subject:     tc.key.Subject,
-			SubjectType: policies.UserType,
-			Permission:  policies.MembershipPermission,
-			Object:      policies.SuperMQObject,
-			ObjectType:  policies.PlatformType,
-		}).Return(tc.roleCheckErr)
-		_, err := svc.Issue(context.Background(), tc.token, tc.key)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-		policyCall.Unset()
+		t.Run(tc.desc, func(t *testing.T) {
+			tokenizerCall := tokenizer.On("Issue", mock.Anything).Return(tc.token, tc.tokenizerErr)
+			policyCall := pEvaluator.On("CheckPolicy", mock.Anything, policies.Policy{
+				Subject:     tc.key.Subject,
+				SubjectType: policies.UserType,
+				Permission:  policies.MembershipPermission,
+				Object:      policies.SuperMQObject,
+				ObjectType:  policies.PlatformType,
+			}).Return(tc.roleCheckErr)
+			_, err := svc.Issue(context.Background(), tc.token, tc.key)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
+			policyCall.Unset()
+			tokenizerCall.Unset()
+		})
 	}
 
 	cases2 := []struct {
@@ -135,6 +153,7 @@ func TestIssue(t *testing.T) {
 		key          auth.Key
 		saveResponse auth.Key
 		token        string
+		tokenizerErr error
 		saveErr      error
 		roleCheckErr error
 		err          error
@@ -152,24 +171,31 @@ func TestIssue(t *testing.T) {
 		},
 	}
 	for _, tc := range cases2 {
-		repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, tc.saveErr)
-		policyCall := pEvaluator.On("CheckPolicy", mock.Anything, policies.Policy{
-			Subject:     tc.key.Subject,
-			SubjectType: policies.UserType,
-			Permission:  policies.MembershipPermission,
-			Object:      policies.SuperMQObject,
-			ObjectType:  policies.PlatformType,
-		}).Return(tc.roleCheckErr)
-		_, err := svc.Issue(context.Background(), tc.token, tc.key)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-		repoCall.Unset()
-		policyCall.Unset()
+		t.Run(tc.desc, func(t *testing.T) {
+			tokenizerCall := tokenizer.On("Issue", mock.Anything).Return(tc.token, tc.tokenizerErr)
+			repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, tc.saveErr)
+			policyCall := pEvaluator.On("CheckPolicy", mock.Anything, policies.Policy{
+				Subject:     tc.key.Subject,
+				SubjectType: policies.UserType,
+				Permission:  policies.MembershipPermission,
+				Object:      policies.SuperMQObject,
+				ObjectType:  policies.PlatformType,
+			}).Return(tc.roleCheckErr)
+			_, err := svc.Issue(context.Background(), tc.token, tc.key)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
+			tokenizerCall.Unset()
+			repoCall.Unset()
+			policyCall.Unset()
+		})
 	}
 
 	cases3 := []struct {
 		desc         string
 		key          auth.Key
 		token        string
+		issueErr     error
+		parseRes     auth.Key
+		parseErr     error
 		saveErr      error
 		roleCheckErr error
 		err          error
@@ -182,8 +208,9 @@ func TestIssue(t *testing.T) {
 				Role:     auth.UserRole,
 				IssuedAt: time.Now(),
 			},
-			token: accessToken,
-			err:   nil,
+			token:    accessToken,
+			parseRes: accesskey,
+			err:      nil,
 		},
 		{
 			desc: "issue API key with an invalid token",
@@ -193,8 +220,9 @@ func TestIssue(t *testing.T) {
 				Role:     auth.UserRole,
 				IssuedAt: time.Now(),
 			},
-			token: "invalid",
-			err:   svcerr.ErrAuthentication,
+			token:    "invalid",
+			parseErr: svcerr.ErrAuthentication,
+			err:      svcerr.ErrAuthentication,
 		},
 		{
 			desc: " issue API key with invalid key request",
@@ -204,8 +232,9 @@ func TestIssue(t *testing.T) {
 				Role:     auth.UserRole,
 				IssuedAt: time.Now(),
 			},
-			token: apiToken,
-			err:   svcerr.ErrAuthentication,
+			token:    apiToken,
+			issueErr: svcerr.ErrAuthentication,
+			err:      svcerr.ErrAuthentication,
 		},
 		{
 			desc: "issue API key with failed to save",
@@ -215,9 +244,10 @@ func TestIssue(t *testing.T) {
 				Role:     auth.UserRole,
 				IssuedAt: time.Now(),
 			},
-			token:   accessToken,
-			saveErr: repoerr.ErrNotFound,
-			err:     repoerr.ErrNotFound,
+			token:    accessToken,
+			parseRes: accesskey,
+			saveErr:  repoerr.ErrNotFound,
+			err:      repoerr.ErrNotFound,
 		},
 		{
 			desc: "issue API key with failed to check role",
@@ -228,30 +258,40 @@ func TestIssue(t *testing.T) {
 				IssuedAt: time.Now(),
 			},
 			token:        accessToken,
+			parseRes:     accesskey,
 			roleCheckErr: errRoleAuth,
 			err:          errRoleAuth,
 		},
 	}
 	for _, tc := range cases3 {
-		repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, tc.saveErr)
-		policyCall := pEvaluator.On("CheckPolicy", mock.Anything, policies.Policy{
-			Subject:     tc.key.Subject,
-			SubjectType: policies.UserType,
-			Permission:  policies.MembershipPermission,
-			Object:      policies.SuperMQObject,
-			ObjectType:  policies.PlatformType,
-		}).Return(tc.roleCheckErr)
-		_, err := svc.Issue(context.Background(), tc.token, tc.key)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-		repoCall.Unset()
-		policyCall.Unset()
+		t.Run(tc.desc, func(t *testing.T) {
+			tokenizerCall := tokenizer.On("Issue", mock.Anything).Return(tc.token, tc.issueErr)
+			tokenizerCall1 := tokenizer.On("Parse", mock.Anything).Return(tc.parseRes, tc.parseErr)
+			repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, tc.saveErr)
+			policyCall := pEvaluator.On("CheckPolicy", mock.Anything, policies.Policy{
+				Subject:     tc.key.Subject,
+				SubjectType: policies.UserType,
+				Permission:  policies.MembershipPermission,
+				Object:      policies.SuperMQObject,
+				ObjectType:  policies.PlatformType,
+			}).Return(tc.roleCheckErr)
+			_, err := svc.Issue(context.Background(), tc.token, tc.key)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
+			tokenizerCall.Unset()
+			tokenizerCall1.Unset()
+			repoCall.Unset()
+			policyCall.Unset()
+		})
 	}
 
 	cases4 := []struct {
 		desc         string
 		key          auth.Key
 		token        string
+		parseRes     auth.Key
+		parseErr     error
 		roleCheckErr error
+		issueErr     error
 		err          error
 	}{
 		{
@@ -262,8 +302,9 @@ func TestIssue(t *testing.T) {
 				Subject:  userID,
 				Role:     auth.UserRole,
 			},
-			token: refreshToken,
-			err:   nil,
+			token:    refreshToken,
+			parseRes: refreshkey,
+			err:      nil,
 		},
 		{
 			desc: "issue refresh key with invalid token",
@@ -273,8 +314,9 @@ func TestIssue(t *testing.T) {
 				Subject:  userID,
 				Role:     auth.UserRole,
 			},
-			token: inValidToken,
-			err:   svcerr.ErrAuthentication,
+			token:    inValidToken,
+			parseErr: svcerr.ErrAuthentication,
+			err:      svcerr.ErrAuthentication,
 		},
 		{
 			desc: "issue refresh key with empty token",
@@ -284,8 +326,9 @@ func TestIssue(t *testing.T) {
 				Subject:  userID,
 				Role:     auth.UserRole,
 			},
-			token: "",
-			err:   svcerr.ErrAuthentication,
+			token:    "",
+			parseErr: svcerr.ErrAuthentication,
+			err:      svcerr.ErrAuthentication,
 		},
 		{
 			desc: "issue refresh key with failed to check role",
@@ -296,88 +339,103 @@ func TestIssue(t *testing.T) {
 				Role:     auth.UserRole,
 			},
 			token:        refreshToken,
+			parseRes:     refreshkey,
 			roleCheckErr: errRoleAuth,
 			err:          errRoleAuth,
 		},
 	}
 	for _, tc := range cases4 {
-		policyCall := pEvaluator.On("CheckPolicy", mock.Anything, policies.Policy{
-			Subject:     tc.key.Subject,
-			SubjectType: policies.UserType,
-			Permission:  policies.MembershipPermission,
-			Object:      policies.SuperMQObject,
-			ObjectType:  policies.PlatformType,
-		}).Return(tc.roleCheckErr)
-		_, err := svc.Issue(context.Background(), tc.token, tc.key)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-		policyCall.Unset()
+		t.Run(tc.desc, func(t *testing.T) {
+			tokenizerCall := tokenizer.On("Issue", mock.Anything).Return(tc.token, tc.issueErr)
+			tokenizerCall1 := tokenizer.On("Parse", mock.Anything).Return(tc.parseRes, tc.parseErr)
+			policyCall := pEvaluator.On("CheckPolicy", mock.Anything, policies.Policy{
+				Subject:     tc.key.Subject,
+				SubjectType: policies.UserType,
+				Permission:  policies.MembershipPermission,
+				Object:      policies.SuperMQObject,
+				ObjectType:  policies.PlatformType,
+			}).Return(tc.roleCheckErr)
+			_, err := svc.Issue(context.Background(), tc.token, tc.key)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
+			tokenizerCall.Unset()
+			tokenizerCall1.Unset()
+			policyCall.Unset()
+		})
 	}
 }
 
 func TestRevoke(t *testing.T) {
-	svc, _ := newService()
-	repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, errIssueUser)
-	policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-	secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Role: auth.UserRole, IssuedAt: time.Now(), Subject: userID})
-	repoCall.Unset()
-	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	repoCall1 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-	key := auth.Key{
+	svc, _ := newService(t)
+
+	accesskey := auth.Key{
+		IssuedAt:  time.Now(),
+		ExpiresAt: time.Now().Add(refreshDuration),
+		Subject:   userID,
+		Type:      auth.AccessKey,
+		Role:      auth.UserRole,
+		Issuer:    issuerName,
+	}
+	apikey := auth.Key{
 		Type:     auth.APIKey,
 		Role:     auth.UserRole,
 		IssuedAt: time.Now(),
 		Subject:  userID,
 	}
-	_, err = svc.Issue(context.Background(), secret.AccessToken, key)
-	assert.Nil(t, err, fmt.Sprintf("Issuing user's key expected to succeed: %s", err))
-	repoCall1.Unset()
-	policyCall.Unset()
+	apiToken, _, err := signToken(issuerName, apikey, false)
+	assert.Nil(t, err, fmt.Sprintf("Issuing API key expected to succeed: %s", err))
 
 	cases := []struct {
-		desc  string
-		id    string
-		token string
-		err   error
+		desc     string
+		id       string
+		token    string
+		parseRes auth.Key
+		parseErr error
+		err      error
 	}{
 		{
-			desc:  "revoke login key",
-			token: secret.AccessToken,
-			err:   nil,
+			desc:     "revoke login key",
+			token:    apiToken,
+			parseRes: accesskey,
+			err:      nil,
 		},
 		{
-			desc:  "revoke non-existing login key",
-			token: secret.AccessToken,
-			err:   nil,
+			desc:     "revoke non-existing login key",
+			token:    apiToken,
+			parseRes: accesskey,
+			err:      nil,
 		},
 		{
-			desc:  "revoke with empty login key",
-			token: "",
-			err:   svcerr.ErrAuthentication,
+			desc:     "revoke with empty login key",
+			token:    "",
+			parseRes: auth.Key{},
+			parseErr: svcerr.ErrAuthentication,
+			err:      svcerr.ErrAuthentication,
 		},
 		{
-			desc:  "revoke login key with failed to remove",
-			id:    "invalidID",
-			token: secret.AccessToken,
-			err:   svcerr.ErrNotFound,
+			desc:     "revoke login key with failed to remove",
+			id:       "invalidID",
+			token:    apiToken,
+			parseRes: accesskey,
+			err:      svcerr.ErrNotFound,
 		},
 	}
 
 	for _, tc := range cases {
-		repoCall := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(tc.err)
-		err := svc.Revoke(context.Background(), tc.token, tc.id)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-		repoCall.Unset()
+		t.Run(tc.desc, func(t *testing.T) {
+			tokenizerCall := tokenizer.On("Parse", mock.Anything).Return(tc.parseRes, tc.parseErr)
+			repoCall := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(tc.err)
+			err := svc.Revoke(context.Background(), tc.token, tc.id)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
+			tokenizerCall.Unset()
+			repoCall.Unset()
+		})
 	}
 }
 
 func TestRetrieve(t *testing.T) {
-	svc, _ := newService()
-	repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-	repoCall1 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-	secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Subject: userID, Role: auth.UserRole, IssuedAt: time.Now()})
-	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	repoCall.Unset()
-	key := auth.Key{
+	svc, accessToken := newService(t)
+
+	apiKey := auth.Key{
 		ID:       "id",
 		Type:     auth.APIKey,
 		Subject:  userID,
@@ -385,86 +443,114 @@ func TestRetrieve(t *testing.T) {
 		IssuedAt: time.Now(),
 	}
 
-	repoCall3 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-	userToken, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Subject: userID, Role: auth.UserRole, IssuedAt: time.Now()})
-	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	repoCall3.Unset()
+	apiToken, _, err := signToken(issuerName, apiKey, false)
+	assert.Nil(t, err, fmt.Sprintf("Issuing API key expected to succeed: %s", err))
 
-	repoCall4 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-	apiToken, err := svc.Issue(context.Background(), secret.AccessToken, key)
-	assert.Nil(t, err, fmt.Sprintf("Issuing login's key expected to succeed: %s", err))
-	repoCall4.Unset()
-
-	repoCall5 := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-	resetToken, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.RecoveryKey, Subject: userID, Role: auth.UserRole, IssuedAt: time.Now()})
-	assert.Nil(t, err, fmt.Sprintf("Issuing reset key expected to succeed: %s", err))
-	repoCall5.Unset()
-	repoCall1.Unset()
+	recoveryKey := auth.Key{
+		Type:     auth.RecoveryKey,
+		Subject:  userID,
+		Role:     auth.UserRole,
+		IssuedAt: time.Now(),
+	}
+	resetToken, _, err := signToken(issuerName, recoveryKey, false)
+	assert.Nil(t, err, fmt.Sprintf("Issuing recovery key expected to succeed: %s", err))
 
 	cases := []struct {
-		desc  string
-		id    string
-		token string
-		err   error
+		desc     string
+		id       string
+		token    string
+		parseRes auth.Key
+		parseErr error
+		err      error
 	}{
 		{
-			desc:  "retrieve login key",
-			token: userToken.AccessToken,
-			err:   nil,
+			desc:     "retrieve login key",
+			token:    accessToken,
+			parseRes: accessKey,
+			err:      nil,
 		},
 		{
-			desc:  "retrieve non-existing login key",
-			id:    "invalid",
-			token: userToken.AccessToken,
-			err:   svcerr.ErrNotFound,
+			desc:     "retrieve non-existing login key",
+			id:       "invalid",
+			token:    accessToken,
+			parseRes: accessKey,
+			err:      svcerr.ErrNotFound,
 		},
 		{
-			desc:  "retrieve with wrong login key",
-			token: "wrong",
-			err:   svcerr.ErrAuthentication,
+			desc:     "retrieve with wrong login key",
+			token:    "wrong",
+			parseErr: svcerr.ErrAuthentication,
+			err:      svcerr.ErrAuthentication,
 		},
 		{
-			desc:  "retrieve with API token",
-			token: apiToken.AccessToken,
-			err:   svcerr.ErrAuthentication,
+			desc:     "retrieve with API token",
+			token:    apiToken,
+			parseRes: apiKey,
+			err:      svcerr.ErrAuthentication,
 		},
 		{
-			desc:  "retrieve with reset token",
-			token: resetToken.AccessToken,
-			err:   svcerr.ErrAuthentication,
+			desc:     "retrieve with reset token",
+			token:    resetToken,
+			parseRes: recoveryKey,
+			err:      svcerr.ErrAuthentication,
 		},
 	}
 
 	for _, tc := range cases {
-		repoCall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(auth.Key{}, tc.err)
-		_, err := svc.RetrieveKey(context.Background(), tc.token, tc.id)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-		repoCall.Unset()
+		t.Run(tc.desc, func(t *testing.T) {
+			tokenizerCall := tokenizer.On("Parse", mock.Anything).Return(tc.parseRes, tc.parseErr)
+			repoCall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(auth.Key{}, tc.err)
+			_, err := svc.RetrieveKey(context.Background(), tc.token, tc.id)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
+			tokenizerCall.Unset()
+			repoCall.Unset()
+		})
 	}
 }
 
 func TestIdentify(t *testing.T) {
-	svc, _ := newService()
+	svc, accessToken := newService(t)
 
-	repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-	repoCall1 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-	loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Subject: userID, Role: auth.UserRole, IssuedAt: time.Now()})
-	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
+	refreshKey := auth.Key{
+		Type:     auth.RefreshKey,
+		Role:     auth.UserRole,
+		Subject:  userID,
+		IssuedAt: time.Now(),
+	}
+	refreshToken, _, err := signToken(issuerName, refreshKey, false)
+	assert.Nil(t, err, fmt.Sprintf("Issuing refresh key expected to succeed: %s", err))
 
-	recoverySecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.RecoveryKey, Role: auth.UserRole, IssuedAt: time.Now(), Subject: userID})
-	assert.Nil(t, err, fmt.Sprintf("Issuing reset key expected to succeed: %s", err))
+	recoveryKey := auth.Key{
+		Type:     auth.RecoveryKey,
+		Role:     auth.UserRole,
+		IssuedAt: time.Now(),
+		Subject:  userID,
+	}
+	recoverySecret, _, err := signToken(issuerName, recoveryKey, false)
+	assert.Nil(t, err, fmt.Sprintf("Issuing recovery key expected to succeed: %s", err))
 
-	apiSecret, err := svc.Issue(context.Background(), loginSecret.AccessToken, auth.Key{Type: auth.APIKey, Role: auth.UserRole, Subject: userID, IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Minute)})
-	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
+	apiKey := auth.Key{
+		Type:      auth.APIKey,
+		Role:      auth.UserRole,
+		Subject:   userID,
+		IssuedAt:  time.Now(),
+		ExpiresAt: time.Now().Add(time.Minute),
+	}
+	apiSecret, _, err := signToken(issuerName, apiKey, false)
+	assert.Nil(t, err, fmt.Sprintf("Issuing API key expected to succeed: %s", err))
 
 	exp0 := time.Now().UTC().Add(-10 * time.Second).Round(time.Second)
 	exp1 := time.Now().UTC().Add(-1 * time.Minute).Round(time.Second)
-	expSecret, err := svc.Issue(context.Background(), loginSecret.AccessToken, auth.Key{Type: auth.APIKey, Role: auth.UserRole, IssuedAt: exp0, ExpiresAt: exp1})
-	assert.Nil(t, err, fmt.Sprintf("Issuing expired login key expected to succeed: %s", err))
-	repoCall.Unset()
-	repoCall1.Unset()
+	expiredKey := auth.Key{
+		Type:      auth.APIKey,
+		Role:      auth.UserRole,
+		Subject:   userID,
+		IssuedAt:  exp0,
+		ExpiresAt: exp1,
+	}
+	expSecret, _, err := signToken(issuerName, expiredKey, false)
+	assert.Nil(t, err, fmt.Sprintf("Issuing expired API key expected to succeed: %s", err))
 
-	te := jwt.New(keyManager)
 	key := auth.Key{
 		IssuedAt:  time.Now(),
 		ExpiresAt: time.Now().Add(refreshDuration),
@@ -472,102 +558,115 @@ func TestIdentify(t *testing.T) {
 		Subject:   userID,
 		Role:      auth.UserRole,
 	}
-	invalidTokenType, _ := te.Issue(key)
+	invalidTokenType, _, err := signToken(issuerName, key, false)
+	assert.Nil(t, err, fmt.Sprintf("Issuing invalid token type key expected to succeed: %s", err))
 
 	cases := []struct {
-		desc    string
-		key     string
-		subject string
-		err     error
+		desc     string
+		key      string
+		subject  string
+		parseRes auth.Key
+		parseErr error
+		err      error
 	}{
 		{
-			desc:    "identify login key",
-			key:     loginSecret.AccessToken,
-			subject: userID,
-			err:     nil,
+			desc:     "identify login key",
+			key:      accessToken,
+			subject:  userID,
+			parseRes: accessKey,
+			err:      nil,
 		},
 		{
-			desc:    "identify refresh key",
-			key:     loginSecret.RefreshToken,
-			subject: userID,
-			err:     nil,
+			desc:     "identify refresh key",
+			key:      refreshToken,
+			subject:  userID,
+			parseRes: refreshKey,
+			err:      nil,
 		},
 		{
-			desc:    "identify recovery key",
-			key:     recoverySecret.AccessToken,
-			subject: userID,
-			err:     nil,
+			desc:     "identify recovery key",
+			key:      recoverySecret,
+			subject:  userID,
+			parseRes: recoveryKey,
+			err:      nil,
 		},
 		{
-			desc:    "identify API key",
-			key:     apiSecret.AccessToken,
-			subject: userID,
-			err:     nil,
+			desc:     "identify API key",
+			key:      apiSecret,
+			subject:  userID,
+			parseRes: apiKey,
+			err:      nil,
 		},
 		{
-			desc:    "identify expired API key",
-			key:     expSecret.AccessToken,
-			subject: "",
-			err:     auth.ErrKeyExpired,
+			desc:     "identify expired API key",
+			key:      expSecret,
+			subject:  "",
+			parseErr: ErrExpiry,
+			err:      auth.ErrKeyExpired,
 		},
 		{
-			desc:    "identify API key with failed to retrieve",
-			key:     apiSecret.AccessToken,
-			subject: "",
-			err:     svcerr.ErrAuthentication,
+			desc:     "identify API key with failed to retrieve",
+			key:      apiSecret,
+			subject:  "",
+			parseRes: apiKey,
+			err:      svcerr.ErrAuthentication,
 		},
 		{
-			desc:    "identify invalid key",
-			key:     "invalid",
-			subject: "",
-			err:     svcerr.ErrAuthentication,
+			desc:     "identify invalid key",
+			key:      "invalid",
+			subject:  "",
+			parseErr: svcerr.ErrAuthentication,
+			err:      svcerr.ErrAuthentication,
 		},
 		{
-			desc:    "identify invalid key type",
-			key:     invalidTokenType,
-			subject: "",
-			err:     svcerr.ErrAuthentication,
+			desc:     "identify invalid key type",
+			key:      invalidTokenType,
+			subject:  "",
+			parseErr: svcerr.ErrAuthentication,
+			err:      svcerr.ErrAuthentication,
 		},
 	}
 
 	for _, tc := range cases {
-		repoCall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(auth.Key{}, tc.err)
-		repoCall1 := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(tc.err)
-		idt, err := svc.Identify(context.Background(), tc.key)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-		assert.Equal(t, tc.subject, idt.Subject, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.subject, idt))
-		repoCall.Unset()
-		repoCall1.Unset()
+		t.Run(tc.desc, func(t *testing.T) {
+			tokenizerCall := tokenizer.On("Parse", mock.Anything).Return(tc.parseRes, tc.parseErr)
+			repoCall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(auth.Key{}, tc.err)
+			repoCall1 := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(tc.err)
+			idt, err := svc.Identify(context.Background(), tc.key)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
+			assert.Equal(t, tc.subject, idt.Subject, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.subject, idt))
+			tokenizerCall.Unset()
+			repoCall.Unset()
+			repoCall1.Unset()
+		})
 	}
 }
 
 func TestAuthorize(t *testing.T) {
-	svc, accessToken := newService()
+	svc, accessToken := newService(t)
 
-	repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-	repoCall1 := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-	loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Subject: userID, Role: auth.UserRole, IssuedAt: time.Now()})
-	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	repoCall.Unset()
-
-	repoCall = krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
 	exp1 := time.Now().Add(-2 * time.Second)
-	expSecret, err := svc.Issue(context.Background(), loginSecret.AccessToken, auth.Key{Type: auth.APIKey, Role: auth.UserRole, IssuedAt: time.Now(), ExpiresAt: exp1})
-	assert.Nil(t, err, fmt.Sprintf("Issuing expired login key expected to succeed: %s", err))
-	repoCall.Unset()
+	expKey := auth.Key{Type: auth.APIKey, Role: auth.UserRole, IssuedAt: time.Now(), ExpiresAt: exp1}
+	expSecret, _, err := signToken(issuerName, expKey, false)
+	assert.Nil(t, err, fmt.Sprintf("Issuing expired key expected to succeed: %s", err))
 
-	repoCall = krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-	repoCall1 = pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-	emptySubject, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Subject: "", Role: auth.UserRole, IssuedAt: time.Now()})
-	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	repoCall.Unset()
-	repoCall1.Unset()
+	emptySubjectKey := auth.Key{
+		Type:     auth.AccessKey,
+		Subject:  "",
+		Role:     auth.UserRole,
+		IssuedAt: time.Now(),
+	}
+	emptySubject, _, err := signToken(issuerName, emptySubjectKey, false)
+	assert.Nil(t, err, fmt.Sprintf("Issuing empty subject key expected to succeed: %s", err))
 
 	cases := []struct {
 		desc                 string
 		policyReq            policies.Policy
 		checkDomainPolicyReq policies.Policy
 		checkPolicyReq       policies.Policy
+		parseReq             string
+		parseRes             auth.Key
+		parseErr             error
 		callBackErr          error
 		checkPolicyErr       error
 		checkDomainPolicyErr error
@@ -597,7 +696,9 @@ func TestAuthorize(t *testing.T) {
 				ObjectType:  policies.DomainType,
 				Permission:  policies.MembershipPermission,
 			},
-			err: nil,
+			parseReq: accessToken,
+			parseRes: accessKey,
+			err:      nil,
 		},
 		{
 			desc: "authorize with malformed policy request",
@@ -635,13 +736,15 @@ func TestAuthorize(t *testing.T) {
 				ObjectType:  policies.DomainType,
 				Permission:  policies.MembershipPermission,
 			},
+			parseReq:             accessToken,
+			parseRes:             accessKey,
 			checkDomainPolicyErr: svcerr.ErrAuthorization,
 			err:                  svcerr.ErrDomainAuthorization,
 		},
 		{
 			desc: "authorize an expired token",
 			policyReq: policies.Policy{
-				Subject:     expSecret.AccessToken,
+				Subject:     expSecret,
 				SubjectType: policies.UserType,
 				SubjectKind: policies.TokenKind,
 				Object:      policies.SuperMQObject,
@@ -656,12 +759,15 @@ func TestAuthorize(t *testing.T) {
 				ObjectType:  policies.DomainType,
 				Permission:  policies.MembershipPermission,
 			},
-			err: svcerr.ErrAuthentication,
+			parseReq: expSecret,
+			parseRes: auth.Key{},
+			parseErr: svcerr.ErrAuthentication,
+			err:      svcerr.ErrAuthentication,
 		},
 		{
 			desc: "authorize a token with an empty subject",
 			policyReq: policies.Policy{
-				Subject:     emptySubject.AccessToken,
+				Subject:     emptySubject,
 				SubjectType: policies.UserType,
 				SubjectKind: policies.TokenKind,
 				Object:      validID,
@@ -676,12 +782,14 @@ func TestAuthorize(t *testing.T) {
 				ObjectType:  policies.DomainType,
 				Permission:  policies.MembershipPermission,
 			},
-			err: svcerr.ErrDomainAuthorization,
+			parseReq: emptySubject,
+			parseRes: emptySubjectKey,
+			err:      svcerr.ErrDomainAuthorization,
 		},
 		{
 			desc: "authorize a token with an empty subject and invalid type",
 			policyReq: policies.Policy{
-				Subject:     emptySubject.AccessToken,
+				Subject:     emptySubject,
 				SubjectType: policies.UserType,
 				SubjectKind: policies.TokenKind,
 				Object:      policies.SuperMQObject,
@@ -701,12 +809,14 @@ func TestAuthorize(t *testing.T) {
 				ObjectType:  policies.DomainType,
 				Permission:  policies.MembershipPermission,
 			},
-			err: svcerr.ErrDomainAuthorization,
+			parseReq: emptySubject,
+			parseRes: emptySubjectKey,
+			err:      svcerr.ErrDomainAuthorization,
 		},
 		{
 			desc: "authorize a token with an empty subject and invalid object type",
 			policyReq: policies.Policy{
-				Subject:     emptySubject.AccessToken,
+				Subject:     emptySubject,
 				SubjectType: policies.UserType,
 				SubjectKind: policies.TokenKind,
 				Object:      validID,
@@ -726,7 +836,9 @@ func TestAuthorize(t *testing.T) {
 				ObjectType:  policies.DomainType,
 				Permission:  policies.MembershipPermission,
 			},
-			err: svcerr.ErrAuthentication,
+			parseReq: emptySubject,
+			parseRes: emptySubjectKey,
+			err:      svcerr.ErrAuthentication,
 		},
 		{
 			desc: "authorize a user key successfully",
@@ -756,7 +868,7 @@ func TestAuthorize(t *testing.T) {
 		{
 			desc: "authorize token with empty subject and domain object type",
 			policyReq: policies.Policy{
-				Subject:     emptySubject.AccessToken,
+				Subject:     emptySubject,
 				SubjectType: policies.UserType,
 				SubjectKind: policies.TokenKind,
 				Object:      policies.SuperMQObject,
@@ -776,18 +888,24 @@ func TestAuthorize(t *testing.T) {
 				ObjectType:  policies.DomainType,
 				Permission:  policies.MembershipPermission,
 			},
-			err: svcerr.ErrDomainAuthorization,
+			parseReq: emptySubject,
+			parseRes: emptySubjectKey,
+			err:      svcerr.ErrDomainAuthorization,
 		},
 	}
 	for _, tc := range cases {
-		policyCall := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPolicyReq).Return(tc.checkPolicyErr)
-		policyCall1 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkDomainPolicyReq).Return(tc.checkDomainPolicyErr)
-		repoCall := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		err := svc.Authorize(context.Background(), tc.policyReq)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-		policyCall.Unset()
-		policyCall1.Unset()
-		repoCall.Unset()
+		t.Run(tc.desc, func(t *testing.T) {
+			tokenizerCall := tokenizer.On("Parse", tc.parseReq).Return(tc.parseRes, tc.parseErr)
+			policyCall := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPolicyReq).Return(tc.checkPolicyErr)
+			policyCall1 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkDomainPolicyReq).Return(tc.checkDomainPolicyErr)
+			repoCall := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			err := svc.Authorize(context.Background(), tc.policyReq)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
+			tokenizerCall.Unset()
+			policyCall.Unset()
+			policyCall1.Unset()
+			repoCall.Unset()
+		})
 	}
 }
 
@@ -829,8 +947,10 @@ func TestSwitchToPermission(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		result := auth.SwitchToPermission(tc.relation)
-		assert.Equal(t, tc.result, result, fmt.Sprintf("switching to permission expected to succeed: %s", result))
+		t.Run(tc.desc, func(t *testing.T) {
+			result := auth.SwitchToPermission(tc.relation)
+			assert.Equal(t, tc.result, result, fmt.Sprintf("switching to permission expected to succeed: %s", result))
+		})
 	}
 }
 
@@ -868,8 +988,10 @@ func TestEncodeDomainUserID(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		ar := auth.EncodeDomainUserID(tc.domainID, tc.userID)
-		assert.Equal(t, tc.response, ar, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.response, ar))
+		t.Run(tc.desc, func(t *testing.T) {
+			ar := auth.EncodeDomainUserID(tc.domainID, tc.userID)
+			assert.Equal(t, tc.response, ar, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.response, ar))
+		})
 	}
 }
 
@@ -907,8 +1029,54 @@ func TestDecodeDomainUserID(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		ar, er := auth.DecodeDomainUserID(tc.domainUserID)
-		assert.Equal(t, tc.respUserID, er, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.respUserID, er))
-		assert.Equal(t, tc.respDomainID, ar, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.respDomainID, ar))
+		t.Run(tc.desc, func(t *testing.T) {
+			ar, er := auth.DecodeDomainUserID(tc.domainUserID)
+			assert.Equal(t, tc.respUserID, er, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.respUserID, er))
+			assert.Equal(t, tc.respDomainID, ar, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.respDomainID, ar))
+		})
 	}
+}
+
+func newToken(issuerName string, key auth.Key) jwt.Token {
+	builder := jwt.NewBuilder()
+	builder.
+		Issuer(issuerName).
+		IssuedAt(key.IssuedAt).
+		Claim(tokenType, key.Type).
+		Expiration(key.ExpiresAt)
+	builder.Claim(roleField, key.Role)
+	builder.Claim(VerifiedField, key.Verified)
+	if key.Subject != "" {
+		builder.Subject(key.Subject)
+	}
+	if key.ID != "" {
+		builder.JwtID(key.ID)
+	}
+	tkn, _ := builder.Build()
+	return tkn
+}
+
+func signToken(issuerName string, key auth.Key, parseToken bool) (string, jwt.Token, error) {
+	tkn := newToken(issuerName, key)
+	pKey, err := rsa.GenerateKey(rand.Reader, 1024)
+	if err != nil {
+		return "", nil, err
+	}
+	pubKey := &pKey.PublicKey
+	sTkn, err := jwt.Sign(tkn, jwt.WithKey(jwa.RS256, pKey))
+	if err != nil {
+		return "", nil, err
+	}
+	if !parseToken {
+		return string(sTkn), nil, nil
+	}
+	pTkn, err := jwt.Parse(
+		sTkn,
+		jwt.WithValidate(true),
+		jwt.WithKey(jwa.RS256, pubKey),
+	)
+	if err != nil {
+		return "", nil, err
+	}
+	return string(sTkn), pTkn, nil
 }
