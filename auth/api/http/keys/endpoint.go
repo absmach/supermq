@@ -85,3 +85,11 @@ func revokeEndpoint(svc auth.Service) endpoint.Endpoint {
 		return revokeKeyRes{}, nil
 	}
 }
+
+func retrieveJWKSEndpoint(svc auth.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request any) (any, error) {
+		jwks := svc.RetrieveJWKS()
+
+		return retrieveJWKSRes{jwks}, nil
+	}
+}
