@@ -20,9 +20,11 @@ import (
 )
 
 var (
-	db       *sqlx.DB
-	database pgclient.Database
-	tracer   = otel.Tracer("repo_tests")
+	db        *sqlx.DB
+	database  pgclient.Database
+	ddatabase pgclient.Database
+	gdatabase pgclient.Database
+	tracer    = otel.Tracer("repo_tests")
 )
 
 func TestMain(m *testing.M) {
@@ -88,6 +90,10 @@ func TestMain(m *testing.M) {
 	}
 
 	database = pgclient.NewDatabase(db, dbConfig, tracer)
+
+	ddatabase = pgclient.NewDatabase(db, dbConfig, tracer)
+
+	gdatabase = pgclient.NewDatabase(db, dbConfig, tracer)
 
 	code := m.Run()
 

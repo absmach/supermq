@@ -14,19 +14,25 @@ import (
 	"github.com/0x6flab/namegenerator"
 	"github.com/absmach/supermq/clients"
 	"github.com/absmach/supermq/clients/postgres"
+	"github.com/absmach/supermq/domains"
+	dpostgres "github.com/absmach/supermq/domains/postgres"
+	"github.com/absmach/supermq/groups"
+	gpostgres "github.com/absmach/supermq/groups/postgres"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/connections"
 	"github.com/absmach/supermq/pkg/errors"
 	repoerr "github.com/absmach/supermq/pkg/errors/repository"
+	"github.com/absmach/supermq/pkg/roles"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 const (
 	maxNameSize = 1024
-	password    = "$tr0ngPassw0rd"
 	emailSuffix = "@example.com"
+	defOrder    = "created_at"
+	defDir      = "asc"
 )
 
 var (
@@ -44,7 +50,57 @@ var (
 		CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
 		Status:    clients.EnabledStatus,
 	}
-	invalidID = strings.Repeat("a", 37)
+	invalidID         = strings.Repeat("a", 37)
+	directAccess      = "direct"
+	directGroupAccess = "direct_group"
+	domainAccess      = "domain"
+	availableActions  = []string{
+		"delete",
+		"membership",
+		"read",
+		"update",
+	}
+	domainAvailableActions = []string{
+		"client_add_role_users",
+		"client_connect_to_channel",
+		"client_create",
+		"client_delete",
+		"client_manage_role",
+		"client_read",
+		"client_remove_role_users",
+		"client_set_parent_group",
+		"client_update",
+		"client_view_role_users",
+	}
+	groupAvailableActions = []string{
+		"client_add_role_users",
+		"client_connect_to_channel",
+		"client_create",
+		"client_delete",
+		"client_manage_role",
+		"client_read",
+		"client_remove_role_users",
+		"client_set_parent_group",
+		"client_update",
+		"client_view_role_users",
+		"subgroup_client_add_role_users",
+		"subgroup_client_connect_to_channel",
+		"subgroup_client_create",
+		"subgroup_client_delete",
+		"subgroup_client_manage_role",
+		"subgroup_client_read",
+		"subgroup_client_remove_role_users",
+		"subgroup_client_set_parent_group",
+		"subgroup_client_update",
+		"subgroup_client_view_role_users",
+		"subgroup_manage_role",
+		"subgroup_membership",
+		"subgroup_read",
+		"subgroup_remove_role_users",
+		"subgroup_set_child",
+		"subgroup_set_parent",
+		"subgroup_update",
+	}
 )
 
 func TestClientsSave(t *testing.T) {
@@ -853,6 +909,126 @@ func TestChangeStatus(t *testing.T) {
 	}
 }
 
+func TestRetrieveByIDsWithRoles(t *testing.T) {
+	t.Cleanup(func() {
+		_, err := db.Exec("DELETE FROM clients")
+		require.Nil(t, err, fmt.Sprintf("clean clients unexpected error: %s", err))
+	})
+
+	repo := postgres.NewRepository(database)
+
+	nClients := uint64(10)
+
+	domainID := testsutil.GenerateUUID(t)
+	userID := testsutil.GenerateUUID(t)
+	expectedClients := []clients.Client{}
+	for range nClients {
+		client := clients.Client{
+			ID:     testsutil.GenerateUUID(t),
+			Domain: domainID,
+			Name:   namegen.Generate(),
+			Credentials: clients.Credentials{
+				Identity: namegen.Generate() + emailSuffix,
+				Secret:   testsutil.GenerateUUID(t),
+			},
+			Tags: namegen.GenerateMultiple(5),
+			Metadata: clients.Metadata{
+				"department": namegen.Generate(),
+			},
+			Status:    clients.EnabledStatus,
+			CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
+		}
+		_, err := repo.Save(context.Background(), client)
+		require.Nil(t, err, fmt.Sprintf("add new client: expected nil got %s\n", err))
+		newRolesProvision := []roles.RoleProvision{
+			{
+				Role: roles.Role{
+					ID:        testsutil.GenerateUUID(t) + "_" + client.ID,
+					Name:      "admin",
+					EntityID:  client.ID,
+					CreatedAt: validTimestamp,
+					CreatedBy: userID,
+				},
+				OptionalActions: availableActions,
+				OptionalMembers: []string{userID},
+			},
+		}
+		npr, err := repo.AddRoles(context.Background(), newRolesProvision)
+		require.Nil(t, err, fmt.Sprintf("add roles unexpected error: %s", err))
+		expectedClient := client
+		expectedClient.Roles = []roles.MemberRoleActions{
+			{
+				RoleID:     npr[0].Role.ID,
+				RoleName:   npr[0].Role.Name,
+				Actions:    npr[0].OptionalActions,
+				AccessType: directAccess,
+			},
+		}
+		expectedClients = append(expectedClients, expectedClient)
+	}
+
+	cases := []struct {
+		desc     string
+		clientID string
+		userID   string
+		response clients.Client
+		err      error
+	}{
+		{
+			desc:     "retrieve client with role successfully",
+			clientID: expectedClients[0].ID,
+			userID:   userID,
+			response: expectedClients[0],
+			err:      nil,
+		},
+		{
+			desc:     "retrieve another client with role successfully",
+			clientID: expectedClients[1].ID,
+			userID:   userID,
+			response: expectedClients[1],
+			err:      nil,
+		},
+		{
+			desc:     "retrieve client with invalid client id",
+			clientID: testsutil.GenerateUUID(t),
+			userID:   userID,
+			response: clients.Client{},
+			err:      repoerr.ErrNotFound,
+		},
+		{
+			desc:     "retrieve client with empty client id",
+			clientID: "",
+			userID:   userID,
+			response: clients.Client{},
+			err:      repoerr.ErrNotFound,
+		},
+		{
+			desc:     "retrieve client with invalid user id",
+			clientID: expectedClients[0].ID,
+			userID:   testsutil.GenerateUUID(t),
+			response: clients.Client{},
+			err:      repoerr.ErrNotFound,
+		},
+		{
+			desc:     "retrieve client with empty user id",
+			clientID: expectedClients[0].ID,
+			userID:   "",
+			response: clients.Client{},
+			err:      repoerr.ErrNotFound,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			client, err := repo.RetrieveByIDWithRoles(context.Background(), tc.clientID, tc.userID)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected %s to contain %s\n", err, tc.err))
+			if err == nil {
+				assert.Equal(t, tc.response, client, fmt.Sprintf("expected %v got %v\n", tc.response, client))
+			}
+		})
+	}
+}
+
 func TestRetrieveAll(t *testing.T) {
 	t.Cleanup(func() {
 		_, err := db.Exec("DELETE FROM clients")
@@ -862,7 +1038,9 @@ func TestRetrieveAll(t *testing.T) {
 	repo := postgres.NewRepository(database)
 
 	nClients := uint64(200)
+	connectedClient := clients.Client{}
 
+	channelID := testsutil.GenerateUUID(t)
 	expectedClients := []clients.Client{}
 	disabledClients := []clients.Client{}
 	baseTime := time.Now().UTC().Truncate(time.Microsecond)
@@ -886,6 +1064,18 @@ func TestRetrieveAll(t *testing.T) {
 			client.Status = clients.DisabledStatus
 		}
 		_, err := repo.Save(context.Background(), client)
+		if i == 0 {
+			conn := clients.Connection{
+				ClientID:  client.ID,
+				ChannelID: channelID,
+				DomainID:  client.Domain,
+				Type:      connections.Publish,
+			}
+			err = repo.AddConnections(context.Background(), []clients.Connection{conn})
+			assert.Nil(t, err, fmt.Sprintf("add connection unexpected error: %s", err))
+			connectedClient = client
+			connectedClient.ConnectionTypes = []connections.ConnType{connections.Publish}
+		}
 		require.Nil(t, err, fmt.Sprintf("add new client: expected nil got %s\n", err))
 		expectedClients = append(expectedClients, client)
 		if client.Status == clients.DisabledStatus {
@@ -1316,6 +1506,23 @@ func TestRetrieveAll(t *testing.T) {
 				Clients: []clients.Client(nil),
 			},
 		},
+		{
+			desc: "with channel id",
+			pm: clients.Page{
+				Offset:  0,
+				Limit:   nClients,
+				Channel: channelID,
+				Status:  clients.AllStatus,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  1,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client{connectedClient},
+			},
+		},
 	}
 	for _, c := range cases {
 		t.Run(c.desc, func(t *testing.T) {
@@ -1327,7 +1534,719 @@ func TestRetrieveAll(t *testing.T) {
 				assert.Equal(t, c.response.Limit, page.Limit)
 				expected := stripClientDetails(c.response.Clients)
 				got := stripClientDetails(page.Clients)
-				assert.ElementsMatch(t, expected, got)
+				assert.ElementsMatch(t, expected, got, fmt.Sprintf("expected %v got %v\n", expected, got))
+			}
+		})
+	}
+}
+
+func TestRetrieveUserClients(t *testing.T) {
+	t.Cleanup(func() {
+		_, err := db.Exec("DELETE FROM clients")
+		require.Nil(t, err, fmt.Sprintf("clean clients unexpected error: %s", err))
+		_, err = db.Exec("DELETE FROM groups")
+		require.Nil(t, err, fmt.Sprintf("clean groups unexpected error: %s", err))
+		_, err = db.Exec("DELETE FROM domains")
+		require.Nil(t, err, fmt.Sprintf("clean clients unexpected error: %s", err))
+	})
+
+	repo := postgres.NewRepository(database)
+
+	nClients := uint64(10)
+
+	emptyGroupParam := ""
+	userID := testsutil.GenerateUUID(t)
+	domainMemberID := testsutil.GenerateUUID(t)
+	groupMemberID := testsutil.GenerateUUID(t)
+	channelID := testsutil.GenerateUUID(t)
+	domain := generateDomain(t, userID, domainMemberID)
+	group := generateGroup(t, userID, groupMemberID, domain.ID)
+	groupClient := clients.Client{}
+	parentGroupClient := clients.Client{}
+	connectedClient := clients.Client{}
+	directClients := []clients.Client{}
+	domainClients := []clients.Client{}
+	for i := range nClients {
+		client := clients.Client{
+			ID:     testsutil.GenerateUUID(t),
+			Domain: domain.ID,
+			Name:   namegen.Generate(),
+			Credentials: clients.Credentials{
+				Identity: namegen.Generate() + emailSuffix,
+				Secret:   testsutil.GenerateUUID(t),
+			},
+			Tags: namegen.GenerateMultiple(5),
+			Metadata: clients.Metadata{
+				"department": namegen.Generate(),
+			},
+			Status:    clients.EnabledStatus,
+			CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
+		}
+		if i == 1 {
+			client.ParentGroup = group.ID
+		}
+		_, err := repo.Save(context.Background(), client)
+		require.Nil(t, err, fmt.Sprintf("add new client: expected nil got %s\n", err))
+		newRolesProvision := []roles.RoleProvision{
+			{
+				Role: roles.Role{
+					ID:        testsutil.GenerateUUID(t) + "_" + client.ID,
+					Name:      "admin",
+					EntityID:  client.ID,
+					CreatedAt: validTimestamp,
+					CreatedBy: userID,
+				},
+				OptionalActions: availableActions,
+				OptionalMembers: []string{userID},
+			},
+		}
+		npr, err := repo.AddRoles(context.Background(), newRolesProvision)
+		require.Nil(t, err, fmt.Sprintf("add roles unexpected error: %s", err))
+		directClient := client
+		directClient.RoleID = npr[0].Role.ID
+		directClient.RoleName = npr[0].Role.Name
+		directClient.AccessType = directAccess
+		directClient.AccessProviderRoleActions = []string{}
+		directClients = append(directClients, directClient)
+		if i == 1 {
+			parentGroupClient = directClient
+			parentGroupClient.ParentGroupPath = group.ID
+			client.ParentGroupPath = group.ID
+			groupClient = client
+			groupClient.AccessType = directGroupAccess
+			groupClient.AccessProviderId = group.ID
+			groupClient.AccessProviderRoleId = group.Roles[0].RoleID
+			groupClient.AccessProviderRoleName = group.Roles[0].RoleName
+			groupClient.AccessProviderRoleActions = groupAvailableActions
+		}
+		if i == 2 {
+			conn := clients.Connection{
+				ClientID:  client.ID,
+				ChannelID: channelID,
+				DomainID:  client.Domain,
+				Type:      connections.Publish,
+			}
+			err = repo.AddConnections(context.Background(), []clients.Connection{conn})
+			assert.Nil(t, err, fmt.Sprintf("add connection unexpected error: %s", err))
+			connectedClient = client
+			connectedClient.RoleID = npr[0].Role.ID
+			connectedClient.RoleName = npr[0].Role.Name
+			connectedClient.AccessType = directAccess
+			connectedClient.AccessProviderRoleActions = []string{}
+			connectedClient.ConnectionTypes = []connections.ConnType{connections.Publish}
+		}
+		domainClient := client
+		domainClient.AccessType = domainAccess
+		domainClient.AccessProviderId = domain.ID
+		domainClient.AccessProviderRoleId = domain.Roles[0].RoleID
+		domainClient.AccessProviderRoleName = domain.Roles[0].RoleName
+		domainClient.AccessProviderRoleActions = domainAvailableActions
+		domainClients = append(domainClients, domainClient)
+	}
+
+	cases := []struct {
+		desc     string
+		domainID string
+		userID   string
+		pm       clients.Page
+		response clients.ClientsPage
+		err      error
+	}{
+		{
+			desc:     "retrieve clients with empty page",
+			domainID: domain.ID,
+			userID:   userID,
+			pm:       clients.Page{},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  10,
+					Offset: 0,
+					Limit:  0,
+				},
+				Clients: []clients.Client(nil),
+			},
+		},
+		{
+			desc:     "retrieve clients with offset and limit",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset: 5,
+				Limit:  10,
+				Status: clients.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  nClients,
+					Offset: 5,
+					Limit:  10,
+				},
+				Clients: directClients[5:10],
+			},
+		},
+		{
+			desc:     "retrieve clients with member id of parent group wth direct group access",
+			domainID: domain.ID,
+			userID:   groupMemberID,
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  10,
+				Status: clients.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  1,
+					Offset: 0,
+					Limit:  10,
+				},
+				Clients: []clients.Client{groupClient},
+			},
+		},
+		{
+			desc:     "retrieve clients with member id of domain with domain access",
+			domainID: domain.ID,
+			userID:   domainMemberID,
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  10,
+				Status: clients.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  10,
+					Offset: 0,
+					Limit:  10,
+				},
+				Clients: domainClients,
+			},
+		},
+		{
+			desc:     "retrieve clients connected to a channel",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset:  0,
+				Limit:   10,
+				Channel: channelID,
+				Status:  clients.AllStatus,
+				Order:   defOrder,
+				Dir:     defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  1,
+					Offset: 0,
+					Limit:  10,
+				},
+				Clients: []clients.Client{connectedClient},
+			},
+		},
+		{
+			desc:     "retrieve clients with offset out of range and limit",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset: 1000,
+				Limit:  50,
+				Status: clients.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  nClients,
+					Offset: 1000,
+					Limit:  50,
+				},
+				Clients: []clients.Client(nil),
+			},
+		},
+		{
+			desc:     "retrieve clients with metadata",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset:   0,
+				Limit:    nClients,
+				Metadata: directClients[0].Metadata,
+				Status:   clients.AllStatus,
+				Order:    defOrder,
+				Dir:      defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  1,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client{directClients[0]},
+			},
+		},
+		{
+			desc:     "retrieve clients with wrong metadata",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  nClients,
+				Metadata: clients.Metadata{
+					"faculty": namegen.Generate(),
+				},
+				Status: clients.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  0,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client(nil),
+			},
+		},
+		{
+			desc:     "retrieve clients with invalid metadata",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  nClients,
+				Metadata: clients.Metadata{
+					"faculty": make(chan int),
+				},
+				Status: clients.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  uint64(nClients),
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client(nil),
+			},
+			err: repoerr.ErrMalformedEntity,
+		},
+		{
+			desc:     "retrieve clients with name",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  nClients,
+				Name:   directClients[0].Name,
+				Status: clients.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  1,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client{directClients[0]},
+			},
+		},
+		{
+			desc:     "retrieve clients with wrong name",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  nClients,
+				Name:   namegen.Generate(),
+				Status: clients.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  0,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client(nil),
+			},
+		},
+		{
+			desc:     "retrieve cliens with identity",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset:   0,
+				Limit:    nClients,
+				Identity: directClients[0].Credentials.Identity,
+				Status:   clients.AllStatus,
+				Order:    defOrder,
+				Dir:      defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  1,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client{directClients[0]},
+			},
+		},
+		{
+			desc:     "retrieve clients with wrong identity",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset:   0,
+				Limit:    nClients,
+				Identity: namegen.Generate(),
+				Status:   clients.AllStatus,
+				Order:    defOrder,
+				Dir:      defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  0,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client(nil),
+			},
+		},
+		{
+			desc:     "retrieve clients with tag",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  nClients,
+				Tag:    directClients[0].Tags[0],
+				Status: clients.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  1,
+					Offset: 0,
+					Limit:  uint64(nClients),
+				},
+				Clients: []clients.Client{directClients[0]},
+			},
+		},
+		{
+			desc:     "retrieve clients with wrong tags",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  nClients,
+				Tag:    namegen.Generate(),
+				Status: clients.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  0,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client(nil),
+			},
+		},
+		{
+			desc:     "retrieve clients with multiple parameters",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset:   0,
+				Limit:    nClients,
+				Metadata: directClients[0].Metadata,
+				Name:     directClients[0].Name,
+				Tag:      directClients[0].Tags[0],
+				Identity: directClients[0].Credentials.Identity,
+				Status:   clients.AllStatus,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  1,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client{directClients[0]},
+			},
+		},
+		{
+			desc:     "retrieve clients with id",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  nClients,
+				ID:     directClients[0].ID,
+				Status: clients.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  1,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client{directClients[0]},
+			},
+		},
+		{
+			desc:     "retrieve clients with wrong id",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  nClients,
+				ID:     testsutil.GenerateUUID(t),
+				Status: clients.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  0,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client(nil),
+			},
+		},
+		{
+			desc:     "retrieve clients with wrong domain id",
+			domainID: testsutil.GenerateUUID(t),
+			userID:   userID,
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  nClients,
+				Status: clients.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  0,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client(nil),
+			},
+		},
+		{
+			desc:     "retrieve clients with wrong user id",
+			domainID: domain.ID,
+			userID:   testsutil.GenerateUUID(t),
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  nClients,
+				Status: clients.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  0,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client(nil),
+			},
+		},
+		{
+			desc:     "retrieve clients with parent group",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  nClients,
+				Group:  &group.ID,
+				Status: clients.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  1,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client{parentGroupClient},
+			},
+			err: nil,
+		},
+		{
+			desc:     "retrieve clients with no parent group",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  nClients,
+				Group:  &emptyGroupParam,
+				Status: clients.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  0,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client{},
+			},
+		},
+		{
+			desc:     "retrieve clients with access type",
+			domainID: domain.ID,
+			userID:   domainMemberID,
+			pm: clients.Page{
+				Offset:     0,
+				Limit:      10,
+				AccessType: domainAccess,
+				Status:     clients.AllStatus,
+				Order:      defOrder,
+				Dir:        defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  10,
+					Offset: 0,
+					Limit:  10,
+				},
+				Clients: domainClients,
+			},
+		},
+		{
+			desc:     "retrieve clients with wrong access type",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset:     0,
+				Limit:      nClients,
+				AccessType: domainAccess,
+				Status:     clients.AllStatus,
+				Order:      defOrder,
+				Dir:        defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  0,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client{},
+			},
+		},
+		{
+			desc:     "retrieve clients with role ID",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  nClients,
+				RoleID: directClients[0].RoleID,
+				Status: clients.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  1,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client{directClients[0]},
+			},
+		},
+		{
+			desc:     "retrieve clients with wrong role ID",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  nClients,
+				RoleID: testsutil.GenerateUUID(t),
+				Status: clients.AllStatus,
+				Order:  defOrder,
+				Dir:    defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  0,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client(nil),
+			},
+		},
+		{
+			desc:     "retrieve clients with role name",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset:   0,
+				Limit:    1,
+				RoleName: directClients[0].RoleName,
+				Status:   clients.AllStatus,
+				Order:    defOrder,
+				Dir:      defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  10,
+					Offset: 0,
+					Limit:  1,
+				},
+				Clients: directClients[0:1],
+			},
+		},
+		{
+			desc:     "retrieve clients with wrong role name",
+			domainID: domain.ID,
+			userID:   userID,
+			pm: clients.Page{
+				Offset:   0,
+				Limit:    nClients,
+				RoleName: namegen.Generate(),
+				Status:   clients.AllStatus,
+				Order:    defOrder,
+				Dir:      defDir,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  0,
+					Offset: 0,
+					Limit:  nClients,
+				},
+				Clients: []clients.Client(nil),
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			page, err := repo.RetrieveUserClients(context.Background(), tc.domainID, tc.userID, tc.pm)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected %s to contain %s\n", err, tc.err))
+			if err == nil {
+				assert.Equal(t, tc.response.Total, page.Total)
+				assert.Equal(t, tc.response.Offset, page.Offset)
+				assert.Equal(t, tc.response.Limit, page.Limit)
+				expected := stripClientDetails(tc.response.Clients)
+				got := stripClientDetails(page.Clients)
+				assert.ElementsMatch(t, expected, got, fmt.Sprintf("expected %+v got %+v\n", expected, got))
 			}
 		})
 	}
@@ -2497,6 +3416,82 @@ func generateClient(t *testing.T, status clients.Status, repo clients.Repository
 	return client
 }
 
+func generateDomain(t *testing.T, userID, memberID string) domains.Domain {
+	domain := domains.Domain{
+		ID:        testsutil.GenerateUUID(t),
+		Route:     namegen.Generate(),
+		Status:    domains.EnabledStatus,
+		CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
+		CreatedBy: userID,
+	}
+
+	drepo := dpostgres.NewRepository(ddatabase)
+	_, err := drepo.SaveDomain(context.Background(), domain)
+	require.Nil(t, err, fmt.Sprintf("add new domain: expected nil got %s\n", err))
+	newRolesProvision := []roles.RoleProvision{
+		{
+			Role: roles.Role{
+				ID:        testsutil.GenerateUUID(t) + "_" + domain.ID,
+				Name:      "admin",
+				EntityID:  domain.ID,
+				CreatedAt: validTimestamp,
+				CreatedBy: userID,
+			},
+			OptionalActions: domainAvailableActions,
+			OptionalMembers: []string{userID, memberID},
+		},
+	}
+	_, err = drepo.AddRoles(context.Background(), newRolesProvision)
+	require.Nil(t, err, fmt.Sprintf("add new role: expected nil got %s\n", err))
+	domain.Roles = []roles.MemberRoleActions{
+		{
+			RoleID:   newRolesProvision[0].Role.ID,
+			RoleName: newRolesProvision[0].Role.Name,
+			Actions:  newRolesProvision[0].OptionalActions,
+		},
+	}
+
+	return domain
+}
+
+func generateGroup(t *testing.T, userID, memberID, domainID string) groups.Group {
+	group := groups.Group{
+		ID:        testsutil.GenerateUUID(t),
+		Name:      namegen.Generate(),
+		Domain:    domainID,
+		Status:    groups.EnabledStatus,
+		CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
+	}
+
+	grepo := gpostgres.New(gdatabase)
+	_, err := grepo.Save(context.Background(), group)
+	require.Nil(t, err, fmt.Sprintf("add new domain: expected nil got %s\n", err))
+	newRolesProvision := []roles.RoleProvision{
+		{
+			Role: roles.Role{
+				ID:        testsutil.GenerateUUID(t) + "_" + group.ID,
+				Name:      "admin",
+				EntityID:  group.ID,
+				CreatedAt: validTimestamp,
+				CreatedBy: userID,
+			},
+			OptionalActions: groupAvailableActions,
+			OptionalMembers: []string{userID, memberID},
+		},
+	}
+	_, err = grepo.AddRoles(context.Background(), newRolesProvision)
+	require.Nil(t, err, fmt.Sprintf("add new role: expected nil got %s\n", err))
+	group.Roles = []roles.MemberRoleActions{
+		{
+			RoleID:   newRolesProvision[0].Role.ID,
+			RoleName: newRolesProvision[0].Role.Name,
+			Actions:  newRolesProvision[0].OptionalActions,
+		},
+	}
+
+	return group
+}
+
 func getIDs(clis []clients.Client) []string {
 	var ids []string
 	for _, client := range clis {
@@ -2510,6 +3505,7 @@ func stripClientDetails(clients []clients.Client) []clients.Client {
 	for i := range clients {
 		clients[i].CreatedAt = validTimestamp
 		clients[i].Credentials.Secret = ""
+		clients[i].Actions = []string{}
 	}
 
 	return clients
