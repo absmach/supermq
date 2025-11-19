@@ -22,7 +22,6 @@ var (
 	_ supermq.Response = (*createUserRes)(nil)
 	_ supermq.Response = (*changeUserStatusRes)(nil)
 	_ supermq.Response = (*usersPageRes)(nil)
-	_ supermq.Response = (*viewMembersRes)(nil)
 	_ supermq.Response = (*passResetReqRes)(nil)
 	_ supermq.Response = (*passChangeRes)(nil)
 	_ supermq.Response = (*updateUserRes)(nil)
@@ -155,22 +154,6 @@ func (res usersPageRes) Headers() map[string]string {
 }
 
 func (res usersPageRes) Empty() bool {
-	return false
-}
-
-type viewMembersRes struct {
-	users.User `json:",inline"`
-}
-
-func (res viewMembersRes) Code() int {
-	return http.StatusOK
-}
-
-func (res viewMembersRes) Headers() map[string]string {
-	return map[string]string{}
-}
-
-func (res viewMembersRes) Empty() bool {
 	return false
 }
 
