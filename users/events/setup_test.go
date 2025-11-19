@@ -3,8 +3,6 @@
 
 package events_test
 
-
-
 import (
 	"context"
 	"fmt"
@@ -12,8 +10,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/redis/go-redis/v9"
 	"github.com/ory/dockertest/v3"
+	"github.com/redis/go-redis/v9"
+	"github.com/redis/go-redis/v9/maintnotifications"
 )
 
 var (
@@ -36,6 +35,9 @@ func TestMain(m *testing.M) {
 	opts, err := redis.ParseURL(storeURL)
 	if err != nil {
 		log.Fatalf("Could not parse redis URL: %s", err)
+	}
+	opts.MaintNotificationsConfig = &maintnotifications.Config{
+		Mode: maintnotifications.ModeDisabled,
 	}
 
 	if err := pool.Retry(func() error {
