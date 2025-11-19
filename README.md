@@ -2,7 +2,7 @@
 
   # SuperMQ
   
-  **Planetary event-driven infrastructure**
+  ### Planetary event-driven infrastructure
   
   **Made with ❤️ by [Abstract Machines](https://abstractmachines.fr/)**
   
@@ -17,8 +17,6 @@
   ### [Guide](https://docs.supermq.abstractmachines.fr) | [Contributing](CONTRIBUTING.md) | [Website](https://abstractmachines.fr/) | [Chat](https://matrix.to/#/#supermq:matrix.org)
 
 </div>
-
-
 
 ## Introduction 📖
 
@@ -81,11 +79,11 @@ curl -X GET http://localhost:8080/status
 
 This request fetches the server status over HTTP and provides a JSON response.
 
-See our [CLI documentation](https://docs.supermq.abstractmachines.fr/cli) for more details.
+See our [CLI documentation](https://docs.supermq.absmach.eu/cli) for more details.
 
 ## Documentation 📚
 
-The official documentation is hosted at [SuperMQ docs page](https://docs.supermq.abstractmachines.fr).
+The official documentation is hosted at [SuperMQ docs page](https://docs.supermq.absmach.eu/).
 
 Documentation is auto-generated, check out the instructions in the [docs repository](https://github.com/absmach/supermq-docs).
 If you spot an error or a need for corrections, please let us know - or even better: send us a PR! 💌
@@ -115,4 +113,3 @@ SuperMQ is open-source software licensed under the [Apache License 2.0](LICENSE)
 Special thanks to the amazing contributors who make SuperMQ possible. Check out the [MAINTAINERS](MAINTAINERS) file to see the team behind the magic.
 
 Ready to build the future of messaging and event-driven systems? Let's get started! 🚀
-

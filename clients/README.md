@@ -1,6 +1,6 @@
 # Clients
 
-Clients service provides an HTTP API for managing platform resources: clients and channels.
+Clients service provides an HTTP API for managing platform resources: `clients` and `channels`.
 Through this API clients are able to do the following actions:
 
 - provision new clients
@@ -116,7 +116,226 @@ To run service in a standalone mode, set `Clients_STANDALONE_EMAIL` and `Clients
 
 ## Usage
 
-For more information about service capabilities and its usage, please check out
-the [API documentation](https://docs.api.supermq.abstractmachines.fr/?urls.primaryName=clients-openapi.yaml).
+SuperMQ supports the following operations for Clients:
 
-[doc]: https://docs.supermq.abstractmachines.fr
+| Operation     | Description                                                        |
+| ------------- | ------------------------------------------------------------------ |
+| `create`      | Create a new client                                                |
+| `get`         | Retrieve a single client or list all clients                       |
+| `update`      | Update a client’s name and metadata                                |
+| `delete`      | Permanently delete a client                                        |
+| `enable`      | Enable a previously disabled client                                |
+| `disable`     | Disable an active client                                           |
+| `connect`     | Connect a client to a channel via roles                            |
+| `disconnect`  | Disconnect a client from a channel by removing roles              |
+| `connections` | List channels connected or disconnected from a client             |
+| `share`       | Share a client with a user (via roles)                             |
+| `unshare`     | Revoke a user's access to a shared client                          |
+| `users`       | List users associated with a given client                          |
+
+### API Examples
+
+#### Create a Client
+
+```bash
+curl -X POST http://localhost:9006/<domainID>/clients \
+  -H "Authorization: Bearer <your_access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "name": "clientName",
+  "tags": [
+    "tag1",
+    "tag2"
+  ],
+  "credentials": {
+    "identity": "clientIDentity",
+    "secret": "bb7edb32-2eac-4aad-aebe-ed96fe073879"
+  },
+  "metadata": {
+    "model": "example"
+  },
+  "status": "enabled"
+}'
+```
+
+The expected response should be: 
+
+```bash
+{
+  "id": "bb7edb32-2eac-4aad-aebe-ed96fe073879",
+  "name": "clientName",
+  "tags": [
+    "tag1",
+    "tag2"
+  ],
+  "domain_id": "bb7edb32-2eac-4aad-aebe-ed96fe073879",
+  "credentials": {
+    "identity": "clientIDentity",
+    "secret": "bb7edb32-2eac-4aad-aebe-ed96fe073879"
+  },
+  "metadata": {
+    "model": "example"
+  },
+  "status": "enabled",
+  "created_at": "2019-11-26 13:31:52",
+  "updated_at": "2019-11-26 13:31:52"
+}
+```
+
+#### Get Clients
+
+List all clients:
+
+```bash
+curl -X GET "http://localhost:9006/<domainID>/clients?limit=10" \
+  -H "Authorization: Bearer <your_access_token>"
+```
+
+List a singular client:
+
+```bash
+curl -X GET http://localhost:9006/<domainID>/clients/<clientID> \
+  -H "Authorization: Bearer <your_access_token>"
+```
+
+#### Update a Client
+
+Update is performed by replacing the current resource data with values provided in a request payload. Note that the client's type and ID cannot be changed.
+
+```bash
+curl -X PATCH http://localhost:9006/<domainID>/clients/<clientID> \
+  -H "Authorization: Bearer <your_access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "clientName",
+    "metadata": {"role": "general"}
+  }'
+```
+
+The expected response is
+
+```bash
+{
+  "id": "bb7edb32-2eac-4aad-aebe-ed96fe073879",
+  "name": "clientName",
+  "tags": [
+    "tag1",
+    "tag2"
+  ],
+  "domain_id": "bb7edb32-2eac-4aad-aebe-ed96fe073879",
+  "credentials": {
+    "identity": "clientIDentity",
+    "secret": "bb7edb32-2eac-4aad-aebe-ed96fe073879"
+  },
+  "metadata": { "model": "example" },
+  "status": "enabled",
+  "created_at": "2019-11-26 13:31:52",
+  "updated_at": "2019-11-26 13:31:52"
+}
+```
+
+#### Delete a Client
+
+Delete client removes a client with the given id from repo and removes all the policies related to this client.
+
+```bash
+curl -X DELETE http://localhost:9006/<domainID>/clients/<clientID> \
+  -H "Authorization: Bearer <your_access_token>"
+```
+
+#### Disable a Client
+
+Disables a specific client that is identified by the client ID.
+
+```bash
+curl -X POST http://localhost:9006/<domainID>/clients/<clientID>/disable \
+  -H "Authorization: Bearer <your_access_token>"
+```
+
+#### Enable a Client
+
+Enable logically enables the client identified with the provided ID
+
+```bash
+curl -X POST http://localhost:9006/<domainID>/clients/<clientID>/enable \
+  -H "Authorization: Bearer <your_access_token>"
+```
+
+## Implementation Details
+
+Clients in SuperMQ are persisted in PostgreSQL using a schema optimized for identity management, authorization, and relationship tracking (channels, groups, and users).
+
+### Clients Table Structure
+
+The main `clients` table tracks all metadata, identity, and lifecycle information for each client:
+
+| Column            | Type           | Description                                                                 |
+|------------------ | -------------- | --------------------------------------------------------------------------- |
+| `id`              | VARCHAR(36)    | UUID of the client (primary key).                                           |
+| `name`            | VARCHAR(1024)  | Human‑readable name.                                                        |
+| `domain_id`       | VARCHAR(36)    | Domain to which the client belongs.                                         |
+| `parent_group_id` | VARCHAR(36)    | Optional group parent (for inheritance/scoping).                            |
+| `identity`        | VARCHAR(254)   | Login identity (often an email or unique ID).                               |
+| `secret`          | VARCHAR(4096)  | Hashed authentication secret.                                               |
+| `tags`            | TEXT[]         | Arbitrary list of client tags.                                              |
+| `metadata`        | JSONB          | Free‑form structured metadata.                                              |
+| `created_at`      | TIMESTAMPTZ    | Timestamp when the client was created.                                      |
+| `updated_at`      | TIMESTAMPTZ    | Timestamp when the client was last updated.                                 |
+| `updated_by`      | VARCHAR(254)   | Identifier of the actor who performed the last update.                      |
+| `status`          | SMALLINT       | 0 = enabled, 1 = disabled.                                                  |
+
+#### Connections Table Structure
+
+Client ↔ Channel relationships are stored in the `connections` table:
+
+| Column        | Type         | Description                                                            |
+|-------------- | ------------ | ---------------------------------------------------------------------- |
+| `channel_id`  | VARCHAR(36)  | Channel UUID.                                                          |
+| `domain_id`   | VARCHAR(36)  | Domain of the client & channel.                                        |
+| `client_id`   | VARCHAR(36)  | Client UUID.                                                           |
+| `type`        | SMALLINT     | Connection type: `1 = Publish`, `2 = Subscribe`.                       |
+
+This guarantees that when a client is deleted, all channel connections are automatically removed.
+
+## Best Practices
+
+To ensure robust and secure usage of the Clients service, consider the following recommendations:
+
+- **Use metadata and tags meaningfully**: Store useful attributes like model, location, environment (e.g., `production`, `test`) to filter and manage clients efficiently.
+- **Keep credentials secure**: Rotate client secrets periodically. Avoid using guessable strings.
+- **Disable unused clients**: Use the `disable` operation to revoke access instead of deleting clients when deactivation is preferred.
+- **Restrict channel access**: Only connect clients to the channels they need with appropriate publish/subscribe permissions.
+- **Share clients judiciously**: Use the `share` and `unshare` endpoints to control visibility and access for other users.
+- **Audit regularly**: Periodically list client roles and connections to ensure expected configuration.
+- **Prefer standalone mode for edge deployments**: Use environment variables to configure standalone mode in isolated environments without needing the Auth service.
+
+## Versioning and Health Check
+
+The Clients service exposes a `/health` endpoint to verify operational status and version information.
+
+### Health Check Request
+
+```bash
+curl -X 'GET' \
+  'http://localhost:9006/health' \
+  -H 'accept: application/health+json'
+```
+
+The exoected response is:
+
+```bash
+{
+  "status": "pass",
+  "version": "0.14.0",
+  "commit": "7d6f4dc4f7f0c1fa3dc24eddfb18bb5073ff4f62",
+  "description": "clients service",
+  "build_time": "1970-01-01_00:00:00"
+}
+```
+
+This endpoint can be used for monitoring, CI/CD readiness checks, or basic diagnostics.
+
+For more information about service capabilities and its usage, please check out
+the [API documentation](https://docs.api.supermq.absmach.eu/?urls.primaryName=api%2Fclients.yaml).
+
+[doc]: https://docs.supermq.absmach.eu/
