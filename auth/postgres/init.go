@@ -125,6 +125,17 @@ func Migration() *migrate.MemoryMigrationSource {
 					`ALTER TABLE pats ALTER COLUMN last_used_at TYPE TIMESTAMP;`,
 				},
 			},
+			{
+				Id: "auth_7",
+				Up: []string{
+					`CREATE TABLE IF NOT EXISTS tokens (
+						id          VARCHAR(36) PRIMARY KEY
+					);`,
+				},
+				Down: []string{
+					`DROP TABLE IF EXISTS tokens`,
+				},
+			},
 		},
 	}
 }

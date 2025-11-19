@@ -31,6 +31,8 @@ var (
 	ErrValidateJWTToken = errors.New("failed to validate jwt token")
 	// ErrJSONHandle indicates an error in handling JSON.
 	ErrJSONHandle = errors.New("failed to perform operation JSON")
+	// errRevokedToken indicates that the token is revoked.
+	errRevokedToken = errors.New("token is revoked")
 )
 
 const (
@@ -46,14 +48,18 @@ const (
 
 type tokenizer struct {
 	secret []byte
+	cache  auth.TokensCache
+	repo   auth.TokensRepository
 }
 
 var _ auth.Tokenizer = (*tokenizer)(nil)
 
-// NewRepository instantiates an implementation of Token repository.
-func New(secret []byte) auth.Tokenizer {
+// New instantiates an implementation of Tokenizer service.
+func New(secret []byte, repo auth.TokensRepository, cache auth.TokensCache) auth.Tokenizer {
 	return &tokenizer{
 		secret: secret,
+		repo:   repo,
+		cache:  cache,
 	}
 }
 
@@ -83,7 +89,7 @@ func (tok *tokenizer) Issue(key auth.Key) (string, error) {
 	return string(signedTkn), nil
 }
 
-func (tok *tokenizer) Parse(token string) (auth.Key, error) {
+func (tok *tokenizer) Parse(ctx context.Context, token string) (auth.Key, error) {
 	tkn, err := tok.validateToken(token)
 	if err != nil {
 		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
@@ -94,7 +100,46 @@ func (tok *tokenizer) Parse(token string) (auth.Key, error) {
 		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
 
+	if key.Type == auth.RefreshKey {
+		switch tok.cache.Contains(ctx, "", key.ID) {
+		case true:
+			return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, errRevokedToken)
+		default:
+			if ok := tok.repo.Contains(ctx, key.ID); ok {
+				if err := tok.cache.Save(ctx, "", key.ID); err != nil {
+					return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
+				}
+
+				return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, errRevokedToken)
+			}
+		}
+	}
+
 	return key, nil
+}
+
+func (tok *tokenizer) Revoke(ctx context.Context, token string) error {
+	tkn, err := tok.validateToken(token)
+	if err != nil {
+		return errors.Wrap(svcerr.ErrAuthentication, err)
+	}
+
+	key, err := toKey(tkn)
+	if err != nil {
+		return errors.Wrap(svcerr.ErrAuthentication, err)
+	}
+
+	if key.Type == auth.RefreshKey {
+		if err := tok.repo.Save(ctx, key.ID); err != nil {
+			return errors.Wrap(svcerr.ErrAuthentication, err)
+		}
+
+		if err := tok.cache.Save(ctx, "", key.ID); err != nil {
+			return errors.Wrap(svcerr.ErrAuthentication, err)
+		}
+	}
+
+	return nil
 }
 
 func (tok *tokenizer) validateToken(token string) (jwt.Token, error) {
