@@ -760,7 +760,6 @@ func generateRandomString(n int) (string, error) {
 	b := make([]rune, n)
 	randBytes := make([]byte, n)
 
-	// Read cryptographically secure random bytes
 	if _, err := rand.Read(randBytes); err != nil {
 		return "", errors.Wrap(errors.New("failed to generate random string"), err)
 	}
