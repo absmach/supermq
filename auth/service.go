@@ -723,7 +723,12 @@ func (svc service) generateSecretAndHash(userID, patID string) (string, string, 
 		return "", "", errors.Wrap(errFailedToParseUUID, err)
 	}
 
-	secret := patPrefix + patSecretSeparator + encode(uID, pID) + patSecretSeparator + generateRandomString(100)
+	randomPart, err := generateRandomString(100)
+	if err != nil {
+		return "", "", err
+	}
+
+	secret := patPrefix + patSecretSeparator + encode(uID, pID) + patSecretSeparator + randomPart
 	secretHash, err := svc.hasher.Hash(secret)
 	return secret, secretHash, err
 }
@@ -750,21 +755,20 @@ func decode(encoded string) (uuid.UUID, uuid.UUID, error) {
 	return userID, patID, nil
 }
 
-func generateRandomString(n int) string {
+func generateRandomString(n int) (string, error) {
 	letterRunes := []rune(randStr)
 	b := make([]rune, n)
 	randBytes := make([]byte, n)
 
 	// Read cryptographically secure random bytes
 	if _, err := rand.Read(randBytes); err != nil {
-		// This should never happen with crypto/rand
-		panic(err)
+		return "", errors.Wrap(errors.New("failed to generate random string"), err)
 	}
 
 	for i := range b {
 		b[i] = letterRunes[int(randBytes[i])%len(letterRunes)]
 	}
-	return string(b)
+	return string(b), nil
 }
 
 func (svc service) authnAuthzUserPAT(ctx context.Context, token, patID string) (Key, error) {
