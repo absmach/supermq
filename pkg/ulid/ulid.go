@@ -5,7 +5,8 @@
 package ulid
 
 import (
-	"math/rand"
+	"crypto/rand"
+	"io"
 	"time"
 
 	"github.com/absmach/supermq"
@@ -19,15 +20,13 @@ var ErrGeneratingID = errors.New("generating id failed")
 var _ supermq.IDProvider = (*ulidProvider)(nil)
 
 type ulidProvider struct {
-	entropy *rand.Rand
+	entropy io.Reader
 }
 
 // New instantiates a ULID provider.
 func New() supermq.IDProvider {
-	seed := time.Now().UnixNano()
-	source := rand.NewSource(seed)
 	return &ulidProvider{
-		entropy: rand.New(source),
+		entropy: rand.Reader,
 	}
 }
 

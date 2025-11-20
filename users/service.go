@@ -8,7 +8,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	mrand "math/rand"
 	"net/mail"
 	"regexp"
 	"strings"
@@ -743,18 +742,17 @@ func extractEmailPrefix(email string) string {
 }
 
 func generateRandomID() string {
-	randomBytes := make([]byte, 0, 16)
+	// Generate 8 random bytes (will result in 16 hex chars, truncated to 10)
+	randomBytes := make([]byte, 8)
 	if _, err := rand.Read(randomBytes); err != nil {
-		return fmt.Sprintf("%x", time.Now().UnixNano())[:10]
+		// Fallback: use UUID if crypto/rand fails (should never happen)
+		id, uuidErr := uuid.NewV4()
+		if uuidErr != nil {
+			// Last resort fallback
+			return fmt.Sprintf("%x", time.Now().UnixNano())[:10]
+		}
+		return hex.EncodeToString(id.Bytes())[:10]
 	}
-	id, err := uuid.NewV4()
-	if err == nil {
-		randomBytes = append(randomBytes, id.Bytes()...)
-	}
-
-	mrand.Shuffle(len(randomBytes), func(i, j int) {
-		randomBytes[i], randomBytes[j] = randomBytes[j], randomBytes[i]
-	})
 	return hex.EncodeToString(randomBytes)[:10]
 }
 

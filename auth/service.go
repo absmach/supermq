@@ -5,8 +5,8 @@ package auth
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/base64"
-	"math/rand"
 	"strings"
 	"time"
 
@@ -752,10 +752,17 @@ func decode(encoded string) (uuid.UUID, uuid.UUID, error) {
 
 func generateRandomString(n int) string {
 	letterRunes := []rune(randStr)
-	rand.New(rand.NewSource(time.Now().UnixNano()))
 	b := make([]rune, n)
+	randBytes := make([]byte, n)
+
+	// Read cryptographically secure random bytes
+	if _, err := rand.Read(randBytes); err != nil {
+		// This should never happen with crypto/rand
+		panic(err)
+	}
+
 	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+		b[i] = letterRunes[int(randBytes[i])%len(letterRunes)]
 	}
 	return string(b)
 }

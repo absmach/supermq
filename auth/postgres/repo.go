@@ -493,9 +493,9 @@ func (pr *patRepo) processScope(ctx context.Context, sc auth.Scope) (auth.Scope,
 }
 
 func (pr *patRepo) RemoveScope(ctx context.Context, userID string, scopesIDs ...string) error {
-	deleteScopesQuery := fmt.Sprintf(`DELETE FROM pat_scopes WHERE id IN ('%s')`, strings.Join(scopesIDs, ","))
+	deleteScopesQuery := `DELETE FROM pat_scopes WHERE id = ANY($1)`
 
-	res, err := pr.db.ExecContext(ctx, deleteScopesQuery)
+	res, err := pr.db.ExecContext(ctx, deleteScopesQuery, scopesIDs)
 	if err != nil {
 		return errors.Wrap(repoerr.ErrRemoveEntity, err)
 	}
