@@ -128,12 +128,12 @@ func Migration() *migrate.MemoryMigrationSource {
 			{
 				Id: "auth_7",
 				Up: []string{
-					`CREATE TABLE IF NOT EXISTS tokens (
+					`CREATE TABLE IF NOT EXISTS revoked_tokens (
 						id          VARCHAR(36) PRIMARY KEY
 					);`,
 				},
 				Down: []string{
-					`DROP TABLE IF EXISTS tokens`,
+					`DROP TABLE IF EXISTS revoked_tokens`,
 				},
 			},
 		},
