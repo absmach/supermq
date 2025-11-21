@@ -9,7 +9,7 @@ require (
 	github.com/absmach/senml v1.0.8
 	github.com/authzed/authzed-go v1.6.0
 	github.com/authzed/grpcutil v0.0.0-20250221190651-1985b19b35b8
-	github.com/authzed/spicedb v1.47.0
+	github.com/authzed/spicedb v1.47.1
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/dgraph-io/ristretto/v2 v2.3.0
@@ -49,7 +49,7 @@ require (
 	golang.org/x/crypto v0.45.0
 	golang.org/x/oauth2 v0.33.0
 	golang.org/x/sync v0.18.0
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251014184007-4626949a642f
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251022142026-3a174f9686a8
 	google.golang.org/grpc v1.76.0
 	google.golang.org/protobuf v1.36.10
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
@@ -66,7 +66,7 @@ require (
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/authzed/cel-go v0.20.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/ccoveille/go-safecast v1.7.0 // indirect
+	github.com/ccoveille/go-safecast/v2 v2.0.0 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/certifi/gocertifi v0.0.0-20210507211836-431795d63e8d // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
