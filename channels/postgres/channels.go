@@ -1326,7 +1326,7 @@ func PageQuery(pm channels.Page) (string, error) {
 	if pm.Client != "" {
 		query = append(query, "conn.client_id = :client_id ")
 		if pm.ConnectionType != "" {
-			query = append(query, "conn.type = :conn_type ")
+			query = append(query, ":conn_type = ANY(conn.connection_types) ")
 		}
 	}
 	if pm.AccessType != "" {
@@ -1381,6 +1381,16 @@ func toDBChannelsPage(pm channels.Page) (dbChannelsPage, error) {
 	if err != nil {
 		return dbChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
+
+	var connType uint8
+	if pm.ConnectionType != "" {
+		ct, err := connections.ParseConnType(pm.ConnectionType)
+		if err != nil {
+			return dbChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		}
+		connType = uint8(ct)
+	}
+
 	return dbChannelsPage{
 		Limit:      pm.Limit,
 		Offset:     pm.Offset,
@@ -1392,7 +1402,7 @@ func toDBChannelsPage(pm channels.Page) (dbChannelsPage, error) {
 		Status:     pm.Status,
 		GroupID:    sql.NullString{Valid: pm.Group.Valid, String: pm.Group.Value},
 		ClientID:   pm.Client,
-		ConnType:   pm.ConnectionType,
+		ConnType:   connType,
 		RoleName:   pm.RoleName,
 		RoleID:     pm.RoleID,
 		Actions:    pm.Actions,
@@ -1411,7 +1421,7 @@ type dbChannelsPage struct {
 	Status     channels.Status `db:"status"`
 	GroupID    sql.NullString  `db:"group_id"`
 	ClientID   string          `db:"client_id"`
-	ConnType   string          `db:"type"`
+	ConnType   uint8           `db:"conn_type"`
 	RoleName   string          `db:"role_name"`
 	RoleID     string          `db:"role_id"`
 	Actions    pq.StringArray  `db:"actions"`

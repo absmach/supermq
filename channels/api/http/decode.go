@@ -149,25 +149,30 @@ func decodeListChannels(_ context.Context, r *http.Request) (any, error) {
 	if err != nil {
 		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
+	connectionType, err := apiutil.ReadStringQuery(r, api.ConnTypeKey, "")
+	if err != nil {
+		return listChannelsReq{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
 
 	req := listChannelsReq{
 		Page: channels.Page{
-			Name:       name,
-			Tag:        tag,
-			Status:     status,
-			Metadata:   meta,
-			RoleName:   roleName,
-			RoleID:     roleID,
-			Actions:    actions,
-			AccessType: accessType,
-			Order:      order,
-			Dir:        dir,
-			Offset:     offset,
-			Limit:      limit,
-			Group:      groupID,
-			Client:     clientID,
-			ID:         id,
-			OnlyTotal:  ot,
+			Name:           name,
+			Tag:            tag,
+			Status:         status,
+			Metadata:       meta,
+			RoleName:       roleName,
+			RoleID:         roleID,
+			Actions:        actions,
+			AccessType:     accessType,
+			Order:          order,
+			Dir:            dir,
+			Offset:         offset,
+			Limit:          limit,
+			Group:          groupID,
+			Client:         clientID,
+			ConnectionType: connectionType,
+			ID:             id,
+			OnlyTotal:      ot,
 		},
 		userID: userID,
 	}

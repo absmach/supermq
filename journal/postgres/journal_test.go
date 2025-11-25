@@ -279,6 +279,35 @@ func TestJournalSave(t *testing.T) {
 			err: nil,
 		},
 		{
+			desc: "with domain in attributes",
+			journal: journal.Journal{
+				ID:         testsutil.GenerateUUID(t),
+				Operation:  operation + ".with.domain.in.attributes",
+				OccurredAt: time.Now(),
+				Attributes: map[string]any{
+					"domain": testsutil.GenerateUUID(t),
+					"data":   "test",
+				},
+				Metadata: payload,
+			},
+			err: nil,
+		},
+		{
+			desc: "with domain operation prefix",
+			journal: journal.Journal{
+				ID:         testsutil.GenerateUUID(t),
+				Operation:  "domain.create",
+				OccurredAt: time.Now(),
+				Attributes: map[string]any{
+					"id":     testsutil.GenerateUUID(t),
+					"name":   "test-domain",
+					"status": "enabled",
+				},
+				Metadata: payload,
+			},
+			err: nil,
+		},
+		{
 			desc:    "with empty journal",
 			journal: journal.Journal{},
 			err:     repoerr.ErrCreateEntity,
@@ -778,4 +807,525 @@ func extractEntities(journals []journal.Journal, entityType journal.EntityType, 
 	}
 
 	return entities
+}
+
+func TestSaveClientTelemetry(t *testing.T) {
+	t.Cleanup(func() {
+		_, err := db.Exec("DELETE FROM clients_telemetry")
+		require.Nil(t, err, fmt.Sprintf("clean clients_telemetry unexpected error: %s", err))
+	})
+	repo := postgres.NewRepository(database)
+
+	clientID := testsutil.GenerateUUID(t)
+	domainID := testsutil.GenerateUUID(t)
+	firstSeen := time.Now().UTC().Truncate(time.Millisecond)
+	lastSeen := time.Now().UTC().Add(time.Hour).Truncate(time.Millisecond)
+
+	cases := []struct {
+		desc      string
+		telemetry journal.ClientTelemetry
+		err       error
+	}{
+		{
+			desc: "save client telemetry successfully",
+			telemetry: journal.ClientTelemetry{
+				ClientID:         clientID,
+				DomainID:         domainID,
+				InboundMessages:  10,
+				OutboundMessages: 5,
+				FirstSeen:        firstSeen,
+				LastSeen:         lastSeen,
+			},
+			err: nil,
+		},
+		{
+			desc: "save duplicate client telemetry",
+			telemetry: journal.ClientTelemetry{
+				ClientID:         clientID,
+				DomainID:         domainID,
+				InboundMessages:  20,
+				OutboundMessages: 10,
+				FirstSeen:        firstSeen,
+				LastSeen:         lastSeen,
+			},
+			err: repoerr.ErrConflict,
+		},
+		{
+			desc: "save client telemetry with zero messages",
+			telemetry: journal.ClientTelemetry{
+				ClientID:         testsutil.GenerateUUID(t),
+				DomainID:         domainID,
+				InboundMessages:  0,
+				OutboundMessages: 0,
+				FirstSeen:        firstSeen,
+				LastSeen:         time.Time{},
+			},
+			err: nil,
+		},
+		{
+			desc: "save client telemetry with high message counts",
+			telemetry: journal.ClientTelemetry{
+				ClientID:         testsutil.GenerateUUID(t),
+				DomainID:         testsutil.GenerateUUID(t),
+				InboundMessages:  1000000,
+				OutboundMessages: 999999,
+				FirstSeen:        firstSeen,
+				LastSeen:         lastSeen,
+			},
+			err: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := repo.SaveClientTelemetry(context.Background(), tc.telemetry)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.err, err))
+		})
+	}
+}
+
+func TestDeleteClientTelemetry(t *testing.T) {
+	t.Cleanup(func() {
+		_, err := db.Exec("DELETE FROM clients_telemetry")
+		require.Nil(t, err, fmt.Sprintf("clean clients_telemetry unexpected error: %s", err))
+	})
+	repo := postgres.NewRepository(database)
+
+	clientID := testsutil.GenerateUUID(t)
+	domainID := testsutil.GenerateUUID(t)
+
+	ct := journal.ClientTelemetry{
+		ClientID:         clientID,
+		DomainID:         domainID,
+		InboundMessages:  10,
+		OutboundMessages: 5,
+		FirstSeen:        time.Now().UTC(),
+		LastSeen:         time.Now().UTC(),
+	}
+
+	err := repo.SaveClientTelemetry(context.Background(), ct)
+	require.Nil(t, err)
+
+	cases := []struct {
+		desc     string
+		clientID string
+		domainID string
+		err      error
+	}{
+		{
+			desc:     "delete existing client telemetry",
+			clientID: clientID,
+			domainID: domainID,
+			err:      nil,
+		},
+		{
+			desc:     "delete non-existing client telemetry",
+			clientID: testsutil.GenerateUUID(t),
+			domainID: domainID,
+			err:      repoerr.ErrNotFound,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := repo.DeleteClientTelemetry(context.Background(), tc.clientID, tc.domainID)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.err, err))
+		})
+	}
+}
+
+func TestRetrieveClientTelemetry(t *testing.T) {
+	t.Cleanup(func() {
+		_, err := db.Exec("DELETE FROM clients_telemetry")
+		require.Nil(t, err, fmt.Sprintf("clean clients_telemetry unexpected error: %s", err))
+	})
+	repo := postgres.NewRepository(database)
+
+	clientID := testsutil.GenerateUUID(t)
+	domainID := testsutil.GenerateUUID(t)
+	firstSeen := time.Now().UTC().Truncate(time.Millisecond)
+	lastSeen := time.Now().UTC().Add(time.Hour).Truncate(time.Millisecond)
+
+	ct := journal.ClientTelemetry{
+		ClientID:         clientID,
+		DomainID:         domainID,
+		InboundMessages:  10,
+		OutboundMessages: 5,
+		FirstSeen:        firstSeen,
+		LastSeen:         lastSeen,
+	}
+
+	err := repo.SaveClientTelemetry(context.Background(), ct)
+	require.Nil(t, err)
+
+	cases := []struct {
+		desc     string
+		clientID string
+		domainID string
+		response journal.ClientTelemetry
+		err      error
+	}{
+		{
+			desc:     "retrieve existing client telemetry",
+			clientID: clientID,
+			domainID: domainID,
+			response: ct,
+			err:      nil,
+		},
+		{
+			desc:     "retrieve non-existing client telemetry",
+			clientID: testsutil.GenerateUUID(t),
+			domainID: domainID,
+			response: journal.ClientTelemetry{},
+			err:      repoerr.ErrNotFound,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			result, err := repo.RetrieveClientTelemetry(context.Background(), tc.clientID, tc.domainID)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.err, err))
+			if err == nil {
+				assert.Equal(t, tc.response.ClientID, result.ClientID)
+				assert.Equal(t, tc.response.DomainID, result.DomainID)
+				assert.Equal(t, tc.response.InboundMessages, result.InboundMessages)
+				assert.Equal(t, tc.response.OutboundMessages, result.OutboundMessages)
+				assert.Equal(t, tc.response.FirstSeen.Unix(), result.FirstSeen.Unix())
+				assert.Equal(t, tc.response.LastSeen.Unix(), result.LastSeen.Unix())
+			}
+		})
+	}
+}
+
+func TestAddSubscription(t *testing.T) {
+	t.Cleanup(func() {
+		_, err := db.Exec("DELETE FROM subscriptions")
+		require.Nil(t, err)
+		_, err = db.Exec("DELETE FROM clients_telemetry")
+		require.Nil(t, err)
+	})
+	repo := postgres.NewRepository(database)
+
+	clientID := testsutil.GenerateUUID(t)
+	domainID := testsutil.GenerateUUID(t)
+
+	ct := journal.ClientTelemetry{
+		ClientID:  clientID,
+		DomainID:  domainID,
+		FirstSeen: time.Now().UTC(),
+	}
+
+	err := repo.SaveClientTelemetry(context.Background(), ct)
+	require.Nil(t, err)
+
+	cases := []struct {
+		desc         string
+		subscription journal.ClientSubscription
+		err          error
+	}{
+		{
+			desc: "add subscription successfully",
+			subscription: journal.ClientSubscription{
+				ID:           testsutil.GenerateUUID(t),
+				SubscriberID: testsutil.GenerateUUID(t),
+				ChannelID:    testsutil.GenerateUUID(t),
+				Subtopic:     "subtopic",
+				ClientID:     clientID,
+			},
+			err: nil,
+		},
+		{
+			desc: "add subscription with empty subtopic",
+			subscription: journal.ClientSubscription{
+				ID:           testsutil.GenerateUUID(t),
+				SubscriberID: testsutil.GenerateUUID(t),
+				ChannelID:    testsutil.GenerateUUID(t),
+				Subtopic:     "",
+				ClientID:     clientID,
+			},
+			err: nil,
+		},
+		{
+			desc: "add duplicate subscription",
+			subscription: journal.ClientSubscription{
+				ID:           testsutil.GenerateUUID(t),
+				SubscriberID: testsutil.GenerateUUID(t),
+				ChannelID:    testsutil.GenerateUUID(t),
+				Subtopic:     "another-subtopic",
+				ClientID:     clientID,
+			},
+			err: nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := repo.AddSubscription(context.Background(), tc.subscription)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.err, err))
+		})
+	}
+}
+
+func TestCountSubscriptions(t *testing.T) {
+	t.Cleanup(func() {
+		_, err := db.Exec("DELETE FROM subscriptions")
+		require.Nil(t, err)
+		_, err = db.Exec("DELETE FROM clients_telemetry")
+		require.Nil(t, err)
+	})
+	repo := postgres.NewRepository(database)
+
+	clientID := testsutil.GenerateUUID(t)
+	domainID := testsutil.GenerateUUID(t)
+
+	ct := journal.ClientTelemetry{
+		ClientID:  clientID,
+		DomainID:  domainID,
+		FirstSeen: time.Now().UTC(),
+	}
+
+	err := repo.SaveClientTelemetry(context.Background(), ct)
+	require.Nil(t, err)
+
+	for i := 0; i < 3; i++ {
+		sub := journal.ClientSubscription{
+			ID:           testsutil.GenerateUUID(t),
+			SubscriberID: testsutil.GenerateUUID(t),
+			ChannelID:    testsutil.GenerateUUID(t),
+			Subtopic:     fmt.Sprintf("subtopic%d", i),
+			ClientID:     clientID,
+		}
+		err := repo.AddSubscription(context.Background(), sub)
+		require.Nil(t, err)
+	}
+
+	cases := []struct {
+		desc     string
+		clientID string
+		count    uint64
+		err      error
+	}{
+		{
+			desc:     "count subscriptions for existing client",
+			clientID: clientID,
+			count:    3,
+			err:      nil,
+		},
+		{
+			desc:     "count subscriptions for non-existing client",
+			clientID: testsutil.GenerateUUID(t),
+			count:    0,
+			err:      nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			count, err := repo.CountSubscriptions(context.Background(), tc.clientID)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.err, err))
+			assert.Equal(t, tc.count, count)
+		})
+	}
+}
+
+func TestRemoveSubscription(t *testing.T) {
+	t.Cleanup(func() {
+		_, err := db.Exec("DELETE FROM subscriptions")
+		require.Nil(t, err)
+		_, err = db.Exec("DELETE FROM clients_telemetry")
+		require.Nil(t, err)
+	})
+	repo := postgres.NewRepository(database)
+
+	clientID := testsutil.GenerateUUID(t)
+	domainID := testsutil.GenerateUUID(t)
+	subscriberID := testsutil.GenerateUUID(t)
+
+	ct := journal.ClientTelemetry{
+		ClientID:  clientID,
+		DomainID:  domainID,
+		FirstSeen: time.Now().UTC(),
+	}
+
+	err := repo.SaveClientTelemetry(context.Background(), ct)
+	require.Nil(t, err)
+
+	sub := journal.ClientSubscription{
+		ID:           testsutil.GenerateUUID(t),
+		SubscriberID: subscriberID,
+		ChannelID:    testsutil.GenerateUUID(t),
+		Subtopic:     "subtopic",
+		ClientID:     clientID,
+	}
+
+	err = repo.AddSubscription(context.Background(), sub)
+	require.Nil(t, err)
+
+	cases := []struct {
+		desc         string
+		subscriberID string
+		err          error
+	}{
+		{
+			desc:         "remove existing subscription",
+			subscriberID: subscriberID,
+			err:          nil,
+		},
+		{
+			desc:         "remove non-existing subscription",
+			subscriberID: testsutil.GenerateUUID(t),
+			err:          nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := repo.RemoveSubscription(context.Background(), tc.subscriberID)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.err, err))
+		})
+	}
+}
+
+func TestIncrementInboundMessages(t *testing.T) {
+	t.Cleanup(func() {
+		_, err := db.Exec("DELETE FROM clients_telemetry")
+		require.Nil(t, err)
+	})
+	repo := postgres.NewRepository(database)
+
+	clientID := testsutil.GenerateUUID(t)
+	domainID := testsutil.GenerateUUID(t)
+	firstSeen := time.Now().UTC().Truncate(time.Millisecond)
+
+	cases := []struct {
+		desc            string
+		telemetry       journal.ClientTelemetry
+		expectedInbound uint64
+		err             error
+		setupExisting   bool
+		existingInbound uint64
+	}{
+		{
+			desc: "increment inbound messages for new client",
+			telemetry: journal.ClientTelemetry{
+				ClientID:  clientID,
+				DomainID:  domainID,
+				FirstSeen: firstSeen,
+				LastSeen:  firstSeen,
+			},
+			expectedInbound: 1,
+			setupExisting:   false,
+			err:             nil,
+		},
+		{
+			desc: "increment inbound messages for existing client",
+			telemetry: journal.ClientTelemetry{
+				ClientID:  clientID,
+				DomainID:  domainID,
+				FirstSeen: firstSeen,
+				LastSeen:  firstSeen.Add(time.Hour),
+			},
+			expectedInbound: 2,
+			setupExisting:   true,
+			existingInbound: 1,
+			err:             nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := repo.IncrementInboundMessages(context.Background(), tc.telemetry)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.err, err))
+
+			if err == nil {
+				result, err := repo.RetrieveClientTelemetry(context.Background(), tc.telemetry.ClientID, tc.telemetry.DomainID)
+				require.Nil(t, err)
+				assert.Equal(t, tc.expectedInbound, result.InboundMessages)
+			}
+		})
+	}
+}
+
+func TestIncrementOutboundMessages(t *testing.T) {
+	t.Cleanup(func() {
+		_, err := db.Exec("DELETE FROM subscriptions")
+		require.Nil(t, err)
+		_, err = db.Exec("DELETE FROM clients_telemetry")
+		require.Nil(t, err)
+	})
+	repo := postgres.NewRepository(database)
+
+	clientID1 := testsutil.GenerateUUID(t)
+	clientID2 := testsutil.GenerateUUID(t)
+	domainID := testsutil.GenerateUUID(t)
+	channelID := testsutil.GenerateUUID(t)
+	subtopic := "test/subtopic"
+
+	for i, cid := range []string{clientID1, clientID2} {
+		ct := journal.ClientTelemetry{
+			ClientID:  cid,
+			DomainID:  domainID,
+			FirstSeen: time.Now().UTC(),
+		}
+		err := repo.SaveClientTelemetry(context.Background(), ct)
+		require.Nil(t, err)
+
+		for j := 0; j < 2; j++ {
+			sub := journal.ClientSubscription{
+				ID:           testsutil.GenerateUUID(t),
+				SubscriberID: fmt.Sprintf("subscriber-%d-%d", i, j),
+				ChannelID:    channelID,
+				Subtopic:     subtopic,
+				ClientID:     cid,
+			}
+			err = repo.AddSubscription(context.Background(), sub)
+			require.Nil(t, err)
+		}
+	}
+
+	cases := []struct {
+		desc              string
+		channelID         string
+		subtopic          string
+		expectedIncrement uint64
+		setupAdditional   bool
+		err               error
+	}{
+		{
+			desc:              "increment outbound messages for subscribed clients with multiple subscriptions",
+			channelID:         channelID,
+			subtopic:          subtopic,
+			expectedIncrement: 2,
+			err:               nil,
+		},
+		{
+			desc:              "increment for non-existing channel",
+			channelID:         testsutil.GenerateUUID(t),
+			subtopic:          subtopic,
+			expectedIncrement: 0,
+			err:               nil,
+		},
+		{
+			desc:              "increment with different subtopic",
+			channelID:         channelID,
+			subtopic:          "different/subtopic",
+			expectedIncrement: 0,
+			err:               nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := repo.IncrementOutboundMessages(context.Background(), tc.channelID, tc.subtopic)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.err, err))
+
+			if err == nil && tc.expectedIncrement > 0 {
+				for _, cid := range []string{clientID1, clientID2} {
+					result, err := repo.RetrieveClientTelemetry(context.Background(), cid, domainID)
+					require.Nil(t, err)
+					assert.Equal(t, tc.expectedIncrement, result.OutboundMessages)
+				}
+			}
+		})
+	}
 }

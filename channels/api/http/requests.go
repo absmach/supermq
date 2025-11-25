@@ -103,6 +103,12 @@ func (req listChannelsReq) validate() error {
 		return apiutil.ErrInvalidDirection
 	}
 
+	if req.ConnectionType != "" {
+		if _, err := connections.ParseConnType(req.ConnectionType); err != nil {
+			return apiutil.ErrValidation
+		}
+	}
+
 	return nil
 }
 

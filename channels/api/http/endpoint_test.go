@@ -786,6 +786,64 @@ func TestListChannels(t *testing.T) {
 			status:   http.StatusBadRequest,
 			err:      apiutil.ErrInvalidQueryParams,
 		},
+		{
+			desc:     "list channels with client ID",
+			domainID: validID,
+			token:    validToken,
+			listChannelsResponse: channels.ChannelsPage{
+				Page: channels.Page{
+					Total: 1,
+				},
+				Channels: []channels.Channel{validChannelResp},
+			},
+			query:  "client=" + validID,
+			status: http.StatusOK,
+			err:    nil,
+		},
+		{
+			desc:     "list channels with client ID and connection type publish",
+			domainID: validID,
+			token:    validToken,
+			listChannelsResponse: channels.ChannelsPage{
+				Page: channels.Page{
+					Total: 1,
+				},
+				Channels: []channels.Channel{validChannelResp},
+			},
+			query:  "client=" + validID + "&connection_type=publish",
+			status: http.StatusOK,
+			err:    nil,
+		},
+		{
+			desc:     "list channels with client ID and connection type subscribe",
+			domainID: validID,
+			token:    validToken,
+			listChannelsResponse: channels.ChannelsPage{
+				Page: channels.Page{
+					Total: 1,
+				},
+				Channels: []channels.Channel{validChannelResp},
+			},
+			query:  "client=" + validID + "&connection_type=subscribe",
+			status: http.StatusOK,
+			err:    nil,
+		},
+		{
+			desc:     "list channels with invalid connection type",
+			domainID: validID,
+			token:    validToken,
+			query:    "client=" + validID + "&connection_type=invalid",
+			status:   http.StatusBadRequest,
+			err:      apiutil.ErrValidation,
+		},
+		{
+			desc:     "list channels with duplicate connection type",
+			domainID: validID,
+			token:    validToken,
+			query:    "connection_type=publish&connection_type=subscribe",
+			status:   http.StatusBadRequest,
+			err:      apiutil.ErrInvalidQueryParams,
+		},
 	}
 
 	for _, tc := range cases {
