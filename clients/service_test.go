@@ -1029,7 +1029,7 @@ func TestSetParentGroup(t *testing.T) {
 			parentGroupID:    validID,
 			session:          smqauthn.Session{UserID: validID, DomainID: validID, DomainUserID: validID + "_" + validID},
 			retrieveByIDResp: parentedClient,
-			err:              nil,
+			err:              svcerr.ErrConflict,
 		},
 		{
 			desc:             "set parent group of client with existing parent group",

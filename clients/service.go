@@ -20,8 +20,9 @@ import (
 )
 
 var (
-	errRollbackRepo   = errors.New("failed to rollback repo")
-	errSetParentGroup = errors.New("client already have parent")
+	errRollbackRepo       = errors.New("failed to rollback repo")
+	errSetParentGroup     = errors.New("client already have parent")
+	errSetSameParentGroup = errors.New("client already assigned to the parent group")
 )
 var _ Service = (*service)(nil)
 
@@ -247,7 +248,7 @@ func (svc service) SetParentGroup(ctx context.Context, session authn.Session, pa
 	}
 	switch cli.ParentGroup {
 	case parentGroupID:
-		return nil
+		return errors.Wrap(svcerr.ErrConflict, errSetSameParentGroup)
 	case "":
 		// No action needed, proceed to next code after switch
 	default:
