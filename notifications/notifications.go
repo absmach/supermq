@@ -51,16 +51,20 @@ type Notification struct {
 }
 
 // Service provides access to the notifications service.
+// The service acts as a consumer that subscribes to events, converts them to Notifications,
+// and routes them to all registered notifiers.
 type Service interface {
 	// SendNotification sends a notification.
 	SendNotification(ctx context.Context, notification Notification) error
 }
 
-// Emailer sends notification emails.
-type Emailer interface {
-	// SendInvitationSentEmail sends an email to the invitee when they receive an invitation.
-	SendInvitationSentEmail(to []string, inviteeName, domainName, inviterName string) error
-
-	// SendInvitationAcceptedEmail sends an email to the inviter when their invitation is accepted.
-	SendInvitationAcceptedEmail(to []string, inviterName, inviteeName, domainName string) error
+// Notifier is a generic interface for sending notifications through various channels.
+// Implementations can be for email, SMS, Slack, push notifications, etc.
+// Multiple notifiers can be registered with the notifications service to enable
+// multi-channel notification delivery.
+type Notifier interface {
+	// Notify sends a notification through the specific channel.
+	// The implementation determines how to extract and format the necessary
+	// information from the Notification struct.
+	Notify(ctx context.Context, notification Notification) error
 }

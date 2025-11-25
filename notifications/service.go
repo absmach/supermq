@@ -10,16 +10,30 @@ import (
 
 var _ Service = (*service)(nil)
 
+// Config holds configuration for the notifications service.
+type Config struct {
+	// InvitationSentTemplate is the template path for invitation sent emails
+	InvitationSentTemplate string
+	// InvitationAcceptedTemplate is the template path for invitation accepted emails
+	InvitationAcceptedTemplate string
+	// DefaultSubjectPrefix is the prefix for email subjects (e.g., "SuperMQ" or "PRISM")
+	DefaultSubjectPrefix string
+	// DefaultFooter is the footer text for emails
+	DefaultFooter string
+}
+
 type service struct {
-	emailer Emailer
-	logger  *slog.Logger
+	notifiers []Notifier
+	config    Config
+	logger    *slog.Logger
 }
 
 // NewService returns a new notifications service.
-func NewService(emailer Emailer, logger *slog.Logger) Service {
+func NewService(notifiers []Notifier, config Config, logger *slog.Logger) Service {
 	return &service{
-		emailer: emailer,
-		logger:  logger,
+		notifiers: notifiers,
+		config:    config,
+		logger:    logger,
 	}
 }
 
@@ -41,19 +55,7 @@ func (s *service) sendInvitationSent(ctx context.Context, notification Notificat
 		return nil
 	}
 
-	inviteeName := notification.InviteeUsername
-	if inviteeName == "" {
-		inviteeName = notification.InviteeEmail
-	}
-
-	inviterName := notification.InviterUsername
-	if inviterName == "" {
-		inviterName = notification.InviterEmail
-	}
-	if inviterName == "" {
-		inviterName = "A user"
-	}
-
+	// Normalize domain name for logging
 	domainName := notification.DomainName
 	if domainName == "" {
 		domainName = notification.DomainID
@@ -62,14 +64,21 @@ func (s *service) sendInvitationSent(ctx context.Context, notification Notificat
 	s.logger.Info("sending invitation sent notification",
 		slog.String("to", notification.InviteeEmail),
 		slog.String("domain", domainName),
+		slog.Int("notifiers", len(s.notifiers)),
 	)
 
-	return s.emailer.SendInvitationSentEmail(
-		[]string{notification.InviteeEmail},
-		inviteeName,
-		domainName,
-		inviterName,
-	)
+	// Route notification to all registered notifiers
+	for _, notifier := range s.notifiers {
+		if err := notifier.Notify(ctx, notification); err != nil {
+			s.logger.Error("failed to send notification via notifier",
+				slog.String("error", err.Error()),
+				slog.String("to", notification.InviteeEmail),
+			)
+			// Continue to other notifiers if one fails
+		}
+	}
+
+	return nil
 }
 
 func (s *service) sendInvitationAccepted(ctx context.Context, notification Notification) error {
@@ -78,19 +87,7 @@ func (s *service) sendInvitationAccepted(ctx context.Context, notification Notif
 		return nil
 	}
 
-	inviteeName := notification.InviteeUsername
-	if inviteeName == "" {
-		inviteeName = notification.InviteeEmail
-	}
-	if inviteeName == "" {
-		inviteeName = "A user"
-	}
-
-	inviterName := notification.InviterUsername
-	if inviterName == "" {
-		inviterName = notification.InviterEmail
-	}
-
+	// Normalize domain name for logging
 	domainName := notification.DomainName
 	if domainName == "" {
 		domainName = notification.DomainID
@@ -99,12 +96,19 @@ func (s *service) sendInvitationAccepted(ctx context.Context, notification Notif
 	s.logger.Info("sending invitation accepted notification",
 		slog.String("to", notification.InviterEmail),
 		slog.String("domain", domainName),
+		slog.Int("notifiers", len(s.notifiers)),
 	)
 
-	return s.emailer.SendInvitationAcceptedEmail(
-		[]string{notification.InviterEmail},
-		inviterName,
-		inviteeName,
-		domainName,
-	)
+	// Route notification to all registered notifiers
+	for _, notifier := range s.notifiers {
+		if err := notifier.Notify(ctx, notification); err != nil {
+			s.logger.Error("failed to send notification via notifier",
+				slog.String("error", err.Error()),
+				slog.String("to", notification.InviterEmail),
+			)
+			// Continue to other notifiers even if one fails
+		}
+	}
+
+	return nil
 }

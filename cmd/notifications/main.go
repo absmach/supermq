@@ -47,6 +47,8 @@ type config struct {
 	TraceRatio                      float64 `env:"SMQ_JAEGER_TRACE_RATIO"                         envDefault:"1.0"`
 	InvitationSentEmailTemplate     string  `env:"SMQ_NOTIFICATIONS_INVITATION_SENT_TEMPLATE"     envDefault:"email.tmpl"`
 	InvitationAcceptedEmailTemplate string  `env:"SMQ_NOTIFICATIONS_INVITATION_ACCEPTED_TEMPLATE" envDefault:"email.tmpl"`
+	EmailFooter                     string  `env:"SMQ_NOTIFICATIONS_EMAIL_FOOTER"                 envDefault:"Notification Service"`
+	EmailSubjectPrefix              string  `env:"SMQ_NOTIFICATIONS_EMAIL_SUBJECT_PREFIX"         envDefault:""`
 }
 
 func main() {
@@ -122,20 +124,28 @@ func main() {
 		return
 	}
 
-	invitationSentEmailConfig := emailConfig
-	invitationSentEmailConfig.Template = cfg.InvitationSentEmailTemplate
+	emailConfig.Template = cfg.InvitationSentEmailTemplate
 
-	invitationAcceptedEmailConfig := emailConfig
-	invitationAcceptedEmailConfig.Template = cfg.InvitationAcceptedEmailTemplate
-
-	emailer, err := emailer.New(&invitationSentEmailConfig, &invitationAcceptedEmailConfig)
+	emailerConfig := emailer.Config{
+		Footer:        cfg.EmailFooter,
+		SubjectPrefix: cfg.EmailSubjectPrefix,
+	}
+	emailNotifier, err := emailer.New(&emailConfig, emailerConfig)
 	if err != nil {
-		logger.Error(fmt.Sprintf("failed to create emailer: %s", err))
+		logger.Error(fmt.Sprintf("failed to create email notifier: %s", err))
 		exitCode = 1
 		return
 	}
 
-	svc := newService(emailer, logger)
+	notifiers := []notifications.Notifier{emailNotifier}
+
+	svcConfig := notifications.Config{
+		InvitationSentTemplate:     cfg.InvitationSentEmailTemplate,
+		InvitationAcceptedTemplate: cfg.InvitationAcceptedEmailTemplate,
+		DefaultSubjectPrefix:       cfg.EmailSubjectPrefix,
+		DefaultFooter:              cfg.EmailFooter,
+	}
+	svc := newService(notifiers, svcConfig, logger)
 
 	subscriber, err := store.NewSubscriber(ctx, cfg.ESURL, logger)
 	if err != nil {
@@ -186,7 +196,6 @@ func main() {
 	}
 }
 
-func newService(emailer notifications.Emailer, logger *slog.Logger) notifications.Service {
-	svc := notifications.NewService(emailer, logger)
-	return svc
+func newService(notifiers []notifications.Notifier, config notifications.Config, logger *slog.Logger) notifications.Service {
+	return notifications.NewService(notifiers, config, logger)
 }
