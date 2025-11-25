@@ -24,17 +24,17 @@ tags:
     description: CRUD operations for your clients
     externalDocs:
       description: Find out more about clients
-      url: https://docs.supermq.abstractmachines.fr/
+      url: https://docs.supermq.absmach.eu/
   - name: Roles
     description: All operations involving roles for clients
     externalDocs:
       description: Find out more about roles
-      url: https://docs.supermq.abstractmachines.fr/
+      url: https://docs.supermq.absmach.eu/
   - name: Health
     description: Health check operations
     externalDocs:
       description: Find out more about health checks
-      url: https://docs.supermq.abstractmachines.fr/
+      url: https://docs.supermq.absmach.eu/
 
 paths:
   /{domainID}/clients:
