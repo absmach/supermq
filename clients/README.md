@@ -55,7 +55,7 @@ default values.
 
 ## Deployment
 
-The service itself is distributed as Docker container. Check the [`clients `](https://github.com/absmach/supermq/blob/main/docker/docker-compose.yaml#L167-L194) service section in
+The service itself is distributed as Docker container. Check the [`clients`](https://github.com/absmach/supermq/blob/main/docker/docker-compose.yaml#L167-L194) service section in
 docker-compose file to see how service is deployed.
 
 To start the service outside of the container, execute the following shell script:
@@ -158,7 +158,7 @@ curl -X POST http://localhost:9006/<domainID>/clients \
 }'
 ```
 
-The expected response should be: 
+The expected response should be:
 
 ```bash
 {
@@ -261,6 +261,42 @@ curl -X POST http://localhost:9006/<domainID>/clients/<clientID>/enable \
   -H "Authorization: Bearer <your_access_token>"
 ```
 
+## Roles Management for Clients
+
+In addition to standard client lifecycle operations (create, get, update, delete, enable, disable), the Clients service supports robust role‑based operations for managing permissions and associations for each client.
+
+### Supported Role Operations
+
+| Operation                     | Description                                                                 |
+|------------------------------|-----------------------------------------------------------------------------|
+| `create-role`                | Create a new role for a client                                             |
+| `list-roles`                 | List all roles assigned to a client                                         |
+| `get-role`                   | Retrieve details for a specific client role                                 |
+| `update-role`                | Update a specific client role                                               |
+| `delete-role`                | Delete a specific client role                                               |
+| `add-role-action`            | Add one or more actions (permissions) to a client role                        |
+| `list-role-actions`          | List all actions associated with a client role                              |
+| `delete-role-action`         | Remove a specific action from a client role                                 |
+| `delete-all-role-actions`    | Remove all actions from a client role                                       |
+| `add-role-member`            | Associate one or more users or entities to a client role                     |
+| `list-role-members`          | List all members of a client role                                            |
+| `delete-role-member`         | Remove one or more members from a client role                               |
+| `delete-all-role-members`    | Remove all members from a client role                                       |
+| `list-available-actions`     | Retrieve the global list of available actions key for role creation         |
+
+### Example: Create a Client Role
+
+```bash
+curl -X POST http://localhost:9006/<domainID>/clients/<clientID>/roles \
+  -H "Authorization: Bearer <your_access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "publisher",
+    "actions": ["publish"],
+    "members": []
+  }'
+```
+
 ## Implementation Details
 
 Clients in SuperMQ are persisted in PostgreSQL using a schema optimized for identity management, authorization, and relationship tracking (channels, groups, and users).
@@ -321,7 +357,7 @@ curl -X 'GET' \
   -H 'accept: application/health+json'
 ```
 
-The exoected response is:
+The expected response is:
 
 ```bash
 {
