@@ -20,24 +20,24 @@ const (
 var _ events.EventHandler = (*eventHandler)(nil)
 
 type eventHandler struct {
-	emailer  users.Emailer
+	notifier users.Notifier
 	userRepo users.Repository
 	logger   *slog.Logger
 }
 
 // NewEventHandler creates a new event handler for testing purposes.
-func NewEventHandler(emailer users.Emailer, userRepo users.Repository, logger *slog.Logger) events.EventHandler {
+func NewEventHandler(notifier users.Notifier, userRepo users.Repository, logger *slog.Logger) events.EventHandler {
 	return &eventHandler{
-		emailer:  emailer,
+		notifier: notifier,
 		userRepo: userRepo,
 		logger:   logger,
 	}
 }
 
 // Start starts the event consumer for invitation events.
-func Start(ctx context.Context, consumer string, sub events.Subscriber, emailer users.Emailer, userRepo users.Repository, logger *slog.Logger) error {
+func Start(ctx context.Context, consumer string, sub events.Subscriber, notifier users.Notifier, userRepo users.Repository, logger *slog.Logger) error {
 	handler := &eventHandler{
-		emailer:  emailer,
+		notifier: notifier,
 		userRepo: userRepo,
 		logger:   logger,
 	}
@@ -66,15 +66,15 @@ func (h *eventHandler) Handle(ctx context.Context, event events.Event) error {
 
 	switch operation {
 	case invitationSend:
-		return handleInvitationSent(ctx, data, h.emailer, h.userRepo, h.logger)
+		return handleInvitationSent(ctx, data, h.notifier, h.userRepo, h.logger)
 	case invitationAccept:
-		return handleInvitationAccepted(ctx, data, h.emailer, h.userRepo, h.logger)
+		return handleInvitationAccepted(ctx, data, h.notifier, h.userRepo, h.logger)
 	default:
 		return nil
 	}
 }
 
-func handleInvitationSent(ctx context.Context, data map[string]any, emailer users.Emailer, userRepo users.Repository, logger *slog.Logger) error {
+func handleInvitationSent(ctx context.Context, data map[string]any, notifier users.Notifier, userRepo users.Repository, logger *slog.Logger) error {
 	inviteeUserID, _ := data["invitee_user_id"].(string)
 	invitedBy, _ := data["invited_by"].(string)
 	domainName, _ := data["domain_name"].(string)
@@ -136,16 +136,27 @@ func handleInvitationSent(ctx context.Context, data map[string]any, emailer user
 		roleName = "member"
 	}
 
-	// Send invitation email
-	if err := emailer.SendInvitation([]string{invitee.Email}, inviteeName, inviterName, domainName, roleName); err != nil {
-		logger.Error("failed to send invitation email",
+	// Send invitation notification
+	notificationData := users.NotificationData{
+		Type:       users.NotificationInvitationSent,
+		Recipients: []string{invitee.Email},
+		Metadata: map[string]string{
+			"invitee_name": inviteeName,
+			"inviter_name": inviterName,
+			"domain_name":  domainName,
+			"role_name":    roleName,
+		},
+	}
+
+	if err := notifier.Notify(ctx, notificationData); err != nil {
+		logger.Error("failed to send invitation notification",
 			slog.String("to", invitee.Email),
 			slog.Any("error", err),
 		)
 		return nil
 	}
 
-	logger.Info("invitation email sent",
+	logger.Info("invitation notification sent",
 		slog.String("to", invitee.Email),
 		slog.String("domain", domainName),
 	)
@@ -153,7 +164,7 @@ func handleInvitationSent(ctx context.Context, data map[string]any, emailer user
 	return nil
 }
 
-func handleInvitationAccepted(ctx context.Context, data map[string]any, emailer users.Emailer, userRepo users.Repository, logger *slog.Logger) error {
+func handleInvitationAccepted(ctx context.Context, data map[string]any, notifier users.Notifier, userRepo users.Repository, logger *slog.Logger) error {
 	inviteeUserID, _ := data["invitee_user_id"].(string)
 	invitedBy, _ := data["invited_by"].(string)
 	domainName, _ := data["domain_name"].(string)
@@ -215,16 +226,27 @@ func handleInvitationAccepted(ctx context.Context, data map[string]any, emailer 
 		roleName = "member"
 	}
 
-	// Send invitation accepted email
-	if err := emailer.SendInvitationAccepted([]string{inviter.Email}, inviterName, inviteeName, domainName, roleName); err != nil {
-		logger.Error("failed to send invitation accepted email",
+	// Send invitation accepted notification
+	notificationData := users.NotificationData{
+		Type:       users.NotificationInvitationAccepted,
+		Recipients: []string{inviter.Email},
+		Metadata: map[string]string{
+			"invitee_name": inviteeName,
+			"inviter_name": inviterName,
+			"domain_name":  domainName,
+			"role_name":    roleName,
+		},
+	}
+
+	if err := notifier.Notify(ctx, notificationData); err != nil {
+		logger.Error("failed to send invitation accepted notification",
 			slog.String("to", inviter.Email),
 			slog.Any("error", err),
 		)
 		return nil
 	}
 
-	logger.Info("invitation accepted email sent",
+	logger.Info("invitation accepted notification sent",
 		slog.String("to", inviter.Email),
 		slog.String("domain", domainName),
 	)

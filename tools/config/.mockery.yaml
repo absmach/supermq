@@ -135,5 +135,6 @@ packages:
     interfaces:
       Emailer:
       Hasher:
+      Notifier:
       Repository:
       Service:

@@ -40,10 +40,10 @@ func newTestEvent(data map[string]any, err error) testEvent {
 }
 
 func TestHandleInvitationSent(t *testing.T) {
-	emailer := new(mocks.Emailer)
+	notifier := new(mocks.Notifier)
 	repo := new(mocks.Repository)
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	handler := events.NewEventHandler(emailer, repo, logger)
+	handler := events.NewEventHandler(notifier, repo, logger)
 
 	invitee := users.User{
 		ID:        inviteeUserID,
@@ -60,15 +60,15 @@ func TestHandleInvitationSent(t *testing.T) {
 	}
 
 	cases := []struct {
-		desc            string
-		event           map[string]any
-		encodeErr       error
-		retrieveInvitee users.User
-		retrieveInviter users.User
-		inviteeErr      error
-		inviterErr      error
-		emailErr        error
-		shouldCallEmail bool
+		desc             string
+		event            map[string]any
+		encodeErr        error
+		retrieveInvitee  users.User
+		retrieveInviter  users.User
+		inviteeErr       error
+		inviterErr       error
+		notifyErr        error
+		shouldCallNotify bool
 	}{
 		{
 			desc: "successful invitation sent",
@@ -81,9 +81,9 @@ func TestHandleInvitationSent(t *testing.T) {
 				"role_id":         roleID,
 				"role_name":       "Admin",
 			},
-			retrieveInvitee: invitee,
-			retrieveInviter: inviter,
-			shouldCallEmail: true,
+			retrieveInvitee:  invitee,
+			retrieveInviter:  inviter,
+			shouldCallNotify: true,
 		},
 		{
 			desc: "invitation sent with missing domain name",
@@ -94,9 +94,9 @@ func TestHandleInvitationSent(t *testing.T) {
 				"domain_id":       domainID,
 				"role_id":         roleID,
 			},
-			retrieveInvitee: invitee,
-			retrieveInviter: inviter,
-			shouldCallEmail: true,
+			retrieveInvitee:  invitee,
+			retrieveInviter:  inviter,
+			shouldCallNotify: true,
 		},
 		{
 			desc: "invitation sent with missing invitee_user_id",
@@ -106,7 +106,7 @@ func TestHandleInvitationSent(t *testing.T) {
 				"domain_id":   domainID,
 				"domain_name": "Test Domain",
 			},
-			shouldCallEmail: false,
+			shouldCallNotify: false,
 		},
 		{
 			desc: "invitation sent with missing invited_by",
@@ -116,7 +116,7 @@ func TestHandleInvitationSent(t *testing.T) {
 				"domain_id":       domainID,
 				"domain_name":     "Test Domain",
 			},
-			shouldCallEmail: false,
+			shouldCallNotify: false,
 		},
 		{
 			desc: "invitation sent with invitee not found",
@@ -127,8 +127,8 @@ func TestHandleInvitationSent(t *testing.T) {
 				"domain_id":       domainID,
 				"domain_name":     "Test Domain",
 			},
-			inviteeErr:      repoerr.ErrNotFound,
-			shouldCallEmail: false,
+			inviteeErr:       repoerr.ErrNotFound,
+			shouldCallNotify: false,
 		},
 		{
 			desc: "invitation sent with inviter not found",
@@ -139,9 +139,9 @@ func TestHandleInvitationSent(t *testing.T) {
 				"domain_id":       domainID,
 				"domain_name":     "Test Domain",
 			},
-			retrieveInvitee: invitee,
-			inviterErr:      repoerr.ErrNotFound,
-			shouldCallEmail: false,
+			retrieveInvitee:  invitee,
+			inviterErr:       repoerr.ErrNotFound,
+			shouldCallNotify: false,
 		},
 		{
 			desc: "invitation sent with email error",
@@ -153,30 +153,30 @@ func TestHandleInvitationSent(t *testing.T) {
 				"domain_name":     "Test Domain",
 				"role_name":       "Admin",
 			},
-			retrieveInvitee: invitee,
-			retrieveInviter: inviter,
-			emailErr:        errors.New("email send failed"),
-			shouldCallEmail: true,
+			retrieveInvitee:  invitee,
+			retrieveInviter:  inviter,
+			notifyErr:        errors.New("notification send failed"),
+			shouldCallNotify: true,
 		},
 		{
 			desc: "encode error",
 			event: map[string]any{
 				"operation": "invitation.send",
 			},
-			encodeErr:       errors.New("encode error"),
-			shouldCallEmail: false,
+			encodeErr:        errors.New("encode error"),
+			shouldCallNotify: false,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			if tc.shouldCallEmail || tc.inviteeErr != nil || tc.inviterErr != nil {
+			if tc.shouldCallNotify || tc.inviteeErr != nil || tc.inviterErr != nil {
 				inviteeCall := repo.On("RetrieveByID", context.Background(), inviteeUserID).Return(tc.retrieveInvitee, tc.inviteeErr)
-				var inviterCall, emailCall *mock.Call
+				var inviterCall, notifyCall *mock.Call
 				if tc.inviteeErr == nil {
 					inviterCall = repo.On("RetrieveByID", context.Background(), inviterUserID).Return(tc.retrieveInviter, tc.inviterErr)
-					if tc.inviterErr == nil && tc.shouldCallEmail {
-						emailCall = emailer.On("SendInvitation", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.emailErr)
+					if tc.inviterErr == nil && tc.shouldCallNotify {
+						notifyCall = notifier.On("Notify", context.Background(), mock.Anything).Return(tc.notifyErr)
 					}
 				}
 
@@ -187,8 +187,8 @@ func TestHandleInvitationSent(t *testing.T) {
 				if inviterCall != nil {
 					inviterCall.Unset()
 				}
-				if emailCall != nil {
-					emailCall.Unset()
+				if notifyCall != nil {
+					notifyCall.Unset()
 				}
 			} else {
 				err := handler.Handle(context.Background(), newTestEvent(tc.event, tc.encodeErr))
@@ -199,10 +199,10 @@ func TestHandleInvitationSent(t *testing.T) {
 }
 
 func TestHandleInvitationAccepted(t *testing.T) {
-	emailer := new(mocks.Emailer)
+	notifier := new(mocks.Notifier)
 	repo := new(mocks.Repository)
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	handler := events.NewEventHandler(emailer, repo, logger)
+	handler := events.NewEventHandler(notifier, repo, logger)
 
 	invitee := users.User{
 		ID:        inviteeUserID,
@@ -219,15 +219,15 @@ func TestHandleInvitationAccepted(t *testing.T) {
 	}
 
 	cases := []struct {
-		desc            string
-		event           map[string]any
-		encodeErr       error
-		retrieveInvitee users.User
-		retrieveInviter users.User
-		inviteeErr      error
-		inviterErr      error
-		emailErr        error
-		shouldCallEmail bool
+		desc             string
+		event            map[string]any
+		encodeErr        error
+		retrieveInvitee  users.User
+		retrieveInviter  users.User
+		inviteeErr       error
+		inviterErr       error
+		notifyErr        error
+		shouldCallNotify bool
 	}{
 		{
 			desc: "successful invitation accepted",
@@ -240,9 +240,9 @@ func TestHandleInvitationAccepted(t *testing.T) {
 				"role_id":         roleID,
 				"role_name":       "Admin",
 			},
-			retrieveInvitee: invitee,
-			retrieveInviter: inviter,
-			shouldCallEmail: true,
+			retrieveInvitee:  invitee,
+			retrieveInviter:  inviter,
+			shouldCallNotify: true,
 		},
 		{
 			desc: "invitation accepted with missing domain name",
@@ -253,9 +253,9 @@ func TestHandleInvitationAccepted(t *testing.T) {
 				"domain_id":       domainID,
 				"role_id":         roleID,
 			},
-			retrieveInvitee: invitee,
-			retrieveInviter: inviter,
-			shouldCallEmail: true,
+			retrieveInvitee:  invitee,
+			retrieveInviter:  inviter,
+			shouldCallNotify: true,
 		},
 		{
 			desc: "invitation accepted with missing invitee_user_id",
@@ -265,7 +265,7 @@ func TestHandleInvitationAccepted(t *testing.T) {
 				"domain_id":   domainID,
 				"domain_name": "Test Domain",
 			},
-			shouldCallEmail: false,
+			shouldCallNotify: false,
 		},
 		{
 			desc: "invitation accepted with missing invited_by",
@@ -275,7 +275,7 @@ func TestHandleInvitationAccepted(t *testing.T) {
 				"domain_id":       domainID,
 				"domain_name":     "Test Domain",
 			},
-			shouldCallEmail: false,
+			shouldCallNotify: false,
 		},
 		{
 			desc: "invitation accepted with invitee not found",
@@ -286,8 +286,8 @@ func TestHandleInvitationAccepted(t *testing.T) {
 				"domain_id":       domainID,
 				"domain_name":     "Test Domain",
 			},
-			inviteeErr:      repoerr.ErrNotFound,
-			shouldCallEmail: false,
+			inviteeErr:       repoerr.ErrNotFound,
+			shouldCallNotify: false,
 		},
 		{
 			desc: "invitation accepted with inviter not found",
@@ -298,9 +298,9 @@ func TestHandleInvitationAccepted(t *testing.T) {
 				"domain_id":       domainID,
 				"domain_name":     "Test Domain",
 			},
-			retrieveInvitee: invitee,
-			inviterErr:      repoerr.ErrNotFound,
-			shouldCallEmail: false,
+			retrieveInvitee:  invitee,
+			inviterErr:       repoerr.ErrNotFound,
+			shouldCallNotify: false,
 		},
 		{
 			desc: "invitation accepted with email error",
@@ -312,22 +312,22 @@ func TestHandleInvitationAccepted(t *testing.T) {
 				"domain_name":     "Test Domain",
 				"role_name":       "Admin",
 			},
-			retrieveInvitee: invitee,
-			retrieveInviter: inviter,
-			emailErr:        errors.New("email send failed"),
-			shouldCallEmail: true,
+			retrieveInvitee:  invitee,
+			retrieveInviter:  inviter,
+			notifyErr:        errors.New("notification send failed"),
+			shouldCallNotify: true,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			if tc.shouldCallEmail || tc.inviteeErr != nil || tc.inviterErr != nil {
+			if tc.shouldCallNotify || tc.inviteeErr != nil || tc.inviterErr != nil {
 				inviteeCall := repo.On("RetrieveByID", context.Background(), inviteeUserID).Return(tc.retrieveInvitee, tc.inviteeErr)
-				var inviterCall, emailCall *mock.Call
+				var inviterCall, notifyCall *mock.Call
 				if tc.inviteeErr == nil {
 					inviterCall = repo.On("RetrieveByID", context.Background(), inviterUserID).Return(tc.retrieveInviter, tc.inviterErr)
-					if tc.inviterErr == nil && tc.shouldCallEmail {
-						emailCall = emailer.On("SendInvitationAccepted", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.emailErr)
+					if tc.inviterErr == nil && tc.shouldCallNotify {
+						notifyCall = notifier.On("Notify", context.Background(), mock.Anything).Return(tc.notifyErr)
 					}
 				}
 
@@ -338,8 +338,8 @@ func TestHandleInvitationAccepted(t *testing.T) {
 				if inviterCall != nil {
 					inviterCall.Unset()
 				}
-				if emailCall != nil {
-					emailCall.Unset()
+				if notifyCall != nil {
+					notifyCall.Unset()
 				}
 			} else {
 				err := handler.Handle(context.Background(), newTestEvent(tc.event, tc.encodeErr))
@@ -350,10 +350,10 @@ func TestHandleInvitationAccepted(t *testing.T) {
 }
 
 func TestHandleUnknownOperation(t *testing.T) {
-	emailer := new(mocks.Emailer)
+	notifier := new(mocks.Notifier)
 	repo := new(mocks.Repository)
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	handler := events.NewEventHandler(emailer, repo, logger)
+	handler := events.NewEventHandler(notifier, repo, logger)
 
 	event := map[string]any{
 		"operation": "unknown.operation",

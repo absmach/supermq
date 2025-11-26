@@ -278,8 +278,11 @@ func main() {
 		return
 	}
 
+	// Create email notifier for sending invitation notifications
+	notifier := emailer.NewNotifier(emailerClient)
+
 	g.Go(func() error {
-		return userevents.Start(ctx, svcName, subscriber, emailerClient, repo, logger)
+		return userevents.Start(ctx, svcName, subscriber, notifier, repo, logger)
 	})
 
 	logger.Info("Subscribed to invitation events")
