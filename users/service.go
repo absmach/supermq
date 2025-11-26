@@ -41,17 +41,17 @@ type service struct {
 	idProvider supermq.IDProvider
 	policies   policies.Service
 	hasher     Hasher
-	email      Emailer
+	notifier   Notifier
 }
 
 // NewService returns a new Users service implementation.
-func NewService(token grpcTokenV1.TokenServiceClient, urepo Repository, policyService policies.Service, emailer Emailer, hasher Hasher, idp supermq.IDProvider) Service {
+func NewService(token grpcTokenV1.TokenServiceClient, urepo Repository, policyService policies.Service, notifier Notifier, hasher Hasher, idp supermq.IDProvider) Service {
 	return service{
 		token:      token,
 		users:      urepo,
 		policies:   policyService,
 		hasher:     hasher,
-		email:      emailer,
+		notifier:   notifier,
 		idProvider: idp,
 	}
 }
@@ -132,7 +132,16 @@ func (svc service) SendVerification(ctx context.Context, session authn.Session) 
 		return errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 
-	if err := svc.email.SendVerification([]string{dbUser.Email}, dbUser.Credentials.Username, uvs); err != nil {
+	notificationData := NotificationData{
+		Type:       NotificationEmailVerification,
+		Recipients: []string{dbUser.Email},
+		Metadata: map[string]string{
+			"user":               dbUser.Credentials.Username,
+			"verification_token": uvs,
+		},
+	}
+
+	if err := svc.notifier.Notify(ctx, notificationData); err != nil {
 		return errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 	return nil
@@ -409,7 +418,16 @@ func (svc service) SendPasswordReset(ctx context.Context, email string) error {
 		return errors.Wrap(errRecoveryToken, err)
 	}
 
-	return svc.email.SendPasswordReset([]string{email}, user.Credentials.Username, token.AccessToken)
+	notificationData := NotificationData{
+		Type:       NotificationPasswordReset,
+		Recipients: []string{email},
+		Metadata: map[string]string{
+			"user":  user.Credentials.Username,
+			"token": token.AccessToken,
+		},
+	}
+
+	return svc.notifier.Notify(ctx, notificationData)
 }
 
 func (svc service) ResetSecret(ctx context.Context, session authn.Session, secret string) error {

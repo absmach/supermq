@@ -26,6 +26,10 @@ func NewNotifier(emailer users.Emailer) users.Notifier {
 // Notify sends a notification via email based on the notification type.
 func (n *emailNotifier) Notify(ctx context.Context, data users.NotificationData) error {
 	switch data.Type {
+	case users.NotificationPasswordReset:
+		return n.notifyPasswordReset(data)
+	case users.NotificationEmailVerification:
+		return n.notifyEmailVerification(data)
 	case users.NotificationInvitationSent:
 		return n.notifyInvitationSent(data)
 	case users.NotificationInvitationAccepted:
@@ -33,6 +37,20 @@ func (n *emailNotifier) Notify(ctx context.Context, data users.NotificationData)
 	default:
 		return fmt.Errorf("unknown notification type: %s", data.Type)
 	}
+}
+
+func (n *emailNotifier) notifyPasswordReset(data users.NotificationData) error {
+	user := data.Metadata["user"]
+	token := data.Metadata["token"]
+
+	return n.emailer.SendPasswordReset(data.Recipients, user, token)
+}
+
+func (n *emailNotifier) notifyEmailVerification(data users.NotificationData) error {
+	user := data.Metadata["user"]
+	token := data.Metadata["verification_token"]
+
+	return n.emailer.SendVerification(data.Recipients, user, token)
 }
 
 func (n *emailNotifier) notifyInvitationSent(data users.NotificationData) error {

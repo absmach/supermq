@@ -264,7 +264,10 @@ func main() {
 		return
 	}
 
-	csvc, err := newService(ctx, authz, tokenClient, policyService, domainsClient, repo, emailerClient, tracer, cfg, logger)
+	// Create email notifier for sending notifications
+	notifier := emailer.NewNotifier(emailerClient)
+
+	csvc, err := newService(ctx, authz, tokenClient, policyService, domainsClient, repo, notifier, tracer, cfg, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to setup service: %s", err))
 		exitCode = 1
@@ -277,9 +280,6 @@ func main() {
 		exitCode = 1
 		return
 	}
-
-	// Create email notifier for sending invitation notifications
-	notifier := emailer.NewNotifier(emailerClient)
 
 	g.Go(func() error {
 		return userevents.Start(ctx, svcName, subscriber, notifier, repo, logger)
@@ -324,11 +324,11 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, authz smqauthz.Authorization, token grpcTokenV1.TokenServiceClient, policyService policies.Service, domainsClient grpcDomainsV1.DomainsServiceClient, repo users.Repository, emailerClient users.Emailer, tracer trace.Tracer, c config, logger *slog.Logger) (users.Service, error) {
+func newService(ctx context.Context, authz smqauthz.Authorization, token grpcTokenV1.TokenServiceClient, policyService policies.Service, domainsClient grpcDomainsV1.DomainsServiceClient, repo users.Repository, notifier users.Notifier, tracer trace.Tracer, c config, logger *slog.Logger) (users.Service, error) {
 	idp := uuid.New()
 	hsr := hasher.New()
 
-	svc := users.NewService(token, repo, policyService, emailerClient, hsr, idp)
+	svc := users.NewService(token, repo, policyService, notifier, hsr, idp)
 
 	svc, err := events.NewEventStoreMiddleware(ctx, svc, c.ESURL)
 	if err != nil {

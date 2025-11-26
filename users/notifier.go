@@ -9,6 +9,10 @@ import "context"
 type NotificationType string
 
 const (
+	// NotificationPasswordReset is sent when a user requests a password reset.
+	NotificationPasswordReset NotificationType = "password_reset"
+	// NotificationEmailVerification is sent when a user needs to verify their email.
+	NotificationEmailVerification NotificationType = "email_verification"
 	// NotificationInvitationSent is sent when a user is invited to a domain.
 	NotificationInvitationSent NotificationType = "invitation_sent"
 	// NotificationInvitationAccepted is sent when a user accepts an invitation.
