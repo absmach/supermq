@@ -189,9 +189,19 @@ func (svc service) ListDomains(ctx context.Context, session authn.Session, p Pag
 }
 
 func (svc *service) SendInvitation(ctx context.Context, session authn.Session, invitation Invitation) error {
-	if _, err := svc.repo.RetrieveRole(ctx, invitation.RoleID); err != nil {
+	role, err := svc.repo.RetrieveRole(ctx, invitation.RoleID)
+	if err != nil {
 		return errors.Wrap(svcerr.ErrInvalidRole, err)
 	}
+	invitation.RoleName = role.Name
+
+	// Retrieve domain to get domain name
+	domain, err := svc.repo.RetrieveDomainByID(ctx, invitation.DomainID)
+	if err != nil {
+		return errors.Wrap(svcerr.ErrViewEntity, err)
+	}
+	invitation.DomainName = domain.Name
+
 	invitation.InvitedBy = session.UserID
 	invitation.CreatedAt = time.Now().UTC()
 
@@ -261,6 +271,24 @@ func (svc *service) AcceptInvitation(ctx context.Context, session authn.Session,
 
 	if !inv.RejectedAt.IsZero() {
 		return Invitation{}, svcerr.ErrInvitationAlreadyRejected
+	}
+
+	// Populate domain name if not already set
+	if inv.DomainName == "" {
+		domain, err := svc.repo.RetrieveDomainByID(ctx, domainID)
+		if err != nil {
+			return Invitation{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		}
+		inv.DomainName = domain.Name
+	}
+
+	// Populate role name if not already set
+	if inv.RoleName == "" {
+		role, err := svc.repo.RetrieveRole(ctx, inv.RoleID)
+		if err != nil {
+			return Invitation{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		}
+		inv.RoleName = role.Name
 	}
 
 	session.DomainID = domainID

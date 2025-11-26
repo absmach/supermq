@@ -260,8 +260,8 @@ func (es *eventStore) AcceptInvitation(ctx context.Context, session authn.Sessio
 	}
 
 	event := acceptInvitationEvent{
-		domainID: domainID,
-		session:  session,
+		invitation: inv,
+		session:    session,
 	}
 
 	if err := es.Publish(ctx, acceptInvitationStream, event); err != nil {

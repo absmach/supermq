@@ -637,6 +637,7 @@ func TestSendInvitation(t *testing.T) {
 		session             authn.Session
 		req                 domains.Invitation
 		retrieveRoleErr     error
+		retrieveDomainErr   error
 		createInvitationErr error
 		retrieveInvRes      domains.Invitation
 		retrieveInvErr      error
@@ -659,6 +660,13 @@ func TestSendInvitation(t *testing.T) {
 			},
 			retrieveRoleErr: repoerr.ErrNotFound,
 			err:             svcerr.ErrInvalidRole,
+		},
+		{
+			desc:              "send invitation with failed to retrieve domain",
+			session:           validSession,
+			req:               validInvitation,
+			retrieveDomainErr: repoerr.ErrNotFound,
+			err:               svcerr.ErrViewEntity,
 		},
 		{
 			desc:                "send invitations with failed to save invitation",
@@ -695,16 +703,18 @@ func TestSendInvitation(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			repoCall := drepo.On("RetrieveRole", context.Background(), tc.req.RoleID).Return(roles.Role{}, tc.retrieveRoleErr)
-			repoCall1 := drepo.On("SaveInvitation", context.Background(), mock.Anything).Return(tc.createInvitationErr)
-			repoCall2 := drepo.On("RetrieveInvitation", context.Background(), tc.req.InviteeUserID, tc.req.DomainID).Return(tc.retrieveInvRes, tc.retrieveInvErr)
-			repoCall3 := drepo.On("UpdateRejection", context.Background(), mock.Anything).Return(tc.updateRejectionErr)
+			repoCall := drepo.On("RetrieveRole", context.Background(), tc.req.RoleID).Return(roles.Role{Name: "admin"}, tc.retrieveRoleErr)
+			repoCall1 := drepo.On("RetrieveDomainByID", context.Background(), tc.req.DomainID).Return(domains.Domain{Name: "test_domain"}, tc.retrieveDomainErr)
+			repoCall2 := drepo.On("SaveInvitation", context.Background(), mock.Anything).Return(tc.createInvitationErr)
+			repoCall3 := drepo.On("RetrieveInvitation", context.Background(), tc.req.InviteeUserID, tc.req.DomainID).Return(tc.retrieveInvRes, tc.retrieveInvErr)
+			repoCall4 := drepo.On("UpdateRejection", context.Background(), mock.Anything).Return(tc.updateRejectionErr)
 			err := svc.SendInvitation(context.Background(), tc.session, tc.req)
 			assert.True(t, errors.Contains(err, tc.err))
 			repoCall.Unset()
 			repoCall1.Unset()
 			repoCall2.Unset()
 			repoCall3.Unset()
+			repoCall4.Unset()
 		})
 	}
 }
@@ -844,6 +854,8 @@ func TestAcceptInvitation(t *testing.T) {
 		session               authn.Session
 		resp                  domains.Invitation
 		retrieveInvitationErr error
+		retrieveDomainErr     error
+		retrieveRoleErr       error
 		updateConfirmationErr error
 		addRoleMemberErr      error
 		err                   error
@@ -928,17 +940,21 @@ func TestAcceptInvitation(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			repoCall := drepo.On("RetrieveInvitation", context.Background(), tc.session.UserID, tc.domainID).Return(tc.resp, tc.retrieveInvitationErr)
-			repoCall1 := drepo.On("RetrieveEntityRole", context.Background(), tc.domainID, tc.resp.RoleID).Return(roles.Role{}, tc.addRoleMemberErr)
+			repoCall1 := drepo.On("RetrieveDomainByID", context.Background(), tc.domainID).Return(domains.Domain{Name: "test_domain"}, tc.retrieveDomainErr)
+			repoCall2 := drepo.On("RetrieveRole", context.Background(), tc.resp.RoleID).Return(roles.Role{Name: "admin"}, tc.retrieveRoleErr)
+			repoCall3 := drepo.On("RetrieveEntityRole", context.Background(), tc.domainID, tc.resp.RoleID).Return(roles.Role{}, tc.addRoleMemberErr)
 			policyCall := policy.On("AddPolicies", context.Background(), mock.Anything).Return(tc.addRoleMemberErr)
-			repoCall2 := drepo.On("RoleAddMembers", context.Background(), mock.Anything, []string{tc.resp.InviteeUserID}).Return([]string{}, tc.addRoleMemberErr)
-			repoCall3 := drepo.On("UpdateConfirmation", context.Background(), mock.Anything).Return(tc.updateConfirmationErr)
+			repoCall4 := drepo.On("RoleAddMembers", context.Background(), mock.Anything, []string{tc.resp.InviteeUserID}).Return([]string{}, tc.addRoleMemberErr)
+			repoCall5 := drepo.On("UpdateConfirmation", context.Background(), mock.Anything).Return(tc.updateConfirmationErr)
 			_, err := svc.AcceptInvitation(context.Background(), tc.session, tc.domainID)
 			assert.True(t, errors.Contains(err, tc.err))
 			repoCall.Unset()
 			repoCall1.Unset()
-			policyCall.Unset()
 			repoCall2.Unset()
 			repoCall3.Unset()
+			policyCall.Unset()
+			repoCall4.Unset()
+			repoCall5.Unset()
 		})
 	}
 }

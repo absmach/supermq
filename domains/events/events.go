@@ -319,6 +319,13 @@ func (sie sendInvitationEvent) Encode() (map[string]any, error) {
 		"super_admin":     sie.session.SuperAdmin,
 	}
 
+	if sie.invitation.DomainName != "" {
+		val["domain_name"] = sie.invitation.DomainName
+	}
+	if sie.invitation.RoleName != "" {
+		val["role_name"] = sie.invitation.RoleName
+	}
+
 	return val, nil
 }
 
@@ -387,17 +394,26 @@ func (lie listDomainInvitationsEvent) Encode() (map[string]any, error) {
 }
 
 type acceptInvitationEvent struct {
-	domainID string
-	session  authn.Session
+	invitation domains.Invitation
+	session    authn.Session
 }
 
 func (aie acceptInvitationEvent) Encode() (map[string]any, error) {
 	val := map[string]any{
 		"operation":       invitationAccept,
-		"domain_id":       aie.domainID,
+		"domain_id":       aie.invitation.DomainID,
 		"invitee_user_id": aie.session.UserID,
+		"invited_by":      aie.invitation.InvitedBy,
+		"role_id":         aie.invitation.RoleID,
 		"token_type":      aie.session.Type.String(),
 		"super_admin":     aie.session.SuperAdmin,
+	}
+
+	if aie.invitation.DomainName != "" {
+		val["domain_name"] = aie.invitation.DomainName
+	}
+	if aie.invitation.RoleName != "" {
+		val["role_name"] = aie.invitation.RoleName
 	}
 
 	return val, nil
