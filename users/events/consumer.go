@@ -25,6 +25,15 @@ type eventHandler struct {
 	logger   *slog.Logger
 }
 
+// NewEventHandler creates a new event handler for testing purposes.
+func NewEventHandler(emailer users.Emailer, userRepo users.Repository, logger *slog.Logger) events.EventHandler {
+	return &eventHandler{
+		emailer:  emailer,
+		userRepo: userRepo,
+		logger:   logger,
+	}
+}
+
 // Start starts the event consumer for invitation events.
 func Start(ctx context.Context, consumer string, sub events.Subscriber, emailer users.Emailer, userRepo users.Repository, logger *slog.Logger) error {
 	handler := &eventHandler{

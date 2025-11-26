@@ -1,0 +1,365 @@
+// Copyright (c) Abstract Machines
+// SPDX-License-Identifier: Apache-2.0
+
+package events_test
+
+import (
+	"context"
+	"log/slog"
+	"os"
+	"testing"
+
+	"github.com/absmach/supermq/internal/testsutil"
+	"github.com/absmach/supermq/pkg/errors"
+	repoerr "github.com/absmach/supermq/pkg/errors/repository"
+	"github.com/absmach/supermq/users"
+	"github.com/absmach/supermq/users/events"
+	"github.com/absmach/supermq/users/mocks"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+)
+
+var (
+	inviteeUserID = testsutil.GenerateUUID(&testing.T{})
+	inviterUserID = testsutil.GenerateUUID(&testing.T{})
+	domainID      = testsutil.GenerateUUID(&testing.T{})
+	roleID        = testsutil.GenerateUUID(&testing.T{})
+)
+
+type testEvent struct {
+	data map[string]any
+	err  error
+}
+
+func (e testEvent) Encode() (map[string]any, error) {
+	return e.data, e.err
+}
+
+func newTestEvent(data map[string]any, err error) testEvent {
+	return testEvent{data: data, err: err}
+}
+
+func TestHandleInvitationSent(t *testing.T) {
+	emailer := new(mocks.Emailer)
+	repo := new(mocks.Repository)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	handler := events.NewEventHandler(emailer, repo, logger)
+
+	invitee := users.User{
+		ID:        inviteeUserID,
+		Email:     "invitee@example.com",
+		FirstName: "John",
+		LastName:  "Doe",
+	}
+
+	inviter := users.User{
+		ID:        inviterUserID,
+		Email:     "inviter@example.com",
+		FirstName: "Jane",
+		LastName:  "Smith",
+	}
+
+	cases := []struct {
+		desc            string
+		event           map[string]any
+		encodeErr       error
+		retrieveInvitee users.User
+		retrieveInviter users.User
+		inviteeErr      error
+		inviterErr      error
+		emailErr        error
+		shouldCallEmail bool
+	}{
+		{
+			desc: "successful invitation sent",
+			event: map[string]any{
+				"operation":       "invitation.send",
+				"invitee_user_id": inviteeUserID,
+				"invited_by":      inviterUserID,
+				"domain_id":       domainID,
+				"domain_name":     "Test Domain",
+				"role_id":         roleID,
+				"role_name":       "Admin",
+			},
+			retrieveInvitee: invitee,
+			retrieveInviter: inviter,
+			shouldCallEmail: true,
+		},
+		{
+			desc: "invitation sent with missing domain name",
+			event: map[string]any{
+				"operation":       "invitation.send",
+				"invitee_user_id": inviteeUserID,
+				"invited_by":      inviterUserID,
+				"domain_id":       domainID,
+				"role_id":         roleID,
+			},
+			retrieveInvitee: invitee,
+			retrieveInviter: inviter,
+			shouldCallEmail: true,
+		},
+		{
+			desc: "invitation sent with missing invitee_user_id",
+			event: map[string]any{
+				"operation":   "invitation.send",
+				"invited_by":  inviterUserID,
+				"domain_id":   domainID,
+				"domain_name": "Test Domain",
+			},
+			shouldCallEmail: false,
+		},
+		{
+			desc: "invitation sent with missing invited_by",
+			event: map[string]any{
+				"operation":       "invitation.send",
+				"invitee_user_id": inviteeUserID,
+				"domain_id":       domainID,
+				"domain_name":     "Test Domain",
+			},
+			shouldCallEmail: false,
+		},
+		{
+			desc: "invitation sent with invitee not found",
+			event: map[string]any{
+				"operation":       "invitation.send",
+				"invitee_user_id": inviteeUserID,
+				"invited_by":      inviterUserID,
+				"domain_id":       domainID,
+				"domain_name":     "Test Domain",
+			},
+			inviteeErr:      repoerr.ErrNotFound,
+			shouldCallEmail: false,
+		},
+		{
+			desc: "invitation sent with inviter not found",
+			event: map[string]any{
+				"operation":       "invitation.send",
+				"invitee_user_id": inviteeUserID,
+				"invited_by":      inviterUserID,
+				"domain_id":       domainID,
+				"domain_name":     "Test Domain",
+			},
+			retrieveInvitee: invitee,
+			inviterErr:      repoerr.ErrNotFound,
+			shouldCallEmail: false,
+		},
+		{
+			desc: "invitation sent with email error",
+			event: map[string]any{
+				"operation":       "invitation.send",
+				"invitee_user_id": inviteeUserID,
+				"invited_by":      inviterUserID,
+				"domain_id":       domainID,
+				"domain_name":     "Test Domain",
+				"role_name":       "Admin",
+			},
+			retrieveInvitee: invitee,
+			retrieveInviter: inviter,
+			emailErr:        errors.New("email send failed"),
+			shouldCallEmail: true,
+		},
+		{
+			desc: "encode error",
+			event: map[string]any{
+				"operation": "invitation.send",
+			},
+			encodeErr:       errors.New("encode error"),
+			shouldCallEmail: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.shouldCallEmail || tc.inviteeErr != nil || tc.inviterErr != nil {
+				inviteeCall := repo.On("RetrieveByID", context.Background(), inviteeUserID).Return(tc.retrieveInvitee, tc.inviteeErr)
+				var inviterCall, emailCall *mock.Call
+				if tc.inviteeErr == nil {
+					inviterCall = repo.On("RetrieveByID", context.Background(), inviterUserID).Return(tc.retrieveInviter, tc.inviterErr)
+					if tc.inviterErr == nil && tc.shouldCallEmail {
+						emailCall = emailer.On("SendInvitation", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.emailErr)
+					}
+				}
+
+				err := handler.Handle(context.Background(), newTestEvent(tc.event, tc.encodeErr))
+				assert.Nil(t, err, "Handle should not return error")
+
+				inviteeCall.Unset()
+				if inviterCall != nil {
+					inviterCall.Unset()
+				}
+				if emailCall != nil {
+					emailCall.Unset()
+				}
+			} else {
+				err := handler.Handle(context.Background(), newTestEvent(tc.event, tc.encodeErr))
+				assert.Nil(t, err, "Handle should not return error")
+			}
+		})
+	}
+}
+
+func TestHandleInvitationAccepted(t *testing.T) {
+	emailer := new(mocks.Emailer)
+	repo := new(mocks.Repository)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	handler := events.NewEventHandler(emailer, repo, logger)
+
+	invitee := users.User{
+		ID:        inviteeUserID,
+		Email:     "invitee@example.com",
+		FirstName: "John",
+		LastName:  "Doe",
+	}
+
+	inviter := users.User{
+		ID:        inviterUserID,
+		Email:     "inviter@example.com",
+		FirstName: "Jane",
+		LastName:  "Smith",
+	}
+
+	cases := []struct {
+		desc            string
+		event           map[string]any
+		encodeErr       error
+		retrieveInvitee users.User
+		retrieveInviter users.User
+		inviteeErr      error
+		inviterErr      error
+		emailErr        error
+		shouldCallEmail bool
+	}{
+		{
+			desc: "successful invitation accepted",
+			event: map[string]any{
+				"operation":       "invitation.accept",
+				"invitee_user_id": inviteeUserID,
+				"invited_by":      inviterUserID,
+				"domain_id":       domainID,
+				"domain_name":     "Test Domain",
+				"role_id":         roleID,
+				"role_name":       "Admin",
+			},
+			retrieveInvitee: invitee,
+			retrieveInviter: inviter,
+			shouldCallEmail: true,
+		},
+		{
+			desc: "invitation accepted with missing domain name",
+			event: map[string]any{
+				"operation":       "invitation.accept",
+				"invitee_user_id": inviteeUserID,
+				"invited_by":      inviterUserID,
+				"domain_id":       domainID,
+				"role_id":         roleID,
+			},
+			retrieveInvitee: invitee,
+			retrieveInviter: inviter,
+			shouldCallEmail: true,
+		},
+		{
+			desc: "invitation accepted with missing invitee_user_id",
+			event: map[string]any{
+				"operation":   "invitation.accept",
+				"invited_by":  inviterUserID,
+				"domain_id":   domainID,
+				"domain_name": "Test Domain",
+			},
+			shouldCallEmail: false,
+		},
+		{
+			desc: "invitation accepted with missing invited_by",
+			event: map[string]any{
+				"operation":       "invitation.accept",
+				"invitee_user_id": inviteeUserID,
+				"domain_id":       domainID,
+				"domain_name":     "Test Domain",
+			},
+			shouldCallEmail: false,
+		},
+		{
+			desc: "invitation accepted with invitee not found",
+			event: map[string]any{
+				"operation":       "invitation.accept",
+				"invitee_user_id": inviteeUserID,
+				"invited_by":      inviterUserID,
+				"domain_id":       domainID,
+				"domain_name":     "Test Domain",
+			},
+			inviteeErr:      repoerr.ErrNotFound,
+			shouldCallEmail: false,
+		},
+		{
+			desc: "invitation accepted with inviter not found",
+			event: map[string]any{
+				"operation":       "invitation.accept",
+				"invitee_user_id": inviteeUserID,
+				"invited_by":      inviterUserID,
+				"domain_id":       domainID,
+				"domain_name":     "Test Domain",
+			},
+			retrieveInvitee: invitee,
+			inviterErr:      repoerr.ErrNotFound,
+			shouldCallEmail: false,
+		},
+		{
+			desc: "invitation accepted with email error",
+			event: map[string]any{
+				"operation":       "invitation.accept",
+				"invitee_user_id": inviteeUserID,
+				"invited_by":      inviterUserID,
+				"domain_id":       domainID,
+				"domain_name":     "Test Domain",
+				"role_name":       "Admin",
+			},
+			retrieveInvitee: invitee,
+			retrieveInviter: inviter,
+			emailErr:        errors.New("email send failed"),
+			shouldCallEmail: true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.shouldCallEmail || tc.inviteeErr != nil || tc.inviterErr != nil {
+				inviteeCall := repo.On("RetrieveByID", context.Background(), inviteeUserID).Return(tc.retrieveInvitee, tc.inviteeErr)
+				var inviterCall, emailCall *mock.Call
+				if tc.inviteeErr == nil {
+					inviterCall = repo.On("RetrieveByID", context.Background(), inviterUserID).Return(tc.retrieveInviter, tc.inviterErr)
+					if tc.inviterErr == nil && tc.shouldCallEmail {
+						emailCall = emailer.On("SendInvitationAccepted", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.emailErr)
+					}
+				}
+
+				err := handler.Handle(context.Background(), newTestEvent(tc.event, tc.encodeErr))
+				assert.Nil(t, err, "Handle should not return error")
+
+				inviteeCall.Unset()
+				if inviterCall != nil {
+					inviterCall.Unset()
+				}
+				if emailCall != nil {
+					emailCall.Unset()
+				}
+			} else {
+				err := handler.Handle(context.Background(), newTestEvent(tc.event, tc.encodeErr))
+				assert.Nil(t, err, "Handle should not return error")
+			}
+		})
+	}
+}
+
+func TestHandleUnknownOperation(t *testing.T) {
+	emailer := new(mocks.Emailer)
+	repo := new(mocks.Repository)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	handler := events.NewEventHandler(emailer, repo, logger)
+
+	event := map[string]any{
+		"operation": "unknown.operation",
+		"data":      "some data",
+	}
+
+	err := handler.Handle(context.Background(), newTestEvent(event, nil))
+	assert.Nil(t, err, "Handle should not return error for unknown operations")
+}
