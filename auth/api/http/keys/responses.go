@@ -9,6 +9,7 @@ import (
 
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/auth"
+	"github.com/lestrrat-go/jwx/v2/jwk"
 )
 
 var (
@@ -68,4 +69,24 @@ func (res revokeKeyRes) Headers() map[string]string {
 
 func (res revokeKeyRes) Empty() bool {
 	return true
+}
+
+type retrieveJWKSRes struct {
+	Keys []jwk.Key `json:"keys"`
+}
+
+func (res retrieveJWKSRes) Code() int {
+	return http.StatusOK
+}
+
+func (res retrieveJWKSRes) Headers() map[string]string {
+	headers := map[string]string{
+		"Cache-Control": "public, max-age=900, stale-while-revalidate=60",
+	}
+
+	return headers
+}
+
+func (res retrieveJWKSRes) Empty() bool {
+	return false
 }
