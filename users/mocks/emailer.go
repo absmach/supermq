@@ -39,6 +39,156 @@ func (_m *Emailer) EXPECT() *Emailer_Expecter {
 	return &Emailer_Expecter{mock: &_m.Mock}
 }
 
+// SendInvitation provides a mock function for the type Emailer
+func (_mock *Emailer) SendInvitation(To []string, inviteeName string, inviterName string, domainName string, roleName string) error {
+	ret := _mock.Called(To, inviteeName, inviterName, domainName, roleName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SendInvitation")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func([]string, string, string, string, string) error); ok {
+		r0 = returnFunc(To, inviteeName, inviterName, domainName, roleName)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Emailer_SendInvitation_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SendInvitation'
+type Emailer_SendInvitation_Call struct {
+	*mock.Call
+}
+
+// SendInvitation is a helper method to define mock.On call
+//   - To []string
+//   - inviteeName string
+//   - inviterName string
+//   - domainName string
+//   - roleName string
+func (_e *Emailer_Expecter) SendInvitation(To interface{}, inviteeName interface{}, inviterName interface{}, domainName interface{}, roleName interface{}) *Emailer_SendInvitation_Call {
+	return &Emailer_SendInvitation_Call{Call: _e.mock.On("SendInvitation", To, inviteeName, inviterName, domainName, roleName)}
+}
+
+func (_c *Emailer_SendInvitation_Call) Run(run func(To []string, inviteeName string, inviterName string, domainName string, roleName string)) *Emailer_SendInvitation_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 []string
+		if args[0] != nil {
+			arg0 = args[0].([]string)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		var arg4 string
+		if args[4] != nil {
+			arg4 = args[4].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+		)
+	})
+	return _c
+}
+
+func (_c *Emailer_SendInvitation_Call) Return(err error) *Emailer_SendInvitation_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Emailer_SendInvitation_Call) RunAndReturn(run func(To []string, inviteeName string, inviterName string, domainName string, roleName string) error) *Emailer_SendInvitation_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SendInvitationAccepted provides a mock function for the type Emailer
+func (_mock *Emailer) SendInvitationAccepted(To []string, inviterName string, inviteeName string, domainName string, roleName string) error {
+	ret := _mock.Called(To, inviterName, inviteeName, domainName, roleName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SendInvitationAccepted")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func([]string, string, string, string, string) error); ok {
+		r0 = returnFunc(To, inviterName, inviteeName, domainName, roleName)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Emailer_SendInvitationAccepted_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SendInvitationAccepted'
+type Emailer_SendInvitationAccepted_Call struct {
+	*mock.Call
+}
+
+// SendInvitationAccepted is a helper method to define mock.On call
+//   - To []string
+//   - inviterName string
+//   - inviteeName string
+//   - domainName string
+//   - roleName string
+func (_e *Emailer_Expecter) SendInvitationAccepted(To interface{}, inviterName interface{}, inviteeName interface{}, domainName interface{}, roleName interface{}) *Emailer_SendInvitationAccepted_Call {
+	return &Emailer_SendInvitationAccepted_Call{Call: _e.mock.On("SendInvitationAccepted", To, inviterName, inviteeName, domainName, roleName)}
+}
+
+func (_c *Emailer_SendInvitationAccepted_Call) Run(run func(To []string, inviterName string, inviteeName string, domainName string, roleName string)) *Emailer_SendInvitationAccepted_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 []string
+		if args[0] != nil {
+			arg0 = args[0].([]string)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		var arg4 string
+		if args[4] != nil {
+			arg4 = args[4].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+		)
+	})
+	return _c
+}
+
+func (_c *Emailer_SendInvitationAccepted_Call) Return(err error) *Emailer_SendInvitationAccepted_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Emailer_SendInvitationAccepted_Call) RunAndReturn(run func(To []string, inviterName string, inviteeName string, domainName string, roleName string) error) *Emailer_SendInvitationAccepted_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // SendPasswordReset provides a mock function for the type Emailer
 func (_mock *Emailer) SendPasswordReset(To []string, user string, token string) error {
 	ret := _mock.Called(To, user, token)
