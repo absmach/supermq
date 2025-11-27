@@ -144,7 +144,8 @@ func handleInvitationSent(ctx context.Context, data map[string]any, notifier use
 	}
 
 	// Send invitation notification
-	notification := &users.InvitationSentNotification{
+	notification := &users.InvitationNotification{
+		Type:        users.InvitationSent,
 		To:          []string{invitee.Email},
 		InviteeName: inviteeName,
 		InviterName: inviterName,
@@ -231,7 +232,8 @@ func handleInvitationAccepted(ctx context.Context, data map[string]any, notifier
 	}
 
 	// Send invitation accepted notification
-	notification := &users.InvitationAcceptedNotification{
+	notification := &users.InvitationNotification{
+		Type:        users.InvitationAccepted,
 		To:          []string{inviter.Email},
 		InviteeName: inviteeName,
 		InviterName: inviterName,
@@ -318,7 +320,7 @@ func handleInvitationRejected(ctx context.Context, data map[string]any, notifier
 	}
 
 	// Send invitation rejected notification to the inviter
-	notification := &users.InvitationRejectedNotification{
+	notification := &users.InvitationNotification{
 		To:          []string{inviter.Email},
 		InviteeName: inviteeName,
 		InviterName: inviterName,

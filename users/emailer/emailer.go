@@ -80,12 +80,8 @@ func (e *emailer) Notify(ctx context.Context, notification any) error {
 		return e.sendPasswordReset(ctx, notif)
 	case *users.EmailVerificationNotification:
 		return e.sendEmailVerification(ctx, notif)
-	case *users.InvitationSentNotification:
-		return e.sendInvitationSent(ctx, notif)
-	case *users.InvitationAcceptedNotification:
-		return e.sendInvitationAccepted(ctx, notif)
-	case *users.InvitationRejectedNotification:
-		return e.sendInvitationRejected(ctx, notif)
+	case *users.InvitationNotification:
+		return e.sendInvitation(ctx, notif)
 	default:
 		return fmt.Errorf("%w: %T", errInvalidNotificationType, notification)
 	}
@@ -118,10 +114,11 @@ func (e *emailer) sendEmailVerification(_ context.Context, notif *users.EmailVer
 	}
 
 	url := fmt.Sprintf("%s?token=%s", e.verificationURL, notif.Token)
+
 	return e.verifyAgent.Send(notif.To, "", "Email Verification", "", notif.User, url, "")
 }
 
-func (e *emailer) sendInvitationSent(_ context.Context, notif *users.InvitationSentNotification) error {
+func (e *emailer) sendInvitation(_ context.Context, notif *users.InvitationNotification) error {
 	if len(notif.To) == 0 {
 		return errMissingRecipients
 	}
@@ -138,51 +135,20 @@ func (e *emailer) sendInvitationSent(_ context.Context, notif *users.InvitationS
 		return errMissingRoleName
 	}
 
-	subject := fmt.Sprintf("You've been invited to join %s", notif.DomainName)
-	content := fmt.Sprintf("%s has invited you to join %s as %s.", notif.InviterName, notif.DomainName, notif.RoleName)
-	return e.invitationAgent.Send(notif.To, "", subject, "", notif.InviteeName, content, "SuperMQ Team")
-}
-
-func (e *emailer) sendInvitationAccepted(_ context.Context, notif *users.InvitationAcceptedNotification) error {
-	if len(notif.To) == 0 {
-		return errMissingRecipients
+	switch notif.Type {
+	case users.InvitationSent:
+		subject := fmt.Sprintf("You've been invited to join %s", notif.DomainName)
+		content := fmt.Sprintf("%s has invited you to join %s as %s.", notif.InviterName, notif.DomainName, notif.RoleName)
+		return e.invitationAgent.Send(notif.To, "", subject, "", notif.InviteeName, content, "SuperMQ Team")
+	case users.InvitationAccepted:
+		subject := fmt.Sprintf("%s accepted your invitation to %s", notif.InviteeName, notif.DomainName)
+		content := fmt.Sprintf("%s has accepted your invitation to join %s as %s.", notif.InviteeName, notif.DomainName, notif.RoleName)
+		return e.invitationAcceptedAgent.Send(notif.To, "", subject, "", notif.InviterName, content, "SuperMQ Team")
+	case users.InvitationRejected:
+		subject := fmt.Sprintf("%s declined your invitation to %s", notif.InviteeName, notif.DomainName)
+		content := fmt.Sprintf("%s has declined your invitation to join %s as %s.", notif.InviteeName, notif.DomainName, notif.RoleName)
+		return e.invitationRejectedAgent.Send(notif.To, "", subject, "", notif.InviterName, content, "SuperMQ Team")
+	default:
+		return fmt.Errorf("invalid invitation type: %s", notif.Type)
 	}
-	if notif.InviteeName == "" {
-		return errMissingInviteeName
-	}
-	if notif.InviterName == "" {
-		return errMissingInviterName
-	}
-	if notif.DomainName == "" {
-		return errMissingDomainName
-	}
-	if notif.RoleName == "" {
-		return errMissingRoleName
-	}
-
-	subject := fmt.Sprintf("%s accepted your invitation to %s", notif.InviteeName, notif.DomainName)
-	content := fmt.Sprintf("%s has accepted your invitation to join %s as %s.", notif.InviteeName, notif.DomainName, notif.RoleName)
-	return e.invitationAcceptedAgent.Send(notif.To, "", subject, "", notif.InviterName, content, "SuperMQ Team")
-}
-
-func (e *emailer) sendInvitationRejected(_ context.Context, notif *users.InvitationRejectedNotification) error {
-	if len(notif.To) == 0 {
-		return errMissingRecipients
-	}
-	if notif.InviteeName == "" {
-		return errMissingInviteeName
-	}
-	if notif.InviterName == "" {
-		return errMissingInviterName
-	}
-	if notif.DomainName == "" {
-		return errMissingDomainName
-	}
-	if notif.RoleName == "" {
-		return errMissingRoleName
-	}
-
-	subject := fmt.Sprintf("%s declined your invitation to %s", notif.InviteeName, notif.DomainName)
-	content := fmt.Sprintf("%s has declined your invitation to join %s as %s.", notif.InviteeName, notif.DomainName, notif.RoleName)
-	return e.invitationRejectedAgent.Send(notif.To, "", subject, "", notif.InviterName, content, "SuperMQ Team")
 }

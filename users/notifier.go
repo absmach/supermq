@@ -19,26 +19,21 @@ type EmailVerificationNotification struct {
 	Token string
 }
 
-// InvitationSentNotification contains data for invitation sent notifications.
-type InvitationSentNotification struct {
-	To          []string
-	InviteeName string
-	InviterName string
-	DomainName  string
-	RoleName    string
-}
+// InvitationType represents the type of invitation notification.
+type InvitationType string
 
-// InvitationAcceptedNotification contains data for invitation accepted notifications.
-type InvitationAcceptedNotification struct {
-	To          []string
-	InviteeName string
-	InviterName string
-	DomainName  string
-	RoleName    string
-}
+const (
+	// InvitationSent indicates an invitation was sent.
+	InvitationSent InvitationType = "sent"
+	// InvitationAccepted indicates an invitation was accepted.
+	InvitationAccepted InvitationType = "accepted"
+	// InvitationRejected indicates an invitation was rejected.
+	InvitationRejected InvitationType = "rejected"
+)
 
-// InvitationRejectedNotification contains data for invitation rejected notifications.
-type InvitationRejectedNotification struct {
+// InvitationNotification contains data for invitation notifications.
+type InvitationNotification struct {
+	Type        InvitationType
 	To          []string
 	InviteeName string
 	InviterName string
