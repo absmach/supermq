@@ -126,7 +126,7 @@ func (tm *tracingMiddleware) AcceptInvitation(ctx context.Context, session authn
 	return tm.svc.AcceptInvitation(ctx, session, domainID)
 }
 
-func (tm *tracingMiddleware) RejectInvitation(ctx context.Context, session authn.Session, domainID string) (err error) {
+func (tm *tracingMiddleware) RejectInvitation(ctx context.Context, session authn.Session, domainID string) (inv domains.Invitation, err error) {
 	ctx, span := tracing.StartSpan(ctx, tm.tracer, "reject_invitation", trace.WithAttributes(
 		attribute.String("domain_id", domainID),
 	))

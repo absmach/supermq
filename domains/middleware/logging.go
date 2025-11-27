@@ -248,7 +248,7 @@ func (lm *loggingMiddleware) AcceptInvitation(ctx context.Context, session authn
 	return lm.svc.AcceptInvitation(ctx, session, domainID)
 }
 
-func (lm *loggingMiddleware) RejectInvitation(ctx context.Context, session authn.Session, domainID string) (err error) {
+func (lm *loggingMiddleware) RejectInvitation(ctx context.Context, session authn.Session, domainID string) (inv domains.Invitation, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),

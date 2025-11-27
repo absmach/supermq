@@ -420,17 +420,26 @@ func (aie acceptInvitationEvent) Encode() (map[string]any, error) {
 }
 
 type rejectInvitationEvent struct {
-	domainID string
-	session  authn.Session
+	invitation domains.Invitation
+	session    authn.Session
 }
 
 func (rie rejectInvitationEvent) Encode() (map[string]any, error) {
 	val := map[string]any{
 		"operation":       invitationReject,
-		"domain_id":       rie.domainID,
+		"domain_id":       rie.invitation.DomainID,
 		"invitee_user_id": rie.session.UserID,
+		"invited_by":      rie.invitation.InvitedBy,
+		"role_id":         rie.invitation.RoleID,
 		"token_type":      rie.session.Type.String(),
 		"super_admin":     rie.session.SuperAdmin,
+	}
+
+	if rie.invitation.DomainName != "" {
+		val["domain_name"] = rie.invitation.DomainName
+	}
+	if rie.invitation.RoleName != "" {
+		val["role_name"] = rie.invitation.RoleName
 	}
 
 	return val, nil

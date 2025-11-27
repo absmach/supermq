@@ -192,7 +192,11 @@ func TestHandleInvitationSent(t *testing.T) {
 				}
 			} else {
 				err := handler.Handle(context.Background(), newTestEvent(tc.event, tc.encodeErr))
-				assert.Nil(t, err, "Handle should not return error")
+				if tc.encodeErr != nil {
+					assert.NotNil(t, err, "Handle should return error on encode failure")
+				} else {
+					assert.Nil(t, err, "Handle should not return error")
+				}
 			}
 		})
 	}
@@ -343,7 +347,11 @@ func TestHandleInvitationAccepted(t *testing.T) {
 				}
 			} else {
 				err := handler.Handle(context.Background(), newTestEvent(tc.event, tc.encodeErr))
-				assert.Nil(t, err, "Handle should not return error")
+				if tc.encodeErr != nil {
+					assert.NotNil(t, err, "Handle should return error on encode failure")
+				} else {
+					assert.Nil(t, err, "Handle should not return error")
+				}
 			}
 		})
 	}

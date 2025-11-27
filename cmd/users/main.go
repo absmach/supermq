@@ -94,6 +94,7 @@ type config struct {
 	VerificationEmailTemplate       string        `env:"SMQ_VERIFICATION_EMAIL_TEMPLATE"              envDefault:"verification-email.tmpl"`
 	InvitationSentEmailTemplate     string        `env:"SMQ_USERS_INVITATION_SENT_EMAIL_TEMPLATE"     envDefault:"invitation-sent-email.tmpl"`
 	InvitationAcceptedEmailTemplate string        `env:"SMQ_USERS_INVITATION_ACCEPTED_EMAIL_TEMPLATE" envDefault:"invitation-accepted-email.tmpl"`
+	InvitationRejectedEmailTemplate string        `env:"SMQ_USERS_INVITATION_REJECTED_EMAIL_TEMPLATE" envDefault:"invitation-rejected-email.tmpl"`
 	PassRegex                       *regexp.Regexp
 }
 
@@ -158,6 +159,14 @@ func main() {
 		return
 	}
 	invitationAcceptedEmailConfig.Template = cfg.InvitationAcceptedEmailTemplate
+
+	invitationRejectedEmailConfig := email.Config{}
+	if err := env.Parse(&invitationRejectedEmailConfig); err != nil {
+		logger.Error(fmt.Sprintf("failed to load invitation rejected email configuration : %s", err.Error()))
+		exitCode = 1
+		return
+	}
+	invitationRejectedEmailConfig.Template = cfg.InvitationRejectedEmailTemplate
 
 	dbConfig := pgclient.Config{Name: defDB}
 	if err := env.ParseWithOptions(&dbConfig, env.Options{Prefix: envPrefixDB}); err != nil {
@@ -250,22 +259,20 @@ func main() {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	repo := postgres.NewRepository(database)
 
-	emailerClient, err := emailer.New(
+	notifier, err := emailer.New(
 		cfg.PasswordResetURLPrefix,
 		cfg.VerificationURLPrefix,
 		&resetPasswordEmailConfig,
 		&verificationEmailConfig,
 		&invitationSentEmailConfig,
 		&invitationAcceptedEmailConfig,
+		&invitationRejectedEmailConfig,
 	)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to configure e-mailing util: %s", err))
 		exitCode = 1
 		return
 	}
-
-	// Create email notifier for sending notifications
-	notifier := emailer.NewNotifier(emailerClient)
 
 	csvc, err := newService(ctx, authz, tokenClient, policyService, domainsClient, repo, notifier, tracer, cfg, logger)
 	if err != nil {

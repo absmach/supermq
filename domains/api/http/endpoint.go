@@ -274,7 +274,7 @@ func rejectInvitationEndpoint(svc domains.Service) endpoint.Endpoint {
 			return nil, svcerr.ErrAuthorization
 		}
 
-		if err := svc.RejectInvitation(ctx, session, req.DomainID); err != nil {
+		if _, err := svc.RejectInvitation(ctx, session, req.DomainID); err != nil {
 			return nil, err
 		}
 

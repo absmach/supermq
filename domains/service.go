@@ -307,32 +307,32 @@ func (svc *service) AcceptInvitation(ctx context.Context, session authn.Session,
 	return inv, nil
 }
 
-func (svc *service) RejectInvitation(ctx context.Context, session authn.Session, domainID string) error {
+func (svc *service) RejectInvitation(ctx context.Context, session authn.Session, domainID string) (Invitation, error) {
 	inv, err := svc.repo.RetrieveInvitation(ctx, session.UserID, domainID)
 	if err != nil {
-		return errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return Invitation{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 
 	if inv.InviteeUserID != session.UserID {
-		return svcerr.ErrAuthorization
+		return Invitation{}, svcerr.ErrAuthorization
 	}
 
 	if !inv.ConfirmedAt.IsZero() {
-		return svcerr.ErrInvitationAlreadyAccepted
+		return Invitation{}, svcerr.ErrInvitationAlreadyAccepted
 	}
 
 	if !inv.RejectedAt.IsZero() {
-		return svcerr.ErrInvitationAlreadyRejected
+		return Invitation{}, svcerr.ErrInvitationAlreadyRejected
 	}
 
 	inv.RejectedAt = time.Now().UTC()
 	inv.UpdatedAt = inv.RejectedAt
 
 	if err := svc.repo.UpdateRejection(ctx, inv); err != nil {
-		return errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return Invitation{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 
-	return nil
+	return inv, nil
 }
 
 func (svc *service) DeleteInvitation(ctx context.Context, session authn.Session, inviteeUserID, domainID string) error {

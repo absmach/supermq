@@ -248,11 +248,11 @@ func (am *authorizationMiddleware) AcceptInvitation(ctx context.Context, session
 	return am.svc.AcceptInvitation(ctx, session, domainID)
 }
 
-func (am *authorizationMiddleware) RejectInvitation(ctx context.Context, session authn.Session, domainID string) (err error) {
+func (am *authorizationMiddleware) RejectInvitation(ctx context.Context, session authn.Session, domainID string) (inv domains.Invitation, err error) {
 	// Similar to sending and accepting, Domain is used as
 	// the entity in callout since the invitation refers to the domain.
 	if err := am.callOut(ctx, session, domains.OpRejectInvitation.String(domains.OperationNames), domainID, nil); err != nil {
-		return err
+		return domains.Invitation{}, err
 	}
 
 	return am.svc.RejectInvitation(ctx, session, domainID)

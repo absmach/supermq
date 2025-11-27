@@ -132,16 +132,13 @@ func (svc service) SendVerification(ctx context.Context, session authn.Session) 
 		return errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 
-	notificationData := NotificationData{
-		Type:       NotificationEmailVerification,
-		Recipients: []string{dbUser.Email},
-		Metadata: map[string]string{
-			"user":               dbUser.Credentials.Username,
-			"verification_token": uvs,
-		},
+	notification := &EmailVerificationNotification{
+		To:    []string{dbUser.Email},
+		User:  dbUser.Credentials.Username,
+		Token: uvs,
 	}
 
-	if err := svc.notifier.Notify(ctx, notificationData); err != nil {
+	if err := svc.notifier.Notify(ctx, notification); err != nil {
 		return errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 	return nil
@@ -418,16 +415,13 @@ func (svc service) SendPasswordReset(ctx context.Context, email string) error {
 		return errors.Wrap(errRecoveryToken, err)
 	}
 
-	notificationData := NotificationData{
-		Type:       NotificationPasswordReset,
-		Recipients: []string{email},
-		Metadata: map[string]string{
-			"user":  user.Credentials.Username,
-			"token": token.AccessToken,
-		},
+	notification := &PasswordResetNotification{
+		To:    []string{email},
+		User:  user.Credentials.Username,
+		Token: token.AccessToken,
 	}
 
-	return svc.notifier.Notify(ctx, notificationData)
+	return svc.notifier.Notify(ctx, notification)
 }
 
 func (svc service) ResetSecret(ctx context.Context, session authn.Session, secret string) error {

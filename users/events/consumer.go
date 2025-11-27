@@ -15,6 +15,11 @@ import (
 const (
 	invitationSend   = "invitation.send"
 	invitationAccept = "invitation.accept"
+	invitationReject = "invitation.reject"
+
+	defaultUserName   = "A user"
+	defaultDomainName = "a domain"
+	defaultRoleName   = "member"
 )
 
 var _ events.EventHandler = (*eventHandler)(nil)
@@ -56,7 +61,7 @@ func (h *eventHandler) Handle(ctx context.Context, event events.Event) error {
 	data, err := event.Encode()
 	if err != nil {
 		h.logger.Error("failed to encode event", slog.Any("error", err))
-		return nil
+		return err
 	}
 
 	operation, ok := data["operation"].(string)
@@ -69,6 +74,8 @@ func (h *eventHandler) Handle(ctx context.Context, event events.Event) error {
 		return handleInvitationSent(ctx, data, h.notifier, h.userRepo, h.logger)
 	case invitationAccept:
 		return handleInvitationAccepted(ctx, data, h.notifier, h.userRepo, h.logger)
+	case invitationReject:
+		return handleInvitationRejected(ctx, data, h.notifier, h.userRepo, h.logger)
 	default:
 		return nil
 	}
@@ -110,7 +117,7 @@ func handleInvitationSent(ctx context.Context, data map[string]any, notifier use
 
 	// Normalize names for display
 	inviteeName := invitee.FirstName + " " + invitee.LastName
-	if inviteeName == " " || inviteeName == "" {
+	if inviteeName == " " {
 		inviteeName = invitee.Credentials.Username
 	}
 	if inviteeName == "" {
@@ -118,37 +125,34 @@ func handleInvitationSent(ctx context.Context, data map[string]any, notifier use
 	}
 
 	inviterName := inviter.FirstName + " " + inviter.LastName
-	if inviterName == " " || inviterName == "" {
+	if inviterName == " " {
 		inviterName = inviter.Credentials.Username
 	}
 	if inviterName == "" {
 		inviterName = inviter.Email
 	}
 	if inviterName == "" {
-		inviterName = "A user"
+		inviterName = defaultUserName
 	}
 
 	if domainName == "" {
-		domainName = "a domain"
+		domainName = defaultDomainName
 	}
 
 	if roleName == "" {
-		roleName = "member"
+		roleName = defaultRoleName
 	}
 
 	// Send invitation notification
-	notificationData := users.NotificationData{
-		Type:       users.NotificationInvitationSent,
-		Recipients: []string{invitee.Email},
-		Metadata: map[string]string{
-			"invitee_name": inviteeName,
-			"inviter_name": inviterName,
-			"domain_name":  domainName,
-			"role_name":    roleName,
-		},
+	notification := &users.InvitationSentNotification{
+		To:          []string{invitee.Email},
+		InviteeName: inviteeName,
+		InviterName: inviterName,
+		DomainName:  domainName,
+		RoleName:    roleName,
 	}
 
-	if err := notifier.Notify(ctx, notificationData); err != nil {
+	if err := notifier.Notify(ctx, notification); err != nil {
 		logger.Error("failed to send invitation notification",
 			slog.String("to", invitee.Email),
 			slog.Any("error", err),
@@ -200,18 +204,18 @@ func handleInvitationAccepted(ctx context.Context, data map[string]any, notifier
 
 	// Normalize names for display
 	inviteeName := invitee.FirstName + " " + invitee.LastName
-	if inviteeName == " " || inviteeName == "" {
+	if inviteeName == " " {
 		inviteeName = invitee.Credentials.Username
 	}
 	if inviteeName == "" {
 		inviteeName = invitee.Email
 	}
 	if inviteeName == "" {
-		inviteeName = "A user"
+		inviteeName = defaultUserName
 	}
 
 	inviterName := inviter.FirstName + " " + inviter.LastName
-	if inviterName == " " || inviterName == "" {
+	if inviterName == " " {
 		inviterName = inviter.Credentials.Username
 	}
 	if inviterName == "" {
@@ -219,26 +223,23 @@ func handleInvitationAccepted(ctx context.Context, data map[string]any, notifier
 	}
 
 	if domainName == "" {
-		domainName = "a domain"
+		domainName = defaultDomainName
 	}
 
 	if roleName == "" {
-		roleName = "member"
+		roleName = defaultRoleName
 	}
 
 	// Send invitation accepted notification
-	notificationData := users.NotificationData{
-		Type:       users.NotificationInvitationAccepted,
-		Recipients: []string{inviter.Email},
-		Metadata: map[string]string{
-			"invitee_name": inviteeName,
-			"inviter_name": inviterName,
-			"domain_name":  domainName,
-			"role_name":    roleName,
-		},
+	notification := &users.InvitationAcceptedNotification{
+		To:          []string{inviter.Email},
+		InviteeName: inviteeName,
+		InviterName: inviterName,
+		DomainName:  domainName,
+		RoleName:    roleName,
 	}
 
-	if err := notifier.Notify(ctx, notificationData); err != nil {
+	if err := notifier.Notify(ctx, notification); err != nil {
 		logger.Error("failed to send invitation accepted notification",
 			slog.String("to", inviter.Email),
 			slog.Any("error", err),
@@ -247,6 +248,93 @@ func handleInvitationAccepted(ctx context.Context, data map[string]any, notifier
 	}
 
 	logger.Info("invitation accepted notification sent",
+		slog.String("to", inviter.Email),
+		slog.String("domain", domainName),
+	)
+
+	return nil
+}
+
+func handleInvitationRejected(ctx context.Context, data map[string]any, notifier users.Notifier, userRepo users.Repository, logger *slog.Logger) error {
+	inviteeUserID, _ := data["invitee_user_id"].(string)
+	invitedBy, _ := data["invited_by"].(string)
+	domainName, _ := data["domain_name"].(string)
+	roleName, _ := data["role_name"].(string)
+
+	if inviteeUserID == "" || invitedBy == "" {
+		logger.Warn("missing required fields in invitation.reject event",
+			slog.String("invitee_user_id", inviteeUserID),
+			slog.String("invited_by", invitedBy),
+		)
+		return nil
+	}
+
+	// Retrieve invitee user
+	invitee, err := userRepo.RetrieveByID(ctx, inviteeUserID)
+	if err != nil {
+		logger.Error("failed to retrieve invitee user",
+			slog.String("user_id", inviteeUserID),
+			slog.Any("error", err),
+		)
+		return nil
+	}
+
+	// Retrieve inviter user
+	inviter, err := userRepo.RetrieveByID(ctx, invitedBy)
+	if err != nil {
+		logger.Error("failed to retrieve inviter user",
+			slog.String("user_id", invitedBy),
+			slog.Any("error", err),
+		)
+		return nil
+	}
+
+	// Normalize names for display
+	inviteeName := invitee.FirstName + " " + invitee.LastName
+	if inviteeName == " " {
+		inviteeName = invitee.Credentials.Username
+	}
+	if inviteeName == "" {
+		inviteeName = invitee.Email
+	}
+	if inviteeName == "" {
+		inviteeName = defaultUserName
+	}
+
+	inviterName := inviter.FirstName + " " + inviter.LastName
+	if inviterName == " " {
+		inviterName = inviter.Credentials.Username
+	}
+	if inviterName == "" {
+		inviterName = inviter.Email
+	}
+
+	if domainName == "" {
+		domainName = defaultDomainName
+	}
+
+	if roleName == "" {
+		roleName = defaultRoleName
+	}
+
+	// Send invitation rejected notification to the inviter
+	notification := &users.InvitationRejectedNotification{
+		To:          []string{inviter.Email},
+		InviteeName: inviteeName,
+		InviterName: inviterName,
+		DomainName:  domainName,
+		RoleName:    roleName,
+	}
+
+	if err := notifier.Notify(ctx, notification); err != nil {
+		logger.Error("failed to send invitation rejected notification",
+			slog.String("to", inviter.Email),
+			slog.Any("error", err),
+		)
+		return nil
+	}
+
+	logger.Info("invitation rejected notification sent",
 		slog.String("to", inviter.Email),
 		slog.String("domain", domainName),
 	)

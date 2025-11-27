@@ -270,17 +270,22 @@ func (es *eventStore) AcceptInvitation(ctx context.Context, session authn.Sessio
 	return inv, err
 }
 
-func (es *eventStore) RejectInvitation(ctx context.Context, session authn.Session, domainID string) error {
-	if err := es.svc.RejectInvitation(ctx, session, domainID); err != nil {
-		return err
+func (es *eventStore) RejectInvitation(ctx context.Context, session authn.Session, domainID string) (domains.Invitation, error) {
+	inv, err := es.svc.RejectInvitation(ctx, session, domainID)
+	if err != nil {
+		return domains.Invitation{}, err
 	}
 
 	event := rejectInvitationEvent{
-		domainID: domainID,
-		session:  session,
+		invitation: inv,
+		session:    session,
 	}
 
-	return es.Publish(ctx, rejectInvitationStream, event)
+	if err := es.Publish(ctx, rejectInvitationStream, event); err != nil {
+		return inv, err
+	}
+
+	return inv, nil
 }
 
 func (es *eventStore) DeleteInvitation(ctx context.Context, session authn.Session, inviteeUserID, domainID string) error {

@@ -11,7 +11,6 @@ package mocks
 import (
 	"context"
 
-	"github.com/absmach/supermq/users"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -43,16 +42,16 @@ func (_m *Notifier) EXPECT() *Notifier_Expecter {
 }
 
 // Notify provides a mock function for the type Notifier
-func (_mock *Notifier) Notify(ctx context.Context, data users.NotificationData) error {
-	ret := _mock.Called(ctx, data)
+func (_mock *Notifier) Notify(ctx context.Context, notification any) error {
+	ret := _mock.Called(ctx, notification)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Notify")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, users.NotificationData) error); ok {
-		r0 = returnFunc(ctx, data)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, any) error); ok {
+		r0 = returnFunc(ctx, notification)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -66,20 +65,20 @@ type Notifier_Notify_Call struct {
 
 // Notify is a helper method to define mock.On call
 //   - ctx context.Context
-//   - data users.NotificationData
-func (_e *Notifier_Expecter) Notify(ctx interface{}, data interface{}) *Notifier_Notify_Call {
-	return &Notifier_Notify_Call{Call: _e.mock.On("Notify", ctx, data)}
+//   - notification any
+func (_e *Notifier_Expecter) Notify(ctx interface{}, notification interface{}) *Notifier_Notify_Call {
+	return &Notifier_Notify_Call{Call: _e.mock.On("Notify", ctx, notification)}
 }
 
-func (_c *Notifier_Notify_Call) Run(run func(ctx context.Context, data users.NotificationData)) *Notifier_Notify_Call {
+func (_c *Notifier_Notify_Call) Run(run func(ctx context.Context, notification any)) *Notifier_Notify_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 users.NotificationData
+		var arg1 any
 		if args[1] != nil {
-			arg1 = args[1].(users.NotificationData)
+			arg1 = args[1].(any)
 		}
 		run(
 			arg0,
@@ -94,7 +93,7 @@ func (_c *Notifier_Notify_Call) Return(err error) *Notifier_Notify_Call {
 	return _c
 }
 
-func (_c *Notifier_Notify_Call) RunAndReturn(run func(ctx context.Context, data users.NotificationData) error) *Notifier_Notify_Call {
+func (_c *Notifier_Notify_Call) RunAndReturn(run func(ctx context.Context, notification any) error) *Notifier_Notify_Call {
 	_c.Call.Return(run)
 	return _c
 }

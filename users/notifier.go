@@ -5,34 +5,49 @@ package users
 
 import "context"
 
-// NotificationType represents the type of notification to send.
-type NotificationType string
+// PasswordResetNotification contains data for password reset notifications.
+type PasswordResetNotification struct {
+	To    []string
+	User  string
+	Token string
+}
 
-const (
-	// NotificationPasswordReset is sent when a user requests a password reset.
-	NotificationPasswordReset NotificationType = "password_reset"
-	// NotificationEmailVerification is sent when a user needs to verify their email.
-	NotificationEmailVerification NotificationType = "email_verification"
-	// NotificationInvitationSent is sent when a user is invited to a domain.
-	NotificationInvitationSent NotificationType = "invitation_sent"
-	// NotificationInvitationAccepted is sent when a user accepts an invitation.
-	NotificationInvitationAccepted NotificationType = "invitation_accepted"
-)
+// EmailVerificationNotification contains data for email verification notifications.
+type EmailVerificationNotification struct {
+	To    []string
+	User  string
+	Token string
+}
 
-// NotificationData contains the data needed to send a notification.
-type NotificationData struct {
-	// Type is the type of notification to send.
-	Type NotificationType
+// InvitationSentNotification contains data for invitation sent notifications.
+type InvitationSentNotification struct {
+	To          []string
+	InviteeName string
+	InviterName string
+	DomainName  string
+	RoleName    string
+}
 
-	// Recipients is the list of recipients for the notification.
-	Recipients []string
+// InvitationAcceptedNotification contains data for invitation accepted notifications.
+type InvitationAcceptedNotification struct {
+	To          []string
+	InviteeName string
+	InviterName string
+	DomainName  string
+	RoleName    string
+}
 
-	// Metadata contains additional data specific to the notification type.
-	Metadata map[string]string
+// InvitationRejectedNotification contains data for invitation rejected notifications.
+type InvitationRejectedNotification struct {
+	To          []string
+	InviteeName string
+	InviterName string
+	DomainName  string
+	RoleName    string
 }
 
 // Notifier is an interface for sending notifications through various channels.
 type Notifier interface {
-	// Notify sends a notification of the given type to the specified recipients.
-	Notify(ctx context.Context, data NotificationData) error
+	// Notify sends a notification based on the notification type.
+	Notify(ctx context.Context, notification any) error
 }

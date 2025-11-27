@@ -217,7 +217,7 @@ type Service interface {
 	// RejectInvitation rejects an invitation.
 	// People who can reject invitations are:
 	// - the invited user: they can reject their own invitations
-	RejectInvitation(ctx context.Context, session authn.Session, domainID string) (err error)
+	RejectInvitation(ctx context.Context, session authn.Session, domainID string) (Invitation, error)
 
 	roles.RoleManager
 }
