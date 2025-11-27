@@ -89,7 +89,9 @@ func TestSendInvitationNotification(t *testing.T) {
 			roleName:   roleName,
 			setupMock: func() {
 				usersClient.On("RetrieveUsers", mock.Anything, mock.MatchedBy(func(req *grpcUsersV1.RetrieveUsersReq) bool {
-					return len(req.Ids) == 1 && req.Ids[0] == inviterID
+					return len(req.Ids) == 2 &&
+						((req.Ids[0] == inviterID && req.Ids[1] == inviteeID) ||
+						 (req.Ids[0] == inviteeID && req.Ids[1] == inviterID))
 				}), mock.Anything).Return(&grpcUsersV1.RetrieveUsersRes{
 					Users: []*grpcUsersV1.User{
 						{
@@ -98,13 +100,6 @@ func TestSendInvitationNotification(t *testing.T) {
 							FirstName: inviterFirst,
 							LastName:  inviterLast,
 						},
-					},
-				}, nil).Once()
-
-				usersClient.On("RetrieveUsers", mock.Anything, mock.MatchedBy(func(req *grpcUsersV1.RetrieveUsersReq) bool {
-					return len(req.Ids) == 1 && req.Ids[0] == inviteeID
-				}), mock.Anything).Return(&grpcUsersV1.RetrieveUsersRes{
-					Users: []*grpcUsersV1.User{
 						{
 							Id:        inviteeID,
 							Email:     inviteeEmail,
@@ -117,7 +112,7 @@ func TestSendInvitationNotification(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			desc:       "failed to fetch inviter",
+			desc:       "failed to fetch users",
 			inviterID:  inviterID,
 			inviteeID:  inviteeID,
 			domainID:   domainID,
@@ -125,11 +120,9 @@ func TestSendInvitationNotification(t *testing.T) {
 			roleID:     roleID,
 			roleName:   roleName,
 			setupMock: func() {
-				usersClient.On("RetrieveUsers", mock.Anything, mock.MatchedBy(func(req *grpcUsersV1.RetrieveUsersReq) bool {
-					return len(req.Ids) == 1 && req.Ids[0] == inviterID
-				}), mock.Anything).Return(nil, fmt.Errorf("user not found")).Once()
+				usersClient.On("RetrieveUsers", mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("grpc error")).Once()
 			},
-			expectedError: fmt.Errorf("user not found"),
+			expectedError: fmt.Errorf("grpc error"),
 		},
 	}
 
@@ -170,7 +163,7 @@ func TestSendAcceptanceNotification(t *testing.T) {
 	assert.NoError(t, err)
 
 	usersClient.On("RetrieveUsers", mock.Anything, mock.MatchedBy(func(req *grpcUsersV1.RetrieveUsersReq) bool {
-		return len(req.Ids) == 1 && req.Ids[0] == inviterID
+		return len(req.Ids) == 2
 	}), mock.Anything).Return(&grpcUsersV1.RetrieveUsersRes{
 		Users: []*grpcUsersV1.User{
 			{
@@ -179,13 +172,6 @@ func TestSendAcceptanceNotification(t *testing.T) {
 				FirstName: inviterFirst,
 				LastName:  inviterLast,
 			},
-		},
-	}, nil).Once()
-
-	usersClient.On("RetrieveUsers", mock.Anything, mock.MatchedBy(func(req *grpcUsersV1.RetrieveUsersReq) bool {
-		return len(req.Ids) == 1 && req.Ids[0] == inviteeID
-	}), mock.Anything).Return(&grpcUsersV1.RetrieveUsersRes{
-		Users: []*grpcUsersV1.User{
 			{
 				Id:        inviteeID,
 				Email:     inviteeEmail,
@@ -223,7 +209,7 @@ func TestSendRejectionNotification(t *testing.T) {
 	assert.NoError(t, err)
 
 	usersClient.On("RetrieveUsers", mock.Anything, mock.MatchedBy(func(req *grpcUsersV1.RetrieveUsersReq) bool {
-		return len(req.Ids) == 1 && req.Ids[0] == inviterID
+		return len(req.Ids) == 2
 	}), mock.Anything).Return(&grpcUsersV1.RetrieveUsersRes{
 		Users: []*grpcUsersV1.User{
 			{
@@ -232,13 +218,6 @@ func TestSendRejectionNotification(t *testing.T) {
 				FirstName: inviterFirst,
 				LastName:  inviterLast,
 			},
-		},
-	}, nil).Once()
-
-	usersClient.On("RetrieveUsers", mock.Anything, mock.MatchedBy(func(req *grpcUsersV1.RetrieveUsersReq) bool {
-		return len(req.Ids) == 1 && req.Ids[0] == inviteeID
-	}), mock.Anything).Return(&grpcUsersV1.RetrieveUsersRes{
-		Users: []*grpcUsersV1.User{
 			{
 				Id:        inviteeID,
 				Email:     inviteeEmail,

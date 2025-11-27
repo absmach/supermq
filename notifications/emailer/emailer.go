@@ -97,14 +97,19 @@ func New(usersClient grpcUsersV1.UsersServiceClient, cfg Config) (notifications.
 }
 
 func (n *notifier) SendInvitationNotification(ctx context.Context, inviterID, inviteeID, domainID, domainName, roleID, roleName string) error {
-	inviter, err := n.fetchUser(ctx, inviterID)
+	users, err := n.fetchUsers(ctx, []string{inviterID, inviteeID})
 	if err != nil {
 		return errors.Wrap(errFetchingUser, err)
 	}
 
-	invitee, err := n.fetchUser(ctx, inviteeID)
-	if err != nil {
-		return errors.Wrap(errFetchingUser, err)
+	inviter, ok := users[inviterID]
+	if !ok {
+		return errors.Wrap(errFetchingUser, fmt.Errorf("inviter not found: %s", inviterID))
+	}
+
+	invitee, ok := users[inviteeID]
+	if !ok {
+		return errors.Wrap(errFetchingUser, fmt.Errorf("invitee not found: %s", inviteeID))
 	}
 
 	inviterName := n.getUserDisplayName(inviter)
@@ -128,14 +133,19 @@ func (n *notifier) SendInvitationNotification(ctx context.Context, inviterID, in
 }
 
 func (n *notifier) SendAcceptanceNotification(ctx context.Context, inviterID, inviteeID, domainID, domainName, roleID, roleName string) error {
-	inviter, err := n.fetchUser(ctx, inviterID)
+	users, err := n.fetchUsers(ctx, []string{inviterID, inviteeID})
 	if err != nil {
 		return errors.Wrap(errFetchingUser, err)
 	}
 
-	invitee, err := n.fetchUser(ctx, inviteeID)
-	if err != nil {
-		return errors.Wrap(errFetchingUser, err)
+	inviter, ok := users[inviterID]
+	if !ok {
+		return errors.Wrap(errFetchingUser, fmt.Errorf("inviter not found: %s", inviterID))
+	}
+
+	invitee, ok := users[inviteeID]
+	if !ok {
+		return errors.Wrap(errFetchingUser, fmt.Errorf("invitee not found: %s", inviteeID))
 	}
 
 	inviterName := n.getUserDisplayName(inviter)
@@ -159,14 +169,19 @@ func (n *notifier) SendAcceptanceNotification(ctx context.Context, inviterID, in
 }
 
 func (n *notifier) SendRejectionNotification(ctx context.Context, inviterID, inviteeID, domainID, domainName, roleID, roleName string) error {
-	inviter, err := n.fetchUser(ctx, inviterID)
+	users, err := n.fetchUsers(ctx, []string{inviterID, inviteeID})
 	if err != nil {
 		return errors.Wrap(errFetchingUser, err)
 	}
 
-	invitee, err := n.fetchUser(ctx, inviteeID)
-	if err != nil {
-		return errors.Wrap(errFetchingUser, err)
+	inviter, ok := users[inviterID]
+	if !ok {
+		return errors.Wrap(errFetchingUser, fmt.Errorf("inviter not found: %s", inviterID))
+	}
+
+	invitee, ok := users[inviteeID]
+	if !ok {
+		return errors.Wrap(errFetchingUser, fmt.Errorf("invitee not found: %s", inviteeID))
 	}
 
 	inviterName := n.getUserDisplayName(inviter)
@@ -189,10 +204,10 @@ func (n *notifier) SendRejectionNotification(ctx context.Context, inviterID, inv
 	return nil
 }
 
-func (n *notifier) fetchUser(ctx context.Context, userID string) (*grpcUsersV1.User, error) {
+func (n *notifier) fetchUsers(ctx context.Context, userIDs []string) (map[string]*grpcUsersV1.User, error) {
 	req := &grpcUsersV1.RetrieveUsersReq{
-		Ids:    []string{userID},
-		Limit:  1,
+		Ids:    userIDs,
+		Limit:  uint64(len(userIDs)),
 		Offset: 0,
 	}
 
@@ -201,11 +216,12 @@ func (n *notifier) fetchUser(ctx context.Context, userID string) (*grpcUsersV1.U
 		return nil, err
 	}
 
-	if len(res.Users) == 0 {
-		return nil, fmt.Errorf("user not found: %s", userID)
+	users := make(map[string]*grpcUsersV1.User)
+	for _, user := range res.Users {
+		users[user.Id] = user
 	}
 
-	return res.Users[0], nil
+	return users, nil
 }
 
 func (n *notifier) getUserDisplayName(user *grpcUsersV1.User) string {
