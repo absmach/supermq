@@ -61,7 +61,6 @@ func Start(ctx context.Context, consumer string, sub events.Subscriber, notifier
 func (h *eventHandler) Handle(ctx context.Context, event events.Event) error {
 	data, err := event.Encode()
 	if err != nil {
-		h.logger.Error("failed to encode event", slog.Any("error", err))
 		return err
 	}
 
@@ -72,17 +71,17 @@ func (h *eventHandler) Handle(ctx context.Context, event events.Event) error {
 
 	switch operation {
 	case invitationSend:
-		return handleInvitationSent(ctx, data, h.notifier, h.userRepo, h.logger)
+		return handleInvitationSent(ctx, data, h.notifier, h.userRepo)
 	case invitationAccept:
-		return handleInvitationAccepted(ctx, data, h.notifier, h.userRepo, h.logger)
+		return handleInvitationAccepted(ctx, data, h.notifier, h.userRepo)
 	case invitationReject:
-		return handleInvitationRejected(ctx, data, h.notifier, h.userRepo, h.logger)
+		return handleInvitationRejected(ctx, data, h.notifier, h.userRepo)
 	default:
 		return nil
 	}
 }
 
-func handleInvitationSent(ctx context.Context, data map[string]any, notifier users.Notifier, userRepo users.Repository, logger *slog.Logger) error {
+func handleInvitationSent(ctx context.Context, data map[string]any, notifier users.Notifier, userRepo users.Repository) error {
 	inviteeUserIDVal, ok := data["invitee_user_id"].(string)
 	if !ok {
 		return fmt.Errorf("invalid or missing invitee_user_id in event payload")
@@ -119,20 +118,12 @@ func handleInvitationSent(ctx context.Context, data map[string]any, notifier use
 	// Retrieve invitee user
 	invitee, err := userRepo.RetrieveByID(ctx, inviteeUserID)
 	if err != nil {
-		logger.Error("failed to retrieve invitee user",
-			slog.String("user_id", inviteeUserID),
-			slog.Any("error", err),
-		)
 		return err
 	}
 
 	// Retrieve inviter user
 	inviter, err := userRepo.RetrieveByID(ctx, invitedBy)
 	if err != nil {
-		logger.Error("failed to retrieve inviter user",
-			slog.String("user_id", invitedBy),
-			slog.Any("error", err),
-		)
 		return err
 	}
 
@@ -175,22 +166,13 @@ func handleInvitationSent(ctx context.Context, data map[string]any, notifier use
 	}
 
 	if err := notifier.Notify(ctx, notification); err != nil {
-		logger.Error("failed to send invitation notification",
-			slog.String("to", invitee.Email),
-			slog.Any("error", err),
-		)
 		return err
 	}
-
-	logger.Info("invitation notification sent",
-		slog.String("to", invitee.Email),
-		slog.String("domain", domainName),
-	)
 
 	return nil
 }
 
-func handleInvitationAccepted(ctx context.Context, data map[string]any, notifier users.Notifier, userRepo users.Repository, logger *slog.Logger) error {
+func handleInvitationAccepted(ctx context.Context, data map[string]any, notifier users.Notifier, userRepo users.Repository) error {
 	inviteeUserIDVal, ok := data["invitee_user_id"].(string)
 	if !ok {
 		return fmt.Errorf("invalid or missing invitee_user_id in event payload")
@@ -227,20 +209,12 @@ func handleInvitationAccepted(ctx context.Context, data map[string]any, notifier
 	// Retrieve invitee user
 	invitee, err := userRepo.RetrieveByID(ctx, inviteeUserID)
 	if err != nil {
-		logger.Error("failed to retrieve invitee user",
-			slog.String("user_id", inviteeUserID),
-			slog.Any("error", err),
-		)
 		return err
 	}
 
 	// Retrieve inviter user
 	inviter, err := userRepo.RetrieveByID(ctx, invitedBy)
 	if err != nil {
-		logger.Error("failed to retrieve inviter user",
-			slog.String("user_id", invitedBy),
-			slog.Any("error", err),
-		)
 		return err
 	}
 
@@ -283,22 +257,13 @@ func handleInvitationAccepted(ctx context.Context, data map[string]any, notifier
 	}
 
 	if err := notifier.Notify(ctx, notification); err != nil {
-		logger.Error("failed to send invitation accepted notification",
-			slog.String("to", inviter.Email),
-			slog.Any("error", err),
-		)
 		return err
 	}
-
-	logger.Info("invitation accepted notification sent",
-		slog.String("to", inviter.Email),
-		slog.String("domain", domainName),
-	)
 
 	return nil
 }
 
-func handleInvitationRejected(ctx context.Context, data map[string]any, notifier users.Notifier, userRepo users.Repository, logger *slog.Logger) error {
+func handleInvitationRejected(ctx context.Context, data map[string]any, notifier users.Notifier, userRepo users.Repository) error {
 	inviteeUserIDVal, ok := data["invitee_user_id"].(string)
 	if !ok {
 		return fmt.Errorf("invalid or missing invitee_user_id in event payload")
@@ -335,20 +300,12 @@ func handleInvitationRejected(ctx context.Context, data map[string]any, notifier
 	// Retrieve invitee user
 	invitee, err := userRepo.RetrieveByID(ctx, inviteeUserID)
 	if err != nil {
-		logger.Error("failed to retrieve invitee user",
-			slog.String("user_id", inviteeUserID),
-			slog.Any("error", err),
-		)
 		return err
 	}
 
 	// Retrieve inviter user
 	inviter, err := userRepo.RetrieveByID(ctx, invitedBy)
 	if err != nil {
-		logger.Error("failed to retrieve inviter user",
-			slog.String("user_id", invitedBy),
-			slog.Any("error", err),
-		)
 		return err
 	}
 
@@ -390,17 +347,8 @@ func handleInvitationRejected(ctx context.Context, data map[string]any, notifier
 	}
 
 	if err := notifier.Notify(ctx, notification); err != nil {
-		logger.Error("failed to send invitation rejected notification",
-			slog.String("to", inviter.Email),
-			slog.Any("error", err),
-		)
 		return err
 	}
-
-	logger.Info("invitation rejected notification sent",
-		slog.String("to", inviter.Email),
-		slog.String("domain", domainName),
-	)
 
 	return nil
 }
