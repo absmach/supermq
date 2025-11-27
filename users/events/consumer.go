@@ -4,8 +4,9 @@
 package events
 
 import (
-	"context"
-	"log/slog"
+    "context"
+    "fmt"
+    "log/slog"
 
 	"github.com/absmach/supermq/pkg/events"
 	"github.com/absmach/supermq/pkg/events/store"
@@ -82,37 +83,33 @@ func (h *eventHandler) Handle(ctx context.Context, event events.Event) error {
 }
 
 func handleInvitationSent(ctx context.Context, data map[string]any, notifier users.Notifier, userRepo users.Repository, logger *slog.Logger) error {
-	inviteeUserIDVal, ok := data["invitee_user_id"].(string)
-	if !ok {
-		logger.Warn("invalid or missing invitee_user_id in event payload", slog.Any("invitee_user_id", data["invitee_user_id"]))
-	}
-	inviteeUserID := inviteeUserIDVal
+    inviteeUserIDVal, ok := data["invitee_user_id"].(string)
+    if !ok {
+        return fmt.Errorf("invalid or missing invitee_user_id in event payload")
+    }
+    inviteeUserID := inviteeUserIDVal
 
-	invitedByVal, ok := data["invited_by"].(string)
-	if !ok {
-		logger.Warn("invalid or missing invited_by in event payload", slog.Any("invited_by", data["invited_by"]))
-	}
-	invitedBy := invitedByVal
+    invitedByVal, ok := data["invited_by"].(string)
+    if !ok {
+        return fmt.Errorf("invalid or missing invited_by in event payload")
+    }
+    invitedBy := invitedByVal
 
-	domainNameVal, ok := data["domain_name"].(string)
-	if !ok {
-		logger.Warn("invalid or missing domain_name in event payload", slog.Any("domain_name", data["domain_name"]))
-	}
-	domainName := domainNameVal
+    domainNameVal, ok := data["domain_name"].(string)
+    if !ok {
+        return fmt.Errorf("invalid or missing domain_name in event payload")
+    }
+    domainName := domainNameVal
 
-	roleNameVal, ok := data["role_name"].(string)
-	if !ok {
-		logger.Warn("invalid or missing role_name in event payload", slog.Any("role_name", data["role_name"]))
-	}
-	roleName := roleNameVal
+    roleNameVal, ok := data["role_name"].(string)
+    if !ok {
+        return fmt.Errorf("invalid or missing role_name in event payload")
+    }
+    roleName := roleNameVal
 
-	if inviteeUserID == "" || invitedBy == "" {
-		logger.Warn("missing required fields in invitation.send event",
-			slog.String("invitee_user_id", inviteeUserID),
-			slog.String("invited_by", invitedBy),
-		)
-		return nil
-	}
+    if inviteeUserID == "" || invitedBy == "" {
+        return fmt.Errorf("missing required fields in invitation.send event")
+    }
 
 	// Retrieve invitee user
 	invitee, err := userRepo.RetrieveByID(ctx, inviteeUserID)
@@ -189,37 +186,33 @@ func handleInvitationSent(ctx context.Context, data map[string]any, notifier use
 }
 
 func handleInvitationAccepted(ctx context.Context, data map[string]any, notifier users.Notifier, userRepo users.Repository, logger *slog.Logger) error {
-	inviteeUserIDVal, ok := data["invitee_user_id"].(string)
-	if !ok {
-		logger.Warn("invalid or missing invitee_user_id in event payload", slog.Any("invitee_user_id", data["invitee_user_id"]))
-	}
-	inviteeUserID := inviteeUserIDVal
+    inviteeUserIDVal, ok := data["invitee_user_id"].(string)
+    if !ok {
+        return fmt.Errorf("invalid or missing invitee_user_id in event payload")
+    }
+    inviteeUserID := inviteeUserIDVal
 
-	invitedByVal, ok := data["invited_by"].(string)
-	if !ok {
-		logger.Warn("invalid or missing invited_by in event payload", slog.Any("invited_by", data["invited_by"]))
-	}
-	invitedBy := invitedByVal
+    invitedByVal, ok := data["invited_by"].(string)
+    if !ok {
+        return fmt.Errorf("invalid or missing invited_by in event payload")
+    }
+    invitedBy := invitedByVal
 
-	domainNameVal, ok := data["domain_name"].(string)
-	if !ok {
-		logger.Warn("invalid or missing domain_name in event payload", slog.Any("domain_name", data["domain_name"]))
-	}
-	domainName := domainNameVal
+    domainNameVal, ok := data["domain_name"].(string)
+    if !ok {
+        return fmt.Errorf("invalid or missing domain_name in event payload")
+    }
+    domainName := domainNameVal
 
-	roleNameVal, ok := data["role_name"].(string)
-	if !ok {
-		logger.Warn("invalid or missing role_name in event payload", slog.Any("role_name", data["role_name"]))
-	}
-	roleName := roleNameVal
+    roleNameVal, ok := data["role_name"].(string)
+    if !ok {
+        return fmt.Errorf("invalid or missing role_name in event payload")
+    }
+    roleName := roleNameVal
 
-	if inviteeUserID == "" || invitedBy == "" {
-		logger.Warn("missing required fields in invitation.accept event",
-			slog.String("invitee_user_id", inviteeUserID),
-			slog.String("invited_by", invitedBy),
-		)
-		return nil
-	}
+    if inviteeUserID == "" || invitedBy == "" {
+        return fmt.Errorf("missing required fields in invitation.accept event")
+    }
 
 	// Retrieve invitee user
 	invitee, err := userRepo.RetrieveByID(ctx, inviteeUserID)
@@ -296,37 +289,33 @@ func handleInvitationAccepted(ctx context.Context, data map[string]any, notifier
 }
 
 func handleInvitationRejected(ctx context.Context, data map[string]any, notifier users.Notifier, userRepo users.Repository, logger *slog.Logger) error {
-	inviteeUserIDVal, ok := data["invitee_user_id"].(string)
-	if !ok {
-		logger.Warn("invalid or missing invitee_user_id in event payload", slog.Any("invitee_user_id", data["invitee_user_id"]))
-	}
-	inviteeUserID := inviteeUserIDVal
+    inviteeUserIDVal, ok := data["invitee_user_id"].(string)
+    if !ok {
+        return fmt.Errorf("invalid or missing invitee_user_id in event payload")
+    }
+    inviteeUserID := inviteeUserIDVal
 
-	invitedByVal, ok := data["invited_by"].(string)
-	if !ok {
-		logger.Warn("invalid or missing invited_by in event payload", slog.Any("invited_by", data["invited_by"]))
-	}
-	invitedBy := invitedByVal
+    invitedByVal, ok := data["invited_by"].(string)
+    if !ok {
+        return fmt.Errorf("invalid or missing invited_by in event payload")
+    }
+    invitedBy := invitedByVal
 
-	domainNameVal, ok := data["domain_name"].(string)
-	if !ok {
-		logger.Warn("invalid or missing domain_name in event payload", slog.Any("domain_name", data["domain_name"]))
-	}
-	domainName := domainNameVal
+    domainNameVal, ok := data["domain_name"].(string)
+    if !ok {
+        return fmt.Errorf("invalid or missing domain_name in event payload")
+    }
+    domainName := domainNameVal
 
-	roleNameVal, ok := data["role_name"].(string)
-	if !ok {
-		logger.Warn("invalid or missing role_name in event payload", slog.Any("role_name", data["role_name"]))
-	}
-	roleName := roleNameVal
+    roleNameVal, ok := data["role_name"].(string)
+    if !ok {
+        return fmt.Errorf("invalid or missing role_name in event payload")
+    }
+    roleName := roleNameVal
 
-	if inviteeUserID == "" || invitedBy == "" {
-		logger.Warn("missing required fields in invitation.reject event",
-			slog.String("invitee_user_id", inviteeUserID),
-			slog.String("invited_by", invitedBy),
-		)
-		return nil
-	}
+    if inviteeUserID == "" || invitedBy == "" {
+        return fmt.Errorf("missing required fields in invitation.reject event")
+    }
 
 	// Retrieve invitee user
 	invitee, err := userRepo.RetrieveByID(ctx, inviteeUserID)

@@ -5,7 +5,6 @@ package email
 
 import (
 	"bytes"
-	"fmt"
 	"net/mail"
 	"strconv"
 	"strings"
@@ -106,8 +105,6 @@ func (a *Agent) Send(to []string, from, subject, header, user, content, footer s
 	if err := a.dial.DialAndSend(m); err != nil {
 		return errors.Wrap(errSendMail, err)
 	}
-
-	fmt.Println("Email Sent")
 
 	return nil
 }
