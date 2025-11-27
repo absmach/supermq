@@ -846,6 +846,15 @@ services:
       SMQ_USERS_HTTP_PORT: ${SMQ_USERS_HTTP_PORT}
       SMQ_USERS_HTTP_SERVER_CERT: ${SMQ_USERS_HTTP_SERVER_CERT}
       SMQ_USERS_HTTP_SERVER_KEY: ${SMQ_USERS_HTTP_SERVER_KEY}
+      SMQ_USERS_GRPC_HOST: ${SMQ_USERS_GRPC_HOST}
+      SMQ_USERS_GRPC_PORT: ${SMQ_USERS_GRPC_PORT}
+      ## Compose supports parameter expansion in environment,
+      ## Eg: ${VAR:+replacement} or ${VAR+replacement} -> replacement if VAR is set and non-empty, otherwise empty
+      ## Eg :${VAR:-default} or ${VAR-default}  -> value of VAR if set and non-empty, otherwise default
+      SMQ_USERS_GRPC_SERVER_CERT: ${SMQ_USERS_GRPC_SERVER_CERT:+/users-grpc-server.crt}
+      SMQ_USERS_GRPC_SERVER_KEY: ${SMQ_USERS_GRPC_SERVER_KEY:+/users-grpc-server.key}
+      SMQ_USERS_GRPC_SERVER_CA_CERTS: ${SMQ_USERS_GRPC_SERVER_CA_CERTS:+/users-grpc-server-ca.crt}
+      SMQ_USERS_GRPC_CLIENT_CA_CERTS: ${SMQ_USERS_GRPC_CLIENT_CA_CERTS:+/users-grpc-client-ca.crt}
       SMQ_USERS_DB_HOST: ${SMQ_USERS_DB_HOST}
       SMQ_USERS_DB_PORT: ${SMQ_USERS_DB_PORT}
       SMQ_USERS_DB_USER: ${SMQ_USERS_DB_USER}
@@ -894,6 +903,7 @@ services:
       SMQ_ALLOW_UNVERIFIED_USER: ${SMQ_ALLOW_UNVERIFIED_USER}
     ports:
       - ${SMQ_USERS_HTTP_PORT}:${SMQ_USERS_HTTP_PORT}
+      - ${SMQ_USERS_GRPC_PORT}:${SMQ_USERS_GRPC_PORT}
     networks:
       - supermq-base-net
     volumes:
