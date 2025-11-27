@@ -329,7 +329,12 @@ func newService(ctx context.Context, authz smqauthz.Authorization, policy polici
 	}
 
 	svc, err = middleware.NewAuthorization(policies.GroupType, svc, repo, authz, groups.NewOperationPermissionMap(), groups.NewRolesOperationPermissionMap(),
-		groups.NewExternalOperationPermissionMap(), callout)
+		groups.NewExternalOperationPermissionMap())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	svc, err = middleware.NewCallout(svc, repo, callout)
 	if err != nil {
 		return nil, nil, err
 	}

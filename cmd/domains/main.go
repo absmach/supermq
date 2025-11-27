@@ -281,7 +281,12 @@ func newDomainService(ctx context.Context, domainsRepo domainsSvc.Repository, ca
 		return nil, fmt.Errorf("failed to init domain event store middleware: %w", err)
 	}
 
-	svc, err = dmw.NewAuthorization(policies.DomainType, svc, authz, domains.NewOperationPermissionMap(), domains.NewRolesOperationPermissionMap(), callout)
+	svc, err = dmw.NewAuthorization(policies.DomainType, svc, authz, domains.NewOperationPermissionMap(), domains.NewRolesOperationPermissionMap())
+	if err != nil {
+		return nil, err
+	}
+
+	svc, err = dmw.NewCallout(svc, callout)
 	if err != nil {
 		return nil, err
 	}
