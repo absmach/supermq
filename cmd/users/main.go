@@ -18,6 +18,7 @@ import (
 	"github.com/absmach/supermq"
 	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
+	grpcUsersV1 "github.com/absmach/supermq/api/grpc/users/v1"
 	"github.com/absmach/supermq/internal/email"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
@@ -35,35 +36,40 @@ import (
 	pgclient "github.com/absmach/supermq/pkg/postgres"
 	"github.com/absmach/supermq/pkg/prometheus"
 	"github.com/absmach/supermq/pkg/server"
+	grpcserver "github.com/absmach/supermq/pkg/server/grpc"
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/absmach/supermq/users"
 	httpapi "github.com/absmach/supermq/users/api"
+	grpcapi "github.com/absmach/supermq/users/api/grpc"
 	"github.com/absmach/supermq/users/emailer"
 	"github.com/absmach/supermq/users/events"
 	"github.com/absmach/supermq/users/hasher"
 	"github.com/absmach/supermq/users/middleware"
 	"github.com/absmach/supermq/users/postgres"
+	pusers "github.com/absmach/supermq/users/private"
 	"github.com/authzed/authzed-go/v1"
 	"github.com/authzed/grpcutil"
 	"github.com/caarlos0/env/v11"
 	"github.com/go-chi/chi/v5"
-	"github.com/jmoiron/sqlx"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/reflection"
 )
 
 const (
 	svcName          = "users"
 	envPrefixDB      = "SMQ_USERS_DB_"
 	envPrefixHTTP    = "SMQ_USERS_HTTP_"
+	envPrefixGRPC    = "SMQ_USERS_GRPC_"
 	envPrefixAuth    = "SMQ_AUTH_GRPC_"
 	envPrefixDomains = "SMQ_DOMAINS_GRPC_"
 	envPrefixGoogle  = "SMQ_GOOGLE_"
 	defDB            = "users"
 	defSvcHTTPPort   = "9002"
+	defSvcGRPCPort   = "7002"
 )
 
 type config struct {
@@ -169,6 +175,9 @@ func main() {
 	}()
 	tracer := tp.Tracer(svcName)
 
+	database := pg.NewDatabase(db, dbConfig, tracer)
+	repo := postgres.NewRepository(database)
+
 	authClientConfig := grpcclient.Config{}
 	if err := env.ParseWithOptions(&authClientConfig, env.Options{Prefix: envPrefixAuth}); err != nil {
 		logger.Error(fmt.Sprintf("failed to load %s auth configuration : %s", svcName, err))
@@ -227,12 +236,27 @@ func main() {
 	}
 	logger.Info("Policy client successfully connected to spicedb gRPC server")
 
-	csvc, err := newService(ctx, authz, tokenClient, policyService, domainsClient, db, dbConfig, tracer, cfg, resetPasswordEmailConfig, verificationEmailConfig, logger)
+	csvc, err := newService(ctx, authz, tokenClient, policyService, domainsClient, repo, tracer, cfg, resetPasswordEmailConfig, verificationEmailConfig, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to setup service: %s", err))
 		exitCode = 1
 		return
 	}
+
+	psvc := pusers.New(repo)
+
+	grpcServerConfig := server.Config{Port: defSvcGRPCPort}
+	if err := env.ParseWithOptions(&grpcServerConfig, env.Options{Prefix: envPrefixGRPC}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load %s gRPC server configuration : %s", svcName, err.Error()))
+		exitCode = 1
+		return
+	}
+
+	registerUsersServer := func(srv *grpc.Server) {
+		reflection.Register(srv)
+		grpcUsersV1.RegisterUsersServiceServer(srv, grpcapi.NewServer(psvc))
+	}
+	gs := grpcserver.NewServer(ctx, cancel, svcName, grpcServerConfig, registerUsersServer, logger)
 
 	httpServerConfig := server.Config{Port: defSvcHTTPPort}
 	if err := env.ParseWithOptions(&httpServerConfig, env.Options{Prefix: envPrefixHTTP}); err != nil {
@@ -263,7 +287,11 @@ func main() {
 	})
 
 	g.Go(func() error {
-		return server.StopSignalHandler(ctx, cancel, logger, svcName, httpSrv)
+		return gs.Start()
+	})
+
+	g.Go(func() error {
+		return server.StopSignalHandler(ctx, cancel, logger, svcName, httpSrv, gs)
 	})
 
 	if err := g.Wait(); err != nil {
@@ -271,14 +299,11 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, authz smqauthz.Authorization, token grpcTokenV1.TokenServiceClient, policyService policies.Service, domainsClient grpcDomainsV1.DomainsServiceClient, db *sqlx.DB, dbConfig pgclient.Config, tracer trace.Tracer, c config, resetPasswordEmailConfig, verificationEmailConfig email.Config, logger *slog.Logger) (users.Service, error) {
-	database := pg.NewDatabase(db, dbConfig, tracer)
+func newService(ctx context.Context, authz smqauthz.Authorization, token grpcTokenV1.TokenServiceClient, policyService policies.Service, domainsClient grpcDomainsV1.DomainsServiceClient, repo users.Repository, tracer trace.Tracer, c config, resetPasswordEmailConfig, verificationEmailConfig email.Config, logger *slog.Logger) (users.Service, error) {
 	idp := uuid.New()
 	hsr := hasher.New()
 
 	// Creating users service
-	repo := postgres.NewRepository(database)
-
 	emailerClient, err := emailer.New(
 		c.PasswordResetURLPrefix,
 		c.VerificationURLPrefix,

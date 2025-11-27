@@ -11,11 +11,13 @@ import (
 	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
 	grpcGroupsV1 "github.com/absmach/supermq/api/grpc/groups/v1"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
+	grpcUsersV1 "github.com/absmach/supermq/api/grpc/users/v1"
 	tokengrpc "github.com/absmach/supermq/auth/api/grpc/token"
 	channelsgrpc "github.com/absmach/supermq/channels/api/grpc"
 	clientsauth "github.com/absmach/supermq/clients/api/grpc"
 	domainsgrpc "github.com/absmach/supermq/domains/api/grpc"
 	groupsgrpc "github.com/absmach/supermq/groups/api/grpc"
+	usersgrpc "github.com/absmach/supermq/users/api/grpc"
 	grpchealth "google.golang.org/grpc/health/grpc_health_v1"
 )
 
@@ -96,4 +98,18 @@ func SetupGroupsClient(ctx context.Context, cfg Config) (grpcGroupsV1.GroupsServ
 	}
 
 	return groupsgrpc.NewClient(client.Connection(), cfg.Timeout), client, nil
+}
+
+// SetupUsersClient loads users gRPC configuration and creates new users gRPC client.
+//
+// For example:
+//
+// usersClient, usersHandler, err := grpcclient.SetupUsersClient(ctx, grpcclient.Config{}).
+func SetupUsersClient(ctx context.Context, cfg Config) (grpcUsersV1.UsersServiceClient, Handler, error) {
+	client, err := NewHandler(cfg)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return usersgrpc.NewClient(client.Connection(), cfg.Timeout), client, nil
 }
