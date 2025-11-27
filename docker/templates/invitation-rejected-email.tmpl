@@ -21,7 +21,7 @@
             overflow: hidden;
         }
         .header {
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
             padding: 30px 40px;
             text-align: center;
         }
@@ -38,22 +38,17 @@
             margin: 0 0 15px 0;
             font-size: 15px;
         }
-        .success-details {
-            background-color: #eafaf1;
-            border-left: 4px solid #27ae60;
+        .rejection-details {
+            background-color: #fadbd8;
+            border-left: 4px solid #e74c3c;
             padding: 20px;
             margin: 25px 0;
             border-radius: 4px;
         }
-        .success-details p {
+        .rejection-details p {
             margin: 0;
             font-size: 16px;
             line-height: 1.8;
-        }
-        .icon-success {
-            text-align: center;
-            margin: 20px 0;
-            font-size: 48px;
         }
         .footer {
             background-color: #f8f9fb;
@@ -72,19 +67,17 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Invitation Accepted</h1>
+            <h1>Invitation Declined</h1>
         </div>
 
         <div class="content">
-            <div class="icon-success">✓</div>
-
             <p>Dear <strong>{{.User}}</strong>,</p>
 
-            <div class="success-details">
+            <div class="rejection-details">
                 <p>{{.Content}}</p>
             </div>
 
-            <p>You can now collaborate with them in the domain.</p>
+            <p>If you would like to extend another invitation or have any questions, please don't hesitate to contact us.</p>
 
             <hr class="footer-divider">
 
