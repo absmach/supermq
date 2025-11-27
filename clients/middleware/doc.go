@@ -5,5 +5,5 @@
 // for SuperMQ Clients Service.
 //
 // For more details about tracing instrumentation for SuperMQ refer to the
-// documentation at https://docs.supermq.abstractmachines.fr/tracing/.
+// documentation at https://docs.supermq.absmach.eu/tracing/.
 package middleware

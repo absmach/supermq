@@ -11,5 +11,5 @@
 // clients and servers.
 //
 // For more details about SuperMQ messaging and WebSocket adapter service,
-// please refer to the documentation at https://docs.supermq.abstractmachines.fr/messaging/#websocket.
+// please refer to the documentation at https://docs.supermq.absmach.eu/messaging/#websocket.
 package ws

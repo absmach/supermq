@@ -14,7 +14,7 @@
   [![License](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
  [![Matrix](https://img.shields.io/matrix/supermq%3Amatrix.org?label=Chat&style=flat&logo=matrix&logoColor=white)](https://matrix.to/#/#supermq:matrix.org)
   
-  ### [Guide](https://docs.supermq.abstractmachines.fr) | [Contributing](CONTRIBUTING.md) | [Website](https://abstractmachines.fr/) | [Chat](https://matrix.to/#/#supermq:matrix.org)
+  ### [Guide](https://docs.supermq.absmach.eu) | [Contributing](CONTRIBUTING.md) | [Website](https://abstractmachines.fr/) | [Chat](https://matrix.to/#/#supermq:matrix.org)
 
 </div>
 
@@ -58,7 +58,7 @@ Or use the [Makefile](Makefile) for a simpler command:
 make run
 ```
 
-For production deployments, check our [Kubernetes guide](https://docs.supermq.abstractmachines.fr/kubernetes). ⚙️
+For production deployments, check our [Kubernetes guide](https://docs.supermq.absmach.eu/kubernetes). ⚙️
 
 ### Usage 📤📥
 

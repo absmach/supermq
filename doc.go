@@ -3,5 +3,5 @@
 
 // Package supermq acts as an umbrella package containing multiple different
 // microservices and defines all shared domain concepts.
-// For detailed documentation of the platform, please visit https://docs.supermq.abstractmachines.fr.
+// For detailed documentation of the platform, please visit https://docs.supermq.absmach.eu.
 package supermq

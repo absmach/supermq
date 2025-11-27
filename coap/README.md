@@ -84,3 +84,43 @@ Setting `SMQ_CLIENTS_GRPC_CLIENT_CERT` and `SMQ_CLIENTS_GRPC_CLIENT_KEY` will en
 
 If CoAP adapter is running locally (on default 5683 port), a valid URL would be: `coap://localhost/m/<domain_id>/c/<channel_id>/<subtopic>?auth=<client_auth_key>`.
 Since CoAP protocol does not support `Authorization` header (option) and options have limited size, in order to send CoAP messages, valid `auth` value (a valid Client key) must be present in `Uri-Query` option.
+
+## Best Practices
+
+- Use distinct client auth keys and rotate them frequently for better security.
+
+- Use meaningful channel IDs and subtopics so you know exactly where your messages go.
+
+- Leverage metadata/tags in channels and clients (via clients service) to filter and manage messaging paths.
+
+- Ensure the auth query parameter is not exposed publicly (use secure networks or DTLS if available).
+
+- Monitor message broker load and usage patterns — CoAP traffic can burst.
+
+- Use the /health endpoint (if exposed) to monitor service status and integrate with your observability stack.
+
+## Versioning and  Health Check
+
+If the service exposes a /health endpoint, you can use it for monitoring and version readiness checks.
+
+```bash
+curl -X GET coap://localhost/health \
+  -H "accept: application/health+json"
+```
+
+The expected response is:
+
+```bash
+{
+  "status": "pass",
+  "version": "0.xx.x",
+  "commit": "<commit‑hash>",
+  "description": "coap‑adapter service",
+  "build_time": "YYYY‑MM‑DDT…"
+}
+```
+
+## CLI 
+
+SuperMQ provides a CoAP CLI for testing and interacting with the CoAP Adapter.
+To learn more about this visit the [SuperMQ CoAp CLI page](https://github.com/absmach/coap-cli/tree/main).
