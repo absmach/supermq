@@ -77,17 +77,17 @@ func New(resetURL, verificationURL string, resetConfig, verifyConfig, invitation
 func (e *emailer) Notify(ctx context.Context, notification any) error {
 	switch notif := notification.(type) {
 	case *users.PasswordResetNotification:
-		return e.sendPasswordReset(ctx, notif)
+		return e.sendPasswordReset(notif)
 	case *users.EmailVerificationNotification:
-		return e.sendEmailVerification(ctx, notif)
+		return e.sendEmailVerification(notif)
 	case *users.InvitationNotification:
-		return e.sendInvitation(ctx, notif)
+		return e.sendInvitation(notif)
 	default:
 		return fmt.Errorf("%w: %T", errInvalidNotificationType, notification)
 	}
 }
 
-func (e *emailer) sendPasswordReset(_ context.Context, notif *users.PasswordResetNotification) error {
+func (e *emailer) sendPasswordReset(notif *users.PasswordResetNotification) error {
 	if len(notif.To) == 0 {
 		return errMissingRecipients
 	}
@@ -102,7 +102,7 @@ func (e *emailer) sendPasswordReset(_ context.Context, notif *users.PasswordRese
 	return e.resetAgent.Send(notif.To, "", "Password Reset Request", "", notif.User, url, "")
 }
 
-func (e *emailer) sendEmailVerification(_ context.Context, notif *users.EmailVerificationNotification) error {
+func (e *emailer) sendEmailVerification(notif *users.EmailVerificationNotification) error {
 	if len(notif.To) == 0 {
 		return errMissingRecipients
 	}
@@ -118,7 +118,7 @@ func (e *emailer) sendEmailVerification(_ context.Context, notif *users.EmailVer
 	return e.verifyAgent.Send(notif.To, "", "Email Verification", "", notif.User, url, "")
 }
 
-func (e *emailer) sendInvitation(_ context.Context, notif *users.InvitationNotification) error {
+func (e *emailer) sendInvitation(notif *users.InvitationNotification) error {
 	if len(notif.To) == 0 {
 		return errMissingRecipients
 	}

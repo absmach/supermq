@@ -82,10 +82,29 @@ func (h *eventHandler) Handle(ctx context.Context, event events.Event) error {
 }
 
 func handleInvitationSent(ctx context.Context, data map[string]any, notifier users.Notifier, userRepo users.Repository, logger *slog.Logger) error {
-	inviteeUserID, _ := data["invitee_user_id"].(string)
-	invitedBy, _ := data["invited_by"].(string)
-	domainName, _ := data["domain_name"].(string)
-	roleName, _ := data["role_name"].(string)
+	inviteeUserIDVal, ok := data["invitee_user_id"].(string)
+	if !ok {
+		logger.Warn("invalid or missing invitee_user_id in event payload", slog.Any("invitee_user_id", data["invitee_user_id"]))
+	}
+	inviteeUserID := inviteeUserIDVal
+
+	invitedByVal, ok := data["invited_by"].(string)
+	if !ok {
+		logger.Warn("invalid or missing invited_by in event payload", slog.Any("invited_by", data["invited_by"]))
+	}
+	invitedBy := invitedByVal
+
+	domainNameVal, ok := data["domain_name"].(string)
+	if !ok {
+		logger.Warn("invalid or missing domain_name in event payload", slog.Any("domain_name", data["domain_name"]))
+	}
+	domainName := domainNameVal
+
+	roleNameVal, ok := data["role_name"].(string)
+	if !ok {
+		logger.Warn("invalid or missing role_name in event payload", slog.Any("role_name", data["role_name"]))
+	}
+	roleName := roleNameVal
 
 	if inviteeUserID == "" || invitedBy == "" {
 		logger.Warn("missing required fields in invitation.send event",
@@ -170,10 +189,29 @@ func handleInvitationSent(ctx context.Context, data map[string]any, notifier use
 }
 
 func handleInvitationAccepted(ctx context.Context, data map[string]any, notifier users.Notifier, userRepo users.Repository, logger *slog.Logger) error {
-	inviteeUserID, _ := data["invitee_user_id"].(string)
-	invitedBy, _ := data["invited_by"].(string)
-	domainName, _ := data["domain_name"].(string)
-	roleName, _ := data["role_name"].(string)
+	inviteeUserIDVal, ok := data["invitee_user_id"].(string)
+	if !ok {
+		logger.Warn("invalid or missing invitee_user_id in event payload", slog.Any("invitee_user_id", data["invitee_user_id"]))
+	}
+	inviteeUserID := inviteeUserIDVal
+
+	invitedByVal, ok := data["invited_by"].(string)
+	if !ok {
+		logger.Warn("invalid or missing invited_by in event payload", slog.Any("invited_by", data["invited_by"]))
+	}
+	invitedBy := invitedByVal
+
+	domainNameVal, ok := data["domain_name"].(string)
+	if !ok {
+		logger.Warn("invalid or missing domain_name in event payload", slog.Any("domain_name", data["domain_name"]))
+	}
+	domainName := domainNameVal
+
+	roleNameVal, ok := data["role_name"].(string)
+	if !ok {
+		logger.Warn("invalid or missing role_name in event payload", slog.Any("role_name", data["role_name"]))
+	}
+	roleName := roleNameVal
 
 	if inviteeUserID == "" || invitedBy == "" {
 		logger.Warn("missing required fields in invitation.accept event",
@@ -258,10 +296,29 @@ func handleInvitationAccepted(ctx context.Context, data map[string]any, notifier
 }
 
 func handleInvitationRejected(ctx context.Context, data map[string]any, notifier users.Notifier, userRepo users.Repository, logger *slog.Logger) error {
-	inviteeUserID, _ := data["invitee_user_id"].(string)
-	invitedBy, _ := data["invited_by"].(string)
-	domainName, _ := data["domain_name"].(string)
-	roleName, _ := data["role_name"].(string)
+	inviteeUserIDVal, ok := data["invitee_user_id"].(string)
+	if !ok {
+		logger.Warn("invalid or missing invitee_user_id in event payload", slog.Any("invitee_user_id", data["invitee_user_id"]))
+	}
+	inviteeUserID := inviteeUserIDVal
+
+	invitedByVal, ok := data["invited_by"].(string)
+	if !ok {
+		logger.Warn("invalid or missing invited_by in event payload", slog.Any("invited_by", data["invited_by"]))
+	}
+	invitedBy := invitedByVal
+
+	domainNameVal, ok := data["domain_name"].(string)
+	if !ok {
+		logger.Warn("invalid or missing domain_name in event payload", slog.Any("domain_name", data["domain_name"]))
+	}
+	domainName := domainNameVal
+
+	roleNameVal, ok := data["role_name"].(string)
+	if !ok {
+		logger.Warn("invalid or missing role_name in event payload", slog.Any("role_name", data["role_name"]))
+	}
+	roleName := roleNameVal
 
 	if inviteeUserID == "" || invitedBy == "" {
 		logger.Warn("missing required fields in invitation.reject event",
