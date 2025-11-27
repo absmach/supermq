@@ -15,10 +15,13 @@ import (
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/notifications/emailer"
 	"github.com/absmach/supermq/notifications/events"
+	"github.com/absmach/supermq/notifications/middleware"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/events/store"
 	"github.com/absmach/supermq/pkg/grpcclient"
 	jaegerclient "github.com/absmach/supermq/pkg/jaeger"
+	"github.com/absmach/supermq/pkg/prometheus"
+	"github.com/absmach/supermq/pkg/server"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/caarlos0/env/v11"
 	"golang.org/x/sync/errgroup"
@@ -120,6 +123,12 @@ func main() {
 		return
 	}
 
+	// Wrap notifier with middleware
+	notifier = middleware.NewLogging(notifier, logger)
+	counter, latency := prometheus.MakeMetrics(svcName, "notifier")
+	notifier = middleware.NewMetrics(notifier, counter, latency)
+	notifier = middleware.NewTracing(notifier, tp.Tracer(svcName))
+
 	subscriber, err := store.NewSubscriber(ctx, cfg.ESURL, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create subscriber: %s", err))
@@ -141,9 +150,7 @@ func main() {
 	}
 
 	g.Go(func() error {
-		<-ctx.Done()
-		logger.Info(fmt.Sprintf("%s service shutdown", svcName))
-		return nil
+		return server.StopSignalHandler(ctx, cancel, logger, svcName)
 	})
 
 	if err := g.Wait(); err != nil {
