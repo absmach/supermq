@@ -24,7 +24,7 @@ tags:
     description: Everything about your Twins
     externalDocs:
       description: Find out more about twins
-      url: https://docs.supermq.abstractmachines.fr/
+      url: https://docs.supermq.absmach.eu/
 
 paths:
   /twins:

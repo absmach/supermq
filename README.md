@@ -59,7 +59,7 @@ Or use the [Makefile](Makefile) for a simpler command:
 make run
 ```
 
-For production deployments, check our [Kubernetes guide](https://docs.supermq.abstractmachines.fr/kubernetes). ⚙️
+For production deployments, check our [Kubernetes guide](https://docs.supermq.absmach.eu/kubernetes). ⚙️
 
 ### Usage 📤📥
 
