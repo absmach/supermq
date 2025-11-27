@@ -57,20 +57,20 @@ var (
 	errHashPassword = errors.New("generate hash from password failed")
 )
 
-func newService() (users.Service, *authmocks.TokenServiceClient, *mocks.Repository, *policymocks.Service, *mocks.Notifier) {
+func newService() (users.Service, *authmocks.TokenServiceClient, *mocks.Repository, *policymocks.Service, *mocks.Emailer) {
 	cRepo := new(mocks.Repository)
 	policies := new(policymocks.Service)
-	notifier := new(mocks.Notifier)
+	e := new(mocks.Emailer)
 	tokenClient := new(authmocks.TokenServiceClient)
-	return users.NewService(tokenClient, cRepo, policies, notifier, phasher, idProvider), tokenClient, cRepo, policies, notifier
+	return users.NewService(tokenClient, cRepo, policies, e, phasher, idProvider), tokenClient, cRepo, policies, e
 }
 
 func newServiceMinimal() (users.Service, *mocks.Repository) {
 	cRepo := new(mocks.Repository)
 	policies := new(policymocks.Service)
-	notifier := new(mocks.Notifier)
+	e := new(mocks.Emailer)
 	tokenUser := new(authmocks.TokenServiceClient)
-	return users.NewService(tokenUser, cRepo, policies, notifier, phasher, idProvider), cRepo
+	return users.NewService(tokenUser, cRepo, policies, e, phasher, idProvider), cRepo
 }
 
 func TestRegister(t *testing.T) {
@@ -1637,7 +1637,7 @@ func TestRefreshToken(t *testing.T) {
 }
 
 func TestSendPasswordReset(t *testing.T) {
-	svc, auth, cRepo, _, notifier := newService()
+	svc, auth, cRepo, _, e := newService()
 
 	cases := []struct {
 		desc                    string
@@ -1679,7 +1679,7 @@ func TestSendPasswordReset(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			repoCall := cRepo.On("RetrieveByEmail", context.Background(), tc.email).Return(tc.retrieveByEmailResponse, tc.retrieveByEmailErr)
 			authCall := auth.On("Issue", context.Background(), mock.Anything).Return(tc.issueResponse, tc.issueErr)
-			svcCall := notifier.On("Notify", context.Background(), mock.Anything).Return(tc.err)
+			svcCall := e.On("SendPasswordReset", []string{tc.email}, user.Credentials.Username, validToken).Return(tc.err)
 			err := svc.SendPasswordReset(context.Background(), tc.email)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 			repoCall.Parent.AssertCalled(t, "RetrieveByEmail", context.Background(), tc.email)
@@ -1911,7 +1911,7 @@ func TestOAuthCallback(t *testing.T) {
 }
 
 func TestSendVerification(t *testing.T) {
-	svc, _, cRepo, _, notifier := newService()
+	svc, _, cRepo, _, e := newService()
 
 	verifiedAt := time.Now().UTC()
 	cases := []struct {
@@ -1975,7 +1975,7 @@ func TestSendVerification(t *testing.T) {
 			repoCall := cRepo.On("RetrieveByID", context.Background(), tc.session.UserID).Return(tc.retrieveByIDResponse, tc.retrieveByIDError)
 			repoCall1 := cRepo.On("RetrieveUserVerification", context.Background(), mock.Anything, mock.Anything).Return(tc.retrieveUserVerResponse, tc.retrieveUserVerError)
 			repoCall2 := cRepo.On("AddUserVerification", context.Background(), mock.Anything).Return(tc.addUserVerError)
-			emailCall := notifier.On("Notify", context.Background(), mock.Anything).Return(tc.sendVerificationEmailError)
+			emailCall := e.On("SendVerification", []string{user.Email}, user.Credentials.Username, mock.Anything).Return(tc.sendVerificationEmailError)
 
 			err := svc.SendVerification(context.Background(), tc.session)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))

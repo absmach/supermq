@@ -133,7 +133,7 @@ packages:
       MessageRepository:
   github.com/absmach/supermq/users:
     interfaces:
+      Emailer:
       Hasher:
-      Notifier:
       Repository:
       Service:
