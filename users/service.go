@@ -398,9 +398,7 @@ func (svc service) SendPasswordReset(ctx context.Context, email string) error {
 	if err != nil {
 		return errors.Wrap(svcerr.ErrViewEntity, err)
 	}
-	if user.AuthProvider != "" {
-		return svcerr.ErrExternalAuthProviderCouldNotResetPassword
-	}
+
 	issueReq := &grpcTokenV1.IssueReq{
 		UserId:   user.ID,
 		UserRole: uint32(user.Role + 1),
