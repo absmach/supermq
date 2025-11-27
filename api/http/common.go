@@ -197,8 +197,6 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		errors.Contains(err, errors.ErrRouteNotAvailable),
 		errors.Contains(err, errors.ErrChannelRouteNotAvailable),
 		errors.Contains(err, errors.ErrDomainRouteNotAvailable),
-		errors.Contains(err, svcerr.ErrExternalAuthProviderCouldNotChangePassword),
-		errors.Contains(err, svcerr.ErrExternalAuthProviderCouldNotResetPassword),
 		errors.Contains(err, svcerr.ErrExternalAuthProviderCouldNotUpdate):
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, svcerr.ErrAuthorization),

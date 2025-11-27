@@ -419,9 +419,6 @@ func (svc service) ResetSecret(ctx context.Context, session authn.Session, secre
 	if err != nil {
 		return errors.Wrap(svcerr.ErrViewEntity, err)
 	}
-	if u.AuthProvider != "" {
-		return svcerr.ErrExternalAuthProviderCouldNotResetPassword
-	}
 
 	secret, err = svc.hasher.Hash(secret)
 	if err != nil {
@@ -446,9 +443,6 @@ func (svc service) UpdateSecret(ctx context.Context, session authn.Session, oldS
 	dbUser, err := svc.users.RetrieveByID(ctx, session.UserID)
 	if err != nil {
 		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
-	}
-	if dbUser.AuthProvider != "" {
-		return User{}, svcerr.ErrExternalAuthProviderCouldNotChangePassword
 	}
 	if _, err := svc.IssueToken(ctx, dbUser.Credentials.Username, oldSecret); err != nil {
 		return User{}, err
