@@ -39,6 +39,15 @@ type Provider interface {
 	// Exchange converts an authorization code into a token.
 	Exchange(ctx context.Context, code string) (oauth2.Token, error)
 
+	// ExchangeWithRedirect converts an authorization code into a token using a custom redirect URL.
+	ExchangeWithRedirect(ctx context.Context, code, redirectURL string) (oauth2.Token, error)
+
 	// UserInfo retrieves the user's information using the access token.
 	UserInfo(accessToken string) (users.User, error)
+
+	// GetAuthURL returns the authorization URL for the OAuth2 flow.
+	GetAuthURL() string
+
+	// GetAuthURLWithRedirect returns the authorization URL with a custom redirect URL.
+	GetAuthURLWithRedirect(redirectURL string) string
 }

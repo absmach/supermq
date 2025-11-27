@@ -15,10 +15,8 @@ import (
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
 	api "github.com/absmach/supermq/api/http"
 	apiutil "github.com/absmach/supermq/api/http/util"
-	smqauth "github.com/absmach/supermq/auth"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
-	"github.com/absmach/supermq/pkg/oauth2"
 	"github.com/absmach/supermq/users"
 	"github.com/go-chi/chi/v5"
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -28,7 +26,7 @@ import (
 var passRegex = regexp.MustCompile("^.{8,}$")
 
 // usersHandler returns a HTTP handler for API endpoints.
-func usersHandler(svc users.Service, authn smqauthn.AuthNMiddleware, tokenClient grpcTokenV1.TokenServiceClient, selfRegister bool, r *chi.Mux, logger *slog.Logger, pr *regexp.Regexp, idp supermq.IDProvider, providers ...oauth2.Provider) *chi.Mux {
+func usersHandler(svc users.Service, authn smqauthn.AuthNMiddleware, tokenClient grpcTokenV1.TokenServiceClient, selfRegister bool, r *chi.Mux, logger *slog.Logger, pr *regexp.Regexp, idp supermq.IDProvider) *chi.Mux {
 	passRegex = pr
 
 	opts := []kithttp.ServerOption{
@@ -205,10 +203,6 @@ func usersHandler(svc users.Service, authn smqauthn.AuthNMiddleware, tokenClient
 		api.EncodeResponse,
 		opts...,
 	), "verify_email").ServeHTTP)
-
-	for _, provider := range providers {
-		r.HandleFunc("/oauth/callback/"+provider.Name(), oauth2CallbackHandler(provider, svc, tokenClient))
-	}
 
 	return r
 }
@@ -547,78 +541,4 @@ func decodeChangeUserStatus(_ context.Context, r *http.Request) (any, error) {
 	}
 
 	return req, nil
-}
-
-// oauth2CallbackHandler is a http.HandlerFunc that handles OAuth2 callbacks.
-func oauth2CallbackHandler(oauth oauth2.Provider, svc users.Service, tokenClient grpcTokenV1.TokenServiceClient) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if !oauth.IsEnabled() {
-			http.Redirect(w, r, oauth.ErrorURL()+"?error=oauth%20provider%20is%20disabled", http.StatusSeeOther)
-			return
-		}
-		state := r.FormValue("state")
-		if state != oauth.State() {
-			http.Redirect(w, r, oauth.ErrorURL()+"?error=invalid%20state", http.StatusSeeOther)
-			return
-		}
-
-		if code := r.FormValue("code"); code != "" {
-			token, err := oauth.Exchange(r.Context(), code)
-			if err != nil {
-				http.Redirect(w, r, oauth.ErrorURL()+"?error="+err.Error(), http.StatusSeeOther)
-				return
-			}
-
-			user, err := oauth.UserInfo(token.AccessToken)
-			if err != nil {
-				http.Redirect(w, r, oauth.ErrorURL()+"?error="+err.Error(), http.StatusSeeOther)
-				return
-			}
-
-			user.AuthProvider = oauth.Name()
-			if user.AuthProvider == "" {
-				user.AuthProvider = "oauth"
-			}
-			user, err = svc.OAuthCallback(r.Context(), user)
-			if err != nil {
-				http.Redirect(w, r, oauth.ErrorURL()+"?error="+err.Error(), http.StatusSeeOther)
-				return
-			}
-			if err := svc.OAuthAddUserPolicy(r.Context(), user); err != nil {
-				http.Redirect(w, r, oauth.ErrorURL()+"?error="+err.Error(), http.StatusSeeOther)
-				return
-			}
-
-			jwt, err := tokenClient.Issue(r.Context(), &grpcTokenV1.IssueReq{
-				UserId:   user.ID,
-				Type:     uint32(smqauth.AccessKey),
-				UserRole: uint32(smqauth.UserRole),
-				Verified: !user.VerifiedAt.IsZero(),
-			})
-			if err != nil {
-				http.Redirect(w, r, oauth.ErrorURL()+"?error="+err.Error(), http.StatusSeeOther)
-				return
-			}
-
-			http.SetCookie(w, &http.Cookie{
-				Name:     "access_token",
-				Value:    jwt.GetAccessToken(),
-				Path:     "/",
-				HttpOnly: true,
-				Secure:   true,
-			})
-			http.SetCookie(w, &http.Cookie{
-				Name:     "refresh_token",
-				Value:    jwt.GetRefreshToken(),
-				Path:     "/",
-				HttpOnly: true,
-				Secure:   true,
-			})
-
-			http.Redirect(w, r, oauth.RedirectURL(), http.StatusFound)
-			return
-		}
-
-		http.Redirect(w, r, oauth.ErrorURL()+"?error=empty%20code", http.StatusSeeOther)
-	}
 }

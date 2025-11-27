@@ -84,6 +84,18 @@ func (cfg *config) Exchange(ctx context.Context, code string) (oauth2.Token, err
 	return *token, nil
 }
 
+func (cfg *config) ExchangeWithRedirect(ctx context.Context, code, redirectURL string) (oauth2.Token, error) {
+	// Create a temporary config with the custom redirect URL
+	tempConfig := *cfg.config
+	tempConfig.RedirectURL = redirectURL
+	token, err := tempConfig.Exchange(ctx, code)
+	if err != nil {
+		return oauth2.Token{}, err
+	}
+
+	return *token, nil
+}
+
 func (cfg *config) UserInfo(accessToken string) (uclient.User, error) {
 	resp, err := http.Get(userInfoURL + url.QueryEscape(accessToken))
 	if err != nil {
@@ -106,4 +118,15 @@ func (cfg *config) UserInfo(accessToken string) (uclient.User, error) {
 	}
 
 	return user, nil
+}
+
+func (cfg *config) GetAuthURL() string {
+	return cfg.config.AuthCodeURL(cfg.state)
+}
+
+func (cfg *config) GetAuthURLWithRedirect(redirectURL string) string {
+	// Create a temporary config with the custom redirect URL
+	tempConfig := *cfg.config
+	tempConfig.RedirectURL = redirectURL
+	return tempConfig.AuthCodeURL(cfg.state)
 }

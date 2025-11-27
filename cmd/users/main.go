@@ -18,6 +18,7 @@ import (
 	"github.com/absmach/supermq"
 	grpcDomainsV1 "github.com/absmach/supermq/api/grpc/domains/v1"
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
+	redisclient "github.com/absmach/supermq/internal/clients/redis"
 	"github.com/absmach/supermq/internal/email"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
@@ -91,6 +92,7 @@ type config struct {
 	PasswordResetEmailTemplate string        `env:"SMQ_PASSWORD_RESET_EMAIL_TEMPLATE"     envDefault:"reset-password-email.tmpl"`
 	VerificationURLPrefix      string        `env:"SMQ_VERIFICATION_URL_PREFIX"           envDefault:"http://localhost/verify-email"`
 	VerificationEmailTemplate  string        `env:"SMQ_VERIFICATION_EMAIL_TEMPLATE"       envDefault:"verification-email.tmpl"`
+	CacheURL                   string        `env:"SMQ_USERS_CACHE_URL"                   envDefault:"redis://localhost:6379/0"`
 	PassRegex                  *regexp.Regexp
 }
 
@@ -146,6 +148,13 @@ func main() {
 		exitCode = 1
 		return
 	}
+	cacheClient, err := redisclient.Connect(cfg.CacheURL)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to connect to redis: %s", err))
+		exitCode = 1
+		return
+	}
+	defer cacheClient.Close()
 
 	migration := postgres.Migration()
 	db, err := pgclient.Setup(dbConfig, *migration)
@@ -251,7 +260,7 @@ func main() {
 
 	mux := chi.NewRouter()
 	idp := uuid.New()
-	httpSrv := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(csvc, authnMiddleware, tokenClient, cfg.SelfRegister, mux, logger, cfg.InstanceID, cfg.PassRegex, idp, oauthProvider), logger)
+	httpSrv := httpserver.NewServer(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(csvc, authnMiddleware, tokenClient, cfg.SelfRegister, mux, logger, cfg.InstanceID, cfg.PassRegex, idp, cacheClient, oauthProvider), logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, supermq.Version, logger, cancel)

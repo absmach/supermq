@@ -153,6 +153,173 @@ func (_c *Provider_Exchange_Call) RunAndReturn(run func(ctx context.Context, cod
 	return _c
 }
 
+// ExchangeWithRedirect provides a mock function for the type Provider
+func (_mock *Provider) ExchangeWithRedirect(ctx context.Context, code string, redirectURL string) (oauth2.Token, error) {
+	ret := _mock.Called(ctx, code, redirectURL)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ExchangeWithRedirect")
+	}
+
+	var r0 oauth2.Token
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) (oauth2.Token, error)); ok {
+		return returnFunc(ctx, code, redirectURL)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) oauth2.Token); ok {
+		r0 = returnFunc(ctx, code, redirectURL)
+	} else {
+		r0 = ret.Get(0).(oauth2.Token)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = returnFunc(ctx, code, redirectURL)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Provider_ExchangeWithRedirect_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ExchangeWithRedirect'
+type Provider_ExchangeWithRedirect_Call struct {
+	*mock.Call
+}
+
+// ExchangeWithRedirect is a helper method to define mock.On call
+//   - ctx context.Context
+//   - code string
+//   - redirectURL string
+func (_e *Provider_Expecter) ExchangeWithRedirect(ctx interface{}, code interface{}, redirectURL interface{}) *Provider_ExchangeWithRedirect_Call {
+	return &Provider_ExchangeWithRedirect_Call{Call: _e.mock.On("ExchangeWithRedirect", ctx, code, redirectURL)}
+}
+
+func (_c *Provider_ExchangeWithRedirect_Call) Run(run func(ctx context.Context, code string, redirectURL string)) *Provider_ExchangeWithRedirect_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *Provider_ExchangeWithRedirect_Call) Return(token oauth2.Token, err error) *Provider_ExchangeWithRedirect_Call {
+	_c.Call.Return(token, err)
+	return _c
+}
+
+func (_c *Provider_ExchangeWithRedirect_Call) RunAndReturn(run func(ctx context.Context, code string, redirectURL string) (oauth2.Token, error)) *Provider_ExchangeWithRedirect_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetAuthURL provides a mock function for the type Provider
+func (_mock *Provider) GetAuthURL() string {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAuthURL")
+	}
+
+	var r0 string
+	if returnFunc, ok := ret.Get(0).(func() string); ok {
+		r0 = returnFunc()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	return r0
+}
+
+// Provider_GetAuthURL_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetAuthURL'
+type Provider_GetAuthURL_Call struct {
+	*mock.Call
+}
+
+// GetAuthURL is a helper method to define mock.On call
+func (_e *Provider_Expecter) GetAuthURL() *Provider_GetAuthURL_Call {
+	return &Provider_GetAuthURL_Call{Call: _e.mock.On("GetAuthURL")}
+}
+
+func (_c *Provider_GetAuthURL_Call) Run(run func()) *Provider_GetAuthURL_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *Provider_GetAuthURL_Call) Return(s string) *Provider_GetAuthURL_Call {
+	_c.Call.Return(s)
+	return _c
+}
+
+func (_c *Provider_GetAuthURL_Call) RunAndReturn(run func() string) *Provider_GetAuthURL_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetAuthURLWithRedirect provides a mock function for the type Provider
+func (_mock *Provider) GetAuthURLWithRedirect(redirectURL string) string {
+	ret := _mock.Called(redirectURL)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAuthURLWithRedirect")
+	}
+
+	var r0 string
+	if returnFunc, ok := ret.Get(0).(func(string) string); ok {
+		r0 = returnFunc(redirectURL)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	return r0
+}
+
+// Provider_GetAuthURLWithRedirect_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetAuthURLWithRedirect'
+type Provider_GetAuthURLWithRedirect_Call struct {
+	*mock.Call
+}
+
+// GetAuthURLWithRedirect is a helper method to define mock.On call
+//   - redirectURL string
+func (_e *Provider_Expecter) GetAuthURLWithRedirect(redirectURL interface{}) *Provider_GetAuthURLWithRedirect_Call {
+	return &Provider_GetAuthURLWithRedirect_Call{Call: _e.mock.On("GetAuthURLWithRedirect", redirectURL)}
+}
+
+func (_c *Provider_GetAuthURLWithRedirect_Call) Run(run func(redirectURL string)) *Provider_GetAuthURLWithRedirect_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *Provider_GetAuthURLWithRedirect_Call) Return(s string) *Provider_GetAuthURLWithRedirect_Call {
+	_c.Call.Return(s)
+	return _c
+}
+
+func (_c *Provider_GetAuthURLWithRedirect_Call) RunAndReturn(run func(redirectURL string) string) *Provider_GetAuthURLWithRedirect_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // IsEnabled provides a mock function for the type Provider
 func (_mock *Provider) IsEnabled() bool {
 	ret := _mock.Called()

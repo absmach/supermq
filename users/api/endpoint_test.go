@@ -29,6 +29,7 @@ import (
 	usersapi "github.com/absmach/supermq/users/api"
 	"github.com/absmach/supermq/users/mocks"
 	"github.com/go-chi/chi/v5"
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -97,7 +98,9 @@ func newUsersServer() (*httptest.Server, *mocks.Service, *authnmocks.Authenticat
 	authn := new(authnmocks.Authentication)
 	am := smqauthn.NewAuthNMiddleware(authn)
 	token := new(authmocks.TokenServiceClient)
-	usersapi.MakeHandler(svc, am, token, true, mux, logger, "", passRegex, idp, provider)
+	// Create a mock Redis client for testing (won't be used in these tests)
+	redisClient := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
+	usersapi.MakeHandler(svc, am, token, true, mux, logger, "", passRegex, idp, redisClient, provider)
 
 	return httptest.NewServer(mux), svc, authn
 }
