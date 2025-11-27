@@ -181,7 +181,11 @@ func TestHandleInvitationSent(t *testing.T) {
 				}
 
 				err := handler.Handle(context.Background(), newTestEvent(tc.event, tc.encodeErr))
-				assert.Nil(t, err, "Handle should not return error")
+				if tc.inviteeErr != nil || tc.inviterErr != nil || tc.notifyErr != nil {
+					assert.NotNil(t, err, "Handle should return error")
+				} else {
+					assert.Nil(t, err, "Handle should not return error")
+				}
 
 				inviteeCall.Unset()
 				if inviterCall != nil {
@@ -195,7 +199,7 @@ func TestHandleInvitationSent(t *testing.T) {
 				if tc.encodeErr != nil {
 					assert.NotNil(t, err, "Handle should return error on encode failure")
 				} else {
-					assert.Nil(t, err, "Handle should not return error")
+					assert.NotNil(t, err, "Handle should return error for missing required fields")
 				}
 			}
 		})
@@ -336,7 +340,11 @@ func TestHandleInvitationAccepted(t *testing.T) {
 				}
 
 				err := handler.Handle(context.Background(), newTestEvent(tc.event, tc.encodeErr))
-				assert.Nil(t, err, "Handle should not return error")
+				if tc.inviteeErr != nil || tc.inviterErr != nil || tc.notifyErr != nil {
+					assert.NotNil(t, err, "Handle should return error")
+				} else {
+					assert.Nil(t, err, "Handle should not return error")
+				}
 
 				inviteeCall.Unset()
 				if inviterCall != nil {
@@ -350,7 +358,7 @@ func TestHandleInvitationAccepted(t *testing.T) {
 				if tc.encodeErr != nil {
 					assert.NotNil(t, err, "Handle should return error on encode failure")
 				} else {
-					assert.Nil(t, err, "Handle should not return error")
+					assert.NotNil(t, err, "Handle should return error for missing required fields")
 				}
 			}
 		})

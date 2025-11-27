@@ -67,7 +67,7 @@ func (h *eventHandler) Handle(ctx context.Context, event events.Event) error {
 
 	operation, ok := data["operation"].(string)
 	if !ok {
-		return nil
+		return fmt.Errorf("invalid or missing operation in event payload")
 	}
 
 	switch operation {
@@ -95,20 +95,25 @@ func handleInvitationSent(ctx context.Context, data map[string]any, notifier use
 	}
 	invitedBy := invitedByVal
 
-	domainNameVal, ok := data["domain_name"].(string)
-	if !ok {
-		return fmt.Errorf("invalid or missing domain_name in event payload")
-	}
-	domainName := domainNameVal
-
-	roleNameVal, ok := data["role_name"].(string)
-	if !ok {
-		return fmt.Errorf("invalid or missing role_name in event payload")
-	}
-	roleName := roleNameVal
-
 	if inviteeUserID == "" || invitedBy == "" {
 		return fmt.Errorf("missing required fields in invitation.send event")
+	}
+
+	var domainName, roleName string
+	if val, exists := data["domain_name"]; exists {
+		var ok bool
+		domainName, ok = val.(string)
+		if !ok {
+			return fmt.Errorf("invalid type for domain_name in event payload")
+		}
+	}
+
+	if val, exists := data["role_name"]; exists {
+		var ok bool
+		roleName, ok = val.(string)
+		if !ok {
+			return fmt.Errorf("invalid type for role_name in event payload")
+		}
 	}
 
 	// Retrieve invitee user
@@ -118,7 +123,7 @@ func handleInvitationSent(ctx context.Context, data map[string]any, notifier use
 			slog.String("user_id", inviteeUserID),
 			slog.Any("error", err),
 		)
-		return nil
+		return err
 	}
 
 	// Retrieve inviter user
@@ -128,7 +133,7 @@ func handleInvitationSent(ctx context.Context, data map[string]any, notifier use
 			slog.String("user_id", invitedBy),
 			slog.Any("error", err),
 		)
-		return nil
+		return err
 	}
 
 	// Normalize names for display
@@ -174,7 +179,7 @@ func handleInvitationSent(ctx context.Context, data map[string]any, notifier use
 			slog.String("to", invitee.Email),
 			slog.Any("error", err),
 		)
-		return nil
+		return err
 	}
 
 	logger.Info("invitation notification sent",
@@ -198,20 +203,25 @@ func handleInvitationAccepted(ctx context.Context, data map[string]any, notifier
 	}
 	invitedBy := invitedByVal
 
-	domainNameVal, ok := data["domain_name"].(string)
-	if !ok {
-		return fmt.Errorf("invalid or missing domain_name in event payload")
-	}
-	domainName := domainNameVal
-
-	roleNameVal, ok := data["role_name"].(string)
-	if !ok {
-		return fmt.Errorf("invalid or missing role_name in event payload")
-	}
-	roleName := roleNameVal
-
 	if inviteeUserID == "" || invitedBy == "" {
 		return fmt.Errorf("missing required fields in invitation.accept event")
+	}
+
+	var domainName, roleName string
+	if val, exists := data["domain_name"]; exists {
+		var ok bool
+		domainName, ok = val.(string)
+		if !ok {
+			return fmt.Errorf("invalid type for domain_name in event payload")
+		}
+	}
+
+	if val, exists := data["role_name"]; exists {
+		var ok bool
+		roleName, ok = val.(string)
+		if !ok {
+			return fmt.Errorf("invalid type for role_name in event payload")
+		}
 	}
 
 	// Retrieve invitee user
@@ -221,7 +231,7 @@ func handleInvitationAccepted(ctx context.Context, data map[string]any, notifier
 			slog.String("user_id", inviteeUserID),
 			slog.Any("error", err),
 		)
-		return nil
+		return err
 	}
 
 	// Retrieve inviter user
@@ -231,7 +241,7 @@ func handleInvitationAccepted(ctx context.Context, data map[string]any, notifier
 			slog.String("user_id", invitedBy),
 			slog.Any("error", err),
 		)
-		return nil
+		return err
 	}
 
 	// Normalize names for display
@@ -277,7 +287,7 @@ func handleInvitationAccepted(ctx context.Context, data map[string]any, notifier
 			slog.String("to", inviter.Email),
 			slog.Any("error", err),
 		)
-		return nil
+		return err
 	}
 
 	logger.Info("invitation accepted notification sent",
@@ -301,20 +311,25 @@ func handleInvitationRejected(ctx context.Context, data map[string]any, notifier
 	}
 	invitedBy := invitedByVal
 
-	domainNameVal, ok := data["domain_name"].(string)
-	if !ok {
-		return fmt.Errorf("invalid or missing domain_name in event payload")
-	}
-	domainName := domainNameVal
-
-	roleNameVal, ok := data["role_name"].(string)
-	if !ok {
-		return fmt.Errorf("invalid or missing role_name in event payload")
-	}
-	roleName := roleNameVal
-
 	if inviteeUserID == "" || invitedBy == "" {
 		return fmt.Errorf("missing required fields in invitation.reject event")
+	}
+
+	var domainName, roleName string
+	if val, exists := data["domain_name"]; exists {
+		var ok bool
+		domainName, ok = val.(string)
+		if !ok {
+			return fmt.Errorf("invalid type for domain_name in event payload")
+		}
+	}
+
+	if val, exists := data["role_name"]; exists {
+		var ok bool
+		roleName, ok = val.(string)
+		if !ok {
+			return fmt.Errorf("invalid type for role_name in event payload")
+		}
 	}
 
 	// Retrieve invitee user
@@ -324,7 +339,7 @@ func handleInvitationRejected(ctx context.Context, data map[string]any, notifier
 			slog.String("user_id", inviteeUserID),
 			slog.Any("error", err),
 		)
-		return nil
+		return err
 	}
 
 	// Retrieve inviter user
@@ -334,7 +349,7 @@ func handleInvitationRejected(ctx context.Context, data map[string]any, notifier
 			slog.String("user_id", invitedBy),
 			slog.Any("error", err),
 		)
-		return nil
+		return err
 	}
 
 	// Normalize names for display
@@ -379,7 +394,7 @@ func handleInvitationRejected(ctx context.Context, data map[string]any, notifier
 			slog.String("to", inviter.Email),
 			slog.Any("error", err),
 		)
-		return nil
+		return err
 	}
 
 	logger.Info("invitation rejected notification sent",
