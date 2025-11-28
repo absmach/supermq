@@ -115,7 +115,7 @@ func TestHandleInvitationSent(t *testing.T) {
 
 			var handlerConfig smqevents.SubscriberConfig
 			subscriber.On("Subscribe", mock.Anything, mock.MatchedBy(func(cfg smqevents.SubscriberConfig) bool {
-				if cfg.Stream == "supermq.invitation.send" {
+				if cfg.Stream == "events.supermq.invitation.send" {
 					handlerConfig = cfg
 					return true
 				}
@@ -179,7 +179,7 @@ func TestHandleInvitationAccepted(t *testing.T) {
 
 			var handlerConfig smqevents.SubscriberConfig
 			subscriber.On("Subscribe", mock.Anything, mock.MatchedBy(func(cfg smqevents.SubscriberConfig) bool {
-				if cfg.Stream == "supermq.invitation.accept" {
+				if cfg.Stream == "events.supermq.invitation.accept" {
 					handlerConfig = cfg
 					return true
 				}
@@ -243,7 +243,7 @@ func TestHandleInvitationRejected(t *testing.T) {
 
 			var handlerConfig smqevents.SubscriberConfig
 			subscriber.On("Subscribe", mock.Anything, mock.MatchedBy(func(cfg smqevents.SubscriberConfig) bool {
-				if cfg.Stream == "supermq.invitation.reject" {
+				if cfg.Stream == "events.supermq.invitation.reject" {
 					handlerConfig = cfg
 					return true
 				}
