@@ -126,7 +126,7 @@ func TestSendInvitation(t *testing.T) {
 				}
 			}
 			authCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authenticateErr)
-			svcCall := svc.On("SendInvitation", mock.Anything, tc.session, tc.svcReq).Return(tc.svcErr)
+			svcCall := svc.On("SendInvitation", mock.Anything, tc.session, tc.svcReq).Return(domains.Invitation{}, tc.svcErr)
 			err := mgsdk.SendInvitation(context.Background(), tc.sendInvitationReq, tc.token)
 			assert.Equal(t, tc.err, err)
 			if tc.err == nil {
