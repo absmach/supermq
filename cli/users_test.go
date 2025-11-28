@@ -1266,3 +1266,97 @@ func TestDeleteUserCmd(t *testing.T) {
 		})
 	}
 }
+
+func TestSearchUsersCmd(t *testing.T) {
+	sdkMock := new(sdkmocks.SDK)
+	cli.SetSDK(sdkMock)
+	usersCmd := cli.NewUsersCmd()
+	rootCmd := setFlags(usersCmd)
+
+	usersPage := mgsdk.UsersPage{
+		Users: []mgsdk.User{user},
+		PageRes: mgsdk.PageRes{
+			Total:  1,
+			Offset: 0,
+			Limit:  10,
+		},
+	}
+
+	cases := []struct {
+		desc          string
+		args          []string
+		sdkErr        errors.SDKError
+		errLogMessage string
+		usersPage     mgsdk.UsersPage
+		logType       outputLog
+	}{
+		{
+			desc: "search users by username successfully",
+			args: []string{
+				"search",
+				"username=testuser",
+				validToken,
+			},
+			usersPage: usersPage,
+			logType:   entityLog,
+		},
+		{
+			desc: "search users with missing token",
+			args: []string{
+				"search",
+				"username=testuser",
+			},
+			logType: usageLog,
+		},
+		{
+			desc: "search users with missing query",
+			args: []string{
+				"search",
+				validToken,
+			},
+			logType: usageLog,
+		},
+		{
+			desc: "search users with extra arguments",
+			args: []string{
+				"search",
+				"username=testuser",
+				validToken,
+				extraArg,
+			},
+			logType: usageLog,
+		},
+		{
+			desc: "search users with service error",
+			args: []string{
+				"search",
+				"username=testuser",
+				validToken,
+			},
+			sdkErr:        errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
+			errLogMessage: fmt.Sprintf("\nerror: %s\n\n", errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest).Error()),
+			logType:       errLog,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			sdkCall := sdkMock.On("SearchUsers", mock.Anything, mock.Anything, mock.Anything).Return(tc.usersPage, tc.sdkErr)
+			out := executeCommand(t, rootCmd, tc.args...)
+
+			switch tc.logType {
+			case entityLog:
+				var page mgsdk.UsersPage
+				err := json.Unmarshal([]byte(out), &page)
+				assert.Nil(t, err, fmt.Sprintf("unexpected error: %v", err))
+				assert.Equal(t, tc.usersPage, page, fmt.Sprintf("%s unexpected response: expected %v got %v", tc.desc, tc.usersPage, page))
+			case errLog:
+				assert.Equal(t, tc.errLogMessage, out, fmt.Sprintf("%s unexpected error response: expected %s got errLogMessage:%s", tc.desc, tc.errLogMessage, out))
+			case usageLog:
+				assert.False(t, strings.Contains(out, rootCmd.Use), fmt.Sprintf("%s invalid usage: %s", tc.desc, out))
+			}
+
+			sdkCall.Unset()
+		})
+	}
+}
