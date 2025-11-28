@@ -107,6 +107,20 @@ func TestHandleInvitationSent(t *testing.T) {
 			},
 			mockCall: false,
 		},
+		{
+			desc: "optional fields with wrong type",
+			event: testEvent{
+				data: map[string]any{
+					"invited_by":      inviterID,
+					"invitee_user_id": inviteeID,
+					"domain_id":       domainID,
+					"domain_name":     domainName,
+					"role_id":         123, // wrong type: int instead of string
+					"role_name":       true, // wrong type: bool instead of string
+				},
+			},
+			mockCall: true, // Should still process with empty role_id and role_name
+		},
 	}
 
 	for _, tc := range cases {
@@ -136,6 +150,11 @@ func TestHandleInvitationSent(t *testing.T) {
 					DomainName: domainName,
 					RoleID:     roleID,
 					RoleName:   roleName,
+				}
+				// For the "wrong type" test case, expect empty role fields
+				if tc.desc == "optional fields with wrong type" {
+					expectedNotif.RoleID = ""
+					expectedNotif.RoleName = ""
 				}
 				notifier.On("Notify", mock.Anything, expectedNotif).Return(nil).Once()
 			}

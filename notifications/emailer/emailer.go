@@ -18,6 +18,11 @@ var (
 	errSendingEmail = errors.New("failed to send email")
 )
 
+const (
+	inviterRecipient = "inviter"
+	inviteeRecipient = "invitee"
+)
+
 var _ notifications.Notifier = (*notifier)(nil)
 
 type notifier struct {
@@ -90,8 +95,8 @@ func (n *notifier) Notify(ctx context.Context, notif notifications.Notification)
 		return errors.Wrap(errFetchingUser, fmt.Errorf("invitee not found: %s", notif.InviteeID))
 	}
 
-	inviterName := n.getUserDisplayName(inviter)
-	inviteeName := n.getUserDisplayName(invitee)
+	inviterName := n.userDisplayName(inviter)
+	inviteeName := n.userDisplayName(invitee)
 
 	domainName := notif.DomainName
 	if domainName == "" {
@@ -103,15 +108,22 @@ func (n *notifier) Notify(ctx context.Context, notif notifications.Notification)
 		roleName = notif.RoleID
 	}
 
-	subject, content, recipient := n.buildEmailContent(notif.Type, inviterName, inviteeName, domainName, roleName)
+	subject, content, recipient, err := n.buildEmailContent(notif.Type, inviterName, inviteeName, domainName, roleName)
+	if err != nil {
+		return err
+	}
 	recipientEmail := inviter.Email
 	recipientName := inviterName
-	if recipient == "invitee" {
+	if recipient == inviteeRecipient {
 		recipientEmail = invitee.Email
 		recipientName = inviteeName
 	}
 
-	agent := n.agents[notif.Type]
+	agent, ok := n.agents[notif.Type]
+	if !ok || agent == nil {
+		return errors.Wrap(errSendingEmail, fmt.Errorf("no email agent configured for notification type: %d", notif.Type))
+	}
+
 	if err := agent.Send([]string{recipientEmail}, "", subject, "", recipientName, content, n.fromName); err != nil {
 		return errors.Wrap(errSendingEmail, err)
 	}
@@ -119,22 +131,25 @@ func (n *notifier) Notify(ctx context.Context, notif notifications.Notification)
 	return nil
 }
 
-func (n *notifier) buildEmailContent(notifType notifications.NotificationType, inviterName, inviteeName, domainName, roleName string) (subject, content, recipient string) {
+func (n *notifier) buildEmailContent(notifType notifications.NotificationType, inviterName, inviteeName, domainName, roleName string) (subject, content, recipient string, err error) {
 	switch notifType {
 	case notifications.Invitation:
 		return "Domain Invitation",
 			fmt.Sprintf("%s has invited you to join the domain '%s' as '%s'.", inviterName, domainName, roleName),
-			"invitee"
+			inviteeRecipient,
+			nil
 	case notifications.Acceptance:
 		return "Invitation Accepted",
 			fmt.Sprintf("%s has accepted your invitation to join the domain '%s' as '%s'.", inviteeName, domainName, roleName),
-			"inviter"
+			inviterRecipient,
+			nil
 	case notifications.Rejection:
 		return "Invitation Declined",
 			fmt.Sprintf("%s has declined your invitation to join the domain '%s' as '%s'.", inviteeName, domainName, roleName),
-			"inviter"
+			inviterRecipient,
+			nil
 	default:
-		return "", "", ""
+		return "", "", "", errors.Wrap(errSendingEmail, fmt.Errorf("unsupported notification type: %d", notifType))
 	}
 }
 
@@ -158,7 +173,7 @@ func (n *notifier) fetchUsers(ctx context.Context, userIDs []string) (map[string
 	return users, nil
 }
 
-func (n *notifier) getUserDisplayName(user *grpcUsersV1.User) string {
+func (n *notifier) userDisplayName(user *grpcUsersV1.User) string {
 	if user.FirstName != "" && user.LastName != "" {
 		return fmt.Sprintf("%s %s", user.FirstName, user.LastName)
 	}

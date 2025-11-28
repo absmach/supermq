@@ -17,6 +17,14 @@ const (
 	sendInvitationStream   = "events.supermq.invitation.send"
 	acceptInvitationStream = "events.supermq.invitation.accept"
 	rejectInvitationStream = "events.supermq.invitation.reject"
+
+	// Event data field keys.
+	invitedByKey     = "invited_by"
+	inviteeUserIDKey = "invitee_user_id"
+	domainIDKey      = "domain_id"
+	domainNameKey    = "domain_name"
+	roleIDKey        = "role_id"
+	roleNameKey      = "role_name"
 )
 
 // Start starts consuming invitation events from the event store.
@@ -69,27 +77,28 @@ func parseNotificationFromEvent(event events.Event, errorContext string) (notifi
 		return notifications.Notification{}, err
 	}
 
-	invitedBy, ok := data["invited_by"].(string)
+	invitedBy, ok := data[invitedByKey].(string)
 	if !ok || invitedBy == "" {
-		slog.Error(fmt.Sprintf("missing or invalid invited_by in %s event", errorContext))
-		return notifications.Notification{}, fmt.Errorf("missing or invalid invited_by")
+		slog.Error(fmt.Sprintf("missing or invalid %s in %s event", invitedByKey, errorContext))
+		return notifications.Notification{}, fmt.Errorf("missing or invalid %s", invitedByKey)
 	}
 
-	inviteeUserID, ok := data["invitee_user_id"].(string)
+	inviteeUserID, ok := data[inviteeUserIDKey].(string)
 	if !ok || inviteeUserID == "" {
-		slog.Error(fmt.Sprintf("missing or invalid invitee_user_id in %s event", errorContext))
-		return notifications.Notification{}, fmt.Errorf("missing or invalid invitee_user_id")
+		slog.Error(fmt.Sprintf("missing or invalid %s in %s event", inviteeUserIDKey, errorContext))
+		return notifications.Notification{}, fmt.Errorf("missing or invalid %s", inviteeUserIDKey)
 	}
 
-	domainID, ok := data["domain_id"].(string)
+	domainID, ok := data[domainIDKey].(string)
 	if !ok || domainID == "" {
-		slog.Error(fmt.Sprintf("missing or invalid domain_id in %s event", errorContext))
-		return notifications.Notification{}, fmt.Errorf("missing or invalid domain_id")
+		slog.Error(fmt.Sprintf("missing or invalid %s in %s event", domainIDKey, errorContext))
+		return notifications.Notification{}, fmt.Errorf("missing or invalid %s", domainIDKey)
 	}
 
-	roleID, _ := data["role_id"].(string)
-	domainName, _ := data["domain_name"].(string)
-	roleName, _ := data["role_name"].(string)
+	// Optional fields - log if present but wrong type
+	roleID := optionalString(data, roleIDKey, errorContext)
+	domainName := optionalString(data, domainNameKey, errorContext)
+	roleName := optionalString(data, roleNameKey, errorContext)
 
 	return notifications.Notification{
 		InviterID:  invitedBy,
@@ -99,6 +108,19 @@ func parseNotificationFromEvent(event events.Event, errorContext string) (notifi
 		RoleID:     roleID,
 		RoleName:   roleName,
 	}, nil
+}
+
+func optionalString(data map[string]any, key, errorContext string) string {
+	val, exists := data[key]
+	if !exists {
+		return ""
+	}
+	strVal, ok := val.(string)
+	if !ok {
+		slog.Warn(fmt.Sprintf("field %s in %s event has wrong type, expected string", key, errorContext), "actual_type", fmt.Sprintf("%T", val))
+		return ""
+	}
+	return strVal
 }
 
 type handleFunc func(ctx context.Context, event events.Event) error
