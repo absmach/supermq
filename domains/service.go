@@ -273,7 +273,7 @@ func (svc *service) AcceptInvitation(ctx context.Context, session authn.Session,
 		return Invitation{}, svcerr.ErrInvitationAlreadyRejected
 	}
 
-	inv, err = svc.populateInvitationDetails(ctx, inv, domainID)
+	inv, err = svc.populateDetails(ctx, inv, domainID)
 	if err != nil {
 		return Invitation{}, err
 	}
@@ -312,7 +312,7 @@ func (svc *service) RejectInvitation(ctx context.Context, session authn.Session,
 		return Invitation{}, svcerr.ErrInvitationAlreadyRejected
 	}
 
-	inv, err = svc.populateInvitationDetails(ctx, inv, domainID)
+	inv, err = svc.populateDetails(ctx, inv, domainID)
 	if err != nil {
 		return Invitation{}, err
 	}
@@ -355,8 +355,8 @@ func (svc *service) DeleteInvitation(ctx context.Context, session authn.Session,
 	return nil
 }
 
-// populateInvitationDetails populates the domain and role names for an invitation if they are not already set.
-func (svc *service) populateInvitationDetails(ctx context.Context, inv Invitation, domainID string) (Invitation, error) {
+// Add domain and role names for an invitation if they are not already set.
+func (svc *service) populateDetails(ctx context.Context, inv Invitation, domainID string) (Invitation, error) {
 	// Populate domain name if not already set
 	if inv.DomainName == "" {
 		domain, err := svc.repo.RetrieveDomainByID(ctx, domainID)

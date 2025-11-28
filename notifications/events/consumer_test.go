@@ -115,7 +115,7 @@ func TestHandleInvitationSent(t *testing.T) {
 					"invitee_user_id": inviteeID,
 					"domain_id":       domainID,
 					"domain_name":     domainName,
-					"role_id":         123, // wrong type: int instead of string
+					"role_id":         123,  // wrong type: int instead of string
 					"role_name":       true, // wrong type: bool instead of string
 				},
 			},
