@@ -40,7 +40,7 @@ The following actions are supported:
 
 ## Domains
 
-Domains are used to group users and clients. Each domain has a unique route that is associated with the domain. Domains are used to group users and their entities.
+Domains are used to group users and clients. Each domain has a unique `route` that is associated with the domain. Domains are used to group users and their entities.
 
 Domain consists of the following fields:
 
@@ -183,7 +183,7 @@ PATs in SuperMQ are designed with the following features:
 
 A PAT consists of three parts separated by underscores:
 
-```
+```bash
 pat_<encoded-user-and-pat-id>_<random-string>
 ```
 
@@ -318,7 +318,7 @@ curl --location --request PATCH 'http://localhost:9001/pats/a2500226-95dc-4285-8
 
 When making API requests, include the PAT in the Authorization header:
 
-```
+```bash
 Authorization: Bearer pat_<encoded-user-and-pat-id>_<random-string>
 ```
 
@@ -444,6 +444,6 @@ When a PAT is used for authentication:
 
 ## Usage
 
-For more information about service capabilities and its usage, please check out the [API documentation](https://docs.api.supermq.abstractmachines.fr/?urls.primaryName=auth.yaml).
+For more information about service capabilities and its usage, please check out the [API documentation](https://docs.api.supermq.absmach.eu/?urls.primaryName=auth.yaml).
 
-[doc]: https://docs.supermq.abstractmachines.fr
+[doc]: https://docs.supermq.absmach.eu/
