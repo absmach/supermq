@@ -54,7 +54,6 @@ var (
 	_ events.Event = (*listUserEvent)(nil)
 	_ events.Event = (*searchUserEvent)(nil)
 	_ events.Event = (*identifyUserEvent)(nil)
-	_ events.Event = (*generateResetTokenEvent)(nil)
 	_ events.Event = (*issueTokenEvent)(nil)
 	_ events.Event = (*refreshTokenEvent)(nil)
 	_ events.Event = (*resetSecretEvent)(nil)
@@ -454,21 +453,6 @@ func (ise identifyUserEvent) Encode() (map[string]any, error) {
 		"operation":  userIdentify,
 		"id":         ise.userID,
 		"request_id": ise.requestID,
-	}, nil
-}
-
-type generateResetTokenEvent struct {
-	email     string
-	host      string
-	requestID string
-}
-
-func (req generateResetTokenEvent) Encode() (map[string]any, error) {
-	return map[string]any{
-		"operation":  generateResetToken,
-		"email":      req.email,
-		"host":       req.host,
-		"request_id": req.requestID,
 	}, nil
 }
 
