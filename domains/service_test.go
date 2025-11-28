@@ -689,7 +689,7 @@ func TestSendInvitation(t *testing.T) {
 			req:            resentInvitation,
 			retrieveInvRes: domains.Invitation{},
 			retrieveInvErr: repoerr.ErrNotFound,
-			err:            svcerr.ErrUpdateEntity,
+			err:            svcerr.ErrViewEntity,
 		},
 		{
 			desc:           "resend an invitation that is already accepted",
@@ -697,7 +697,16 @@ func TestSendInvitation(t *testing.T) {
 			req:            resentInvitation,
 			retrieveInvRes: acceptedInvitation,
 			retrieveInvErr: nil,
-			err:            svcerr.ErrUpdateEntity,
+			err:            svcerr.ErrInvitationAlreadyAccepted,
+		},
+		{
+			desc:               "resend invitation with failed to update rejection",
+			session:            validSession,
+			req:                resentInvitation,
+			retrieveInvRes:     rejectedInvitation,
+			retrieveInvErr:     nil,
+			updateRejectionErr: repoerr.ErrUpdateEntity,
+			err:                svcerr.ErrUpdateEntity,
 		},
 	}
 

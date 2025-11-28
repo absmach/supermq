@@ -207,7 +207,7 @@ func (svc *service) SendInvitation(ctx context.Context, session authn.Session, i
 
 	if invitation.Resend {
 		if err := svc.resendInvitation(ctx, invitation); err != nil {
-			return Invitation{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+			return Invitation{}, err
 		}
 		return invitation, nil
 	}
@@ -221,7 +221,7 @@ func (svc *service) SendInvitation(ctx context.Context, session authn.Session, i
 func (svc *service) resendInvitation(ctx context.Context, invitation Invitation) error {
 	inv, err := svc.repo.RetrieveInvitation(ctx, invitation.InviteeUserID, invitation.DomainID)
 	if err != nil {
-		return err
+		return errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	if !inv.ConfirmedAt.IsZero() {
 		return svcerr.ErrInvitationAlreadyAccepted
@@ -230,7 +230,7 @@ func (svc *service) resendInvitation(ctx context.Context, invitation Invitation)
 		invitation.RejectedAt = time.Time{}
 		invitation.UpdatedAt = time.Now().UTC()
 		if err := svc.repo.UpdateRejection(ctx, invitation); err != nil {
-			return err
+			return errors.Wrap(svcerr.ErrUpdateEntity, err)
 		}
 	}
 
