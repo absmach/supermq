@@ -13,9 +13,9 @@ import (
 
 const (
 	// Stream names.
-	sendInvitationStream   = "supermq.invitation.send"
-	acceptInvitationStream = "supermq.invitation.accept"
-	rejectInvitationStream = "supermq.invitation.reject"
+	sendInvitationStream   = "events.supermq.invitation.send"
+	acceptInvitationStream = "events.supermq.invitation.accept"
+	rejectInvitationStream = "events.supermq.invitation.reject"
 )
 
 // Start starts consuming invitation events from the event store.
