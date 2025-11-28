@@ -93,7 +93,7 @@ func (ms *metricsMiddleware) ListDomains(ctx context.Context, session authn.Sess
 	return ms.svc.ListDomains(ctx, session, page)
 }
 
-func (mm *metricsMiddleware) SendInvitation(ctx context.Context, session authn.Session, invitation domains.Invitation) (err error) {
+func (mm *metricsMiddleware) SendInvitation(ctx context.Context, session authn.Session, invitation domains.Invitation) (domains.Invitation, error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "send_invitation").Add(1)
 		mm.latency.With("method", "send_invitation").Observe(time.Since(begin).Seconds())

@@ -200,17 +200,22 @@ func (es *eventStore) ListDomains(ctx context.Context, session authn.Session, p 
 	return dp, nil
 }
 
-func (es *eventStore) SendInvitation(ctx context.Context, session authn.Session, invitation domains.Invitation) error {
-	if err := es.svc.SendInvitation(ctx, session, invitation); err != nil {
-		return err
+func (es *eventStore) SendInvitation(ctx context.Context, session authn.Session, invitation domains.Invitation) (domains.Invitation, error) {
+	inv, err := es.svc.SendInvitation(ctx, session, invitation)
+	if err != nil {
+		return domains.Invitation{}, err
 	}
 
 	event := sendInvitationEvent{
-		invitation: invitation,
+		invitation: inv,
 		session:    session,
 	}
 
-	return es.Publish(ctx, sendInvitationStream, event)
+	if err := es.Publish(ctx, sendInvitationStream, event); err != nil {
+		return inv, err
+	}
+
+	return inv, nil
 }
 
 func (es *eventStore) ListInvitations(ctx context.Context, session authn.Session, pm domains.InvitationPageMeta) (domains.InvitationPage, error) {

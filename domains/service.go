@@ -188,17 +188,17 @@ func (svc service) ListDomains(ctx context.Context, session authn.Session, p Pag
 	return dp, nil
 }
 
-func (svc *service) SendInvitation(ctx context.Context, session authn.Session, invitation Invitation) error {
+func (svc *service) SendInvitation(ctx context.Context, session authn.Session, invitation Invitation) (Invitation, error) {
 	role, err := svc.repo.RetrieveRole(ctx, invitation.RoleID)
 	if err != nil {
-		return errors.Wrap(svcerr.ErrInvalidRole, err)
+		return Invitation{}, errors.Wrap(svcerr.ErrInvalidRole, err)
 	}
 	invitation.RoleName = role.Name
 
 	// Retrieve domain to get domain name
 	domain, err := svc.repo.RetrieveDomainByID(ctx, invitation.DomainID)
 	if err != nil {
-		return errors.Wrap(svcerr.ErrViewEntity, err)
+		return Invitation{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	invitation.DomainName = domain.Name
 
@@ -207,15 +207,15 @@ func (svc *service) SendInvitation(ctx context.Context, session authn.Session, i
 
 	if invitation.Resend {
 		if err := svc.resendInvitation(ctx, invitation); err != nil {
-			return errors.Wrap(svcerr.ErrUpdateEntity, err)
+			return Invitation{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
 		}
-		return nil
+		return invitation, nil
 	}
 
 	if err := svc.repo.SaveInvitation(ctx, invitation); err != nil {
-		return errors.Wrap(svcerr.ErrCreateEntity, err)
+		return Invitation{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
-	return nil
+	return invitation, nil
 }
 
 func (svc *service) resendInvitation(ctx context.Context, invitation Invitation) error {
@@ -323,6 +323,24 @@ func (svc *service) RejectInvitation(ctx context.Context, session authn.Session,
 
 	if !inv.RejectedAt.IsZero() {
 		return Invitation{}, svcerr.ErrInvitationAlreadyRejected
+	}
+
+	// Populate domain name if not already set
+	if inv.DomainName == "" {
+		domain, err := svc.repo.RetrieveDomainByID(ctx, domainID)
+		if err != nil {
+			return Invitation{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		}
+		inv.DomainName = domain.Name
+	}
+
+	// Populate role name if not already set
+	if inv.RoleName == "" {
+		role, err := svc.repo.RetrieveRole(ctx, inv.RoleID)
+		if err != nil {
+			return Invitation{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		}
+		inv.RoleName = role.Name
 	}
 
 	inv.RejectedAt = time.Now().UTC()

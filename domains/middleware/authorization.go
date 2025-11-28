@@ -186,15 +186,15 @@ func (am *authorizationMiddleware) ListDomains(ctx context.Context, session auth
 	return am.svc.ListDomains(ctx, session, page)
 }
 
-func (am *authorizationMiddleware) SendInvitation(ctx context.Context, session authn.Session, invitation domains.Invitation) (err error) {
+func (am *authorizationMiddleware) SendInvitation(ctx context.Context, session authn.Session, invitation domains.Invitation) (domains.Invitation, error) {
 	domainUserId := auth.EncodeDomainUserID(invitation.DomainID, invitation.InviteeUserID)
 	if err := am.extAuthorize(ctx, domainUserId, policies.MembershipPermission, policies.DomainType, invitation.DomainID); err == nil {
 		// return error if the user is already a member of the domain
-		return errors.Wrap(svcerr.ErrConflict, ErrMemberExist)
+		return domains.Invitation{}, errors.Wrap(svcerr.ErrConflict, ErrMemberExist)
 	}
 
 	if err := am.checkAdmin(ctx, session); err != nil {
-		return err
+		return domains.Invitation{}, err
 	}
 
 	params := map[string]any{
@@ -204,7 +204,7 @@ func (am *authorizationMiddleware) SendInvitation(ctx context.Context, session a
 	// While entity here is technically an invitation, Domain is used as
 	// the entity in callout since the invitation refers to the domain.
 	if err := am.callOut(ctx, session, domains.OpSendInvitation.String(domains.OperationNames), invitation.DomainID, params); err != nil {
-		return err
+		return domains.Invitation{}, err
 	}
 
 	return am.svc.SendInvitation(ctx, session, invitation)

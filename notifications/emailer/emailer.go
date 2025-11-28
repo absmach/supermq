@@ -135,17 +135,17 @@ func (n *notifier) buildEmailContent(notifType notifications.NotificationType, i
 	switch notifType {
 	case notifications.Invitation:
 		return "Domain Invitation",
-			fmt.Sprintf("%s has invited you to join the domain '%s' as '%s'.", inviterName, domainName, roleName),
+			fmt.Sprintf("%s has invited you to join the domain %s as %s.", inviterName, domainName, roleName),
 			inviteeRecipient,
 			nil
 	case notifications.Acceptance:
 		return "Invitation Accepted",
-			fmt.Sprintf("%s has accepted your invitation to join the domain '%s' as '%s'.", inviteeName, domainName, roleName),
+			fmt.Sprintf("%s has accepted your invitation to join the domain %s as %s.", inviteeName, domainName, roleName),
 			inviterRecipient,
 			nil
 	case notifications.Rejection:
 		return "Invitation Declined",
-			fmt.Sprintf("%s has declined your invitation to join the domain '%s' as '%s'.", inviteeName, domainName, roleName),
+			fmt.Sprintf("%s has declined your invitation to join the domain %s as %s.", inviteeName, domainName, roleName),
 			inviterRecipient,
 			nil
 	default:

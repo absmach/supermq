@@ -191,7 +191,8 @@ type Service interface {
 
 	// SendInvitation sends an invitation to the given user.
 	// Only domain administrators and platform administrators can send invitations.
-	SendInvitation(ctx context.Context, session authn.Session, invitation Invitation) (err error)
+	// Returns the enriched invitation with domain and role names populated.
+	SendInvitation(ctx context.Context, session authn.Session, invitation Invitation) (Invitation, error)
 
 	// ListInvitations returns a list of invitations.
 	// By default, it will list invitations the current user has received.

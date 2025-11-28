@@ -175,7 +175,7 @@ func (lm *loggingMiddleware) ListDomains(ctx context.Context, session authn.Sess
 	return lm.svc.ListDomains(ctx, session, page)
 }
 
-func (lm *loggingMiddleware) SendInvitation(ctx context.Context, session authn.Session, invitation domains.Invitation) (err error) {
+func (lm *loggingMiddleware) SendInvitation(ctx context.Context, session authn.Session, invitation domains.Invitation) (inv domains.Invitation, err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),

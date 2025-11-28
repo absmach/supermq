@@ -1183,7 +1183,7 @@ func TestSendInvitation(t *testing.T) {
 				tc.session = authn.Session{UserID: userID, DomainID: domainID, DomainUserID: domainID + "_" + userID}
 			}
 			authnCall := auth.On("Authenticate", mock.Anything, tc.token).Return(tc.session, tc.authnErr)
-			repoCall := svc.On("SendInvitation", mock.Anything, tc.session, mock.Anything).Return(tc.svcErr)
+			repoCall := svc.On("SendInvitation", mock.Anything, tc.session, mock.Anything).Return(domains.Invitation{}, tc.svcErr)
 			req := testRequest{
 				client:      is.Client(),
 				method:      http.MethodPost,

@@ -708,7 +708,7 @@ func TestSendInvitation(t *testing.T) {
 			repoCall2 := drepo.On("SaveInvitation", context.Background(), mock.Anything).Return(tc.createInvitationErr)
 			repoCall3 := drepo.On("RetrieveInvitation", context.Background(), tc.req.InviteeUserID, tc.req.DomainID).Return(tc.retrieveInvRes, tc.retrieveInvErr)
 			repoCall4 := drepo.On("UpdateRejection", context.Background(), mock.Anything).Return(tc.updateRejectionErr)
-			err := svc.SendInvitation(context.Background(), tc.session, tc.req)
+			_, err := svc.SendInvitation(context.Background(), tc.session, tc.req)
 			assert.True(t, errors.Contains(err, tc.err))
 			repoCall.Unset()
 			repoCall1.Unset()
@@ -1040,11 +1040,15 @@ func TestRejectInvitation(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			repoCall := drepo.On("RetrieveInvitation", context.Background(), tc.session.UserID, tc.domainID).Return(tc.resp, tc.retrieveInvitationErr)
-			repoCall1 := drepo.On("UpdateRejection", context.Background(), mock.Anything).Return(tc.updateConfirmationErr)
+			repoCall1 := drepo.On("RetrieveDomainByID", context.Background(), tc.domainID).Return(domains.Domain{Name: "test_domain"}, nil)
+			repoCall2 := drepo.On("RetrieveRole", context.Background(), tc.resp.RoleID).Return(roles.Role{Name: "admin"}, nil)
+			repoCall3 := drepo.On("UpdateRejection", context.Background(), mock.Anything).Return(tc.updateConfirmationErr)
 			_, err := svc.RejectInvitation(context.Background(), tc.session, tc.domainID)
 			assert.True(t, errors.Contains(err, tc.err))
 			repoCall.Unset()
 			repoCall1.Unset()
+			repoCall2.Unset()
+			repoCall3.Unset()
 		})
 	}
 }
