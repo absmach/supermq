@@ -120,7 +120,7 @@ The expected response is:
 }
 ```
 
-## CLI 
+## CLI
 
 SuperMQ provides a CoAP CLI for testing and interacting with the CoAP Adapter.
 To learn more about this visit the [SuperMQ CoAp CLI page](https://github.com/absmach/coap-cli/tree/main).
