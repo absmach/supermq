@@ -5,6 +5,7 @@ package events
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"github.com/absmach/supermq/notifications"
@@ -20,26 +21,23 @@ const (
 
 // Start starts consuming invitation events from the event store.
 func Start(ctx context.Context, consumer string, sub events.Subscriber, notifier notifications.Notifier) error {
-	handlers := []events.SubscriberConfig{
-		{
-			Consumer: consumer,
-			Stream:   sendInvitationStream,
-			Handler:  handleInvitationSent(notifier),
-		},
-		{
-			Consumer: consumer,
-			Stream:   acceptInvitationStream,
-			Handler:  handleInvitationAccepted(notifier),
-		},
-		{
-			Consumer: consumer,
-			Stream:   rejectInvitationStream,
-			Handler:  handleInvitationRejected(notifier),
-		},
+	handlers := []struct {
+		stream       string
+		notifType    notifications.NotificationType
+		errorContext string
+	}{
+		{sendInvitationStream, notifications.Invitation, "invitation sent"},
+		{acceptInvitationStream, notifications.Acceptance, "invitation accepted"},
+		{rejectInvitationStream, notifications.Rejection, "invitation rejected"},
 	}
 
-	for _, handler := range handlers {
-		if err := sub.Subscribe(ctx, handler); err != nil {
+	for _, h := range handlers {
+		config := events.SubscriberConfig{
+			Consumer: consumer,
+			Stream:   h.stream,
+			Handler:  handleInvitationEvent(notifier, h.notifType, h.errorContext),
+		}
+		if err := sub.Subscribe(ctx, config); err != nil {
 			return err
 		}
 	}
@@ -47,118 +45,60 @@ func Start(ctx context.Context, consumer string, sub events.Subscriber, notifier
 	return nil
 }
 
-func handleInvitationSent(notifier notifications.Notifier) handleFunc {
+func handleInvitationEvent(notifier notifications.Notifier, notifType notifications.NotificationType, errorContext string) handleFunc {
 	return func(ctx context.Context, event events.Event) error {
-		data, err := event.Encode()
+		notif, err := parseNotificationFromEvent(event, errorContext)
 		if err != nil {
-			slog.Error("failed to encode invitation sent event", "error", err)
 			return nil
 		}
 
-		invitedBy, ok := data["invited_by"].(string)
-		if !ok || invitedBy == "" {
-			slog.Error("missing or invalid invited_by in invitation sent event")
-			return nil
-		}
+		notif.Type = notifType
 
-		inviteeUserID, ok := data["invitee_user_id"].(string)
-		if !ok || inviteeUserID == "" {
-			slog.Error("missing or invalid invitee_user_id in invitation sent event")
-			return nil
-		}
-
-		domainID, ok := data["domain_id"].(string)
-		if !ok || domainID == "" {
-			slog.Error("missing or invalid domain_id in invitation sent event")
-			return nil
-		}
-
-		roleID, _ := data["role_id"].(string)
-		domainName, _ := data["domain_name"].(string)
-		roleName, _ := data["role_name"].(string)
-
-		if err := notifier.SendInvitationNotification(ctx, invitedBy, inviteeUserID, domainID, domainName, roleID, roleName); err != nil {
-			slog.Error("failed to send invitation notification", "error", err)
+		if err := notifier.Notify(ctx, notif); err != nil {
+			slog.Error("failed to send notification", "error", err, "type", notifType, "context", errorContext)
 		}
 
 		return nil
 	}
 }
 
-func handleInvitationAccepted(notifier notifications.Notifier) handleFunc {
-	return func(ctx context.Context, event events.Event) error {
-		data, err := event.Encode()
-		if err != nil {
-			slog.Error("failed to encode invitation accepted event", "error", err)
-			return nil
-		}
-
-		invitedBy, ok := data["invited_by"].(string)
-		if !ok || invitedBy == "" {
-			slog.Error("missing or invalid invited_by in invitation accepted event")
-			return nil
-		}
-
-		inviteeUserID, ok := data["invitee_user_id"].(string)
-		if !ok || inviteeUserID == "" {
-			slog.Error("missing or invalid invitee_user_id in invitation accepted event")
-			return nil
-		}
-
-		domainID, ok := data["domain_id"].(string)
-		if !ok || domainID == "" {
-			slog.Error("missing or invalid domain_id in invitation accepted event")
-			return nil
-		}
-
-		roleID, _ := data["role_id"].(string)
-		domainName, _ := data["domain_name"].(string)
-		roleName, _ := data["role_name"].(string)
-
-		if err := notifier.SendAcceptanceNotification(ctx, invitedBy, inviteeUserID, domainID, domainName, roleID, roleName); err != nil {
-			slog.Error("failed to send acceptance notification", "error", err)
-		}
-
-		return nil
+func parseNotificationFromEvent(event events.Event, errorContext string) (notifications.Notification, error) {
+	data, err := event.Encode()
+	if err != nil {
+		slog.Error(fmt.Sprintf("failed to encode %s event", errorContext), "error", err)
+		return notifications.Notification{}, err
 	}
-}
 
-func handleInvitationRejected(notifier notifications.Notifier) handleFunc {
-	return func(ctx context.Context, event events.Event) error {
-		data, err := event.Encode()
-		if err != nil {
-			slog.Error("failed to encode invitation rejected event", "error", err)
-			return nil
-		}
-
-		invitedBy, ok := data["invited_by"].(string)
-		if !ok || invitedBy == "" {
-			slog.Error("missing or invalid invited_by in invitation rejected event")
-			return nil
-		}
-
-		inviteeUserID, ok := data["invitee_user_id"].(string)
-		if !ok || inviteeUserID == "" {
-			slog.Error("missing or invalid invitee_user_id in invitation rejected event")
-			return nil
-		}
-
-		domainID, ok := data["domain_id"].(string)
-		if !ok || domainID == "" {
-			slog.Error("missing or invalid domain_id in invitation rejected event")
-			return nil
-		}
-
-		roleID, _ := data["role_id"].(string)
-		domainName, _ := data["domain_name"].(string)
-		roleName, _ := data["role_name"].(string)
-
-		if err := notifier.SendRejectionNotification(ctx, invitedBy, inviteeUserID, domainID, domainName, roleID, roleName); err != nil {
-			slog.Error("failed to send rejection notification", "error", err)
-		}
-
-		return nil
+	invitedBy, ok := data["invited_by"].(string)
+	if !ok || invitedBy == "" {
+		slog.Error(fmt.Sprintf("missing or invalid invited_by in %s event", errorContext))
+		return notifications.Notification{}, fmt.Errorf("missing or invalid invited_by")
 	}
+
+	inviteeUserID, ok := data["invitee_user_id"].(string)
+	if !ok || inviteeUserID == "" {
+		slog.Error(fmt.Sprintf("missing or invalid invitee_user_id in %s event", errorContext))
+		return notifications.Notification{}, fmt.Errorf("missing or invalid invitee_user_id")
+	}
+
+	domainID, ok := data["domain_id"].(string)
+	if !ok || domainID == "" {
+		slog.Error(fmt.Sprintf("missing or invalid domain_id in %s event", errorContext))
+		return notifications.Notification{}, fmt.Errorf("missing or invalid domain_id")
+	}
+
+	roleID, _ := data["role_id"].(string)
+	domainName, _ := data["domain_name"].(string)
+	roleName, _ := data["role_name"].(string)
+
+	return notifications.Notification{
+		InviterID:  invitedBy,
+		InviteeID:  inviteeUserID,
+		DomainID:   domainID,
+		DomainName: domainName,
+		RoleID:     roleID,
+		RoleName:   roleName,
+	}, nil
 }
 
 type handleFunc func(ctx context.Context, event events.Event) error

@@ -7,6 +7,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/absmach/supermq/notifications"
 	"github.com/absmach/supermq/notifications/middleware"
 	"github.com/absmach/supermq/notifications/mocks"
 	"github.com/go-kit/kit/metrics"
@@ -54,10 +55,19 @@ func TestMetricsMiddleware(t *testing.T) {
 
 	mm := middleware.NewMetrics(notifier, counter, histogram)
 
-	notifier.On("SendInvitationNotification", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return(nil).Once()
+	notif := notifications.Notification{
+		Type:       notifications.Invitation,
+		InviterID:  "inv1",
+		InviteeID:  "inv2",
+		DomainID:   "dom1",
+		DomainName: "Domain",
+		RoleID:     "role1",
+		RoleName:   "Admin",
+	}
 
-	err := mm.SendInvitationNotification(context.Background(), "inv1", "inv2", "dom1", "Domain", "role1", "Admin")
+	notifier.On("Notify", mock.Anything, notif).Return(nil).Once()
+
+	err := mm.Notify(context.Background(), notif)
 	assert.NoError(t, err)
 	notifier.AssertExpectations(t)
 	counter.AssertCalled(t, "With", []string{"method", "send_invitation_notification"})

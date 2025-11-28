@@ -24,44 +24,17 @@ func NewTracing(notifier notifications.Notifier, tracer trace.Tracer) notificati
 	return &tracing{tracer, notifier}
 }
 
-func (tm *tracing) SendInvitationNotification(ctx context.Context, inviterID, inviteeID, domainID, domainName, roleID, roleName string) error {
-	ctx, span := smqTracing.StartSpan(ctx, tm.tracer, "send_invitation_notification", trace.WithAttributes(
-		attribute.String("inviter_id", inviterID),
-		attribute.String("invitee_id", inviteeID),
-		attribute.String("domain_id", domainID),
-		attribute.String("domain_name", domainName),
-		attribute.String("role_id", roleID),
-		attribute.String("role_name", roleName),
+func (tm *tracing) Notify(ctx context.Context, n notifications.Notification) error {
+	spanName := notificationTypeToMethodName(n.Type)
+	ctx, span := smqTracing.StartSpan(ctx, tm.tracer, spanName, trace.WithAttributes(
+		attribute.String("inviter_id", n.InviterID),
+		attribute.String("invitee_id", n.InviteeID),
+		attribute.String("domain_id", n.DomainID),
+		attribute.String("domain_name", n.DomainName),
+		attribute.String("role_id", n.RoleID),
+		attribute.String("role_name", n.RoleName),
 	))
 	defer span.End()
 
-	return tm.notifier.SendInvitationNotification(ctx, inviterID, inviteeID, domainID, domainName, roleID, roleName)
-}
-
-func (tm *tracing) SendAcceptanceNotification(ctx context.Context, inviterID, inviteeID, domainID, domainName, roleID, roleName string) error {
-	ctx, span := smqTracing.StartSpan(ctx, tm.tracer, "send_acceptance_notification", trace.WithAttributes(
-		attribute.String("inviter_id", inviterID),
-		attribute.String("invitee_id", inviteeID),
-		attribute.String("domain_id", domainID),
-		attribute.String("domain_name", domainName),
-		attribute.String("role_id", roleID),
-		attribute.String("role_name", roleName),
-	))
-	defer span.End()
-
-	return tm.notifier.SendAcceptanceNotification(ctx, inviterID, inviteeID, domainID, domainName, roleID, roleName)
-}
-
-func (tm *tracing) SendRejectionNotification(ctx context.Context, inviterID, inviteeID, domainID, domainName, roleID, roleName string) error {
-	ctx, span := smqTracing.StartSpan(ctx, tm.tracer, "send_rejection_notification", trace.WithAttributes(
-		attribute.String("inviter_id", inviterID),
-		attribute.String("invitee_id", inviteeID),
-		attribute.String("domain_id", domainID),
-		attribute.String("domain_name", domainName),
-		attribute.String("role_id", roleID),
-		attribute.String("role_name", roleName),
-	))
-	defer span.End()
-
-	return tm.notifier.SendRejectionNotification(ctx, inviterID, inviteeID, domainID, domainName, roleID, roleName)
+	return tm.notifier.Notify(ctx, n)
 }

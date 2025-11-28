@@ -26,74 +26,40 @@ func NewLogging(notifier notifications.Notifier, logger *slog.Logger) notificati
 	}
 }
 
-func (lm *loggingMiddleware) SendInvitationNotification(ctx context.Context, inviterID, inviteeID, domainID, domainName, roleID, roleName string) (err error) {
+func (lm *loggingMiddleware) Notify(ctx context.Context, n notifications.Notification) (err error) {
 	defer func(begin time.Time) {
+		groupName := notificationTypeToString(n.Type)
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
-			slog.Group("invitation",
-				slog.String("inviter_id", inviterID),
-				slog.String("invitee_id", inviteeID),
-				slog.String("domain_id", domainID),
-				slog.String("domain_name", domainName),
-				slog.String("role_id", roleID),
-				slog.String("role_name", roleName),
+			slog.Group(groupName,
+				slog.String("inviter_id", n.InviterID),
+				slog.String("invitee_id", n.InviteeID),
+				slog.String("domain_id", n.DomainID),
+				slog.String("domain_name", n.DomainName),
+				slog.String("role_id", n.RoleID),
+				slog.String("role_name", n.RoleName),
 			),
 		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn("Send invitation notification failed", args...)
+			lm.logger.Warn("Send "+groupName+" notification failed", args...)
 			return
 		}
-		lm.logger.Info("Send invitation notification completed successfully", args...)
+		lm.logger.Info("Send "+groupName+" notification completed successfully", args...)
 	}(time.Now())
 
-	return lm.notifier.SendInvitationNotification(ctx, inviterID, inviteeID, domainID, domainName, roleID, roleName)
+	return lm.notifier.Notify(ctx, n)
 }
 
-func (lm *loggingMiddleware) SendAcceptanceNotification(ctx context.Context, inviterID, inviteeID, domainID, domainName, roleID, roleName string) (err error) {
-	defer func(begin time.Time) {
-		args := []any{
-			slog.String("duration", time.Since(begin).String()),
-			slog.Group("acceptance",
-				slog.String("inviter_id", inviterID),
-				slog.String("invitee_id", inviteeID),
-				slog.String("domain_id", domainID),
-				slog.String("domain_name", domainName),
-				slog.String("role_id", roleID),
-				slog.String("role_name", roleName),
-			),
-		}
-		if err != nil {
-			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn("Send acceptance notification failed", args...)
-			return
-		}
-		lm.logger.Info("Send acceptance notification completed successfully", args...)
-	}(time.Now())
-
-	return lm.notifier.SendAcceptanceNotification(ctx, inviterID, inviteeID, domainID, domainName, roleID, roleName)
-}
-
-func (lm *loggingMiddleware) SendRejectionNotification(ctx context.Context, inviterID, inviteeID, domainID, domainName, roleID, roleName string) (err error) {
-	defer func(begin time.Time) {
-		args := []any{
-			slog.String("duration", time.Since(begin).String()),
-			slog.Group("rejection",
-				slog.String("inviter_id", inviterID),
-				slog.String("invitee_id", inviteeID),
-				slog.String("domain_id", domainID),
-				slog.String("domain_name", domainName),
-				slog.String("role_id", roleID),
-				slog.String("role_name", roleName),
-			),
-		}
-		if err != nil {
-			args = append(args, slog.String("error", err.Error()))
-			lm.logger.Warn("Send rejection notification failed", args...)
-			return
-		}
-		lm.logger.Info("Send rejection notification completed successfully", args...)
-	}(time.Now())
-
-	return lm.notifier.SendRejectionNotification(ctx, inviterID, inviteeID, domainID, domainName, roleID, roleName)
+func notificationTypeToString(t notifications.NotificationType) string {
+	switch t {
+	case notifications.Invitation:
+		return "invitation"
+	case notifications.Acceptance:
+		return "acceptance"
+	case notifications.Rejection:
+		return "rejection"
+	default:
+		return "unknown"
+	}
 }

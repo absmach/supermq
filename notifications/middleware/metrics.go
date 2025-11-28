@@ -28,29 +28,25 @@ func NewMetrics(notifier notifications.Notifier, counter metrics.Counter, latenc
 	}
 }
 
-func (mm *metricsMiddleware) SendInvitationNotification(ctx context.Context, inviterID, inviteeID, domainID, domainName, roleID, roleName string) error {
+func (mm *metricsMiddleware) Notify(ctx context.Context, n notifications.Notification) error {
 	defer func(begin time.Time) {
-		mm.counter.With("method", "send_invitation_notification").Add(1)
-		mm.latency.With("method", "send_invitation_notification").Observe(time.Since(begin).Seconds())
+		methodName := notificationTypeToMethodName(n.Type)
+		mm.counter.With("method", methodName).Add(1)
+		mm.latency.With("method", methodName).Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.notifier.SendInvitationNotification(ctx, inviterID, inviteeID, domainID, domainName, roleID, roleName)
+	return mm.notifier.Notify(ctx, n)
 }
 
-func (mm *metricsMiddleware) SendAcceptanceNotification(ctx context.Context, inviterID, inviteeID, domainID, domainName, roleID, roleName string) error {
-	defer func(begin time.Time) {
-		mm.counter.With("method", "send_acceptance_notification").Add(1)
-		mm.latency.With("method", "send_acceptance_notification").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-
-	return mm.notifier.SendAcceptanceNotification(ctx, inviterID, inviteeID, domainID, domainName, roleID, roleName)
-}
-
-func (mm *metricsMiddleware) SendRejectionNotification(ctx context.Context, inviterID, inviteeID, domainID, domainName, roleID, roleName string) error {
-	defer func(begin time.Time) {
-		mm.counter.With("method", "send_rejection_notification").Add(1)
-		mm.latency.With("method", "send_rejection_notification").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-
-	return mm.notifier.SendRejectionNotification(ctx, inviterID, inviteeID, domainID, domainName, roleID, roleName)
+func notificationTypeToMethodName(t notifications.NotificationType) string {
+	switch t {
+	case notifications.Invitation:
+		return "send_invitation_notification"
+	case notifications.Acceptance:
+		return "send_acceptance_notification"
+	case notifications.Rejection:
+		return "send_rejection_notification"
+	default:
+		return "unknown"
+	}
 }

@@ -7,6 +7,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/absmach/supermq/notifications"
 	"github.com/absmach/supermq/notifications/events"
 	"github.com/absmach/supermq/notifications/mocks"
 	smqevents "github.com/absmach/supermq/pkg/events"
@@ -127,7 +128,16 @@ func TestHandleInvitationSent(t *testing.T) {
 			assert.NoError(t, err)
 
 			if tc.mockCall {
-				notifier.On("SendInvitationNotification", mock.Anything, inviterID, inviteeID, domainID, domainName, roleID, roleName).Return(nil).Once()
+				expectedNotif := notifications.Notification{
+					Type:       notifications.Invitation,
+					InviterID:  inviterID,
+					InviteeID:  inviteeID,
+					DomainID:   domainID,
+					DomainName: domainName,
+					RoleID:     roleID,
+					RoleName:   roleName,
+				}
+				notifier.On("Notify", mock.Anything, expectedNotif).Return(nil).Once()
 			}
 
 			err = handlerConfig.Handler.Handle(context.Background(), tc.event)
@@ -191,7 +201,16 @@ func TestHandleInvitationAccepted(t *testing.T) {
 			assert.NoError(t, err)
 
 			if tc.mockCall {
-				notifier.On("SendAcceptanceNotification", mock.Anything, inviterID, inviteeID, domainID, domainName, roleID, roleName).Return(nil).Once()
+				expectedNotif := notifications.Notification{
+					Type:       notifications.Acceptance,
+					InviterID:  inviterID,
+					InviteeID:  inviteeID,
+					DomainID:   domainID,
+					DomainName: domainName,
+					RoleID:     roleID,
+					RoleName:   roleName,
+				}
+				notifier.On("Notify", mock.Anything, expectedNotif).Return(nil).Once()
 			}
 
 			err = handlerConfig.Handler.Handle(context.Background(), tc.event)
@@ -255,7 +274,16 @@ func TestHandleInvitationRejected(t *testing.T) {
 			assert.NoError(t, err)
 
 			if tc.mockCall {
-				notifier.On("SendRejectionNotification", mock.Anything, inviterID, inviteeID, domainID, domainName, roleID, roleName).Return(nil).Once()
+				expectedNotif := notifications.Notification{
+					Type:       notifications.Rejection,
+					InviterID:  inviterID,
+					InviteeID:  inviteeID,
+					DomainID:   domainID,
+					DomainName: domainName,
+					RoleID:     roleID,
+					RoleName:   roleName,
+				}
+				notifier.On("Notify", mock.Anything, expectedNotif).Return(nil).Once()
 			}
 
 			err = handlerConfig.Handler.Handle(context.Background(), tc.event)

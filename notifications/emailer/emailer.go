@@ -21,12 +21,10 @@ var (
 var _ notifications.Notifier = (*notifier)(nil)
 
 type notifier struct {
-	usersClient     grpcUsersV1.UsersServiceClient
-	invitationAgent *email.Agent
-	acceptanceAgent *email.Agent
-	rejectionAgent  *email.Agent
-	fromAddress     string
-	fromName        string
+	usersClient grpcUsersV1.UsersServiceClient
+	agents      map[notifications.NotificationType]*email.Agent
+	fromAddress string
+	fromName    string
 }
 
 // Config represents the emailer configuration.
@@ -44,164 +42,100 @@ type Config struct {
 
 // New creates a new email notifier.
 func New(usersClient grpcUsersV1.UsersServiceClient, cfg Config) (notifications.Notifier, error) {
-	invitationEmailCfg := &email.Config{
-		Host:        cfg.EmailHost,
-		Port:        cfg.EmailPort,
-		Username:    cfg.EmailUsername,
-		Password:    cfg.EmailPassword,
-		FromAddress: cfg.FromAddress,
-		FromName:    cfg.FromName,
-		Template:    cfg.InvitationTemplate,
-	}
-	invitationAgent, err := email.New(invitationEmailCfg)
-	if err != nil {
-		return nil, err
+	templates := map[notifications.NotificationType]string{
+		notifications.Invitation: cfg.InvitationTemplate,
+		notifications.Acceptance: cfg.AcceptanceTemplate,
+		notifications.Rejection:  cfg.RejectionTemplate,
 	}
 
-	acceptanceEmailCfg := &email.Config{
-		Host:        cfg.EmailHost,
-		Port:        cfg.EmailPort,
-		Username:    cfg.EmailUsername,
-		Password:    cfg.EmailPassword,
-		FromAddress: cfg.FromAddress,
-		FromName:    cfg.FromName,
-		Template:    cfg.AcceptanceTemplate,
-	}
-	acceptanceAgent, err := email.New(acceptanceEmailCfg)
-	if err != nil {
-		return nil, err
-	}
-
-	rejectionEmailCfg := &email.Config{
-		Host:        cfg.EmailHost,
-		Port:        cfg.EmailPort,
-		Username:    cfg.EmailUsername,
-		Password:    cfg.EmailPassword,
-		FromAddress: cfg.FromAddress,
-		FromName:    cfg.FromName,
-		Template:    cfg.RejectionTemplate,
-	}
-	rejectionAgent, err := email.New(rejectionEmailCfg)
-	if err != nil {
-		return nil, err
+	agents := make(map[notifications.NotificationType]*email.Agent)
+	for notifType, template := range templates {
+		emailCfg := &email.Config{
+			Host:        cfg.EmailHost,
+			Port:        cfg.EmailPort,
+			Username:    cfg.EmailUsername,
+			Password:    cfg.EmailPassword,
+			FromAddress: cfg.FromAddress,
+			FromName:    cfg.FromName,
+			Template:    template,
+		}
+		agent, err := email.New(emailCfg)
+		if err != nil {
+			return nil, err
+		}
+		agents[notifType] = agent
 	}
 
 	return &notifier{
-		usersClient:     usersClient,
-		invitationAgent: invitationAgent,
-		acceptanceAgent: acceptanceAgent,
-		rejectionAgent:  rejectionAgent,
-		fromAddress:     cfg.FromAddress,
-		fromName:        cfg.FromName,
+		usersClient: usersClient,
+		agents:      agents,
+		fromAddress: cfg.FromAddress,
+		fromName:    cfg.FromName,
 	}, nil
 }
 
-func (n *notifier) SendInvitationNotification(ctx context.Context, inviterID, inviteeID, domainID, domainName, roleID, roleName string) error {
-	users, err := n.fetchUsers(ctx, []string{inviterID, inviteeID})
+func (n *notifier) Notify(ctx context.Context, notif notifications.Notification) error {
+	users, err := n.fetchUsers(ctx, []string{notif.InviterID, notif.InviteeID})
 	if err != nil {
 		return errors.Wrap(errFetchingUser, err)
 	}
 
-	inviter, ok := users[inviterID]
+	inviter, ok := users[notif.InviterID]
 	if !ok {
-		return errors.Wrap(errFetchingUser, fmt.Errorf("inviter not found: %s", inviterID))
+		return errors.Wrap(errFetchingUser, fmt.Errorf("inviter not found: %s", notif.InviterID))
 	}
 
-	invitee, ok := users[inviteeID]
+	invitee, ok := users[notif.InviteeID]
 	if !ok {
-		return errors.Wrap(errFetchingUser, fmt.Errorf("invitee not found: %s", inviteeID))
+		return errors.Wrap(errFetchingUser, fmt.Errorf("invitee not found: %s", notif.InviteeID))
 	}
 
 	inviterName := n.getUserDisplayName(inviter)
 	inviteeName := n.getUserDisplayName(invitee)
 
+	domainName := notif.DomainName
 	if domainName == "" {
-		domainName = domainID
+		domainName = notif.DomainID
 	}
+
+	roleName := notif.RoleName
 	if roleName == "" {
-		roleName = roleID
+		roleName = notif.RoleID
 	}
 
-	subject := "Domain Invitation"
-	content := fmt.Sprintf("%s has invited you to join the domain '%s' as '%s'.", inviterName, domainName, roleName)
+	subject, content, recipient := n.buildEmailContent(notif.Type, inviterName, inviteeName, domainName, roleName)
+	recipientEmail := inviter.Email
+	recipientName := inviterName
+	if recipient == "invitee" {
+		recipientEmail = invitee.Email
+		recipientName = inviteeName
+	}
 
-	if err := n.invitationAgent.Send([]string{invitee.Email}, "", subject, "", inviteeName, content, n.fromName); err != nil {
+	agent := n.agents[notif.Type]
+	if err := agent.Send([]string{recipientEmail}, "", subject, "", recipientName, content, n.fromName); err != nil {
 		return errors.Wrap(errSendingEmail, err)
 	}
 
 	return nil
 }
 
-func (n *notifier) SendAcceptanceNotification(ctx context.Context, inviterID, inviteeID, domainID, domainName, roleID, roleName string) error {
-	users, err := n.fetchUsers(ctx, []string{inviterID, inviteeID})
-	if err != nil {
-		return errors.Wrap(errFetchingUser, err)
+func (n *notifier) buildEmailContent(notifType notifications.NotificationType, inviterName, inviteeName, domainName, roleName string) (subject, content, recipient string) {
+	switch notifType {
+	case notifications.Invitation:
+		return "Domain Invitation",
+			fmt.Sprintf("%s has invited you to join the domain '%s' as '%s'.", inviterName, domainName, roleName),
+			"invitee"
+	case notifications.Acceptance:
+		return "Invitation Accepted",
+			fmt.Sprintf("%s has accepted your invitation to join the domain '%s' as '%s'.", inviteeName, domainName, roleName),
+			"inviter"
+	case notifications.Rejection:
+		return "Invitation Declined",
+			fmt.Sprintf("%s has declined your invitation to join the domain '%s' as '%s'.", inviteeName, domainName, roleName),
+			"inviter"
+	default:
+		return "", "", ""
 	}
-
-	inviter, ok := users[inviterID]
-	if !ok {
-		return errors.Wrap(errFetchingUser, fmt.Errorf("inviter not found: %s", inviterID))
-	}
-
-	invitee, ok := users[inviteeID]
-	if !ok {
-		return errors.Wrap(errFetchingUser, fmt.Errorf("invitee not found: %s", inviteeID))
-	}
-
-	inviterName := n.getUserDisplayName(inviter)
-	inviteeName := n.getUserDisplayName(invitee)
-
-	if domainName == "" {
-		domainName = domainID
-	}
-	if roleName == "" {
-		roleName = roleID
-	}
-
-	subject := "Invitation Accepted"
-	content := fmt.Sprintf("%s has accepted your invitation to join the domain '%s' as '%s'.", inviteeName, domainName, roleName)
-
-	if err := n.acceptanceAgent.Send([]string{inviter.Email}, "", subject, "", inviterName, content, n.fromName); err != nil {
-		return errors.Wrap(errSendingEmail, err)
-	}
-
-	return nil
-}
-
-func (n *notifier) SendRejectionNotification(ctx context.Context, inviterID, inviteeID, domainID, domainName, roleID, roleName string) error {
-	users, err := n.fetchUsers(ctx, []string{inviterID, inviteeID})
-	if err != nil {
-		return errors.Wrap(errFetchingUser, err)
-	}
-
-	inviter, ok := users[inviterID]
-	if !ok {
-		return errors.Wrap(errFetchingUser, fmt.Errorf("inviter not found: %s", inviterID))
-	}
-
-	invitee, ok := users[inviteeID]
-	if !ok {
-		return errors.Wrap(errFetchingUser, fmt.Errorf("invitee not found: %s", inviteeID))
-	}
-
-	inviterName := n.getUserDisplayName(inviter)
-	inviteeName := n.getUserDisplayName(invitee)
-
-	if domainName == "" {
-		domainName = domainID
-	}
-	if roleName == "" {
-		roleName = roleID
-	}
-
-	subject := "Invitation Declined"
-	content := fmt.Sprintf("%s has declined your invitation to join the domain '%s' as '%s'.", inviteeName, domainName, roleName)
-
-	if err := n.rejectionAgent.Send([]string{inviter.Email}, "", subject, "", inviterName, content, n.fromName); err != nil {
-		return errors.Wrap(errSendingEmail, err)
-	}
-
-	return nil
 }
 
 func (n *notifier) fetchUsers(ctx context.Context, userIDs []string) (map[string]*grpcUsersV1.User, error) {

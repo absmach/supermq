@@ -11,6 +11,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/absmach/supermq/notifications"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -41,263 +42,59 @@ func (_m *Notifier) EXPECT() *Notifier_Expecter {
 	return &Notifier_Expecter{mock: &_m.Mock}
 }
 
-// SendAcceptanceNotification provides a mock function for the type Notifier
-func (_mock *Notifier) SendAcceptanceNotification(ctx context.Context, inviterID string, inviteeID string, domainID string, domainName string, roleID string, roleName string) error {
-	ret := _mock.Called(ctx, inviterID, inviteeID, domainID, domainName, roleID, roleName)
+// Notify provides a mock function for the type Notifier
+func (_mock *Notifier) Notify(ctx context.Context, n notifications.Notification) error {
+	ret := _mock.Called(ctx, n)
 
 	if len(ret) == 0 {
-		panic("no return value specified for SendAcceptanceNotification")
+		panic("no return value specified for Notify")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, string, string, string, string) error); ok {
-		r0 = returnFunc(ctx, inviterID, inviteeID, domainID, domainName, roleID, roleName)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, notifications.Notification) error); ok {
+		r0 = returnFunc(ctx, n)
 	} else {
 		r0 = ret.Error(0)
 	}
 	return r0
 }
 
-// Notifier_SendAcceptanceNotification_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SendAcceptanceNotification'
-type Notifier_SendAcceptanceNotification_Call struct {
+// Notifier_Notify_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Notify'
+type Notifier_Notify_Call struct {
 	*mock.Call
 }
 
-// SendAcceptanceNotification is a helper method to define mock.On call
+// Notify is a helper method to define mock.On call
 //   - ctx context.Context
-//   - inviterID string
-//   - inviteeID string
-//   - domainID string
-//   - domainName string
-//   - roleID string
-//   - roleName string
-func (_e *Notifier_Expecter) SendAcceptanceNotification(ctx interface{}, inviterID interface{}, inviteeID interface{}, domainID interface{}, domainName interface{}, roleID interface{}, roleName interface{}) *Notifier_SendAcceptanceNotification_Call {
-	return &Notifier_SendAcceptanceNotification_Call{Call: _e.mock.On("SendAcceptanceNotification", ctx, inviterID, inviteeID, domainID, domainName, roleID, roleName)}
+//   - n notifications.Notification
+func (_e *Notifier_Expecter) Notify(ctx interface{}, n interface{}) *Notifier_Notify_Call {
+	return &Notifier_Notify_Call{Call: _e.mock.On("Notify", ctx, n)}
 }
 
-func (_c *Notifier_SendAcceptanceNotification_Call) Run(run func(ctx context.Context, inviterID string, inviteeID string, domainID string, domainName string, roleID string, roleName string)) *Notifier_SendAcceptanceNotification_Call {
+func (_c *Notifier_Notify_Call) Run(run func(ctx context.Context, n notifications.Notification)) *Notifier_Notify_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 string
+		var arg1 notifications.Notification
 		if args[1] != nil {
-			arg1 = args[1].(string)
-		}
-		var arg2 string
-		if args[2] != nil {
-			arg2 = args[2].(string)
-		}
-		var arg3 string
-		if args[3] != nil {
-			arg3 = args[3].(string)
-		}
-		var arg4 string
-		if args[4] != nil {
-			arg4 = args[4].(string)
-		}
-		var arg5 string
-		if args[5] != nil {
-			arg5 = args[5].(string)
-		}
-		var arg6 string
-		if args[6] != nil {
-			arg6 = args[6].(string)
+			arg1 = args[1].(notifications.Notification)
 		}
 		run(
 			arg0,
 			arg1,
-			arg2,
-			arg3,
-			arg4,
-			arg5,
-			arg6,
 		)
 	})
 	return _c
 }
 
-func (_c *Notifier_SendAcceptanceNotification_Call) Return(err error) *Notifier_SendAcceptanceNotification_Call {
+func (_c *Notifier_Notify_Call) Return(err error) *Notifier_Notify_Call {
 	_c.Call.Return(err)
 	return _c
 }
 
-func (_c *Notifier_SendAcceptanceNotification_Call) RunAndReturn(run func(ctx context.Context, inviterID string, inviteeID string, domainID string, domainName string, roleID string, roleName string) error) *Notifier_SendAcceptanceNotification_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// SendInvitationNotification provides a mock function for the type Notifier
-func (_mock *Notifier) SendInvitationNotification(ctx context.Context, inviterID string, inviteeID string, domainID string, domainName string, roleID string, roleName string) error {
-	ret := _mock.Called(ctx, inviterID, inviteeID, domainID, domainName, roleID, roleName)
-
-	if len(ret) == 0 {
-		panic("no return value specified for SendInvitationNotification")
-	}
-
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, string, string, string, string) error); ok {
-		r0 = returnFunc(ctx, inviterID, inviteeID, domainID, domainName, roleID, roleName)
-	} else {
-		r0 = ret.Error(0)
-	}
-	return r0
-}
-
-// Notifier_SendInvitationNotification_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SendInvitationNotification'
-type Notifier_SendInvitationNotification_Call struct {
-	*mock.Call
-}
-
-// SendInvitationNotification is a helper method to define mock.On call
-//   - ctx context.Context
-//   - inviterID string
-//   - inviteeID string
-//   - domainID string
-//   - domainName string
-//   - roleID string
-//   - roleName string
-func (_e *Notifier_Expecter) SendInvitationNotification(ctx interface{}, inviterID interface{}, inviteeID interface{}, domainID interface{}, domainName interface{}, roleID interface{}, roleName interface{}) *Notifier_SendInvitationNotification_Call {
-	return &Notifier_SendInvitationNotification_Call{Call: _e.mock.On("SendInvitationNotification", ctx, inviterID, inviteeID, domainID, domainName, roleID, roleName)}
-}
-
-func (_c *Notifier_SendInvitationNotification_Call) Run(run func(ctx context.Context, inviterID string, inviteeID string, domainID string, domainName string, roleID string, roleName string)) *Notifier_SendInvitationNotification_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 string
-		if args[1] != nil {
-			arg1 = args[1].(string)
-		}
-		var arg2 string
-		if args[2] != nil {
-			arg2 = args[2].(string)
-		}
-		var arg3 string
-		if args[3] != nil {
-			arg3 = args[3].(string)
-		}
-		var arg4 string
-		if args[4] != nil {
-			arg4 = args[4].(string)
-		}
-		var arg5 string
-		if args[5] != nil {
-			arg5 = args[5].(string)
-		}
-		var arg6 string
-		if args[6] != nil {
-			arg6 = args[6].(string)
-		}
-		run(
-			arg0,
-			arg1,
-			arg2,
-			arg3,
-			arg4,
-			arg5,
-			arg6,
-		)
-	})
-	return _c
-}
-
-func (_c *Notifier_SendInvitationNotification_Call) Return(err error) *Notifier_SendInvitationNotification_Call {
-	_c.Call.Return(err)
-	return _c
-}
-
-func (_c *Notifier_SendInvitationNotification_Call) RunAndReturn(run func(ctx context.Context, inviterID string, inviteeID string, domainID string, domainName string, roleID string, roleName string) error) *Notifier_SendInvitationNotification_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// SendRejectionNotification provides a mock function for the type Notifier
-func (_mock *Notifier) SendRejectionNotification(ctx context.Context, inviterID string, inviteeID string, domainID string, domainName string, roleID string, roleName string) error {
-	ret := _mock.Called(ctx, inviterID, inviteeID, domainID, domainName, roleID, roleName)
-
-	if len(ret) == 0 {
-		panic("no return value specified for SendRejectionNotification")
-	}
-
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, string, string, string, string) error); ok {
-		r0 = returnFunc(ctx, inviterID, inviteeID, domainID, domainName, roleID, roleName)
-	} else {
-		r0 = ret.Error(0)
-	}
-	return r0
-}
-
-// Notifier_SendRejectionNotification_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SendRejectionNotification'
-type Notifier_SendRejectionNotification_Call struct {
-	*mock.Call
-}
-
-// SendRejectionNotification is a helper method to define mock.On call
-//   - ctx context.Context
-//   - inviterID string
-//   - inviteeID string
-//   - domainID string
-//   - domainName string
-//   - roleID string
-//   - roleName string
-func (_e *Notifier_Expecter) SendRejectionNotification(ctx interface{}, inviterID interface{}, inviteeID interface{}, domainID interface{}, domainName interface{}, roleID interface{}, roleName interface{}) *Notifier_SendRejectionNotification_Call {
-	return &Notifier_SendRejectionNotification_Call{Call: _e.mock.On("SendRejectionNotification", ctx, inviterID, inviteeID, domainID, domainName, roleID, roleName)}
-}
-
-func (_c *Notifier_SendRejectionNotification_Call) Run(run func(ctx context.Context, inviterID string, inviteeID string, domainID string, domainName string, roleID string, roleName string)) *Notifier_SendRejectionNotification_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 string
-		if args[1] != nil {
-			arg1 = args[1].(string)
-		}
-		var arg2 string
-		if args[2] != nil {
-			arg2 = args[2].(string)
-		}
-		var arg3 string
-		if args[3] != nil {
-			arg3 = args[3].(string)
-		}
-		var arg4 string
-		if args[4] != nil {
-			arg4 = args[4].(string)
-		}
-		var arg5 string
-		if args[5] != nil {
-			arg5 = args[5].(string)
-		}
-		var arg6 string
-		if args[6] != nil {
-			arg6 = args[6].(string)
-		}
-		run(
-			arg0,
-			arg1,
-			arg2,
-			arg3,
-			arg4,
-			arg5,
-			arg6,
-		)
-	})
-	return _c
-}
-
-func (_c *Notifier_SendRejectionNotification_Call) Return(err error) *Notifier_SendRejectionNotification_Call {
-	_c.Call.Return(err)
-	return _c
-}
-
-func (_c *Notifier_SendRejectionNotification_Call) RunAndReturn(run func(ctx context.Context, inviterID string, inviteeID string, domainID string, domainName string, roleID string, roleName string) error) *Notifier_SendRejectionNotification_Call {
+func (_c *Notifier_Notify_Call) RunAndReturn(run func(ctx context.Context, n notifications.Notification) error) *Notifier_Notify_Call {
 	_c.Call.Return(run)
 	return _c
 }
