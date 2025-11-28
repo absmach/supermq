@@ -22,9 +22,9 @@ const (
 // Start starts consuming invitation events from the event store.
 func Start(ctx context.Context, consumer string, sub events.Subscriber, notifier notifications.Notifier) error {
 	handlers := []struct {
-		stream       string
-		notifType    notifications.NotificationType
-		errorContext string
+		stream    string
+		notifType notifications.NotificationType
+		errorCtx  string
 	}{
 		{sendInvitationStream, notifications.Invitation, "invitation sent"},
 		{acceptInvitationStream, notifications.Acceptance, "invitation accepted"},
@@ -35,7 +35,7 @@ func Start(ctx context.Context, consumer string, sub events.Subscriber, notifier
 		config := events.SubscriberConfig{
 			Consumer: consumer,
 			Stream:   h.stream,
-			Handler:  handleInvitationEvent(notifier, h.notifType, h.errorContext),
+			Handler:  handleInvitationEvent(notifier, h.notifType, h.errorCtx),
 		}
 		if err := sub.Subscribe(ctx, config); err != nil {
 			return err
@@ -47,14 +47,14 @@ func Start(ctx context.Context, consumer string, sub events.Subscriber, notifier
 
 func handleInvitationEvent(notifier notifications.Notifier, notifType notifications.NotificationType, errorContext string) handleFunc {
 	return func(ctx context.Context, event events.Event) error {
-		notif, err := parseNotificationFromEvent(event, errorContext)
+		n, err := parseNotificationFromEvent(event, errorContext)
 		if err != nil {
 			return nil
 		}
 
-		notif.Type = notifType
+		n.Type = notifType
 
-		if err := notifier.Notify(ctx, notif); err != nil {
+		if err := notifier.Notify(ctx, n); err != nil {
 			slog.Error("failed to send notification", "error", err, "type", notifType, "context", errorContext)
 		}
 

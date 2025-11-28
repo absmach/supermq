@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	grpcUsersV1 "github.com/absmach/supermq/api/grpc/users/v1"
+	"github.com/absmach/supermq/notifications"
 	"github.com/absmach/supermq/notifications/emailer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -47,7 +48,7 @@ func (m *mockUsersClient) RetrieveUsers(ctx context.Context, req *grpcUsersV1.Re
 	return args.Get(0).(*grpcUsersV1.RetrieveUsersRes), args.Error(1)
 }
 
-func TestSendInvitationNotification(t *testing.T) {
+func TestNotify(t *testing.T) {
 	if os.Getenv("SMQ_RUN_EMAIL_TESTS") != envTrue {
 		t.Skip("Skipping email tests. Set SMQ_RUN_EMAIL_TESTS=true to run.")
 	}
@@ -72,23 +73,21 @@ func TestSendInvitationNotification(t *testing.T) {
 
 	cases := []struct {
 		desc          string
-		inviterID     string
-		inviteeID     string
-		domainID      string
-		domainName    string
-		roleID        string
-		roleName      string
+		notification  notifications.Notification
 		setupMock     func()
 		expectedError error
 	}{
 		{
-			desc:       "successful invitation notification",
-			inviterID:  inviterID,
-			inviteeID:  inviteeID,
-			domainID:   domainID,
-			domainName: domainName,
-			roleID:     roleID,
-			roleName:   roleName,
+			desc: "successful invitation notification",
+			notification: notifications.Notification{
+				Type:       notifications.Invitation,
+				InviterID:  inviterID,
+				InviteeID:  inviteeID,
+				DomainID:   domainID,
+				DomainName: domainName,
+				RoleID:     roleID,
+				RoleName:   roleName,
+			},
 			setupMock: func() {
 				usersClient.On("RetrieveUsers", mock.Anything, mock.MatchedBy(func(req *grpcUsersV1.RetrieveUsersReq) bool {
 					return len(req.Ids) == 2 &&
@@ -114,13 +113,82 @@ func TestSendInvitationNotification(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			desc:       "failed to fetch users",
-			inviterID:  inviterID,
-			inviteeID:  inviteeID,
-			domainID:   domainID,
-			domainName: domainName,
-			roleID:     roleID,
-			roleName:   roleName,
+			desc: "successful acceptance notification",
+			notification: notifications.Notification{
+				Type:       notifications.Acceptance,
+				InviterID:  inviterID,
+				InviteeID:  inviteeID,
+				DomainID:   domainID,
+				DomainName: domainName,
+				RoleID:     roleID,
+				RoleName:   roleName,
+			},
+			setupMock: func() {
+				usersClient.On("RetrieveUsers", mock.Anything, mock.MatchedBy(func(req *grpcUsersV1.RetrieveUsersReq) bool {
+					return len(req.Ids) == 2
+				}), mock.Anything).Return(&grpcUsersV1.RetrieveUsersRes{
+					Users: []*grpcUsersV1.User{
+						{
+							Id:        inviterID,
+							Email:     inviterEmail,
+							FirstName: inviterFirst,
+							LastName:  inviterLast,
+						},
+						{
+							Id:        inviteeID,
+							Email:     inviteeEmail,
+							FirstName: inviteeFirst,
+							LastName:  inviteeLast,
+						},
+					},
+				}, nil).Once()
+			},
+			expectedError: nil,
+		},
+		{
+			desc: "successful rejection notification",
+			notification: notifications.Notification{
+				Type:       notifications.Rejection,
+				InviterID:  inviterID,
+				InviteeID:  inviteeID,
+				DomainID:   domainID,
+				DomainName: domainName,
+				RoleID:     roleID,
+				RoleName:   roleName,
+			},
+			setupMock: func() {
+				usersClient.On("RetrieveUsers", mock.Anything, mock.MatchedBy(func(req *grpcUsersV1.RetrieveUsersReq) bool {
+					return len(req.Ids) == 2
+				}), mock.Anything).Return(&grpcUsersV1.RetrieveUsersRes{
+					Users: []*grpcUsersV1.User{
+						{
+							Id:        inviterID,
+							Email:     inviterEmail,
+							FirstName: inviterFirst,
+							LastName:  inviterLast,
+						},
+						{
+							Id:        inviteeID,
+							Email:     inviteeEmail,
+							FirstName: inviteeFirst,
+							LastName:  inviteeLast,
+						},
+					},
+				}, nil).Once()
+			},
+			expectedError: nil,
+		},
+		{
+			desc: "failed to fetch users",
+			notification: notifications.Notification{
+				Type:       notifications.Invitation,
+				InviterID:  inviterID,
+				InviteeID:  inviteeID,
+				DomainID:   domainID,
+				DomainName: domainName,
+				RoleID:     roleID,
+				RoleName:   roleName,
+			},
 			setupMock: func() {
 				usersClient.On("RetrieveUsers", mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("grpc error")).Once()
 			},
@@ -131,7 +199,7 @@ func TestSendInvitationNotification(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			tc.setupMock()
-			err := notifier.SendInvitationNotification(context.Background(), tc.inviterID, tc.inviteeID, tc.domainID, tc.domainName, tc.roleID, tc.roleName)
+			err := notifier.Notify(context.Background(), tc.notification)
 			if tc.expectedError != nil {
 				assert.Error(t, err)
 			} else {
@@ -140,96 +208,4 @@ func TestSendInvitationNotification(t *testing.T) {
 			usersClient.AssertExpectations(t)
 		})
 	}
-}
-
-func TestSendAcceptanceNotification(t *testing.T) {
-	if os.Getenv("SMQ_RUN_EMAIL_TESTS") != envTrue {
-		t.Skip("Skipping email tests. Set SMQ_RUN_EMAIL_TESTS=true to run.")
-	}
-
-	usersClient := new(mockUsersClient)
-
-	cfg := emailer.Config{
-		FromAddress:        "test@example.com",
-		FromName:           "Test Service",
-		InvitationTemplate: "../../docker/templates/invitation-sent-email.tmpl",
-		AcceptanceTemplate: "../../docker/templates/invitation-accepted-email.tmpl",
-		RejectionTemplate:  "../../docker/templates/invitation-rejected-email.tmpl",
-		EmailHost:          "localhost",
-		EmailPort:          "1025",
-		EmailUsername:      "",
-		EmailPassword:      "",
-	}
-
-	notifier, err := emailer.New(usersClient, cfg)
-	assert.NoError(t, err)
-
-	usersClient.On("RetrieveUsers", mock.Anything, mock.MatchedBy(func(req *grpcUsersV1.RetrieveUsersReq) bool {
-		return len(req.Ids) == 2
-	}), mock.Anything).Return(&grpcUsersV1.RetrieveUsersRes{
-		Users: []*grpcUsersV1.User{
-			{
-				Id:        inviterID,
-				Email:     inviterEmail,
-				FirstName: inviterFirst,
-				LastName:  inviterLast,
-			},
-			{
-				Id:        inviteeID,
-				Email:     inviteeEmail,
-				FirstName: inviteeFirst,
-				LastName:  inviteeLast,
-			},
-		},
-	}, nil).Once()
-
-	err = notifier.SendAcceptanceNotification(context.Background(), inviterID, inviteeID, domainID, domainName, roleID, roleName)
-	assert.NoError(t, err)
-	usersClient.AssertExpectations(t)
-}
-
-func TestSendRejectionNotification(t *testing.T) {
-	if os.Getenv("SMQ_RUN_EMAIL_TESTS") != envTrue {
-		t.Skip("Skipping email tests. Set SMQ_RUN_EMAIL_TESTS=true to run.")
-	}
-
-	usersClient := new(mockUsersClient)
-
-	cfg := emailer.Config{
-		FromAddress:        "test@example.com",
-		FromName:           "Test Service",
-		InvitationTemplate: "../../docker/templates/invitation-sent-email.tmpl",
-		AcceptanceTemplate: "../../docker/templates/invitation-accepted-email.tmpl",
-		RejectionTemplate:  "../../docker/templates/invitation-rejected-email.tmpl",
-		EmailHost:          "localhost",
-		EmailPort:          "1025",
-		EmailUsername:      "",
-		EmailPassword:      "",
-	}
-
-	notifier, err := emailer.New(usersClient, cfg)
-	assert.NoError(t, err)
-
-	usersClient.On("RetrieveUsers", mock.Anything, mock.MatchedBy(func(req *grpcUsersV1.RetrieveUsersReq) bool {
-		return len(req.Ids) == 2
-	}), mock.Anything).Return(&grpcUsersV1.RetrieveUsersRes{
-		Users: []*grpcUsersV1.User{
-			{
-				Id:        inviterID,
-				Email:     inviterEmail,
-				FirstName: inviterFirst,
-				LastName:  inviterLast,
-			},
-			{
-				Id:        inviteeID,
-				Email:     inviteeEmail,
-				FirstName: inviteeFirst,
-				LastName:  inviteeLast,
-			},
-		},
-	}, nil).Once()
-
-	err = notifier.SendRejectionNotification(context.Background(), inviterID, inviteeID, domainID, domainName, roleID, roleName)
-	assert.NoError(t, err)
-	usersClient.AssertExpectations(t)
 }
