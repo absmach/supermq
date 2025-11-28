@@ -58,6 +58,7 @@ func TestNotify(t *testing.T) {
 	cfg := emailer.Config{
 		FromAddress:        "test@example.com",
 		FromName:           "Test Service",
+		DomainAltName:      "domain",
 		InvitationTemplate: "../../docker/templates/invitation-sent-email.tmpl",
 		AcceptanceTemplate: "../../docker/templates/invitation-accepted-email.tmpl",
 		RejectionTemplate:  "../../docker/templates/invitation-rejected-email.tmpl",

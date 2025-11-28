@@ -6,6 +6,8 @@ package emailer
 import (
 	"context"
 	"fmt"
+	"unicode"
+	"unicode/utf8"
 
 	grpcUsersV1 "github.com/absmach/supermq/api/grpc/users/v1"
 	"github.com/absmach/supermq/internal/email"
@@ -26,16 +28,17 @@ const (
 var _ notifications.Notifier = (*notifier)(nil)
 
 type notifier struct {
-	usersClient grpcUsersV1.UsersServiceClient
-	agents      map[notifications.NotificationType]*email.Agent
-	fromAddress string
-	fromName    string
+	usersClient   grpcUsersV1.UsersServiceClient
+	agents        map[notifications.NotificationType]*email.Agent
+	fromName      string
+	domainAltName string
 }
 
 // Config represents the emailer configuration.
 type Config struct {
 	FromAddress        string
 	FromName           string
+	DomainAltName      string
 	InvitationTemplate string
 	AcceptanceTemplate string
 	RejectionTemplate  string
@@ -72,10 +75,10 @@ func New(usersClient grpcUsersV1.UsersServiceClient, cfg Config) (notifications.
 	}
 
 	return &notifier{
-		usersClient: usersClient,
-		agents:      agents,
-		fromAddress: cfg.FromAddress,
-		fromName:    cfg.FromName,
+		usersClient:   usersClient,
+		agents:        agents,
+		fromName:      cfg.FromName,
+		domainAltName: cfg.DomainAltName,
 	}, nil
 }
 
@@ -134,18 +137,18 @@ func (n *notifier) Notify(ctx context.Context, notif notifications.Notification)
 func (n *notifier) buildEmailContent(notifType notifications.NotificationType, inviterName, inviteeName, domainName, roleName string) (subject, content, recipient string, err error) {
 	switch notifType {
 	case notifications.Invitation:
-		return "Domain Invitation",
-			fmt.Sprintf("%s has invited you to join the domain %s as %s.", inviterName, domainName, roleName),
+		return fmt.Sprintf("%s Invitation", titleFirst(n.domainAltName)),
+			fmt.Sprintf("%s has invited you to join the %s %s as %s.", n.domainAltName, inviterName, domainName, roleName),
 			inviteeRecipient,
 			nil
 	case notifications.Acceptance:
 		return "Invitation Accepted",
-			fmt.Sprintf("%s has accepted your invitation to join the domain %s as %s.", inviteeName, domainName, roleName),
+			fmt.Sprintf("%s has accepted your invitation to join the %s %s as %s.", n.domainAltName, inviteeName, domainName, roleName),
 			inviterRecipient,
 			nil
 	case notifications.Rejection:
 		return "Invitation Declined",
-			fmt.Sprintf("%s has declined your invitation to join the domain %s as %s.", inviteeName, domainName, roleName),
+			fmt.Sprintf("%s has declined your invitation to join the %s %s as %s.", n.domainAltName, inviteeName, domainName, roleName),
 			inviterRecipient,
 			nil
 	default:
@@ -187,4 +190,12 @@ func (n *notifier) userDisplayName(user *grpcUsersV1.User) string {
 		return user.Email
 	}
 	return user.Id
+}
+
+func titleFirst(s string) string {
+	if s == "" {
+		return s
+	}
+	r, size := utf8.DecodeRuneInString(s)
+	return string(unicode.ToUpper(r)) + s[size:]
 }

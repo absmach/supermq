@@ -33,6 +33,7 @@ The service is configured using environment variables:
 ### General Configuration
 - `SMQ_NOTIFICATIONS_LOG_LEVEL` - Log level (default: "info")
 - `SMQ_NOTIFICATIONS_INSTANCE_ID` - Instance ID for the service
+- `SMQ_NOTIFICATIONS_DOMAIN_ALT_NAME` - Alternative name for domains such as, say, workspaces or tenants (default: "domains")
 - `SMQ_ES_URL` - Event store URL (default: "nats://localhost:4222")
 
 ### Email Configuration

@@ -39,6 +39,7 @@ type config struct {
 	JaegerURL          url.URL `env:"SMQ_JAEGER_URL"                           envDefault:"http://localhost:4318/v1/traces"`
 	SendTelemetry      bool    `env:"SMQ_SEND_TELEMETRY"                       envDefault:"true"`
 	InstanceID         string  `env:"SMQ_NOTIFICATIONS_INSTANCE_ID"            envDefault:""`
+	DomainAltName      string  `env:"SMQ_NOTIFICATIONS_DOMAIN_ALT_NAME"        envDefault:"domain"`
 	TraceRatio         float64 `env:"SMQ_JAEGER_TRACE_RATIO"                   envDefault:"1.0"`
 	EmailHost          string  `env:"SMQ_EMAIL_HOST"                           envDefault:"localhost"`
 	EmailPort          string  `env:"SMQ_EMAIL_PORT"                           envDefault:"25"`
@@ -107,6 +108,7 @@ func main() {
 	emailerCfg := emailer.Config{
 		FromAddress:        cfg.EmailFromAddress,
 		FromName:           cfg.EmailFromName,
+		DomainAltName:      cfg.DomainAltName,
 		InvitationTemplate: cfg.InvitationTemplate,
 		AcceptanceTemplate: cfg.AcceptanceTemplate,
 		RejectionTemplate:  cfg.RejectionTemplate,
