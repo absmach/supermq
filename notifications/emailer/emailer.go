@@ -31,15 +31,15 @@ type notifier struct {
 
 // Config represents the emailer configuration.
 type Config struct {
-	FromAddress         string
-	FromName            string
-	InvitationTemplate  string
-	AcceptanceTemplate  string
-	RejectionTemplate   string
-	EmailHost           string
-	EmailPort           string
-	EmailUsername       string
-	EmailPassword       string
+	FromAddress        string
+	FromName           string
+	InvitationTemplate string
+	AcceptanceTemplate string
+	RejectionTemplate  string
+	EmailHost          string
+	EmailPort          string
+	EmailUsername      string
+	EmailPassword      string
 }
 
 // New creates a new email notifier.

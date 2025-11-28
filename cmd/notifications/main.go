@@ -13,10 +13,10 @@ import (
 
 	chclient "github.com/absmach/callhome/pkg/client"
 	"github.com/absmach/supermq"
+	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/notifications/emailer"
 	"github.com/absmach/supermq/notifications/events"
 	"github.com/absmach/supermq/notifications/middleware"
-	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/events/store"
 	"github.com/absmach/supermq/pkg/grpcclient"
 	jaegerclient "github.com/absmach/supermq/pkg/jaeger"
@@ -34,21 +34,21 @@ const (
 )
 
 type config struct {
-	LogLevel              string  `env:"SMQ_NOTIFICATIONS_LOG_LEVEL"              envDefault:"info"`
-	ESURL                 string  `env:"SMQ_ES_URL"                               envDefault:"nats://localhost:4222"`
-	JaegerURL             url.URL `env:"SMQ_JAEGER_URL"                           envDefault:"http://localhost:4318/v1/traces"`
-	SendTelemetry         bool    `env:"SMQ_SEND_TELEMETRY"                       envDefault:"true"`
-	InstanceID            string  `env:"SMQ_NOTIFICATIONS_INSTANCE_ID"            envDefault:""`
-	TraceRatio            float64 `env:"SMQ_JAEGER_TRACE_RATIO"                   envDefault:"1.0"`
-	EmailHost             string  `env:"SMQ_EMAIL_HOST"                           envDefault:"localhost"`
-	EmailPort             string  `env:"SMQ_EMAIL_PORT"                           envDefault:"25"`
-	EmailUsername         string  `env:"SMQ_EMAIL_USERNAME"                       envDefault:""`
-	EmailPassword         string  `env:"SMQ_EMAIL_PASSWORD"                       envDefault:""`
-	EmailFromAddress      string  `env:"SMQ_EMAIL_FROM_ADDRESS"                   envDefault:"noreply@supermq.com"`
-	EmailFromName         string  `env:"SMQ_EMAIL_FROM_NAME"                      envDefault:"SuperMQ Notifications"`
-	InvitationTemplate    string  `env:"SMQ_EMAIL_INVITATION_TEMPLATE"            envDefault:"docker/templates/invitation-sent-email.tmpl"`
-	AcceptanceTemplate    string  `env:"SMQ_EMAIL_ACCEPTANCE_TEMPLATE"            envDefault:"docker/templates/invitation-accepted-email.tmpl"`
-	RejectionTemplate     string  `env:"SMQ_EMAIL_REJECTION_TEMPLATE"             envDefault:"docker/templates/invitation-rejected-email.tmpl"`
+	LogLevel           string  `env:"SMQ_NOTIFICATIONS_LOG_LEVEL"              envDefault:"info"`
+	ESURL              string  `env:"SMQ_ES_URL"                               envDefault:"nats://localhost:4222"`
+	JaegerURL          url.URL `env:"SMQ_JAEGER_URL"                           envDefault:"http://localhost:4318/v1/traces"`
+	SendTelemetry      bool    `env:"SMQ_SEND_TELEMETRY"                       envDefault:"true"`
+	InstanceID         string  `env:"SMQ_NOTIFICATIONS_INSTANCE_ID"            envDefault:""`
+	TraceRatio         float64 `env:"SMQ_JAEGER_TRACE_RATIO"                   envDefault:"1.0"`
+	EmailHost          string  `env:"SMQ_EMAIL_HOST"                           envDefault:"localhost"`
+	EmailPort          string  `env:"SMQ_EMAIL_PORT"                           envDefault:"25"`
+	EmailUsername      string  `env:"SMQ_EMAIL_USERNAME"                       envDefault:""`
+	EmailPassword      string  `env:"SMQ_EMAIL_PASSWORD"                       envDefault:""`
+	EmailFromAddress   string  `env:"SMQ_EMAIL_FROM_ADDRESS"                   envDefault:"noreply@supermq.com"`
+	EmailFromName      string  `env:"SMQ_EMAIL_FROM_NAME"                      envDefault:"SuperMQ Notifications"`
+	InvitationTemplate string  `env:"SMQ_EMAIL_INVITATION_TEMPLATE"            envDefault:"docker/templates/invitation-sent-email.tmpl"`
+	AcceptanceTemplate string  `env:"SMQ_EMAIL_ACCEPTANCE_TEMPLATE"            envDefault:"docker/templates/invitation-accepted-email.tmpl"`
+	RejectionTemplate  string  `env:"SMQ_EMAIL_REJECTION_TEMPLATE"             envDefault:"docker/templates/invitation-rejected-email.tmpl"`
 }
 
 func main() {

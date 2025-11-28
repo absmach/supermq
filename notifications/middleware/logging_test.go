@@ -21,16 +21,16 @@ func TestLoggingMiddleware(t *testing.T) {
 	lm := middleware.NewLogging(notifier, logger)
 
 	cases := []struct {
-		desc                string
-		inviterID           string
-		inviteeID           string
-		domainID            string
-		domainName          string
-		roleID              string
-		roleName            string
-		sendInvitationErr   error
-		sendAcceptanceErr   error
-		sendRejectionErr    error
+		desc              string
+		inviterID         string
+		inviteeID         string
+		domainID          string
+		domainName        string
+		roleID            string
+		roleName          string
+		sendInvitationErr error
+		sendAcceptanceErr error
+		sendRejectionErr  error
 	}{
 		{
 			desc:              "send invitation notification successfully",

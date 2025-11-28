@@ -24,12 +24,14 @@ const (
 	roleID     = "role-id"
 	roleName   = "Admin"
 
-	inviterEmail  = "inviter@example.com"
-	inviteeEmail  = "invitee@example.com"
-	inviterFirst  = "John"
-	inviterLast   = "Doe"
-	inviteeFirst  = "Jane"
-	inviteeLast   = "Smith"
+	inviterEmail = "inviter@example.com"
+	inviteeEmail = "invitee@example.com"
+	inviterFirst = "John"
+	inviterLast  = "Doe"
+	inviteeFirst = "Jane"
+	inviteeLast  = "Smith"
+
+	envTrue = "true"
 )
 
 type mockUsersClient struct {
@@ -46,7 +48,7 @@ func (m *mockUsersClient) RetrieveUsers(ctx context.Context, req *grpcUsersV1.Re
 }
 
 func TestSendInvitationNotification(t *testing.T) {
-	if os.Getenv("SMQ_RUN_EMAIL_TESTS") != "true" {
+	if os.Getenv("SMQ_RUN_EMAIL_TESTS") != envTrue {
 		t.Skip("Skipping email tests. Set SMQ_RUN_EMAIL_TESTS=true to run.")
 	}
 
@@ -91,7 +93,7 @@ func TestSendInvitationNotification(t *testing.T) {
 				usersClient.On("RetrieveUsers", mock.Anything, mock.MatchedBy(func(req *grpcUsersV1.RetrieveUsersReq) bool {
 					return len(req.Ids) == 2 &&
 						((req.Ids[0] == inviterID && req.Ids[1] == inviteeID) ||
-						 (req.Ids[0] == inviteeID && req.Ids[1] == inviterID))
+							(req.Ids[0] == inviteeID && req.Ids[1] == inviterID))
 				}), mock.Anything).Return(&grpcUsersV1.RetrieveUsersRes{
 					Users: []*grpcUsersV1.User{
 						{
@@ -141,7 +143,7 @@ func TestSendInvitationNotification(t *testing.T) {
 }
 
 func TestSendAcceptanceNotification(t *testing.T) {
-	if os.Getenv("SMQ_RUN_EMAIL_TESTS") != "true" {
+	if os.Getenv("SMQ_RUN_EMAIL_TESTS") != envTrue {
 		t.Skip("Skipping email tests. Set SMQ_RUN_EMAIL_TESTS=true to run.")
 	}
 
@@ -187,7 +189,7 @@ func TestSendAcceptanceNotification(t *testing.T) {
 }
 
 func TestSendRejectionNotification(t *testing.T) {
-	if os.Getenv("SMQ_RUN_EMAIL_TESTS") != "true" {
+	if os.Getenv("SMQ_RUN_EMAIL_TESTS") != envTrue {
 		t.Skip("Skipping email tests. Set SMQ_RUN_EMAIL_TESTS=true to run.")
 	}
 

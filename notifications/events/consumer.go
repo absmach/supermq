@@ -12,10 +12,6 @@ import (
 )
 
 const (
-	invitationSend   = "invitation.send"
-	invitationAccept = "invitation.accept"
-	invitationReject = "invitation.reject"
-
 	// Stream names.
 	sendInvitationStream   = "supermq.invitation.send"
 	acceptInvitationStream = "supermq.invitation.accept"
