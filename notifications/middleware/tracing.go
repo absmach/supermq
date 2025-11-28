@@ -38,3 +38,16 @@ func (tm *tracing) Notify(ctx context.Context, n notifications.Notification) err
 
 	return tm.notifier.Notify(ctx, n)
 }
+
+func notificationTypeToMethodName(t notifications.NotificationType) string {
+	switch t {
+	case notifications.Invitation:
+		return "send_invitation_notification"
+	case notifications.Acceptance:
+		return "send_acceptance_notification"
+	case notifications.Rejection:
+		return "send_rejection_notification"
+	default:
+		return "unknown"
+	}
+}

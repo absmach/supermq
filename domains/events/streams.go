@@ -209,6 +209,7 @@ func (es *eventStore) SendInvitation(ctx context.Context, session authn.Session,
 	event := sendInvitationEvent{
 		invitation: inv,
 		session:    session,
+		requestID:  middleware.GetReqID(ctx),
 	}
 
 	if err := es.Publish(ctx, sendInvitationStream, event); err != nil {
@@ -227,6 +228,7 @@ func (es *eventStore) ListInvitations(ctx context.Context, session authn.Session
 	event := listInvitationsEvent{
 		InvitationPageMeta: pm,
 		session:            session,
+		requestID:          middleware.GetReqID(ctx),
 	}
 
 	if err := es.Publish(ctx, listInvitationsStream, event); err != nil {
@@ -245,6 +247,7 @@ func (es *eventStore) ListDomainInvitations(ctx context.Context, session authn.S
 	event := listDomainInvitationsEvent{
 		InvitationPageMeta: pm,
 		session:            session,
+		requestID:          middleware.GetReqID(ctx),
 	}
 
 	if err := es.Publish(ctx, listDomainInvitationsStream, event); err != nil {
@@ -267,12 +270,13 @@ func (es *eventStore) AcceptInvitation(ctx context.Context, session authn.Sessio
 	event := acceptInvitationEvent{
 		invitation: inv,
 		session:    session,
+		requestID:  middleware.GetReqID(ctx),
 	}
 
 	if err := es.Publish(ctx, acceptInvitationStream, event); err != nil {
 		return inv, err
 	}
-	return inv, err
+	return inv, nil
 }
 
 func (es *eventStore) RejectInvitation(ctx context.Context, session authn.Session, domainID string) (domains.Invitation, error) {
@@ -284,6 +288,7 @@ func (es *eventStore) RejectInvitation(ctx context.Context, session authn.Sessio
 	event := rejectInvitationEvent{
 		invitation: inv,
 		session:    session,
+		requestID:  middleware.GetReqID(ctx),
 	}
 
 	if err := es.Publish(ctx, rejectInvitationStream, event); err != nil {
@@ -302,6 +307,7 @@ func (es *eventStore) DeleteInvitation(ctx context.Context, session authn.Sessio
 		inviteeUserID: inviteeUserID,
 		domainID:      domainID,
 		session:       session,
+		requestID:     middleware.GetReqID(ctx),
 	}
 
 	return es.Publish(ctx, deleteInvitationStream, event)

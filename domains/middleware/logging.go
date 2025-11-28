@@ -179,6 +179,8 @@ func (lm *loggingMiddleware) SendInvitation(ctx context.Context, session authn.S
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
+			slog.String("request_id", middleware.GetReqID(ctx)),
+			slog.String("user_id", session.UserID),
 			slog.String("invitee_user_id", invitation.InviteeUserID),
 			slog.String("domain_id", invitation.DomainID),
 		}
@@ -196,6 +198,8 @@ func (lm *loggingMiddleware) ListInvitations(ctx context.Context, session authn.
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
+			slog.String("request_id", middleware.GetReqID(ctx)),
+			slog.String("user_id", session.UserID),
 			slog.Group("page",
 				slog.Uint64("offset", pm.Offset),
 				slog.Uint64("limit", pm.Limit),
@@ -216,6 +220,8 @@ func (lm *loggingMiddleware) ListDomainInvitations(ctx context.Context, session 
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
+			slog.String("request_id", middleware.GetReqID(ctx)),
+			slog.String("domain_id", session.DomainID),
 			slog.Group("page",
 				slog.Uint64("offset", pm.Offset),
 				slog.Uint64("limit", pm.Limit),
@@ -236,6 +242,8 @@ func (lm *loggingMiddleware) AcceptInvitation(ctx context.Context, session authn
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
+			slog.String("request_id", middleware.GetReqID(ctx)),
+			slog.String("user_id", session.UserID),
 			slog.String("domain_id", domainID),
 		}
 		if err != nil {
@@ -252,6 +260,8 @@ func (lm *loggingMiddleware) RejectInvitation(ctx context.Context, session authn
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
+			slog.String("request_id", middleware.GetReqID(ctx)),
+			slog.String("user_id", session.UserID),
 			slog.String("domain_id", domainID),
 		}
 		if err != nil {
@@ -268,6 +278,8 @@ func (lm *loggingMiddleware) DeleteInvitation(ctx context.Context, session authn
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
+			slog.String("request_id", middleware.GetReqID(ctx)),
+			slog.String("user_id", session.UserID),
 			slog.String("invitee_user_id", inviteeUserID),
 			slog.String("domain_id", domainID),
 		}

@@ -258,7 +258,7 @@ func (svc *service) ListDomainInvitations(ctx context.Context, session authn.Ses
 func (svc *service) AcceptInvitation(ctx context.Context, session authn.Session, domainID string) (invitation Invitation, err error) {
 	inv, err := svc.repo.RetrieveInvitation(ctx, session.UserID, domainID)
 	if err != nil {
-		return Invitation{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return Invitation{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
 	if inv.InviteeUserID != session.UserID {
@@ -273,22 +273,9 @@ func (svc *service) AcceptInvitation(ctx context.Context, session authn.Session,
 		return Invitation{}, svcerr.ErrInvitationAlreadyRejected
 	}
 
-	// Populate domain name if not already set
-	if inv.DomainName == "" {
-		domain, err := svc.repo.RetrieveDomainByID(ctx, domainID)
-		if err != nil {
-			return Invitation{}, errors.Wrap(svcerr.ErrViewEntity, err)
-		}
-		inv.DomainName = domain.Name
-	}
-
-	// Populate role name if not already set
-	if inv.RoleName == "" {
-		role, err := svc.repo.RetrieveRole(ctx, inv.RoleID)
-		if err != nil {
-			return Invitation{}, errors.Wrap(svcerr.ErrViewEntity, err)
-		}
-		inv.RoleName = role.Name
+	inv, err = svc.populateInvitationDetails(ctx, inv, domainID)
+	if err != nil {
+		return Invitation{}, err
 	}
 
 	session.DomainID = domainID
@@ -310,7 +297,7 @@ func (svc *service) AcceptInvitation(ctx context.Context, session authn.Session,
 func (svc *service) RejectInvitation(ctx context.Context, session authn.Session, domainID string) (Invitation, error) {
 	inv, err := svc.repo.RetrieveInvitation(ctx, session.UserID, domainID)
 	if err != nil {
-		return Invitation{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return Invitation{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 
 	if inv.InviteeUserID != session.UserID {
@@ -325,22 +312,9 @@ func (svc *service) RejectInvitation(ctx context.Context, session authn.Session,
 		return Invitation{}, svcerr.ErrInvitationAlreadyRejected
 	}
 
-	// Populate domain name if not already set
-	if inv.DomainName == "" {
-		domain, err := svc.repo.RetrieveDomainByID(ctx, domainID)
-		if err != nil {
-			return Invitation{}, errors.Wrap(svcerr.ErrViewEntity, err)
-		}
-		inv.DomainName = domain.Name
-	}
-
-	// Populate role name if not already set
-	if inv.RoleName == "" {
-		role, err := svc.repo.RetrieveRole(ctx, inv.RoleID)
-		if err != nil {
-			return Invitation{}, errors.Wrap(svcerr.ErrViewEntity, err)
-		}
-		inv.RoleName = role.Name
+	inv, err = svc.populateInvitationDetails(ctx, inv, domainID)
+	if err != nil {
+		return Invitation{}, err
 	}
 
 	inv.RejectedAt = time.Now().UTC()
@@ -379,6 +353,29 @@ func (svc *service) DeleteInvitation(ctx context.Context, session authn.Session,
 	}
 
 	return nil
+}
+
+// populateInvitationDetails populates the domain and role names for an invitation if they are not already set.
+func (svc *service) populateInvitationDetails(ctx context.Context, inv Invitation, domainID string) (Invitation, error) {
+	// Populate domain name if not already set
+	if inv.DomainName == "" {
+		domain, err := svc.repo.RetrieveDomainByID(ctx, domainID)
+		if err != nil {
+			return Invitation{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		}
+		inv.DomainName = domain.Name
+	}
+
+	// Populate role name if not already set
+	if inv.RoleName == "" {
+		role, err := svc.repo.RetrieveRole(ctx, inv.RoleID)
+		if err != nil {
+			return Invitation{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		}
+		inv.RoleName = role.Name
+	}
+
+	return inv, nil
 }
 
 // Add addition removal of user from invitations.
