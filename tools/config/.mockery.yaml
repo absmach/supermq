@@ -137,3 +137,7 @@ packages:
       Hasher:
       Repository:
       Service:
+  github.com/absmach/supermq/notifications:
+    interfaces:
+      Notifier:
+
