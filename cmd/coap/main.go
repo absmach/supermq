@@ -42,8 +42,9 @@ import (
 const (
 	svcName           = "coap_adapter"
 	envPrefix         = "SMQ_COAP_ADAPTER_"
+	envPrefixDTLS     = "SMQ_COAP_ADAPTER_DTLS_"
 	envPrefixHTTP     = "SMQ_COAP_ADAPTER_HTTP_"
-	envPrefixDTLS     = "SMQ_COAP_ADAPTER_SERVER_"
+	envPrefixServer   = "SMQ_COAP_ADAPTER_SERVER_"
 	envPrefixCache    = "SMQ_COAP_CACHE_"
 	envPrefixClients  = "SMQ_CLIENTS_GRPC_"
 	envPrefixChannels = "SMQ_CHANNELS_GRPC_"
@@ -103,9 +104,16 @@ func main() {
 		return
 	}
 
-	dtlsCfg, err := mgtls.NewConfig(env.Options{Prefix: envPrefixDTLS})
+	dtlsCfg, err := mgtls.NewConfig(env.Options{Prefix: envPrefixServer})
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to load %s DTLS configuration : %s", svcName, err))
+		exitCode = 1
+		return
+	}
+
+	dtlsCoapServerConfig := server.Config{Port: defSvcCoAPPort}
+	if err := env.ParseWithOptions(&dtlsCoapServerConfig, env.Options{Prefix: envPrefixDTLS}); err != nil {
+		logger.Error(fmt.Sprintf("failed to load %s CoAP server configuration : %s", svcName, err))
 		exitCode = 1
 		return
 	}
@@ -227,7 +235,7 @@ func main() {
 			return cs.Start()
 		})
 		handler := coap.NewHandler(logger, clientsClient, channelsClient, parser)
-		return proxyCoAP(ctx, coapServerConfig, dtlsCfg, handler, logger)
+		return proxyCoAP(ctx, coapServerConfig, dtlsCoapServerConfig, dtlsCfg, handler, logger)
 	})
 	g.Go(func() error {
 		return server.StopSignalHandler(ctx, cancel, logger, svcName, hs, cs)
@@ -238,13 +246,13 @@ func main() {
 	}
 }
 
-func proxyCoAP(ctx context.Context, cfg server.Config, dtlsCfg mgtls.Config, handler session.Handler, logger *slog.Logger) error {
+func proxyCoAP(ctx context.Context, serverCfg server.Config, dtlsServerCfg server.Config, dtlsCfg mgtls.Config, handler session.Handler, logger *slog.Logger) error {
 	var err error
 	config := mgate.Config{
 		Host:           "",
-		Port:           cfg.Port,
+		Port:           serverCfg.Port,
 		TargetProtocol: targetProtocol,
-		TargetHost:     cfg.Host,
+		TargetHost:     serverCfg.Host,
 		TargetPort:     targetCoapPort,
 	}
 
@@ -252,25 +260,25 @@ func proxyCoAP(ctx context.Context, cfg server.Config, dtlsCfg mgtls.Config, han
 
 	errCh := make(chan error)
 
+	logger.Info(fmt.Sprintf("Starting COAP without DTLS proxy on port %s", config.Port))
+	go func() {
+		errCh <- mg.Listen(ctx)
+	}()
+
 	config.DTLSConfig, err = mgtls.LoadTLSConfig(&dtlsCfg, &dtls.Config{})
 	if err != nil {
 		return err
 	}
 
-	switch {
-	case config.DTLSConfig != nil:
-		dltsCfg := config
-		mgDtls := mgatecoap.NewProxy(dltsCfg, handler, logger)
-		logger.Info(fmt.Sprintf("Starting COAP with DTLS proxy on port %s", cfg.Port))
+	if config.DTLSConfig != nil {
+		config.Port = dtlsServerCfg.Port
+		mgDtls := mgatecoap.NewProxy(config, handler, logger)
+		logger.Info(fmt.Sprintf("Starting COAP with DTLS proxy on port %s", config.Port))
 		go func() {
 			errCh <- mgDtls.Listen(ctx)
 		}()
-	default:
-		logger.Info(fmt.Sprintf("Starting COAP without DTLS proxy on port %s", cfg.Port))
-		go func() {
-			errCh <- mg.Listen(ctx)
-		}()
 	}
+
 	select {
 	case <-ctx.Done():
 		logger.Info(fmt.Sprintf("proxy COAP shutdown at %s:%s", config.Host, config.Port))
