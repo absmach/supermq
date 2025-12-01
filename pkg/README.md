@@ -34,4 +34,4 @@ import "github.com/absmach/supermq/pkg/authn"
 | `uuid`, `ulid`, `sid` | ID generators. |
 | `transformers`, `svcutil` | Generic data transformation and service utilities. |
 
-For detailed package-level docs, run `go doc` on the desired package or browse the source here.
+For detailed package-level docs, run `go doc` on the desired package or browse the [source here](https://docs.supermq.absmach.eu.).

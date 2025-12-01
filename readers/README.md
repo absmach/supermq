@@ -2,6 +2,4 @@
 
 Readers provide implementations of various `message readers`. Message readers are services that consume normalized (in `SenML` format) SuperMQ messages from data storage and expose HTTP API for message consumption.
 
-For an in-depth explanation of the usage of `reader`, as well as thorough understanding of SuperMQ, please check out the [official documentation][doc].
-
-[doc]: https://docs.supermq.absmach.eu/
+For an in-depth explanation of the usage of `readers` service as well as API details, see the [Readers guide](https://docs.magistrala.absmach.eu/dev-guide/readers) and the [OpenAPI reference](https://docs.api.magistrala.absmach.eu/?urls.primaryName=api%2Freaders.yaml).
