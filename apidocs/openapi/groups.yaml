@@ -1398,7 +1398,7 @@ components:
       example: "groupName"
 
     GroupDescription:
-      name: name
+      name: description
       description: Group's description.
       in: query
       schema:
