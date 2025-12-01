@@ -9,7 +9,7 @@ info:
     Some useful links:
     - [The SuperMQ repository](https://github.com/absmach/supermq)
   contact:
-    email: info@abstractmachines.fr
+    email: info@absmach.eu
   license:
     name: Apache 2.0
     url: https://github.com/absmach/supermq/blob/main/LICENSE
@@ -24,17 +24,17 @@ tags:
     description: CRUD operations for your clients
     externalDocs:
       description: Find out more about clients
-      url: https://docs.supermq.abstractmachines.fr/
+      url: https://docs.supermq.absmach.eu/
   - name: Roles
     description: All operations involving roles for clients
     externalDocs:
       description: Find out more about roles
-      url: https://docs.supermq.abstractmachines.fr/
+      url: https://docs.supermq.absmach.eu/
   - name: Health
     description: Health check operations
     externalDocs:
       description: Find out more about health checks
-      url: https://docs.supermq.abstractmachines.fr/
+      url: https://docs.supermq.absmach.eu/
 
 paths:
   /{domainID}/clients:
@@ -323,7 +323,7 @@ paths:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "#/components/responses/ClientRes"
+          $ref: "#/components/responses/DisabledClientRes"
         "400":
           description: Failed due to malformed client's ID.
         "401":
@@ -1130,6 +1130,63 @@ components:
           items:
             type: string
 
+    DisabledClient:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+          description: Client unique identifier.
+        name:
+          type: string
+          example: clientName
+          description: Client name.
+        tags:
+          type: array
+          minItems: 0
+          items:
+            type: string
+          example: ["tag1", "tag2"]
+          description: Client tags.
+        domain_id:
+          type: string
+          format: uuid
+          example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+          description: ID of the domain to which client belongs.
+        credentials:
+          type: object
+          properties:
+            identity:
+              type: string
+              example: clientIDentity
+              description: Client Identity for example email address.
+            secret:
+              type: string
+              example: bb7edb32-2eac-4aad-aebe-ed96fe073879
+              description: Client secret password.
+        metadata:
+          type: object
+          example: { "model": "example" }
+          description: Arbitrary, object-encoded client's data.
+        status:
+          type: string
+          description: Client Status
+          format: string
+          example: disabled
+        created_at:
+          type: string
+          format: date-time
+          example: "2019-11-26 13:31:52"
+          description: Time when the channel was created.
+        updated_at:
+          type: string
+          format: date-time
+          example: "2019-11-26 13:31:52"
+          description: Time when the channel was created.
+      xml:
+        name: client
+
     ClientSecret:
       type: object
       properties:
@@ -1446,6 +1503,13 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/Client"
+
+    DisabledClientRes:
+      description: Data retrieved.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/DisabledClient"
 
     ClientPageRes:
       description: Data retrieved.

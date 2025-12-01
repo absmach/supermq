@@ -9,7 +9,7 @@ info:
     Some useful links:
     - [The SuperMQ repository](https://github.com/absmach/supermq)
   contact:
-    email: info@abstractmachines.fr
+    email: info@absmach.eu
   license:
     name: Apache 2.0
     url: https://github.com/absmach/supermq/blob/main/LICENSE
@@ -24,17 +24,17 @@ tags:
     description: Everything about your Keys.
     externalDocs:
       description: Find out more about keys
-      url: https://docs.supermq.abstractmachines.fr/
+      url: https://docs.supermq.absmach.eu/
   - name: PATs
     description: Everything about your Personal Access Tokens.
     externalDocs:
       description: Find out more about Personal Access Tokens
-      url: https://docs.supermq.abstractmachines.fr/
+      url: https://docs.supermq.absmach.eu/
   - name: Health
     description: Service health check endpoint.
     externalDocs:
       description: Find out more about health check
-      url: https://docs.supermq.abstractmachines.fr/
+      url: https://docs.supermq.absmach.eu/
 
 paths:
   /keys:
