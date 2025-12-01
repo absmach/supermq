@@ -6,7 +6,7 @@ name: Deploy GitHub Pages
 on:
   push:
     branches:
-      - gh-actions
+      - main
 
 permissions:
   contents: write
