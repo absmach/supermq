@@ -29,8 +29,6 @@ const (
 	toKey         = "to"
 	attributesKey = "with_attributes"
 	metadataKey   = "with_metadata"
-	entityIDKey   = "id"
-	entityTypeKey = "entity_type"
 )
 
 // MakeHandler returns a HTTP API handler with health check and metrics.

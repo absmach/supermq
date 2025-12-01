@@ -1,77 +1,170 @@
-# HTTP adapter
+# HTTP Adapter
 
-HTTP adapter provides an HTTP API for sending messages through the platform.
+The HTTP Adapter exposes HTTP endpoints for publishing messages into SuperMQ channels. It authenticates clients via tokens or Basic auth, resolves domains/channels over gRPC, and forwards payloads to the message broker.
+
+For more on SuperMQ, see the [official documentation][doc].
 
 ## Configuration
 
-The service is configured using the environment variables presented in the following table. Note that any unset variables will be replaced with their default values.
+Environment variables (unset values fall back to defaults):
 
-| Variable                            | Description                                                                         | Default                             |
-| ----------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------- |
-| SMQ_HTTP_ADAPTER_LOG_LEVEL          | Log level for the HTTP Adapter (debug, info, warn, error)                           | info                                |
-| SMQ_HTTP_ADAPTER_HOST               | Service HTTP host                                                                   | ""                                  |
-| SMQ_HTTP_ADAPTER_PORT               | Service HTTP port                                                                   | 80                                  |
-| SMQ_HTTP_ADAPTER_SERVER_CERT        | Path to the PEM encoded server certificate file                                     | ""                                  |
-| SMQ_HTTP_ADAPTER_SERVER_KEY         | Path to the PEM encoded server key file                                             | ""                                  |
-| SMQ_HTTP_ADAPTER_CACHE_NUM_COUNTERS | Number of cache counters to keep that hold access frequency information             | 200000                              |
-| SMQ_HTTP_ADAPTER_CACHE_MAX_COST     | Maximum size of the cache(in bytes)                                                 | 1048576                             |
-| SMQ_HTTP_ADAPTER_CACHE_BUFFER_ITEMS | Number of cache `Get` buffers                                                       | 64                                  |
-| SMQ_CLIENTS_GRPC_URL                | Clients service Auth gRPC URL                                                       | <localhost:7000>                    |
-| SMQ_CLIENTS_GRPC_TIMEOUT            | Clients service Auth gRPC request timeout in seconds                                | 1s                                  |
-| SMQ_CLIENTS_GRPC_CLIENT_CERT        | Path to the PEM encoded clients service Auth gRPC client certificate file           | ""                                  |
-| SMQ_CLIENTS_GRPC_CLIENT_KEY         | Path to the PEM encoded clients service Auth gRPC client key file                   | ""                                  |
-| SMQ_CLIENTS_GRPC_SERVER_CERTS       | Path to the PEM encoded clients server Auth gRPC server trusted CA certificate file | ""                                  |
-| SMQ_MESSAGE_BROKER_URL              | Message broker instance URL                                                         | <amqp://guest:guest@rabbitmq:5672/> |
-| SMQ_JAEGER_URL                      | Jaeger server URL                                                                   | <http://localhost:4318/v1/traces>   |
-| SMQ_JAEGER_TRACE_RATIO              | Jaeger sampling ratio                                                               | 1.0                                 |
-| SMQ_SEND_TELEMETRY                  | Send telemetry to supermq call home server                                          | true                                |
-| SMQ_HTTP_ADAPTER_INSTANCE_ID        | Service instance ID                                                                 | ""                                  |
+| Variable                               | Description                                                                                | Default                               |
+| -------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------- |
+| `SMQ_HTTP_ADAPTER_LOG_LEVEL`           | Log level (debug, info, warn, error)                                                       | debug                                  |
+| `SMQ_HTTP_ADAPTER_HOST`                | HTTP Adapter host                                                                          | http-adapter                          |
+| `SMQ_HTTP_ADAPTER_PORT`                | HTTP Adapter port                                                                          | 8008                                   |
+| `SMQ_HTTP_ADAPTER_SERVER_CERT`         | Path to PEM-encoded server certificate (enables TLS)                                       | ""                                     |
+| `SMQ_HTTP_ADAPTER_SERVER_KEY`          | Path to PEM-encoded server key                                                             | ""                                     |
+| `SMQ_HTTP_ADAPTER_SERVER_CA_CERTS`     | Trusted CA bundle for HTTPS server                                                         | ""                                     |
+| `SMQ_HTTP_ADAPTER_CLIENT_CA_CERTS`     | Client CA bundle to require mTLS on HTTPS server                                           | ""                                     |
+| `SMQ_HTTP_ADAPTER_CACHE_NUM_COUNTERS`  | Cache counters for topic parsing                                                           | 200000                                 |
+| `SMQ_HTTP_ADAPTER_CACHE_MAX_COST`      | Maximum cache size (bytes)                                                                 | 1048576                                |
+| `SMQ_HTTP_ADAPTER_CACHE_BUFFER_ITEMS`  | Cache buffer items                                                                         | 64                                     |
+| `SMQ_MESSAGE_BROKER_URL`               | Message broker URL (publishing target)                                                     | nats://nats:4222                       |
+| `SMQ_ES_URL`                           | Event store URL (publishing middleware)                                                    | nats://nats:4222                       |
+| `SMQ_JAEGER_URL`                       | Jaeger tracing endpoint                                                                    | <http://jaeger:4318/v1/traces>         |
+| `SMQ_JAEGER_TRACE_RATIO`               | Trace sampling ratio                                                                       | 1.0                                    |
+| `SMQ_SEND_TELEMETRY`                   | Send telemetry to SuperMQ call-home server                                                 | true                                   |
+| `SMQ_HTTP_ADAPTER_INSTANCE_ID`         | Service instance ID (auto-generated when empty)                                            | ""                                     |
+| `SMQ_CLIENTS_GRPC_URL`                 | Clients service gRPC URL                                                                   | clients:7006                           |
+| `SMQ_CLIENTS_GRPC_TIMEOUT`             | Clients gRPC request timeout                                                               | 300s                                   |
+| `SMQ_CLIENTS_GRPC_CLIENT_CERT`         | Clients gRPC client certificate                                                            | ""                                     |
+| `SMQ_CLIENTS_GRPC_CLIENT_KEY`          | Clients gRPC client key                                                                    | ""                                     |
+| `SMQ_CLIENTS_GRPC_SERVER_CA_CERTS`     | Clients gRPC trusted CA bundle                                                             | ""                                     |
+| `SMQ_CHANNELS_GRPC_URL`                | Channels service gRPC URL                                                                  | channels:7005                          |
+| `SMQ_CHANNELS_GRPC_TIMEOUT`            | Channels gRPC request timeout                                                              | 300s                                   |
+| `SMQ_CHANNELS_GRPC_CLIENT_CERT`        | Channels gRPC client certificate                                                           | ""                                     |
+| `SMQ_CHANNELS_GRPC_CLIENT_KEY`         | Channels gRPC client key                                                                   | ""                                     |
+| `SMQ_CHANNELS_GRPC_SERVER_CA_CERTS`    | Channels gRPC trusted CA bundle                                                            | ""                                     |
+| `SMQ_DOMAINS_GRPC_URL`                 | Domains service gRPC URL                                                                   | domains:7003                           |
+| `SMQ_DOMAINS_GRPC_TIMEOUT`             | Domains gRPC request timeout                                                               | 300s                                   |
+| `SMQ_DOMAINS_GRPC_CLIENT_CERT`         | Domains gRPC client certificate                                                            | ""                                     |
+| `SMQ_DOMAINS_GRPC_CLIENT_KEY`          | Domains gRPC client key                                                                    | ""                                     |
+| `SMQ_DOMAINS_GRPC_SERVER_CA_CERTS`     | Domains gRPC trusted CA bundle                                                             | ""                                     |
+| `SMQ_AUTH_GRPC_URL`                    | Auth service gRPC URL                                                                      | auth:7001                              |
+| `SMQ_AUTH_GRPC_TIMEOUT`                | Auth service gRPC request timeout                                                          | 300s                                   |
+| `SMQ_AUTH_GRPC_CLIENT_CERT`            | Auth gRPC client certificate                                                               | ""                                     |
+| `SMQ_AUTH_GRPC_CLIENT_KEY`             | Auth gRPC client key                                                                       | ""                                     |
+| `SMQ_AUTH_GRPC_SERVER_CA_CERTS`        | Auth gRPC trusted CA bundle                                                                | ""                                     |
 
 ## Deployment
 
-The service itself is distributed as Docker container. Check the [`http-adapter`](https://github.com/absmach/supermq/blob/main/docker/docker-compose.yaml) service section in docker-compose file to see how service is deployed.
+The adapter is shipped as a Docker container. See the [`http-adapter` section](https://github.com/absmach/supermq/blob/main/docker/docker-compose.yaml#L1226-L1365) of `docker-compose.yaml` for deployment details.
 
-Running this service outside of container requires working instance of the message broker service, clients service and Jaeger server.
-To start the service outside of the container, execute the following shell script:
+To build and run locally:
 
 ```bash
 # download the latest version of the service
 git clone https://github.com/absmach/supermq
-
 cd supermq
 
-# compile the http
+# compile the http adapter
 make http
 
-# copy binary to bin
+# copy binary to $GOBIN
 make install
 
 # set the environment variables and run the service
-SMQ_HTTP_ADAPTER_LOG_LEVEL=info \
-SMQ_HTTP_ADAPTER_HOST=localhost \
-SMQ_HTTP_ADAPTER_PORT=80 \
+SMQ_HTTP_ADAPTER_LOG_LEVEL=debug \
+SMQ_HTTP_ADAPTER_HOST=http-adapter \
+SMQ_HTTP_ADAPTER_PORT=8008 \
 SMQ_HTTP_ADAPTER_SERVER_CERT="" \
 SMQ_HTTP_ADAPTER_SERVER_KEY="" \
 SMQ_HTTP_ADAPTER_CACHE_NUM_COUNTERS=200000 \
 SMQ_HTTP_ADAPTER_CACHE_MAX_COST=1048576 \
 SMQ_HTTP_ADAPTER_CACHE_BUFFER_ITEMS=64 \
-SMQ_CLIENTS_GRPC_URL=localhost:7000 \
-SMQ_CLIENTS_GRPC_TIMEOUT=1s \
+SMQ_MESSAGE_BROKER_URL=nats://nats:4222 \
+SMQ_ES_URL=nats://nats:4222 \
+SMQ_JAEGER_URL=<http://jaeger:4318/v1/traces> \
+SMQ_JAEGER_TRACE_RATIO=1.0 \
+SMQ_CLIENTS_GRPC_URL=clients:7006 \
+SMQ_CLIENTS_GRPC_TIMEOUT=300s \
 SMQ_CLIENTS_GRPC_CLIENT_CERT="" \
 SMQ_CLIENTS_GRPC_CLIENT_KEY="" \
-SMQ_CLIENTS_GRPC_SERVER_CERTS="" \
-SMQ_MESSAGE_BROKER_URL=amqp://guest:guest@rabbitmq:5672/ \
-SMQ_JAEGER_URL=http://localhost:14268/api/traces \
-SMQ_JAEGER_TRACE_RATIO=1.0 \
+SMQ_CLIENTS_GRPC_SERVER_CA_CERTS="" \
+SMQ_CHANNELS_GRPC_URL=channels:7005 \
+SMQ_CHANNELS_GRPC_TIMEOUT=300s \
+SMQ_CHANNELS_GRPC_CLIENT_CERT="" \
+SMQ_CHANNELS_GRPC_CLIENT_KEY="" \
+SMQ_CHANNELS_GRPC_SERVER_CA_CERTS="" \
+SMQ_DOMAINS_GRPC_URL=domains:7003 \
+SMQ_DOMAINS_GRPC_TIMEOUT=300s \
+SMQ_DOMAINS_GRPC_CLIENT_CERT="" \
+SMQ_DOMAINS_GRPC_CLIENT_KEY="" \
+SMQ_DOMAINS_GRPC_SERVER_CA_CERTS="" \
+SMQ_AUTH_GRPC_URL=auth:7001 \
+SMQ_AUTH_GRPC_TIMEOUT=300s \
+SMQ_AUTH_GRPC_CLIENT_CERT="" \
+SMQ_AUTH_GRPC_CLIENT_KEY="" \
+SMQ_AUTH_GRPC_SERVER_CA_CERTS="" \
 SMQ_SEND_TELEMETRY=true \
 SMQ_HTTP_ADAPTER_INSTANCE_ID="" \
 $GOBIN/supermq-http
 ```
 
-Setting `SMQ_HTTP_ADAPTER_SERVER_CERT` and `SMQ_HTTP_ADAPTER_SERVER_KEY` will enable TLS against the service. The service expects a file in PEM format for both the certificate and the key.
-
-Setting `SMQ_CLIENTS_GRPC_CLIENT_CERT` and `SMQ_CLIENTS_GRPC_CLIENT_KEY` will enable TLS against the clients service. The service expects a file in PEM format for both the certificate and the key. Setting `SMQ_CLIENTS_GRPC_SERVER_CERTS` will enable TLS against the clients service trusting only those CAs that are provided. The service expects a file in PEM format of trusted CAs.
+TLS is enabled by setting `SMQ_HTTP_ADAPTER_SERVER_CERT` and `SMQ_HTTP_ADAPTER_SERVER_KEY`. mTLS is enabled when `SMQ_HTTP_ADAPTER_CLIENT_CA_CERTS` is provided. gRPC client TLS/mTLS is enabled by setting the corresponding client cert/key/CA variables.
 
 ## Usage
 
-HTTP Authorization request header contains the credentials to authenticate a Client. The authorization header can be a plain Client key or a Client key encoded as a password for Basic Authentication. In case the Basic Authentication schema is used, the username is ignored. For more information about service capabilities and its usage, please check out the [API documentation](https://docs.api.supermq.abstractmachines.fr/?urls.primaryName=http.yaml).
+Endpoints:
+
+- `POST /m/{domain}/c/{channel}` (and wildcard `/m/{domain}/c/{channel}/*`): publish a message.
+- `POST /hc/{domain}`: health-check message path (authenticated).
+- `GET /health`: service health probe.
+- `GET /metrics`: Prometheus metrics.
+
+Authentication:
+
+- Bearer token in `Authorization` header, or
+- Basic auth where the password is the token (username ignored).
+
+Supported content types: `application/json`, `application/senml+json`, `application/senml+cbor`.
+
+Example publish:
+
+```bash
+curl -X POST http://localhost:8008/m/<domainID>/c/<channelID>/sub/topic \
+  -H "Authorization: Bearer <client_token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "temp": 22.5, "unit": "C" }'
+```
+
+## Implementation Details
+
+- Publishes to the configured message broker (`SMQ_MESSAGE_BROKER_URL`) with optional event-store middleware (`SMQ_ES_URL`).
+- Resolves domains and channels over gRPC to validate/route topics; authenticates via Auth gRPC; validates client identity via Clients gRPC.
+- Topic parsing is cached (Ristretto) with configurable counters/cost/buffers to reduce resolver calls.
+- Observability: Jaeger tracing, Prometheus metrics at `/metrics`, service health at `/health`.
+- Optional call-home telemetry is enabled by default.
+
+## Best Practices
+
+- Use domain/channel routes consistently in publish paths; include subtopics to segment data.
+- Keep cache defaults unless load patterns require tuning; monitor `/metrics` for cache hit ratios.
+- Enable TLS/mTLS for production deployments (HTTP server and gRPC clients).
+- Reuse a single broker URL across services (often NATS) to simplify operations.
+
+## Versioning and Health Check
+
+The adapter exposes `/health` with status and build metadata.
+
+```bash
+curl -X GET http://localhost:8008/health \
+  -H "accept: application/health+json"
+```
+
+Example response:
+
+```json
+{
+  "status": "pass",
+  "version": "0.18.0",
+  "commit": "7d6f4dc4f7f0c1fa3dc24eddfb18bb5073ff4f62",
+  "description": "http adapter",
+  "build_time": "1970-01-01_00:00:00"
+}
+```
+
+For endpoint details, see the [HTTP Adapter API documentation](https://docs.api.supermq.absmach.eu/?urls.primaryName=http.yaml).
+
+[doc]: https://docs.supermq.absmach.eu/

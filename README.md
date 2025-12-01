@@ -14,7 +14,7 @@
   [![Coverage](https://codecov.io/gh/absmach/supermq/graph/badge.svg?token=nPCEr5nW8S)](https://codecov.io/gh/absmach/supermq)
   [![License](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
  [![Matrix](https://img.shields.io/matrix/supermq%3Amatrix.org?label=Chat&style=flat&logo=matrix&logoColor=white)](https://matrix.to/#/#supermq:matrix.org)
-
+  
   ### [Guide](https://docs.supermq.absmach.eu) | [Contributing](CONTRIBUTING.md) | [Website](https://absmach.eu/) | [Chat](https://matrix.to/#/#supermq:matrix.org)
 
 </div>

@@ -126,12 +126,8 @@ SuperMQ supports the following operations for Clients:
 | `delete`      | Permanently delete a client                                        |
 | `enable`      | Enable a previously disabled client                                |
 | `disable`     | Disable an active client                                           |
-| `connect`     | Connect a client to a channel via roles                            |
-| `disconnect`  | Disconnect a client from a channel by removing roles              |
-| `connections` | List channels connected or disconnected from a client             |
-| `share`       | Share a client with a user (via roles)                             |
-| `unshare`     | Revoke a user's access to a shared client                          |
-| `users`       | List users associated with a given client                          |
+| `setClientParentGroup`     | Add a Parent Group to a client                  |
+| `removeClientParentGroup`  |  Remove a Parent Group from a client      |
 
 ### API Examples
 
@@ -340,8 +336,6 @@ To ensure robust and secure usage of the Clients service, consider the following
 - **Use metadata and tags meaningfully**: Store useful attributes like model, location, environment (e.g., `production`, `test`) to filter and manage clients efficiently.
 - **Keep credentials secure**: Rotate client secrets periodically. Avoid using guessable strings.
 - **Disable unused clients**: Use the `disable` operation to revoke access instead of deleting clients when deactivation is preferred.
-- **Restrict channel access**: Only connect clients to the channels they need with appropriate publish/subscribe permissions.
-- **Share clients judiciously**: Use the `share` and `unshare` endpoints to control visibility and access for other users.
 - **Audit regularly**: Periodically list client roles and connections to ensure expected configuration.
 - **Prefer standalone mode for edge deployments**: Use environment variables to configure standalone mode in isolated environments without needing the Auth service.
 

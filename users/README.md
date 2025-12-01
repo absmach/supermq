@@ -131,6 +131,6 @@ Setting `SMQ_AUTH_GRPC_CLIENT_CERT` and `SMQ_AUTH_GRPC_CLIENT_KEY` will enable T
 
 ## Usage
 
-For more information about service capabilities and its usage, please check out the [API documentation](https://docs.api.supermq.abstractmachines.fr/?urls.primaryName=users-openapi.yaml).
+For more information about service capabilities and its usage, please check out the [API documentation](https://docs.api.supermq.absmach.eu/?urls.primaryName=users-openapi.yaml).
 
 [doc]: https://docs.supermq.absmach.eu/
