@@ -7,10 +7,17 @@ on:
   push:
     branches:
       - fix-ci
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  lint-and-build: # Linting and building are combined to save time for setting up Go
-    name: Lint and Build
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
 
     steps:
@@ -48,6 +55,21 @@ jobs:
           version: v2.4.0
           args: --config ./tools/config/.golangci.yaml
 
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.25.x
+          cache-dependency-path: "go.sum"
+
       - name: Build all Binaries
         run: |
           make all -j $(nproc)
@@ -60,22 +82,17 @@ jobs:
         run: |
           SMQ_ES_TYPE=es_redis make mqtt
 
-  run-tests:
-    name: Run tests
+  detect-changes:
+    name: Detect Changes
     runs-on: ubuntu-latest
-    needs: lint-and-build
-
+    outputs:
+      modules: ${{ steps.set-matrix.outputs.modules }}
+      workflow_changed: ${{ steps.changes.outputs.workflow }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
-      - name: Setup Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: 1.25.x
-          cache-dependency-path: "go.sum"
 
       - name: Check for changes in specific paths
         uses: dorny/paths-filter@v3
@@ -243,123 +260,142 @@ jobs:
               - "clients/**"
               - "pkg/messaging/**"
 
-      - name: Create coverage directory
-        run: |
-          mkdir coverage
+            notifications:
+              - "notifications/**"
+              - "cmd/notifications/**"
+              - "auth.pb.go"
+              - "auth_grpc.pb.go"
+              - "consumers/notifier.go"
+              - "pkg/events/**"
 
-      - name: Run journal tests
-        if: steps.changes.outputs.journal == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/journal.out ./journal/...
+            api:
+              - "api/**"
 
-      - name: Run auth tests
-        if: steps.changes.outputs.auth == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/auth.out ./auth/...
+            consumers:
+              - "consumers/**"
 
-      - name: Run domains tests
-        if: steps.changes.outputs.domains == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/domains.out ./domains/...
+            readers:
+              - "readers/**"
 
-      - name: Run cli tests
-        if: steps.changes.outputs.cli == 'true' || steps.changes.outputs.workflow == 'true'
+      - name: Set matrix for changed modules
+        id: set-matrix
         run: |
-          go test --race -v -count=1 -coverprofile=coverage/cli.out ./cli/...
+          modules=()
 
-      - name: Run CoAP tests
-        if: steps.changes.outputs.coap == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/coap.out ./coap/...
+          if [[ "${{ steps.changes.outputs.workflow }}" == "true" ]]; then
+            # If workflow changed, test everything
+            modules=("auth" "channels" "cli" "clients" "coap" "domains" "groups" "http" "internal" "journal" "logger" "mqtt" "pkg-errors" "pkg-events" "pkg-grpcclient" "pkg-messaging" "pkg-sdk" "pkg-transformers" "pkg-ulid" "pkg-uuid" "users" "ws" "notifications" "api" "consumers" "readers")
+          else
+            # Add only changed modules
+            [[ "${{ steps.changes.outputs.auth }}" == "true" ]] && modules+=("auth")
+            [[ "${{ steps.changes.outputs.channels }}" == "true" ]] && modules+=("channels")
+            [[ "${{ steps.changes.outputs.cli }}" == "true" ]] && modules+=("cli")
+            [[ "${{ steps.changes.outputs.clients }}" == "true" ]] && modules+=("clients")
+            [[ "${{ steps.changes.outputs.coap }}" == "true" ]] && modules+=("coap")
+            [[ "${{ steps.changes.outputs.domains }}" == "true" ]] && modules+=("domains")
+            [[ "${{ steps.changes.outputs.groups }}" == "true" ]] && modules+=("groups")
+            [[ "${{ steps.changes.outputs.http }}" == "true" ]] && modules+=("http")
+            [[ "${{ steps.changes.outputs.internal }}" == "true" ]] && modules+=("internal")
+            [[ "${{ steps.changes.outputs.journal }}" == "true" ]] && modules+=("journal")
+            [[ "${{ steps.changes.outputs.logger }}" == "true" ]] && modules+=("logger")
+            [[ "${{ steps.changes.outputs.mqtt }}" == "true" ]] && modules+=("mqtt")
+            [[ "${{ steps.changes.outputs.pkg-errors }}" == "true" ]] && modules+=("pkg-errors")
+            [[ "${{ steps.changes.outputs.pkg-events }}" == "true" ]] && modules+=("pkg-events")
+            [[ "${{ steps.changes.outputs.pkg-grpcclient }}" == "true" ]] && modules+=("pkg-grpcclient")
+            [[ "${{ steps.changes.outputs.pkg-messaging }}" == "true" ]] && modules+=("pkg-messaging")
+            [[ "${{ steps.changes.outputs.pkg-sdk }}" == "true" ]] && modules+=("pkg-sdk")
+            [[ "${{ steps.changes.outputs.pkg-transformers }}" == "true" ]] && modules+=("pkg-transformers")
+            [[ "${{ steps.changes.outputs.pkg-ulid }}" == "true" ]] && modules+=("pkg-ulid")
+            [[ "${{ steps.changes.outputs.pkg-uuid }}" == "true" ]] && modules+=("pkg-uuid")
+            [[ "${{ steps.changes.outputs.users }}" == "true" ]] && modules+=("users")
+            [[ "${{ steps.changes.outputs.ws }}" == "true" ]] && modules+=("ws")
+            [[ "${{ steps.changes.outputs.notifications }}" == "true" ]] && modules+=("notifications")
+            [[ "${{ steps.changes.outputs.api }}" == "true" ]] && modules+=("api")
+            [[ "${{ steps.changes.outputs.consumers }}" == "true" ]] && modules+=("consumers")
+            [[ "${{ steps.changes.outputs.readers }}" == "true" ]] && modules+=("readers")
+          fi
 
-      - name: Run HTTP tests
-        if: steps.changes.outputs.http == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/http.out ./http/...
+          # Convert to JSON array
+          json_modules=$(printf '%s\n' "${modules[@]}" | jq -R . | jq -s -c .)
+          echo "modules=$json_modules" >> $GITHUB_OUTPUT
+          echo "Testing modules: $json_modules"
 
-      - name: Run internal tests
-        if: steps.changes.outputs.internal == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/internal.out ./internal/...
+  run-tests:
+    name: Test ${{ matrix.module }}
+    runs-on: ubuntu-latest
+    needs: [lint, detect-changes]
+    if: needs.detect-changes.outputs.modules != '[]'
+    strategy:
+      fail-fast: true
+      max-parallel: 20
+      matrix:
+        module: ${{ fromJSON(needs.detect-changes.outputs.modules) }}
 
-      - name: Run logger tests
-        if: steps.changes.outputs.logger == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/logger.out ./logger/...
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
-      - name: Run MQTT tests
-        if: steps.changes.outputs.mqtt == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/mqtt.out ./mqtt/...
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.25.x
+          cache-dependency-path: "go.sum"
 
-      - name: Run pkg errors tests
-        if: steps.changes.outputs.pkg-errors == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/pkg-errors.out ./pkg/errors/...
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
-      - name: Run pkg events tests
-        if: steps.changes.outputs.pkg-events == 'true' || steps.changes.outputs.workflow == 'true'
+      - name: Run ${{ matrix.module }} tests
         run: |
-          go test --race -v -count=1 -coverprofile=coverage/pkg-events.out ./pkg/events/...
+          # Map module names to directories
+          case "${{ matrix.module }}" in
+            pkg-errors) dir="pkg/errors" ;;
+            pkg-events) dir="pkg/events" ;;
+            pkg-grpcclient) dir="pkg/grpcclient" ;;
+            pkg-messaging) dir="pkg/messaging" ;;
+            pkg-sdk) dir="pkg/sdk" ;;
+            pkg-transformers) dir="pkg/transformers" ;;
+            pkg-ulid) dir="pkg/ulid" ;;
+            pkg-uuid) dir="pkg/uuid" ;;
+            *) dir="${{ matrix.module }}" ;;
+          esac
 
-      - name: Run pkg grpcclient tests
-        if: steps.changes.outputs.pkg-grpcclient == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/pkg-grpcclient.out ./pkg/grpcclient/...
-
-      - name: Run pkg messaging tests
-        if: steps.changes.outputs.pkg-messaging == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/pkg-messaging.out ./pkg/messaging/...
-
-      - name: Run pkg sdk tests
-        if: steps.changes.outputs.pkg-sdk == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/pkg-sdk.out ./pkg/sdk/...
-
-      - name: Run pkg transformers tests
-        if: steps.changes.outputs.pkg-transformers == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/pkg-transformers.out ./pkg/transformers/...
-
-      - name: Run pkg ulid tests
-        if: steps.changes.outputs.pkg-ulid == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/pkg-ulid.out ./pkg/ulid/...
-
-      - name: Run pkg uuid tests
-        if: steps.changes.outputs.pkg-uuid == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/pkg-uuid.out ./pkg/uuid/...
-
-      - name: Run clients tests
-        if: steps.changes.outputs.clients == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/clients.out ./clients/...
-
-      - name: Run channels tests
-        if: steps.changes.outputs.channels == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/channels.out ./channels/...
-
-      - name: Run users tests
-        if: steps.changes.outputs.users == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/users.out ./users/...
-
-      - name: Run groups tests
-        if: steps.changes.outputs.groups == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/groups.out ./groups/...
-
-      - name: Run WebSocket tests
-        if: steps.changes.outputs.ws == 'true' || steps.changes.outputs.workflow == 'true'
-        run: |
-          go test --race -v -count=1 -coverprofile=coverage/ws.out ./ws/...
+          go test --race -v -count=1 -failfast -coverprofile=coverage-${{ matrix.module }}.out ./$dir/...
 
       - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.module }}
+          path: coverage-${{ matrix.module }}.out
+          retention-days: 1
+
+  upload-coverage:
+    name: Upload Coverage
+    runs-on: ubuntu-latest
+    needs: run-tests
+    if: always() && needs.run-tests.result != 'cancelled'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download all coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          path: coverage
+          merge-multiple: true
+
+      - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV }}
+          directory: ./coverage
           files: ./coverage/*.out
+          fail_ci_if_error: false
           verbose: true
