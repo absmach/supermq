@@ -4,9 +4,9 @@
 name: CI Pipeline
 
 on:
-  pull_request:
+  push:
     branches:
-      - main
+      - fix-ci
 
 jobs:
   lint-and-build: # Linting and building are combined to save time for setting up Go

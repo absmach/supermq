@@ -4,9 +4,9 @@
 name: Property Based Tests
 
 on:
-  pull_request:
+  push:
     branches:
-      - main
+      - fix-ci
     paths:
       - ".github/workflows/api-tests.yaml"
       - "api/**"
