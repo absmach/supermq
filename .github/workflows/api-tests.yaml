@@ -40,15 +40,13 @@ env:
   JOURNAL_URL: http://localhost:9021
 
 jobs:
-  setup:
-    name: Setup Environment
+  api-test:
     runs-on: ubuntu-latest
-    outputs:
-      user_token: ${{ steps.setup-token.outputs.user_token }}
-      client_secret: ${{ steps.setup-token.outputs.client_secret }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Install Go
         uses: actions/setup-go@v6
@@ -66,44 +64,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - name: Build images
-        run: make all -j $(nproc) && make dockers_dev -j $(nproc)
-
-      - name: Start containers
-        run: make run up args="-d" && make run_addons up args="-d"
-
-      - name: Set access token
-        id: setup-token
-        run: |
-          export USER_TOKEN=$(curl -sSX POST $TOKENS_URL -H "Content-Type: application/json" -d "{\"identity\": \"$USER_IDENTITY\",\"secret\": \"$USER_SECRET\"}" | jq -r .access_token)
-          export DOMAIN_ID=$(curl -sSX POST $CREATE_DOMAINS_URL -H "Content-Type: application/json" -H "Authorization: Bearer $USER_TOKEN" -d "{\"name\":\"$DOMAIN_NAME\",\"route\":\"$DOMAIN_NAME\"}" | jq -r .id)
-          echo "user_token=$USER_TOKEN" >> $GITHUB_OUTPUT
-          export CLIENT_SECRET=$(supermq-cli provision test | /usr/bin/grep -Eo '"secret": "[^"]+"' | awk 'NR % 2 == 0' | sed 's/"secret": "\(.*\)"/\1/')
-          echo "client_secret=$CLIENT_SECRET" >> $GITHUB_OUTPUT
-
-      - name: Save Docker state
-        run: |
-          mkdir -p /tmp/docker-state
-          docker ps -aq > /tmp/docker-state/containers.txt
-
-      - name: Upload Docker state
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-state
-          path: /tmp/docker-state
-          retention-days: 1
-
-  detect-changes:
-    name: Detect API Changes
-    runs-on: ubuntu-latest
-    outputs:
-      modules: ${{ steps.set-matrix.outputs.modules }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
       - name: Check for changes in specific paths
         uses: dorny/paths-filter@v3
         id: changes
@@ -114,168 +74,138 @@ jobs:
               - ".github/workflows/api-tests.yaml"
 
             journal:
-              - ".github/workflows/api-tests.yaml"
               - "apidocs/openapi/journal.yaml"
               - "journal/api/**"
 
             auth:
-              - ".github/workflows/api-tests.yaml"
               - "apidocs/openapi/auth.yaml"
               - "auth/api/http/**"
 
             domains:
-              - ".github/workflows/api-tests.yaml"
               - "apidocs/openapi/domains.yaml"
               - "domains/api/http/**"
 
             http:
-              - ".github/workflows/api-tests.yaml"
               - "apidocs/openapi/http.yaml"
               - "http/api/**"
 
             clients:
-              - ".github/workflows/api-tests.yaml"
               - "apidocs/openapi/clients.yaml"
               - "clients/api/http/**"
 
             channels:
-              - ".github/workflows/api-tests.yaml"
               - "apidocs/openapi/channels.yaml"
               - "channels/api/http/**"
 
             groups:
-              - ".github/workflows/api-tests.yaml"
               - "apidocs/openapi/groups.yaml"
               - "groups/api/http/**"
 
             users:
-              - ".github/workflows/api-tests.yaml"
               - "apidocs/openapi/users.yaml"
               - "users/api/**"
 
-      - name: Set matrix for changed modules
-        id: set-matrix
+      - name: Build images
+        run: make all -j $(nproc) && make dockers_dev -j $(nproc)
+
+      - name: Start containers
+        run: make run up args="-d" && make run_addons up args="-d"
+
+      - name: Wait for services to be ready
         run: |
-          modules=()
+          echo "Waiting for services to start..."
+          sleep 15
 
-          if [[ "${{ steps.changes.outputs.workflow }}" == "true" ]]; then
-            # If workflow changed, test everything
-            modules=("users" "groups" "clients" "channels" "http" "auth" "domains" "journal")
-          else
-            # Add only changed modules
-            [[ "${{ steps.changes.outputs.users }}" == "true" ]] && modules+=("users")
-            [[ "${{ steps.changes.outputs.groups }}" == "true" ]] && modules+=("groups")
-            [[ "${{ steps.changes.outputs.clients }}" == "true" ]] && modules+=("clients")
-            [[ "${{ steps.changes.outputs.channels }}" == "true" ]] && modules+=("channels")
-            [[ "${{ steps.changes.outputs.http }}" == "true" ]] && modules+=("http")
-            [[ "${{ steps.changes.outputs.auth }}" == "true" ]] && modules+=("auth")
-            [[ "${{ steps.changes.outputs.domains }}" == "true" ]] && modules+=("domains")
-            [[ "${{ steps.changes.outputs.journal }}" == "true" ]] && modules+=("journal")
-          fi
+          # Check if services are responding
+          for i in {1..30}; do
+            if curl -f -s http://localhost:9002/health > /dev/null 2>&1; then
+              echo "Services are ready!"
+              break
+            fi
+            echo "Waiting for services... ($i/30)"
+            sleep 2
+          done
 
-          # Convert to JSON array
-          json_modules=$(printf '%s\n' "${modules[@]}" | jq -R . | jq -s -c .)
-          echo "modules=$json_modules" >> $GITHUB_OUTPUT
-          echo "Testing API modules: $json_modules"
-
-  api-tests:
-    name: API Test ${{ matrix.service }}
-    runs-on: ubuntu-latest
-    needs: [setup, detect-changes]
-    if: needs.detect-changes.outputs.modules != '[]'
-    strategy:
-      fail-fast: true
-      matrix:
-        service: ${{ fromJSON(needs.detect-changes.outputs.modules) }}
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v6
-
-      - name: Download Docker state
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-state
-          path: /tmp/docker-state
-
-      - name: Restore containers
+      - name: Set access token
         run: |
-          # Containers should still be running from setup job
-          docker ps
+          export USER_TOKEN=$(curl -sSX POST $TOKENS_URL -H "Content-Type: application/json" -d "{\"identity\": \"$USER_IDENTITY\",\"secret\": \"$USER_SECRET\"}" | jq -r .access_token)
+          export DOMAIN_ID=$(curl -sSX POST $CREATE_DOMAINS_URL -H "Content-Type: application/json" -H "Authorization: Bearer $USER_TOKEN" -d "{\"name\":\"$DOMAIN_NAME\",\"route\":\"$DOMAIN_NAME\"}" | jq -r .id)
+          echo "USER_TOKEN=$USER_TOKEN" >> $GITHUB_ENV
+          export CLIENT_SECRET=$(supermq-cli provision test | /usr/bin/grep -Eo '"secret": "[^"]+"' | awk 'NR % 2 == 0' | sed 's/"secret": "\(.*\)"/\1/')
+          echo "CLIENT_SECRET=$CLIENT_SECRET" >> $GITHUB_ENV
 
-      - name: Set service URL
-        id: set-url
-        run: |
-          case "${{ matrix.service }}" in
-            http)
-              echo "url=${{ env.HTTP_ADAPTER_URL }}" >> $GITHUB_OUTPUT
-              ;;
-            domains)
-              echo "url=${{ env.DOMAIN_URL }}" >> $GITHUB_OUTPUT
-              ;;
-            users)
-              echo "url=${{ env.USERS_URL }}" >> $GITHUB_OUTPUT
-              ;;
-            groups)
-              echo "url=${{ env.GROUPS_URL }}" >> $GITHUB_OUTPUT
-              ;;
-            clients)
-              echo "url=${{ env.CLIENTS_URL }}" >> $GITHUB_OUTPUT
-              ;;
-            channels)
-              echo "url=${{ env.CHANNELS_URL }}" >> $GITHUB_OUTPUT
-              ;;
-            auth)
-              echo "url=${{ env.AUTH_URL }}" >> $GITHUB_OUTPUT
-              ;;
-            journal)
-              echo "url=${{ env.JOURNAL_URL }}" >> $GITHUB_OUTPUT
-              ;;
-          esac
-
-      - name: Set authorization header
-        id: set-auth
-        run: |
-          if [[ "${{ matrix.service }}" == "http" ]]; then
-            echo "header=Client ${{ needs.setup.outputs.client_secret }}" >> $GITHUB_OUTPUT
-          else
-            echo "header=Bearer ${{ needs.setup.outputs.user_token }}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Set test arguments
-        id: set-args
-        run: |
-          if [[ "${{ matrix.service }}" == "users" ]]; then
-            echo "args=--exclude-operation-id=requestPasswordReset --phases=examples,stateful" >> $GITHUB_OUTPUT
-          else
-            echo "args=--phases=examples" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Run ${{ matrix.service }} API tests
+      - name: Run Users API tests
+        if: steps.changes.outputs.users == 'true' || steps.changes.outputs.workflow == 'true'
         uses: schemathesis/action@v2.1.0
         with:
-          schema: apidocs/openapi/${{ matrix.service }}.yaml
-          base-url: ${{ steps.set-url.outputs.url }}
+          schema: apidocs/openapi/users.yaml
+          base-url: ${{ env.USERS_URL }}
           checks: all
-          args: '--header "Authorization: ${{ steps.set-auth.outputs.header }}" --suppress-health-check=filter_too_much --exclude-checks=positive_data_acceptance ${{ steps.set-args.outputs.args }}'
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --suppress-health-check=filter_too_much --exclude-checks=positive_data_acceptance --exclude-operation-id=requestPasswordReset --phases=examples,stateful'
 
-  cleanup:
-    name: Cleanup
-    runs-on: ubuntu-latest
-    needs: [setup, api-tests]
-    if: always()
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v6
-
-      - name: Download Docker state
-        uses: actions/download-artifact@v4
+      - name: Run Groups API tests
+        if: steps.changes.outputs.groups == 'true' || steps.changes.outputs.workflow == 'true'
+        uses: schemathesis/action@v2.1.0
         with:
-          name: docker-state
-          path: /tmp/docker-state
-        continue-on-error: true
+          schema: apidocs/openapi/groups.yaml
+          base-url: ${{ env.GROUPS_URL }}
+          checks: all
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --suppress-health-check=filter_too_much --exclude-checks=positive_data_acceptance --phases=examples'
+
+      - name: Run Clients API tests
+        if: steps.changes.outputs.clients == 'true' || steps.changes.outputs.workflow == 'true'
+        uses: schemathesis/action@v2.1.0
+        with:
+          schema: apidocs/openapi/clients.yaml
+          base-url: ${{ env.CLIENTS_URL }}
+          checks: all
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --suppress-health-check=filter_too_much --exclude-checks=positive_data_acceptance --phases=examples'
+
+      - name: Run Channels API tests
+        if: steps.changes.outputs.channels == 'true' || steps.changes.outputs.workflow == 'true'
+        uses: schemathesis/action@v2.1.0
+        with:
+          schema: apidocs/openapi/channels.yaml
+          base-url: ${{ env.CHANNELS_URL }}
+          checks: all
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --suppress-health-check=filter_too_much --exclude-checks=positive_data_acceptance --phases=examples'
+
+      - name: Run HTTP Adapter API tests
+        if: steps.changes.outputs.http == 'true' || steps.changes.outputs.workflow == 'true'
+        uses: schemathesis/action@v2.1.0
+        with:
+          schema: apidocs/openapi/http.yaml
+          base-url: ${{ env.HTTP_ADAPTER_URL }}
+          checks: all
+          args: '--header "Authorization: Client ${{ env.CLIENT_SECRET }}" --suppress-health-check=filter_too_much --exclude-checks=positive_data_acceptance --phases=examples'
+
+      - name: Run Auth API tests
+        if: steps.changes.outputs.auth == 'true' || steps.changes.outputs.workflow == 'true'
+        uses: schemathesis/action@v2.1.0
+        with:
+          schema: apidocs/openapi/auth.yaml
+          base-url: ${{ env.AUTH_URL }}
+          checks: all
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --suppress-health-check=filter_too_much --exclude-checks=positive_data_acceptance --phases=examples'
+
+      - name: Run Domains API tests
+        if: steps.changes.outputs.domains == 'true' || steps.changes.outputs.workflow == 'true'
+        uses: schemathesis/action@v2.1.0
+        with:
+          schema: apidocs/openapi/domains.yaml
+          base-url: ${{ env.DOMAIN_URL }}
+          checks: all
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --suppress-health-check=filter_too_much --exclude-checks=positive_data_acceptance --phases=examples'
+
+      - name: Run Journal API tests
+        if: steps.changes.outputs.journal == 'true' || steps.changes.outputs.workflow == 'true'
+        uses: schemathesis/action@v2.1.0
+        with:
+          schema: apidocs/openapi/journal.yaml
+          base-url: ${{ env.JOURNAL_URL }}
+          checks: all
+          args: '--header "Authorization: Bearer ${{ env.USER_TOKEN }}" --suppress-health-check=filter_too_much --exclude-checks=positive_data_acceptance --phases=examples'
 
       - name: Stop containers
-        run: |
-          make run down args="-v" || true
-          make run_addons down args="-v" || true
+        if: always()
+        run: make run down args="-v" && make run_addons down args="-v"
