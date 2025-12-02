@@ -70,15 +70,9 @@ jobs:
           go-version: 1.25.x
           cache-dependency-path: "go.sum"
 
-      - name: Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+      - name: Download all dependencies
+        run: |
+          go mod download
 
       - name: Build all Binaries
         run: |
@@ -333,7 +327,7 @@ jobs:
   run-tests:
     name: Test ${{ matrix.module }}
     runs-on: ubuntu-latest
-    needs: [lint, detect-changes]
+    needs: [lint, detect-changes, build]
     if: needs.detect-changes.outputs.modules != '[]'
     strategy:
       fail-fast: true
@@ -351,15 +345,10 @@ jobs:
           go-version: 1.25.x
           cache-dependency-path: "go.sum"
 
-      - name: Cache Go modules (read-only)
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+      - name: Verify dependencies
+        run: |
+          go mod download
+          go mod verify
 
       - name: Run ${{ matrix.module }} tests
         run: |
@@ -376,7 +365,7 @@ jobs:
             *) dir="${{ matrix.module }}" ;;
           esac
 
-          go test --race -v -count=1 -failfast -coverprofile=coverage-${{ matrix.module }}.out ./$dir/...
+          go test -mod=readonly --race -v -count=1 -failfast -coverprofile=coverage-${{ matrix.module }}.out ./$dir/...
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4
