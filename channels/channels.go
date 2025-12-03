@@ -5,6 +5,7 @@ package channels
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/absmach/supermq/internal/nullable"
@@ -46,6 +47,37 @@ type Channel struct {
 	Roles                     []roles.MemberRoleActions `json:"roles,omitempty"`
 }
 
+type Operator uint8
+
+const (
+	OrOp Operator = iota
+	AndOp
+)
+
+type TagsQuery struct {
+	Elements []string
+	Operator Operator
+}
+
+func ToTagsQuery(s string) TagsQuery {
+	switch {
+	case strings.Contains(s, "-"):
+		elements := strings.Split(s, "-")
+		for i := range elements {
+			elements[i] = strings.TrimSpace(elements[i])
+		}
+		return TagsQuery{Elements: elements, Operator: AndOp}
+	case strings.Contains(s, ","):
+		elements := strings.Split(s, ",")
+		for i := range elements {
+			elements[i] = strings.TrimSpace(elements[i])
+		}
+		return TagsQuery{Elements: elements, Operator: OrOp}
+	default:
+		return TagsQuery{Elements: []string{s}, Operator: OrOp}
+	}
+}
+
 type Page struct {
 	Total          uint64                 `json:"total"`
 	Offset         uint64                 `json:"offset"`
@@ -57,7 +89,7 @@ type Page struct {
 	Name           string                 `json:"name,omitempty"`
 	Metadata       Metadata               `json:"metadata,omitempty"`
 	Domain         string                 `json:"domain,omitempty"`
-	Tag            string                 `json:"tag,omitempty"`
+	Tags           TagsQuery              `json:"tags,omitempty"`
 	Status         Status                 `json:"status,omitempty"`
 	Group          nullable.Value[string] `json:"group,omitempty"`
 	Client         string                 `json:"client,omitempty"`

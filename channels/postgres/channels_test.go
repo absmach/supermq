@@ -614,6 +614,10 @@ func TestRetrieveAll(t *testing.T) {
 			CreatedAt:       time.Now().UTC().Truncate(time.Microsecond),
 			Status:          channels.EnabledStatus,
 			ConnectionTypes: []connections.ConnType{},
+			Tags:            []string{"tag1", "tag2"},
+		}
+		if i%99 == 0 {
+			channel.Tags = []string{"tag1", "tag3"}
 		}
 		_, err := repo.Save(context.Background(), channel)
 		require.Nil(t, err, fmt.Sprintf("create channel unexpected error: %s", err))
@@ -935,56 +939,80 @@ func TestRetrieveAll(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc: "retrieve channels with client ID",
+			desc: "retrieve channels with single tag",
 			page: channels.ChannelsPage{
 				Page: channels.Page{
 					Offset: 0,
-					Limit:  10,
-					Client: testsutil.GenerateUUID(t),
+					Limit:  uint64(num),
+					Tags:   channels.TagsQuery{Elements: []string{"tag1"}, Operator: channels.OrOp},
+					Status: channels.AllStatus,
+				},
+			},
+			response: channels.ChannelsPage{
+				Page: channels.Page{
+					Total:  200,
+					Offset: 0,
+					Limit:  uint64(num),
+				},
+				Channels: items,
+			},
+		},
+		{
+			desc: "retrieve channel with multiple tags and OR operator",
+			page: channels.ChannelsPage{
+				Page: channels.Page{
+					Offset: 0,
+					Limit:  uint64(num),
+					Tags:   channels.TagsQuery{Elements: []string{"tag2", "tag3"}, Operator: channels.OrOp},
+					Status: channels.AllStatus,
+				},
+			},
+			response: channels.ChannelsPage{
+				Page: channels.Page{
+					Total:  200,
+					Offset: 0,
+					Limit:  uint64(num),
+				},
+				Channels: items,
+			},
+		},
+		{
+			desc: "retrieve channel with multiple tags and AND operator",
+			page: channels.ChannelsPage{
+				Page: channels.Page{
+					Offset: 0,
+					Limit:  uint64(num),
+					Tags:   channels.TagsQuery{Elements: []string{"tag1", "tag3"}, Operator: channels.AndOp},
+					Status: channels.AllStatus,
+				},
+			},
+			response: channels.ChannelsPage{
+				Page: channels.Page{
+					Total:  3,
+					Offset: 0,
+					Limit:  uint64(num),
+				},
+				Channels: []channels.Channel{items[0], items[99], items[198]},
+			},
+		},
+		{
+			desc: "retrieve channel with invalid tags",
+			page: channels.ChannelsPage{
+				Page: channels.Page{
+					Offset: 0,
+					Limit:  uint64(num),
+					Tags:   channels.TagsQuery{Elements: []string{namegen.Generate(), namegen.Generate()}, Operator: channels.OrOp},
+					Status: channels.AllStatus,
 				},
 			},
 			response: channels.ChannelsPage{
 				Page: channels.Page{
 					Total:  0,
 					Offset: 0,
-					Limit:  10,
+					Limit:  uint64(num),
 				},
 				Channels: []channels.Channel(nil),
 			},
-			err: nil,
-		},
-		{
-			desc: "retrieve channels with client ID and connection type",
-			page: channels.ChannelsPage{
-				Page: channels.Page{
-					Offset:         0,
-					Limit:          10,
-					Client:         testsutil.GenerateUUID(t),
-					ConnectionType: "subscribe",
-				},
-			},
-			response: channels.ChannelsPage{
-				Page: channels.Page{
-					Total:  0,
-					Offset: 0,
-					Limit:  10,
-				},
-				Channels: []channels.Channel(nil),
-			},
-			err: nil,
-		},
-		{
-			desc: "retrieve channels with invalid connection type",
-			page: channels.ChannelsPage{
-				Page: channels.Page{
-					Offset:         0,
-					Limit:          10,
-					Client:         testsutil.GenerateUUID(t),
-					ConnectionType: "invalid_type",
-				},
-			},
-			response: channels.ChannelsPage{},
-			err:      repoerr.ErrViewEntity,
 		},
 	}
 
@@ -2258,7 +2286,7 @@ func TestRetrieveUserChannels(t *testing.T) {
 			pm: channels.Page{
 				Offset: 0,
 				Limit:  nChannels,
-				Tag:    directChannels[0].Tags[0],
+				Tags:   channels.TagsQuery{Elements: []string{directChannels[0].Tags[0]}, Operator: channels.OrOp},
 				Status: channels.AllStatus,
 				Order:  defOrder,
 				Dir:    defDir,
@@ -2279,7 +2307,7 @@ func TestRetrieveUserChannels(t *testing.T) {
 			pm: channels.Page{
 				Offset: 0,
 				Limit:  nChannels,
-				Tag:    namegen.Generate(),
+				Tags:   channels.TagsQuery{Elements: []string{namegen.Generate()}, Operator: channels.OrOp},
 				Status: channels.AllStatus,
 				Order:  defOrder,
 				Dir:    defDir,
@@ -2302,7 +2330,7 @@ func TestRetrieveUserChannels(t *testing.T) {
 				Limit:    nChannels,
 				Metadata: directChannels[0].Metadata,
 				Name:     directChannels[0].Name,
-				Tag:      directChannels[0].Tags[0],
+				Tags:     channels.TagsQuery{Elements: []string{directChannels[0].Tags[0]}, Operator: channels.OrOp},
 				Status:   channels.AllStatus,
 			},
 			response: channels.ChannelsPage{
