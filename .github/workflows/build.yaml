@@ -7,80 +7,26 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/workflows/**'
+      - 'LICENSE'
+      - 'MAINTAINERS'
+      - 'CODEOWNERS'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          fetch-tags: true
-
-      - name: Setup Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: 1.25.x
-          cache-dependency-path: "go.sum"
-
-      - name: Set GOBIN
-        run: echo "GOBIN=$HOME/.local/bin" >> $GITHUB_ENV
-
-      - name: Add GOBIN to PATH
-        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Run tests
-        run: |
-          make test
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV }}
-          files: ./coverage/*.out
-          verbose: true
-
-  compile-check:
-    name: Compile Check
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
-      matrix:
-        variant:
-          - name: rabbitmq
-            env: SMQ_MESSAGE_BROKER_TYPE=msg_rabbitmq
-            target: mqtt
-          - name: redis
-            env: SMQ_ES_TYPE=es_redis
-            target: mqtt
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: 1.25.x
-          cache-dependency-path: "go.sum"
-
-      - name: Compile check for ${{ matrix.variant.name }}
-        run: |
-          ${{ matrix.variant.env }} make ${{ matrix.variant.target }}
+  lint-and-build:
+    uses: ./.github/workflows/lint-and-build.yaml
 
   build-and-push:
-    name: Build and Push
+    name: Build and Push Docker Images
     runs-on: ubuntu-latest
-    needs: [test, compile-check]
+    needs: [lint-and-build]
     permissions:
       contents: read
 
@@ -112,7 +58,7 @@ jobs:
           make latest -j $(nproc)
 
       - name: Trigger Helm Chart Deployment
-        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: success()
         uses: peter-evans/repository-dispatch@v4
         with:
           token: ${{ secrets.REPO_DISPATCH_TOKEN }}

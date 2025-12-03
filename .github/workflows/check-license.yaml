@@ -4,9 +4,6 @@
 name: Check License Header
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main

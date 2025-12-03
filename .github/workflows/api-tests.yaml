@@ -19,6 +19,21 @@ on:
       - "journal/api/**"
       - "users/api/**"
       - "apidocs/openapi/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/api-tests.yaml"
+      - "api/**"
+      - "auth/api/http/**"
+      - "channels/api/http/**"
+      - "clients/api/http/**"
+      - "domains/api/http/**"
+      - "groups/api/http/**"
+      - "http/api/**"
+      - "journal/api/**"
+      - "users/api/**"
+      - "apidocs/openapi/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -58,7 +73,6 @@ jobs:
         uses: dorny/paths-filter@v3
         id: changes
         with:
-          base: main
           filters: |
             workflow:
               - ".github/workflows/api-tests.yaml"

@@ -1,0 +1,74 @@
+# Copyright (c) Abstract Machines
+# SPDX-License-Identifier: Apache-2.0
+
+name: Lint and Build
+
+on:
+  workflow_call:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.25.x
+          cache-dependency-path: "go.sum"
+
+      - name: Run linters
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.4.0
+          args: --config ./tools/config/.golangci.yaml
+
+  build:
+    name: Build All Binaries
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.25.x
+          cache-dependency-path: "go.sum"
+
+      - name: Build all binaries
+        run: |
+          make all -j $(nproc)
+
+  compile-check:
+    name: Compile Check ${{ matrix.variant.name }}
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      fail-fast: true
+      matrix:
+        variant:
+          - name: rabbitmq
+            env: SMQ_MESSAGE_BROKER_TYPE=msg_rabbitmq
+            target: mqtt
+          - name: redis
+            env: SMQ_ES_TYPE=es_redis
+            target: mqtt
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.25.x
+          cache-dependency-path: "go.sum"
+
+      - name: Compile check for ${{ matrix.variant.name }}
+        run: |
+          ${{ matrix.variant.env }} make ${{ matrix.variant.target }}

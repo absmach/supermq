@@ -7,6 +7,12 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - 'MAINTAINERS'
+      - 'CODEOWNERS'
   pull_request:
     branches:
       - main
@@ -16,19 +22,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Lint
+  check-certs:
+    name: Check Certs
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
-
-      - name: Setup Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: 1.25.x
-          cache-dependency-path: "go.sum"
 
       - name: Fetch Certs
         run: |
@@ -41,25 +40,9 @@ jobs:
             exit 0
           fi
 
-      - name: Install protolint
-        run: |
-          go install github.com/yoheimuta/protolint/cmd/protolint@latest
-
-      - name: Lint Protobuf Files
-        run: |
-          protolint .
-
-      - name: Run linters
-        uses: golangci/golangci-lint-action@v9
-        with:
-          version: v2.4.0
-          args: --config ./tools/config/.golangci.yaml
-
-  build:
-    name: Build
+  lint-proto:
+    name: Lint Proto
     runs-on: ubuntu-latest
-    needs: lint
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -70,21 +53,19 @@ jobs:
           go-version: 1.25.x
           cache-dependency-path: "go.sum"
 
-      - name: Download all dependencies
+      - name: Install protolint
         run: |
-          go mod download
+          go install github.com/yoheimuta/protolint/cmd/protolint@latest
 
-      - name: Build all Binaries
+      - name: Lint Protobuf Files
         run: |
-          make all -j $(nproc)
+          protolint .
 
-      - name: Compile check for rabbitmq
-        run: |
-          SMQ_MESSAGE_BROKER_TYPE=msg_rabbitmq make mqtt
+  lint-and-build:
+    needs: [check-certs, lint-proto]
+    uses: ./.github/workflows/lint-and-build.yaml
 
-      - name: Compile check for redis
-        run: |
-          SMQ_ES_TYPE=es_redis make mqtt
+
 
   detect-changes:
     name: Detect Changes
@@ -102,7 +83,6 @@ jobs:
         uses: dorny/paths-filter@v3
         id: changes
         with:
-          base: main
           filters: |
             workflow:
               - ".github/workflows/tests.yaml"
@@ -327,7 +307,7 @@ jobs:
   run-tests:
     name: Test ${{ matrix.module }}
     runs-on: ubuntu-latest
-    needs: [lint, detect-changes, build]
+    needs: [lint-and-build, detect-changes]
     if: needs.detect-changes.outputs.modules != '[]'
     strategy:
       fail-fast: true

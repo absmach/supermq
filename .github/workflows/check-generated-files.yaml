@@ -4,9 +4,6 @@
 name: Check the consistency of generated files
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
@@ -69,32 +66,24 @@ jobs:
               - "journal/journal.go"
               - "consumers/notifier.go"
 
-      - name: Set up protoc
+      - name: Install Protoc
+        if: steps.changes.outputs.proto == 'true'
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "29.1"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Go Protobuf Plugins
         if: steps.changes.outputs.proto == 'true'
         run: |
-          PROTOC_VERSION=33.0
           PROTOC_GEN_VERSION=v1.36.10
           PROTOC_GRPC_VERSION=v1.5.1
-
-          # Export the variables so they are available in future steps
-          echo "PROTOC_VERSION=$PROTOC_VERSION" >> $GITHUB_ENV
+          
           echo "PROTOC_GEN_VERSION=$PROTOC_GEN_VERSION" >> $GITHUB_ENV
           echo "PROTOC_GRPC_VERSION=$PROTOC_GRPC_VERSION" >> $GITHUB_ENV
 
-          # Download and install protoc
-          PROTOC_ZIP=protoc-$PROTOC_VERSION-linux-x86_64.zip
-          curl -0L -o $PROTOC_ZIP https://github.com/protocolbuffers/protobuf/releases/download/v$PROTOC_VERSION/$PROTOC_ZIP
-          unzip -o $PROTOC_ZIP -d protoc3
-          sudo mv protoc3/bin/* /usr/local/bin/
-          sudo mv protoc3/include/* /usr/local/include/
-          rm -rf $PROTOC_ZIP protoc3
-
-          # Install protoc-gen-go and protoc-gen-go-grpc
           go install google.golang.org/protobuf/cmd/protoc-gen-go@$PROTOC_GEN_VERSION
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@$PROTOC_GRPC_VERSION
-
-          # Add protoc to the PATH
-          export PATH=$PATH:/usr/local/bin/protoc
 
       - name: Check Protobuf is up to Date
         if: steps.changes.outputs.proto == 'true'
@@ -110,7 +99,7 @@ jobs:
               echo "Error: Proto file and generated Go file $p are out of sync!"
               echo "Here is the difference:"
               diff $p $p.tmp || true
-              echo "Please run 'make proto' with protoc version $PROTOC_VERSION, protoc-gen-go version $PROTOC_GEN_VERSION and protoc-gen-go-grpc version $PROTOC_GRPC_VERSION and commit the changes."
+              echo "Please run 'make proto' with protoc version 29.1, protoc-gen-go version $PROTOC_GEN_VERSION and protoc-gen-go-grpc version $PROTOC_GRPC_VERSION and commit the changes."
               exit 1
             fi
           done
