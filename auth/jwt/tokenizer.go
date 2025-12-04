@@ -10,7 +10,7 @@ import (
 	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
-	"github.com/lestrrat-go/jwx/v2/jwa"
+	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
@@ -34,26 +34,22 @@ var (
 )
 
 const (
-	issuerName             = "supermq.auth"
-	tokenType              = "type"
-	userField              = "user"
-	RoleField              = "role"
-	VerifiedField          = "verified"
-	oauthProviderField     = "oauth_provider"
-	oauthAccessTokenField  = "access_token"
-	oauthRefreshTokenField = "refresh_token"
+	issuerName    = "supermq.auth"
+	tokenType     = "type"
+	RoleField     = "role"
+	VerifiedField = "verified"
 )
 
 type tokenizer struct {
-	secret []byte
+	keyManager auth.KeyManager
 }
 
 var _ auth.Tokenizer = (*tokenizer)(nil)
 
-// NewRepository instantiates an implementation of Token repository.
-func New(secret []byte) auth.Tokenizer {
+// New instantiates an implementation of Tokenizer service.
+func New(keyManager auth.KeyManager) auth.Tokenizer {
 	return &tokenizer{
-		secret: secret,
+		keyManager: keyManager,
 	}
 }
 
@@ -76,7 +72,7 @@ func (tok *tokenizer) Issue(key auth.Key) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(svcerr.ErrAuthentication, err)
 	}
-	signedTkn, err := jwt.Sign(tkn, jwt.WithKey(jwa.HS512, tok.secret))
+	signedTkn, err := tok.keyManager.SignJWT(tkn)
 	if err != nil {
 		return "", errors.Wrap(ErrSignJWT, err)
 	}
@@ -89,7 +85,7 @@ func (tok *tokenizer) Parse(token string) (auth.Key, error) {
 		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
 
-	key, err := toKey(tkn)
+	key, err := ToKey(tkn)
 	if err != nil {
 		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
@@ -98,11 +94,7 @@ func (tok *tokenizer) Parse(token string) (auth.Key, error) {
 }
 
 func (tok *tokenizer) validateToken(token string) (jwt.Token, error) {
-	tkn, err := jwt.Parse(
-		[]byte(token),
-		jwt.WithValidate(true),
-		jwt.WithKey(jwa.HS512, tok.secret),
-	)
+	tkn, err := tok.keyManager.ParseJWT(token)
 	if err != nil {
 		if errors.Contains(err, errJWTExpiryKey) {
 			return nil, auth.ErrExpiry
@@ -123,7 +115,11 @@ func (tok *tokenizer) validateToken(token string) (jwt.Token, error) {
 	return tkn, nil
 }
 
-func toKey(tkn jwt.Token) (auth.Key, error) {
+func (tok *tokenizer) RetrieveJWKS() []jwk.Key {
+	return tok.keyManager.PublicJWKS()
+}
+
+func ToKey(tkn jwt.Token) (auth.Key, error) {
 	data, err := json.Marshal(tkn.PrivateClaims())
 	if err != nil {
 		return auth.Key{}, errors.Wrap(ErrJSONHandle, err)

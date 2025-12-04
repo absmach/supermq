@@ -23,6 +23,7 @@ import (
 	"github.com/absmach/supermq/auth/cache"
 	"github.com/absmach/supermq/auth/hasher"
 	"github.com/absmach/supermq/auth/jwt"
+	"github.com/absmach/supermq/auth/keymanager"
 	"github.com/absmach/supermq/auth/middleware"
 	apostgres "github.com/absmach/supermq/auth/postgres"
 	redisclient "github.com/absmach/supermq/internal/clients/redis"
@@ -34,6 +35,7 @@ import (
 	"github.com/absmach/supermq/pkg/server"
 	grpcserver "github.com/absmach/supermq/pkg/server/grpc"
 	httpserver "github.com/absmach/supermq/pkg/server/http"
+	"github.com/absmach/supermq/pkg/ulid"
 	"github.com/absmach/supermq/pkg/uuid"
 	v1 "github.com/authzed/authzed-go/proto/authzed/api/v1"
 	"github.com/authzed/authzed-go/v1"
@@ -53,6 +55,7 @@ const (
 	envPrefixHTTP  = "SMQ_AUTH_HTTP_"
 	envPrefixGrpc  = "SMQ_AUTH_GRPC_"
 	envPrefixDB    = "SMQ_AUTH_DB_"
+	envPrefixKeys  = "SMQ_AUTH_KEYS_"
 	defDB          = "auth"
 	defSvcHTTPPort = "8189"
 	defSvcGRPCPort = "8181"
@@ -144,7 +147,24 @@ func main() {
 		return
 	}
 
-	svc, err := newService(db, tracer, cfg, dbConfig, logger, spicedbclient, cacheclient, cfg.CacheKeyDuration)
+	keyManagerCfg := keymanager.KeyManagerConfig{LoginDuration: cfg.AccessDuration}
+	if err := env.ParseWithOptions(&keyManagerCfg, env.Options{Prefix: envPrefixKeys}); err != nil {
+		logger.Error("failed to load key manager %s configuration : %s", svcName, err.Error())
+		exitCode = 1
+		return
+	}
+
+	// Create public key repository
+	publicKeyRepo := apostgres.NewPublicKeyRepo(db)
+
+	keyManager, err := keymanager.NewKeyManager(ctx, keyManagerCfg, ulid.New(), publicKeyRepo)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to init key manager : %s\n", err.Error()))
+		exitCode = 1
+		return
+	}
+
+	svc, err := newService(db, tracer, cfg, dbConfig, logger, spicedbclient, cacheclient, cfg.CacheKeyDuration, keyManager)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create service : %s\n", err.Error()))
 		exitCode = 1
@@ -225,7 +245,7 @@ func initSchema(ctx context.Context, client *authzed.ClientWithExperimental, sch
 	return nil
 }
 
-func newService(db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, logger *slog.Logger, spicedbClient *authzed.ClientWithExperimental, cacheClient *redis.Client, keyDuration time.Duration) (auth.Service, error) {
+func newService(db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, logger *slog.Logger, spicedbClient *authzed.ClientWithExperimental, cacheClient *redis.Client, keyDuration time.Duration, keyManager auth.KeyManager) (auth.Service, error) {
 	cache := cache.NewPatsCache(cacheClient, keyDuration)
 
 	database := pgclient.NewDatabase(db, dbConfig, tracer)
@@ -237,9 +257,9 @@ func newService(db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.
 	pEvaluator := spicedb.NewPolicyEvaluator(spicedbClient, logger)
 	pService := spicedb.NewPolicyService(spicedbClient, logger)
 
-	t := jwt.New([]byte(cfg.SecretKey))
+	tokenizer := jwt.New(keyManager)
 
-	svc := auth.New(keysRepo, patsRepo, nil, hasher, idProvider, t, pEvaluator, pService, cfg.AccessDuration, cfg.RefreshDuration, cfg.InvitationDuration)
+	svc := auth.New(keysRepo, patsRepo, nil, hasher, idProvider, tokenizer, pEvaluator, pService, cfg.AccessDuration, cfg.RefreshDuration, cfg.InvitationDuration)
 	svc = middleware.NewLogging(svc, logger)
 	counter, latency := prometheus.MakeMetrics("auth", "api")
 	svc = middleware.NewMetrics(svc, counter, latency)

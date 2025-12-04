@@ -27,7 +27,7 @@ import (
 	redisclient "github.com/absmach/supermq/internal/clients/redis"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
-	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
+	jwksAuthn "github.com/absmach/supermq/pkg/authn/jwks"
 	"github.com/absmach/supermq/pkg/authz"
 	authsvcAuthz "github.com/absmach/supermq/pkg/authz/authsvc"
 	"github.com/absmach/supermq/pkg/callout"
@@ -67,6 +67,7 @@ const (
 	defDB                  = "domains"
 	defSvcHTTPPort         = "9004"
 	defSvcGRPCPort         = "7004"
+	jwksURL                = "http://auth:9001/keys/.well-known/jwks.json"
 )
 
 type config struct {
@@ -151,14 +152,8 @@ func main() {
 		return
 	}
 
-	authn, authnHandler, err := authsvcAuthn.NewAuthentication(ctx, clientConfig)
-	if err != nil {
-		logger.Error(fmt.Sprintf("authn failed to connect to auth gRPC server : %s", err.Error()))
-		exitCode = 1
-		return
-	}
-	defer authnHandler.Close()
-	logger.Info("Authn successfully connected to auth gRPC server " + authnHandler.Secure())
+	authn := jwksAuthn.NewAuthentication(jwksURL)
+	logger.Info("AuthN successfully set up jwks authentication on " + jwksURL)
 	authnMiddleware := smqauthn.NewAuthNMiddleware(authn)
 
 	database := postgres.NewDatabase(db, dbConfig, tracer)

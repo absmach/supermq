@@ -58,6 +58,8 @@ packages:
       Cache:
       Hasher:
       KeyRepository:
+      KeyManager:
+      Tokenizer:
       PATS:
       PATSRepository:
       Service:

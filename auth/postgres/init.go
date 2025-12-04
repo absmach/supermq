@@ -125,6 +125,23 @@ func Migration() *migrate.MemoryMigrationSource {
 					`ALTER TABLE pats ALTER COLUMN last_used_at TYPE TIMESTAMP;`,
 				},
 			},
+			{
+				Id: "auth_7",
+				Up: []string{
+					`CREATE TABLE IF NOT EXISTS public_keys (
+						kid         		VARCHAR(254) PRIMARY KEY,
+						jwk_data    		JSONB NOT NULL,
+						created_at  		TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+						retired_at  		TIMESTAMPTZ,
+						status      		SMALLINT NOT NULL DEFAULT 0 CHECK (status >= 0)
+					);`,
+					`CREATE INDEX IF NOT EXISTS idx_public_keys_status ON public_keys(status);`,
+					`CREATE INDEX IF NOT EXISTS idx_public_keys_retired_at ON public_keys(retired_at);`,
+				},
+				Down: []string{
+					`DROP TABLE IF EXISTS public_keys;`,
+				},
+			},
 		},
 	}
 }

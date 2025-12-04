@@ -4,7 +4,8 @@
 package keys_test
 
 import (
-	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -17,30 +18,26 @@ import (
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/auth"
 	httpapi "github.com/absmach/supermq/auth/api/http"
-	"github.com/absmach/supermq/auth/jwt"
 	"github.com/absmach/supermq/auth/mocks"
 	smqlog "github.com/absmach/supermq/logger"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
-	policymocks "github.com/absmach/supermq/pkg/policies/mocks"
-	"github.com/absmach/supermq/pkg/uuid"
+	"github.com/lestrrat-go/jwx/v2/jwa"
+	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 const (
-	secret          = "secret"
 	contentType     = "application/json"
 	id              = "123e4567-e89b-12d3-a456-000000000001"
-	email           = "user@example.com"
-	loginDuration   = 30 * time.Minute
 	refreshDuration = 24 * time.Hour
-	invalidDuration = 7 * 24 * time.Hour
+	accessToken     = "valid token"
 )
 
-var (
-	krepo      *mocks.KeyRepository
-	pEvaluator *policymocks.Evaluator
-)
+var Token = auth.Token{
+	AccessToken: accessToken,
+}
 
 type issueRequest struct {
 	Duration time.Duration `json:"duration,omitempty"`
@@ -72,22 +69,11 @@ func (tr testRequest) make() (*http.Response, error) {
 	return tr.client.Do(req)
 }
 
-func newService() auth.Service {
-	krepo = new(mocks.KeyRepository)
-	pRepo := new(mocks.PATSRepository)
-	cache := new(mocks.Cache)
-	hash := new(mocks.Hasher)
-	idProvider := uuid.NewMock()
-	pService := new(policymocks.Service)
-	pEvaluator = new(policymocks.Evaluator)
-	t := jwt.New([]byte(secret))
-
-	return auth.New(krepo, pRepo, cache, hash, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration)
-}
-
-func newServer(svc auth.Service) *httptest.Server {
+func newServer() (*httptest.Server, *mocks.Service) {
+	svc := new(mocks.Service)
 	mux := httpapi.MakeHandler(svc, smqlog.NewMock(), "")
-	return httptest.NewServer(mux)
+
+	return httptest.NewServer(mux), svc
 }
 
 func toJSON(data any) string {
@@ -99,13 +85,7 @@ func toJSON(data any) string {
 }
 
 func TestIssue(t *testing.T) {
-	svc := newService()
-	policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-	token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Role: auth.UserRole, IssuedAt: time.Now(), Subject: id})
-	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	policyCall.Unset()
-
-	ts := newServer(svc)
+	ts, svc := newServer()
 	defer ts.Close()
 	client := ts.Client()
 
@@ -119,6 +99,8 @@ func TestIssue(t *testing.T) {
 		ct     string
 		token  string
 		status int
+		svcRes auth.Token
+		svcErr error
 	}{
 		{
 			desc:   "issue login key with empty token",
@@ -131,28 +113,30 @@ func TestIssue(t *testing.T) {
 			desc:   "issue API key",
 			req:    toJSON(ak),
 			ct:     contentType,
-			token:  token.AccessToken,
+			token:  accessToken,
 			status: http.StatusCreated,
+			svcRes: Token,
 		},
 		{
 			desc:   "issue recovery key",
 			req:    toJSON(rk),
 			ct:     contentType,
-			token:  token.AccessToken,
+			token:  accessToken,
 			status: http.StatusCreated,
+			svcRes: Token,
 		},
 		{
 			desc:   "issue login key wrong content type",
 			req:    toJSON(lk),
 			ct:     "",
-			token:  token.AccessToken,
+			token:  accessToken,
 			status: http.StatusUnsupportedMediaType,
 		},
 		{
 			desc:   "issue recovery key wrong content type",
 			req:    toJSON(rk),
 			ct:     "",
-			token:  token.AccessToken,
+			token:  accessToken,
 			status: http.StatusUnsupportedMediaType,
 		},
 		{
@@ -160,6 +144,7 @@ func TestIssue(t *testing.T) {
 			req:    toJSON(ak),
 			ct:     contentType,
 			token:  "wrong",
+			svcErr: svcerr.ErrAuthentication,
 			status: http.StatusUnauthorized,
 		},
 		{
@@ -167,27 +152,28 @@ func TestIssue(t *testing.T) {
 			req:    toJSON(rk),
 			ct:     contentType,
 			token:  "",
+			svcErr: svcerr.ErrAuthentication,
 			status: http.StatusUnauthorized,
 		},
 		{
 			desc:   "issue key with invalid request",
 			req:    "{",
 			ct:     contentType,
-			token:  token.AccessToken,
+			token:  accessToken,
 			status: http.StatusBadRequest,
 		},
 		{
 			desc:   "issue key with invalid JSON",
 			req:    "{invalid}",
 			ct:     contentType,
-			token:  token.AccessToken,
+			token:  accessToken,
 			status: http.StatusBadRequest,
 		},
 		{
 			desc:   "issue key with invalid JSON content",
 			req:    `{"Type":{"key":"AccessToken"}}`,
 			ct:     contentType,
-			token:  token.AccessToken,
+			token:  accessToken,
 			status: http.StatusBadRequest,
 		},
 	}
@@ -201,30 +187,16 @@ func TestIssue(t *testing.T) {
 			token:       tc.token,
 			body:        strings.NewReader(tc.req),
 		}
-		repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return("", nil)
-		policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
+		svcCall := svc.On("Issue", mock.Anything, tc.token, mock.Anything).Return(tc.svcRes, tc.svcErr)
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		repoCall.Unset()
-		policyCall.Unset()
+		svcCall.Unset()
 	}
 }
 
 func TestRetrieve(t *testing.T) {
-	svc := newService()
-	policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-	token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Role: auth.UserRole, IssuedAt: time.Now(), Subject: id})
-	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	key := auth.Key{Type: auth.APIKey, IssuedAt: time.Now(), Subject: id}
-
-	repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-	k, err := svc.Issue(context.Background(), token.AccessToken, key)
-	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	repoCall.Unset()
-	policyCall.Unset()
-
-	ts := newServer(svc)
+	ts, svc := newServer()
 	defer ts.Close()
 	client := ts.Client()
 
@@ -234,12 +206,13 @@ func TestRetrieve(t *testing.T) {
 		token  string
 		key    auth.Key
 		status int
-		err    error
+		svcRes auth.Key
+		svcErr error
 	}{
 		{
 			desc:  "retrieve an existing key",
-			id:    k.AccessToken,
-			token: token.AccessToken,
+			id:    id,
+			token: accessToken,
 			key: auth.Key{
 				Subject:   id,
 				Type:      auth.AccessKey,
@@ -247,28 +220,28 @@ func TestRetrieve(t *testing.T) {
 				ExpiresAt: time.Now().Add(refreshDuration),
 			},
 			status: http.StatusOK,
-			err:    nil,
+			svcErr: nil,
 		},
 		{
 			desc:   "retrieve a non-existing key",
 			id:     "non-existing",
-			token:  token.AccessToken,
-			status: http.StatusBadRequest,
-			err:    svcerr.ErrNotFound,
+			token:  accessToken,
+			status: http.StatusNotFound,
+			svcErr: svcerr.ErrNotFound,
 		},
 		{
 			desc:   "retrieve a key with an invalid token",
-			id:     k.AccessToken,
+			id:     accessToken,
 			token:  "wrong",
 			status: http.StatusUnauthorized,
-			err:    svcerr.ErrAuthentication,
+			svcErr: svcerr.ErrAuthentication,
 		},
 		{
 			desc:   "retrieve a key with an empty token",
 			token:  "",
-			id:     k.AccessToken,
+			id:     accessToken,
 			status: http.StatusUnauthorized,
-			err:    svcerr.ErrAuthentication,
+			svcErr: svcerr.ErrAuthentication,
 		},
 	}
 
@@ -279,30 +252,16 @@ func TestRetrieve(t *testing.T) {
 			url:    fmt.Sprintf("%s/keys/%s", ts.URL, tc.id),
 			token:  tc.token,
 		}
-		policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-		repoCall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(tc.key, tc.err)
+		svcCall := svc.On("RetrieveKey", mock.Anything, tc.token, tc.id).Return(tc.svcRes, tc.svcErr)
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		repoCall.Unset()
-		policyCall.Unset()
+		svcCall.Unset()
 	}
 }
 
 func TestRevoke(t *testing.T) {
-	svc := newService()
-	policyCall := pEvaluator.On("CheckPolicy", mock.Anything, mock.Anything).Return(nil)
-	token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.AccessKey, Role: auth.UserRole, IssuedAt: time.Now(), Subject: id})
-	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	key := auth.Key{Type: auth.APIKey, IssuedAt: time.Now(), Subject: id}
-
-	repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, nil)
-	k, err := svc.Issue(context.Background(), token.AccessToken, key)
-	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	repoCall.Unset()
-	policyCall.Unset()
-
-	ts := newServer(svc)
+	ts, svc := newServer()
 	defer ts.Close()
 	client := ts.Client()
 
@@ -311,29 +270,33 @@ func TestRevoke(t *testing.T) {
 		id     string
 		token  string
 		status int
+		svcErr error
 	}{
 		{
 			desc:   "revoke an existing key",
-			id:     k.AccessToken,
-			token:  token.AccessToken,
+			id:     id,
+			token:  accessToken,
 			status: http.StatusNoContent,
 		},
 		{
 			desc:   "revoke a non-existing key",
 			id:     "non-existing",
-			token:  token.AccessToken,
-			status: http.StatusNoContent,
+			token:  accessToken,
+			svcErr: svcerr.ErrNotFound,
+			status: http.StatusNotFound,
 		},
 		{
 			desc:   "revoke key with invalid token",
-			id:     k.AccessToken,
+			id:     id,
 			token:  "wrong",
+			svcErr: svcerr.ErrAuthentication,
 			status: http.StatusUnauthorized,
 		},
 		{
 			desc:   "revoke key with empty token",
-			id:     k.AccessToken,
+			id:     id,
 			token:  "",
+			svcErr: svcerr.ErrAuthentication,
 			status: http.StatusUnauthorized,
 		},
 	}
@@ -345,10 +308,58 @@ func TestRevoke(t *testing.T) {
 			url:    fmt.Sprintf("%s/keys/%s", ts.URL, tc.id),
 			token:  tc.token,
 		}
-		repoCall := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		svcCall := svc.On("Revoke", mock.Anything, tc.token, tc.id).Return(tc.svcErr)
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		repoCall.Unset()
+		svcCall.Unset()
 	}
+}
+
+func TestRetrieveJWKS(t *testing.T) {
+	ts, svc := newServer()
+	defer ts.Close()
+	client := ts.Client()
+
+	cases := []struct {
+		desc   string
+		svcRes []jwk.Key
+		status int
+	}{
+		{
+			desc:   "retrieve JWKS with keys",
+			svcRes: []jwk.Key{newJWK(t), newJWK(t)},
+			status: http.StatusOK,
+		},
+		{
+			desc:   "retrieve empty JWKS",
+			svcRes: []jwk.Key{},
+			status: http.StatusOK,
+		},
+	}
+
+	for _, tc := range cases {
+		req := testRequest{
+			client: client,
+			method: http.MethodGet,
+			url:    fmt.Sprintf("%s/keys/.well-known/jwks.json", ts.URL),
+		}
+		svcCall := svc.On("RetrieveJWKS", mock.Anything).Return(tc.svcRes)
+		res, err := req.make()
+		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+		svcCall.Unset()
+	}
+}
+
+func newJWK(t *testing.T) jwk.Key {
+	pKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.Nil(t, err, fmt.Sprintf("generating rsa key expected to succeed: %s", err))
+	jwkKey, err := jwk.FromRaw(&pKey.PublicKey)
+	require.Nil(t, err, fmt.Sprintf("creating jwk from rsa public key expected to succeed: %s", err))
+	err = jwkKey.Set(jwk.KeyIDKey, "test-key-id")
+	require.Nil(t, err, fmt.Sprintf("setting jwk key id expected to succeed: %s", err))
+	err = jwkKey.Set(jwk.AlgorithmKey, jwa.RS256.String())
+	require.Nil(t, err, fmt.Sprintf("setting jwk algorithm expected to succeed: %s", err))
+	return jwkKey
 }
