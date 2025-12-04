@@ -105,4 +105,7 @@ var (
 
 	// ErrExternalAuthProviderCouldNotUpdate indicates that users authenticated via external provider cannot update their account details directly.
 	ErrExternalAuthProviderCouldNotUpdate = errors.New("account details can only be updated through your authentication provider's settings")
+
+	// ErrUpdateEmail indicates that the current email is the same as the update requested email.
+	ErrUpdateSameEmail = errors.New("current email is same as update requested email")
 )

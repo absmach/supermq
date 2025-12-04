@@ -229,7 +229,7 @@ func (lm *loggingMiddleware) Update(ctx context.Context, session authn.Session, 
 				slog.String("username", u.Credentials.Username),
 				slog.String("first_name", u.FirstName),
 				slog.String("last_name", u.LastName),
-				slog.Any("metadata", u.Metadata),
+				slog.Any("public_metadata", u.PublicMetadata),
 			),
 		}
 		if err != nil {
