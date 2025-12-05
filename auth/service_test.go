@@ -25,12 +25,6 @@ import (
 
 const (
 	secret          = "secret"
-	email           = "test@example.com"
-	id              = "testID"
-	groupName       = "smqx"
-	description     = "Description"
-	memberRelation  = "member"
-	authoritiesObj  = "authorities"
 	loginDuration   = 30 * time.Minute
 	refreshDuration = 24 * time.Hour
 	invalidDuration = 7 * 24 * time.Hour
@@ -53,6 +47,8 @@ var (
 	patsrepo   *mocks.PATSRepository
 	cache      *mocks.Cache
 	hasher     *mocks.Hasher
+	trepo      *mocks.TokensRepository
+	tcache     *mocks.TokensCache
 )
 
 func newService() (auth.Service, string) {
@@ -63,8 +59,10 @@ func newService() (auth.Service, string) {
 	patsrepo = new(mocks.PATSRepository)
 	hasher = new(mocks.Hasher)
 	idProvider := uuid.NewMock()
+	trepo = new(mocks.TokensRepository)
+	tcache = new(mocks.TokensCache)
 
-	t := jwt.New([]byte(secret))
+	t := jwt.New([]byte(secret), trepo, tcache)
 	key := auth.Key{
 		IssuedAt:  time.Now(),
 		ExpiresAt: time.Now().Add(refreshDuration),
@@ -80,7 +78,7 @@ func newService() (auth.Service, string) {
 func TestIssue(t *testing.T) {
 	svc, accessToken := newService()
 
-	n := jwt.New([]byte(secret))
+	n := jwt.New([]byte(secret), trepo, tcache)
 
 	apikey := auth.Key{
 		IssuedAt:  time.Now(),
@@ -313,9 +311,13 @@ func TestIssue(t *testing.T) {
 			Object:      policies.SuperMQObject,
 			ObjectType:  policies.PlatformType,
 		}).Return(tc.roleCheckErr)
+		cacheCall := tcache.On("Contains", mock.Anything, "", "").Return(false)
+		repoCall := trepo.On("Contains", mock.Anything, "").Return(false)
 		_, err := svc.Issue(context.Background(), tc.token, tc.key)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 		policyCall.Unset()
+		cacheCall.Unset()
+		repoCall.Unset()
 	}
 }
 
@@ -469,7 +471,7 @@ func TestIdentify(t *testing.T) {
 	repoCall.Unset()
 	repoCall1.Unset()
 
-	te := jwt.New([]byte(secret))
+	te := jwt.New([]byte(secret), trepo, tcache)
 	key := auth.Key{
 		IssuedAt:  time.Now(),
 		ExpiresAt: time.Now().Add(refreshDuration),
@@ -538,11 +540,15 @@ func TestIdentify(t *testing.T) {
 	for _, tc := range cases {
 		repoCall := krepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything).Return(auth.Key{}, tc.err)
 		repoCall1 := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(tc.err)
+		cacheCall := tcache.On("Contains", mock.Anything, "", "").Return(false)
+		repoCall2 := trepo.On("Contains", mock.Anything, "").Return(false)
 		idt, err := svc.Identify(context.Background(), tc.key)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.subject, idt.Subject, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.subject, idt))
 		repoCall.Unset()
 		repoCall1.Unset()
+		cacheCall.Unset()
+		repoCall2.Unset()
 	}
 }
 
