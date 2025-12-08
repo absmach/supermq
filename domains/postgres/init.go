@@ -64,10 +64,46 @@ func Migration() (*migrate.MemoryMigrationSource, error) {
 			{
 				Id: "domain_3",
 				Up: []string{
-					`ALTER TABLE domains RENAME COLUMN IF EXISTS alias TO route;`,
+					`DO $$
+						BEGIN
+							IF EXISTS (
+								SELECT 1
+								FROM information_schema.columns
+								WHERE table_schema = current_schema()
+								AND table_name = 'domains'
+								AND column_name = 'alias'
+							)
+							AND NOT EXISTS (
+								SELECT 1
+								FROM information_schema.columns
+								WHERE table_schema = current_schema()
+								AND table_name = 'domains'
+								AND column_name = 'route'
+							) THEN
+								EXECUTE 'ALTER TABLE domains RENAME COLUMN alias TO route;';
+							END IF;
+						END $$;`,
 				},
 				Down: []string{
-					`ALTER TABLE domains RENAME COLUMN IF EXISTS route TO alias;`,
+					`DO $$
+						BEGIN
+							IF EXISTS (
+								SELECT 1
+								FROM information_schema.columns
+								WHERE table_schema = current_schema()
+								AND table_name = 'domains'
+								AND column_name = 'route'
+							)
+							AND NOT EXISTS (
+								SELECT 1
+								FROM information_schema.columns
+								WHERE table_schema = current_schema()
+								AND table_name = 'domains'
+								AND column_name = 'alias'
+							) THEN
+								EXECUTE 'ALTER TABLE domains RENAME COLUMN route TO alias;';
+							END IF;
+						END $$;`,
 				},
 			},
 			{
@@ -92,10 +128,36 @@ func Migration() (*migrate.MemoryMigrationSource, error) {
 			{
 				Id: "domain_5",
 				Up: []string{
-					`ALTER TABLE domains RENAME CONSTRAINT IF EXISTS domains_alias_key TO domains_route_key;`,
+					`DO $$
+					BEGIN
+						IF EXISTS (
+							SELECT 1
+							FROM pg_constraint c
+							JOIN pg_class t ON c.conrelid = t.oid
+							JOIN pg_namespace n ON n.oid = t.relnamespace
+							WHERE t.relname = 'domains'
+							AND n.nspname = current_schema()
+							AND c.conname = 'domains_alias_key'
+						) THEN
+							EXECUTE 'ALTER TABLE domains RENAME CONSTRAINT domains_alias_key TO domains_route_key;';
+						END IF;
+					END $$;`,
 				},
 				Down: []string{
-					`ALTER TABLE domains RENAME CONSTRAINT IF EXISTS domains_route_key TO domains_alias_key;`,
+					`DO $$
+					BEGIN
+						IF EXISTS (
+							SELECT 1
+							FROM pg_constraint c
+							JOIN pg_class t ON c.conrelid = t.oid
+							JOIN pg_namespace n ON n.oid = t.relnamespace
+							WHERE t.relname = 'domains'
+							AND n.nspname = current_schema()
+							AND c.conname = 'domains_route_key'
+						) THEN
+							EXECUTE 'ALTER TABLE domains RENAME CONSTRAINT domains_route_key TO domains_alias_key;';
+						END IF;
+					END $$;`,
 				},
 			},
 		},
