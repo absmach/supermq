@@ -47,8 +47,8 @@ func Migration() (*migrate.MemoryMigrationSource, error) {
 				Id: "groups_02",
 				Up: []string{
 					`CREATE EXTENSION IF NOT EXISTS LTREE`,
-					`ALTER TABLE groups ADD COLUMN path LTREE`,
-					`CREATE INDEX path_gist_idx ON groups USING GIST (path);`,
+					`ALTER TABLE groups ADD COLUMN IF NOT EXISTS path LTREE`,
+					`CREATE INDEX IF NOT EXISTS path_gist_idx ON groups USING GIST (path);`,
 				},
 				Down: []string{
 					`DROP TABLE IF EXISTS groups`,
@@ -67,7 +67,7 @@ func Migration() (*migrate.MemoryMigrationSource, error) {
 			{
 				Id: "groups_04",
 				Up: []string{
-					`ALTER TABLE groups ADD COLUMN tags TEXT[]`,
+					`ALTER TABLE groups ADD COLUMN IF NOT EXISTS tags TEXT[]`,
 				},
 				Down: []string{
 					`ALTER TABLE groups DROP COLUMN tags`,
