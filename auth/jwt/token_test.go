@@ -4,14 +4,17 @@
 package jwt_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/absmach/supermq/auth"
 	authjwt "github.com/absmach/supermq/auth/jwt"
+	"github.com/absmach/supermq/auth/mocks"
 	"github.com/absmach/supermq/internal/testsutil"
 	"github.com/absmach/supermq/pkg/errors"
+	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
@@ -51,7 +54,9 @@ func newToken(issuerName string, key auth.Key) string {
 }
 
 func TestIssue(t *testing.T) {
-	tokenizer := authjwt.New([]byte(secret))
+	repo := new(mocks.TokensRepository)
+	cache := new(mocks.TokensCache)
+	tokenizer := authjwt.New([]byte(secret), repo, cache)
 
 	cases := []struct {
 		desc string
@@ -128,7 +133,9 @@ func TestIssue(t *testing.T) {
 }
 
 func TestParse(t *testing.T) {
-	tokenizer := authjwt.New([]byte(secret))
+	repo := new(mocks.TokensRepository)
+	cache := new(mocks.TokensCache)
+	tokenizer := authjwt.New([]byte(secret), repo, cache)
 
 	token, err := tokenizer.Issue(key())
 	require.Nil(t, err, fmt.Sprintf("issuing key expected to succeed: %s", err))
@@ -144,27 +151,35 @@ func TestParse(t *testing.T) {
 	expToken, err := tokenizer.Issue(expKey)
 	require.Nil(t, err, fmt.Sprintf("issuing expired key expected to succeed: %s", err))
 
+	emptyDomainKey := key()
+	emptyDomainToken, err := tokenizer.Issue(emptyDomainKey)
+	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
+
 	emptySubjectKey := key()
 	emptySubjectKey.Subject = ""
 	emptySubjectToken, err := tokenizer.Issue(emptySubjectKey)
 	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
 
-	emptyTypeKey := key()
-	emptyTypeKey.Type = auth.KeyType(auth.InvitationKey + 1)
-	emptyTypeToken, err := tokenizer.Issue(emptyTypeKey)
-	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
-
 	emptyKey := key()
 	emptyKey.Subject = ""
+	emptyToken, err := tokenizer.Issue(emptyKey)
 	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
 
 	inValidToken := newToken("invalid", key())
 
+	refreshKey := key()
+	refreshKey.Type = auth.RefreshKey
+	refreshToken, err := tokenizer.Issue(refreshKey)
+	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
+
 	cases := []struct {
-		desc  string
-		key   auth.Key
-		token string
-		err   error
+		desc          string
+		key           auth.Key
+		token         string
+		cacheContains bool
+		repoContains  bool
+		cacheSave     error
+		err           error
 	}{
 		{
 			desc:  "parse valid key",
@@ -203,27 +218,198 @@ func TestParse(t *testing.T) {
 			err:   authjwt.ErrJSONHandle,
 		},
 		{
+			desc:  "parse token with empty domain",
+			key:   emptyDomainKey,
+			token: emptyDomainToken,
+			err:   nil,
+		},
+		{
 			desc:  "parse token with empty subject",
 			key:   emptySubjectKey,
 			token: emptySubjectToken,
 			err:   nil,
 		},
 		{
-			desc:  "parse token with empty type",
-			key:   emptyTypeKey,
-			token: emptyTypeToken,
-			err:   errors.ErrAuthentication,
+			desc:  "parse token with empty domain and subject",
+			key:   emptyKey,
+			token: emptyToken,
+			err:   nil,
+		},
+		{
+			desc:          "parse refresh token",
+			key:           refreshKey,
+			token:         refreshToken,
+			cacheContains: false,
+			repoContains:  false,
+			err:           nil,
+		},
+		{
+			desc:          "parse revoked refresh token in cache",
+			key:           refreshKey,
+			token:         refreshToken,
+			cacheContains: true,
+			repoContains:  false,
+			err:           svcerr.ErrAuthentication,
+		},
+		{
+			desc:          "parse revoked refresh token not in cache",
+			key:           refreshKey,
+			token:         refreshToken,
+			cacheContains: false,
+			repoContains:  true,
+			err:           svcerr.ErrAuthentication,
+		},
+		{
+			desc:          "parse revoked refresh token failed to save in cache",
+			key:           refreshKey,
+			token:         refreshToken,
+			cacheContains: false,
+			repoContains:  true,
+			cacheSave:     repoerr.ErrCreateEntity,
+			err:           svcerr.ErrAuthentication,
 		},
 	}
 
 	for _, tc := range cases {
-		t.Run(tc.desc, func(t *testing.T) {
-			key, err := tokenizer.Parse(tc.token)
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s, got %s", tc.desc, tc.err, err))
-			if err == nil {
-				assert.Equal(t, tc.key, key, fmt.Sprintf("%s expected %v, got %v", tc.desc, tc.key, key))
-			}
-		})
+		cacheCall := cache.On("Contains", context.Background(), "", tc.key.ID).Return(tc.cacheContains)
+		repoCall := repo.On("Contains", context.Background(), tc.key.ID).Return(tc.repoContains)
+		cacheCall1 := cache.On("Save", context.Background(), "", tc.key.ID).Return(tc.cacheSave)
+		key, err := tokenizer.Parse(context.Background(), tc.token)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s, got %s", tc.desc, tc.err, err))
+		if err == nil {
+			assert.Equal(t, tc.key, key, fmt.Sprintf("%s expected %v, got %v", tc.desc, tc.key, key))
+		}
+		cacheCall.Unset()
+		repoCall.Unset()
+		cacheCall1.Unset()
+	}
+}
+
+func TestRevoke(t *testing.T) {
+	repo := new(mocks.TokensRepository)
+	cache := new(mocks.TokensCache)
+	tokenizer := authjwt.New([]byte(secret), repo, cache)
+
+	token, err := tokenizer.Issue(key())
+	require.Nil(t, err, fmt.Sprintf("issuing key expected to succeed: %s", err))
+
+	apiKey := key()
+	apiKey.Type = auth.APIKey
+	apiKey.ExpiresAt = time.Now().UTC().Add(-1 * time.Minute).Round(time.Second)
+	apiToken, err := tokenizer.Issue(apiKey)
+	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
+
+	expKey := key()
+	expKey.ExpiresAt = time.Now().UTC().Add(-1 * time.Minute).Round(time.Second)
+	expToken, err := tokenizer.Issue(expKey)
+	require.Nil(t, err, fmt.Sprintf("issuing expired key expected to succeed: %s", err))
+
+	emptyDomainKey := key()
+	emptyDomainToken, err := tokenizer.Issue(emptyDomainKey)
+	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
+
+	emptySubjectKey := key()
+	emptySubjectKey.Subject = ""
+	emptySubjectToken, err := tokenizer.Issue(emptySubjectKey)
+	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
+
+	emptyKey := key()
+	emptyKey.Subject = ""
+	emptyToken, err := tokenizer.Issue(emptyKey)
+	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
+
+	inValidToken := newToken("invalid", key())
+
+	refreshKey := key()
+	refreshKey.Type = auth.RefreshKey
+	refreshToken, err := tokenizer.Issue(refreshKey)
+	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
+
+	cases := []struct {
+		desc     string
+		key      auth.Key
+		token    string
+		repoErr  error
+		cacheErr error
+		err      error
+	}{
+		{
+			desc:  "revoke valid key",
+			key:   key(),
+			token: token,
+			err:   nil,
+		},
+		{
+			desc:  "revoke invalid key",
+			key:   auth.Key{},
+			token: "invalid",
+			err:   svcerr.ErrAuthentication,
+		},
+		{
+			desc:  "revoke expired key",
+			key:   auth.Key{},
+			token: expToken,
+			err:   auth.ErrExpiry,
+		},
+		{
+			desc:  "revoke expired API key",
+			key:   apiKey,
+			token: apiToken,
+			err:   auth.ErrExpiry,
+		},
+		{
+			desc:  "revoke token with invalid issuer",
+			key:   auth.Key{},
+			token: inValidToken,
+			err:   errInvalidIssuer,
+		},
+		{
+			desc:  "revoke token with invalid content",
+			key:   auth.Key{},
+			token: newToken(issuerName, key()),
+			err:   authjwt.ErrJSONHandle,
+		},
+		{
+			desc:  "revoke token with empty domain",
+			key:   emptyDomainKey,
+			token: emptyDomainToken,
+			err:   nil,
+		},
+		{
+			desc:  "revoke token with empty subject",
+			key:   emptySubjectKey,
+			token: emptySubjectToken,
+			err:   nil,
+		},
+		{
+			desc:  "revoke token with empty domain and subject",
+			key:   emptyKey,
+			token: emptyToken,
+			err:   nil,
+		},
+		{
+			desc:  "revoke refresh token",
+			key:   refreshKey,
+			token: refreshToken,
+			err:   nil,
+		},
+		{
+			desc:     "revoke revoked refresh token failed to save in cache",
+			key:      refreshKey,
+			token:    refreshToken,
+			repoErr:  nil,
+			cacheErr: repoerr.ErrCreateEntity,
+			err:      svcerr.ErrAuthentication,
+		},
+	}
+
+	for _, tc := range cases {
+		repoCall := repo.On("Save", context.Background(), tc.key.ID).Return(tc.repoErr)
+		cacheCall := cache.On("Save", context.Background(), "", tc.key.ID).Return(tc.cacheErr)
+		err := tokenizer.Revoke(context.Background(), tc.token)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s, got %s", tc.desc, tc.err, err))
+		cacheCall.Unset()
+		repoCall.Unset()
 	}
 }
 

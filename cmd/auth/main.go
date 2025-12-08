@@ -226,18 +226,20 @@ func initSchema(ctx context.Context, client *authzed.ClientWithExperimental, sch
 }
 
 func newService(db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, logger *slog.Logger, spicedbClient *authzed.ClientWithExperimental, cacheClient *redis.Client, keyDuration time.Duration) (auth.Service, error) {
-	cache := cache.NewPatsCache(cacheClient, keyDuration)
+	patsCache := cache.NewPatsCache(cacheClient, keyDuration)
+	tokensCache := cache.NewTokensCache(cacheClient, keyDuration)
 
 	database := pgclient.NewDatabase(db, dbConfig, tracer)
 	keysRepo := apostgres.New(database)
-	patsRepo := apostgres.NewPatRepo(database, cache)
+	patsRepo := apostgres.NewPatRepo(database, patsCache)
+	tokensRepo := apostgres.NewTokensRepository(database)
 	hasher := hasher.New()
 	idProvider := uuid.New()
 
 	pEvaluator := spicedb.NewPolicyEvaluator(spicedbClient, logger)
 	pService := spicedb.NewPolicyService(spicedbClient, logger)
 
-	t := jwt.New([]byte(cfg.SecretKey))
+	t := jwt.New([]byte(cfg.SecretKey), tokensRepo, tokensCache)
 
 	svc := auth.New(keysRepo, patsRepo, nil, hasher, idProvider, t, pEvaluator, pService, cfg.AccessDuration, cfg.RefreshDuration, cfg.InvitationDuration)
 	svc = middleware.NewLogging(svc, logger)

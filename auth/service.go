@@ -19,7 +19,6 @@ import (
 
 const (
 	recoveryDuration   = 5 * time.Minute
-	defLimit           = 100
 	randStr            = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&&*|+-="
 	patPrefix          = "pat"
 	patSecretSeparator = "_"
@@ -66,6 +65,9 @@ type Authz interface {
 type Authn interface {
 	// Issue issues a new Key, returning its token value alongside.
 	Issue(ctx context.Context, token string, key Key) (Token, error)
+
+	// RevokeToken revokes the token.
+	RevokeToken(ctx context.Context, token string) error
 
 	// Revoke removes the Key with the provided id that is
 	// issued by the user identified by the provided key.
@@ -140,8 +142,12 @@ func (svc service) Issue(ctx context.Context, token string, key Key) (Token, err
 	}
 }
 
+func (svc service) RevokeToken(ctx context.Context, token string) error {
+	return svc.tokenizer.Revoke(ctx, token)
+}
+
 func (svc service) Revoke(ctx context.Context, token, id string) error {
-	issuerID, _, err := svc.authenticate(token)
+	issuerID, _, err := svc.authenticate(ctx, token)
 	if err != nil {
 		return errors.Wrap(errRevoke, err)
 	}
@@ -152,7 +158,7 @@ func (svc service) Revoke(ctx context.Context, token, id string) error {
 }
 
 func (svc service) RetrieveKey(ctx context.Context, token, id string) (Key, error) {
-	issuerID, _, err := svc.authenticate(token)
+	issuerID, _, err := svc.authenticate(ctx, token)
 	if err != nil {
 		return Key{}, errors.Wrap(errRetrieve, err)
 	}
@@ -165,7 +171,7 @@ func (svc service) RetrieveKey(ctx context.Context, token, id string) (Key, erro
 }
 
 func (svc service) Identify(ctx context.Context, token string) (Key, error) {
-	key, err := svc.tokenizer.Parse(token)
+	key, err := svc.tokenizer.Parse(ctx, token)
 	if errors.Contains(err, ErrExpiry) {
 		err = svc.keys.Remove(ctx, key.Issuer, key.ID)
 		return Key{}, errors.Wrap(svcerr.ErrAuthentication, errors.Wrap(ErrKeyExpired, err))
@@ -308,7 +314,7 @@ func (svc service) invitationKey(ctx context.Context, key Key) (Token, error) {
 }
 
 func (svc service) refreshKey(ctx context.Context, token string, key Key) (Token, error) {
-	k, err := svc.tokenizer.Parse(token)
+	k, err := svc.tokenizer.Parse(ctx, token)
 	if err != nil {
 		return Token{}, errors.Wrap(errRetrieve, err)
 	}
@@ -385,7 +391,7 @@ func (svc service) getUserRole(ctx context.Context, userID string) (role Role) {
 }
 
 func (svc service) userKey(ctx context.Context, token string, key Key) (Token, error) {
-	id, sub, err := svc.authenticate(token)
+	id, sub, err := svc.authenticate(ctx, token)
 	if err != nil {
 		return Token{}, errors.Wrap(errIssueUser, err)
 	}
@@ -416,8 +422,8 @@ func (svc service) userKey(ctx context.Context, token string, key Key) (Token, e
 	return Token{AccessToken: tkn}, nil
 }
 
-func (svc service) authenticate(token string) (string, string, error) {
-	key, err := svc.tokenizer.Parse(token)
+func (svc service) authenticate(ctx context.Context, token string) (string, string, error) {
+	key, err := svc.tokenizer.Parse(ctx, token)
 	if err != nil {
 		return "", "", errors.Wrap(svcerr.ErrAuthentication, err)
 	}
