@@ -57,8 +57,7 @@ func NewAuthorization(
 	if err := entitiesOps.Validate(); err != nil {
 		return nil, err
 	}
-
-	ram, err := rmMW.NewRoleManagerAuthorizationMiddleware(policies.ClientType, svc, authz, roleOps, callout)
+	ram, err := rmMW.NewAuthorization(policies.ClientType, svc, authz, roleOps)
 	if err != nil {
 		return nil, err
 	}
@@ -410,7 +409,7 @@ func (am *authorizationMiddleware) RemoveParentGroup(ctx context.Context, sessio
 	return nil
 }
 
-func (am *authorizationMiddleware) authorize(ctx context.Context, entityType string,op svcutil.Operation, req smqauthz.PolicyReq) error {
+func (am *authorizationMiddleware) authorize(ctx context.Context, entityType string, op svcutil.Operation, req smqauthz.PolicyReq) error {
 	perm, err := am.entitiesOps.GetPermission(entityType, op)
 	if err != nil {
 		return err

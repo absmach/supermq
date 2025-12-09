@@ -45,6 +45,7 @@ import (
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/sid"
 	spicedbdecoder "github.com/absmach/supermq/pkg/spicedb"
+	"github.com/absmach/supermq/pkg/svcutil"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/authzed/authzed-go/v1"
 	"github.com/authzed/grpcutil"
@@ -82,6 +83,7 @@ type config struct {
 	SpicedbPreSharedKey string        `env:"SMQ_SPICEDB_PRE_SHARED_KEY"       envDefault:"12345678"`
 	TraceRatio          float64       `env:"SMQ_JAEGER_TRACE_RATIO"           envDefault:"1.0"`
 	ESURL               string        `env:"SMQ_ES_URL"                       envDefault:"nats://localhost:4222"`
+	PermissionsFile     string        `env:"SMQ_PERMISSIONS_FILE"             envDefault:"permission.yaml"`
 }
 
 func main() {
@@ -272,6 +274,11 @@ func newDomainService(ctx context.Context, domainsRepo domainsSvc.Repository, ca
 		return nil, err
 	}
 
+	permConfig, err := svcutil.ParsePermissionsFile(cfg.PermissionsFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse permissions file: %w", err)
+	}
+
 	svc, err := domainsSvc.New(domainsRepo, cache, policiessvc, idProvider, sidProvider, availableActions, builtInRoles)
 	if err != nil {
 		return nil, fmt.Errorf("failed to init domain service: %w", err)
@@ -281,12 +288,30 @@ func newDomainService(ctx context.Context, domainsRepo domainsSvc.Repository, ca
 		return nil, fmt.Errorf("failed to init domain event store middleware: %w", err)
 	}
 
-	svc, err = dmw.NewAuthorization(policies.DomainType, svc, authz, domains.NewOperationPermissionMap(), domains.NewRolesOperationPermissionMap())
+	domainOps, domainRoleOps, err := permConfig.GetEntityPermissions("domains")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get domain permissions: %w", err)
+	}
+
+	entitiesOps, err := svcutil.NewEntitiesOperations(
+		svcutil.EntitiesPermission{policies.DomainType: domainOps},
+		svcutil.EntitiesOperationDetails[svcutil.Operation]{policies.DomainType: domains.OperationDetails()},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create entities operations: %w", err)
+	}
+
+	roleOps, err := svcutil.NewOperations(roles.Operations(), domainRoleOps)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create role operations: %w", err)
+	}
+
+	svc, err = dmw.NewAuthorization(policies.DomainType, svc, authz, entitiesOps, roleOps)
 	if err != nil {
 		return nil, err
 	}
 
-	svc, err = dmw.NewCallout(svc, callout)
+	svc, err = dmw.NewCallout(svc, entitiesOps, roleOps, callout)
 	if err != nil {
 		return nil, err
 	}

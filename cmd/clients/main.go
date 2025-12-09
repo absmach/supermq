@@ -51,6 +51,7 @@ import (
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/sid"
 	spicedbdecoder "github.com/absmach/supermq/pkg/spicedb"
+	"github.com/absmach/supermq/pkg/svcutil"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/authzed/authzed-go/v1"
 	"github.com/authzed/grpcutil"
@@ -96,6 +97,7 @@ type config struct {
 	SpicedbPort         string        `env:"SMQ_SPICEDB_PORT"               envDefault:"50051"`
 	SpicedbPreSharedKey string        `env:"SMQ_SPICEDB_PRE_SHARED_KEY"     envDefault:"12345678"`
 	SpicedbSchemaFile   string        `env:"SMQ_SPICEDB_SCHEMA_FILE"        envDefault:"schema.zed"`
+	PermissionsFile     string        `env:"SMQ_PERMISSIONS_FILE"           envDefault:"permission.yaml"`
 }
 
 func main() {
@@ -259,8 +261,15 @@ func main() {
 		return
 	}
 
+	permConfig, err := svcutil.ParsePermissionsFile(cfg.PermissionsFile)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to parse permissions file: %s", err))
+		exitCode = 1
+		return
+	}
+
 	svc, psvc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cacheclient,
-		cfg, channelsgRPC, groupsClient, tracer, logger, callout)
+		cfg, channelsgRPC, groupsClient, tracer, logger, callout, permConfig)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create services: %s", err))
 		exitCode = 1
@@ -331,7 +340,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz smqauthz.Authorization, pe policies.Evaluator, ps policies.Service, cacheClient *redis.Client, cfg config, channels grpcChannelsV1.ChannelsServiceClient, groups grpcGroupsV1.GroupsServiceClient, tracer trace.Tracer, logger *slog.Logger, callout callout.Callout) (clients.Service, pClients.Service, error) {
+func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz smqauthz.Authorization, pe policies.Evaluator, ps policies.Service, cacheClient *redis.Client, cfg config, channels grpcChannelsV1.ChannelsServiceClient, groups grpcGroupsV1.GroupsServiceClient, tracer trace.Tracer, logger *slog.Logger, callout callout.Callout, permConfig *svcutil.PermissionConfig) (clients.Service, pClients.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	repo := postgres.NewRepository(database)
 
@@ -364,12 +373,30 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 	counter, latency := prometheus.MakeMetrics(svcName, "api")
 	csvc = middleware.NewMetrics(csvc, counter, latency)
 
-	csvc, err = middleware.NewAuthorization(policies.ClientType, csvc, authz, repo, clients.NewOperationPermissionMap(), clients.NewRolesOperationPermissionMap(), clients.NewExternalOperationPermissionMap())
+	clientOps, clientRoleOps, err := permConfig.GetEntityPermissions("clients")
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get client permissions: %w", err)
+	}
+
+	entitiesOps, err := svcutil.NewEntitiesOperations(
+		svcutil.EntitiesPermission{policies.ClientType: clientOps},
+		svcutil.EntitiesOperationDetails[svcutil.Operation]{policies.ClientType: clients.OperationDetails()},
+	)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create entities operations: %w", err)
+	}
+
+	roleOps, err := svcutil.NewOperations(roles.Operations(), clientRoleOps)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create role operations: %w", err)
+	}
+
+	csvc, err = middleware.NewAuthorization(policies.ClientType, csvc, authz, repo, entitiesOps, roleOps)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	csvc, err = middleware.NewCallout(csvc, repo, callout)
+	csvc, err = middleware.NewCallout(csvc, repo, entitiesOps, roleOps, callout)
 	if err != nil {
 		return nil, nil, err
 	}
