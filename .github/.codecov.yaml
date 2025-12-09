@@ -5,9 +5,10 @@
 coverage:
   ignore:
     - "tools/*"
+    - "api/grpc/**"
     - "cmd/*"
-    - "coap/*"
-    - "*/mocks/*"
+    - "coap/**"
+    - "**/mocks/*"
     - "*/middleware/*"
     - "pkg/sid/mock.go"
     - "pkg/tracing/utils.go"
