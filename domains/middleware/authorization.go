@@ -15,7 +15,7 @@ import (
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
-	rolemw "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
+	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 	"github.com/absmach/supermq/pkg/svcutil"
 )
 
@@ -29,7 +29,7 @@ type authorizationMiddleware struct {
 	authz       smqauthz.Authorization
 	entitiesOps svcutil.EntitiesOperations[svcutil.Operation]
 	rOps        svcutil.Operations[svcutil.RoleOperation]
-	rolemw.RoleManagerAuthorizationMiddleware
+	rmMW.RoleManagerAuthorizationMiddleware
 }
 
 // NewAuthorization adds authorization to the domains service.
@@ -46,6 +46,7 @@ func NewAuthorization(entityType string, svc domains.Service, authz smqauthz.Aut
 		svc:                                svc,
 		authz:                              authz,
 		entitiesOps:                        entitiesOps,
+		rOps:                               domainRoleOps,
 		RoleManagerAuthorizationMiddleware: ram,
 	}, nil
 }
@@ -166,11 +167,17 @@ func (am *authorizationMiddleware) ListInvitations(ctx context.Context, session 
 }
 
 func (am *authorizationMiddleware) ListDomainInvitations(ctx context.Context, session authn.Session, page domains.InvitationPageMeta) (invs domains.InvitationPage, err error) {
-	if err := am.extAuthorize(ctx, session.DomainUserID, policies.AdminPermission, policies.DomainType, session.DomainID); err != nil {
+	if err := am.authorize(ctx, policies.DomainType, domains.OpListDomainInvitations, authz.PolicyReq{
+		Subject:     session.DomainUserID,
+		SubjectType: policies.UserType,
+		SubjectKind: policies.UsersKind,
+		Object:      session.DomainID,
+		ObjectType:  policies.DomainType,
+	}); err != nil {
 		return domains.InvitationPage{}, err
 	}
 
-	return am.svc.ViewInvitation(ctx, session, inviteeUserID, domain)
+	return am.svc.ListDomainInvitations(ctx, session, page)
 }
 
 func (am *authorizationMiddleware) AcceptInvitation(ctx context.Context, session authn.Session, domainID string) (inv domains.Invitation, err error) {
@@ -190,11 +197,12 @@ func (am *authorizationMiddleware) DeleteInvitation(ctx context.Context, session
 	return am.svc.DeleteInvitation(ctx, session, inviteeUserID, domainID)
 }
 
-func (am *authorizationMiddleware) authorize(ctx context.Context, op svcutil.Operation, authReq authz.PolicyReq) error {
-	perm, err := am.opp.GetPermission(op)
+func (am *authorizationMiddleware) authorize(ctx context.Context, entityType string, op svcutil.Operation, authReq authz.PolicyReq) error {
+	perm, err := am.entitiesOps.GetPermission(entityType, op)
 	if err != nil {
 		return err
 	}
+
 	authReq.Permission = perm.String()
 
 	if err := am.authz.Authorize(ctx, authReq); err != nil {
@@ -247,21 +255,5 @@ func (am *authorizationMiddleware) checkSuperAdmin(ctx context.Context, session 
 	}); err != nil {
 		return err
 	}
-	return nil
-}
-
-func (am *authorizationMiddleware) extAuthorize(ctx context.Context, subj, perm, objType, obj string) error {
-	req := authz.PolicyReq{
-		SubjectType: policies.UserType,
-		SubjectKind: policies.UsersKind,
-		Subject:     subj,
-		Permission:  perm,
-		ObjectType:  objType,
-		Object:      obj,
-	}
-	if err := am.authz.Authorize(ctx, req); err != nil {
-		return err
-	}
-
 	return nil
 }

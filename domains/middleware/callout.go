@@ -13,31 +13,42 @@ import (
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
 	rolemw "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
+	"github.com/absmach/supermq/pkg/svcutil"
 )
 
 var _ domains.Service = (*calloutMiddleware)(nil)
 
 type calloutMiddleware struct {
-	svc     domains.Service
-	callout callout.Callout
+	svc         domains.Service
+	callout     callout.Callout
+	entitiesOps svcutil.EntitiesOperations[svcutil.Operation]
 	rolemw.RoleManagerCalloutMiddleware
 }
 
-func NewCallout(svc domains.Service, callout callout.Callout) (domains.Service, error) {
-	call, err := rolemw.NewCallout(policies.ClientType, svc, callout)
+func NewCallout(svc domains.Service, entitiesOps svcutil.EntitiesOperations[svcutil.Operation], roleOps svcutil.Operations[svcutil.RoleOperation], callout callout.Callout) (domains.Service, error) {
+	call, err := rolemw.NewCallout(policies.DomainType, svc, callout, roleOps)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := entitiesOps.Validate(); err != nil {
 		return nil, err
 	}
 
 	return &calloutMiddleware{
 		svc:                          svc,
 		callout:                      callout,
+		entitiesOps:                  entitiesOps,
 		RoleManagerCalloutMiddleware: call,
 	}, nil
 }
 
 func (cm *calloutMiddleware) CreateDomain(ctx context.Context, session authn.Session, d domains.Domain) (domains.Domain, []roles.RoleProvision, error) {
-	if err := cm.callOut(ctx, session, domains.OpCreateDomain.String(domains.OperationNames), d.ID, nil); err != nil {
+	params := map[string]any{
+		"entity_id": d.ID,
+	}
+
+	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpCreateDomain, params); err != nil {
 		return domains.Domain{}, nil, err
 	}
 
@@ -46,10 +57,11 @@ func (cm *calloutMiddleware) CreateDomain(ctx context.Context, session authn.Ses
 
 func (cm *calloutMiddleware) RetrieveDomain(ctx context.Context, session authn.Session, id string, withRoles bool) (domains.Domain, error) {
 	params := map[string]any{
+		"entity_id":  id,
 		"with_roles": withRoles,
 	}
 
-	if err := cm.callOut(ctx, session, domains.OpRetrieveDomain.String(domains.OperationNames), id, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpRetrieveDomain, params); err != nil {
 		return domains.Domain{}, err
 	}
 
@@ -58,10 +70,11 @@ func (cm *calloutMiddleware) RetrieveDomain(ctx context.Context, session authn.S
 
 func (cm *calloutMiddleware) UpdateDomain(ctx context.Context, session authn.Session, id string, d domains.DomainReq) (domains.Domain, error) {
 	params := map[string]any{
+		"entity_id":  id,
 		"domain_req": d,
 	}
 
-	if err := cm.callOut(ctx, session, domains.OpUpdateDomain.String(domains.OperationNames), id, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpUpdateDomain, params); err != nil {
 		return domains.Domain{}, err
 	}
 
@@ -69,7 +82,11 @@ func (cm *calloutMiddleware) UpdateDomain(ctx context.Context, session authn.Ses
 }
 
 func (cm *calloutMiddleware) EnableDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
-	if err := cm.callOut(ctx, session, domains.OpEnableDomain.String(domains.OperationNames), id, nil); err != nil {
+	params := map[string]any{
+		"entity_id": id,
+	}
+
+	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpEnableDomain, params); err != nil {
 		return domains.Domain{}, err
 	}
 
@@ -77,7 +94,11 @@ func (cm *calloutMiddleware) EnableDomain(ctx context.Context, session authn.Ses
 }
 
 func (cm *calloutMiddleware) DisableDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
-	if err := cm.callOut(ctx, session, domains.OpDisableDomain.String(domains.OperationNames), id, nil); err != nil {
+	params := map[string]any{
+		"entity_id": id,
+	}
+
+	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpDisableDomain, params); err != nil {
 		return domains.Domain{}, err
 	}
 
@@ -85,7 +106,11 @@ func (cm *calloutMiddleware) DisableDomain(ctx context.Context, session authn.Se
 }
 
 func (cm *calloutMiddleware) FreezeDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
-	if err := cm.callOut(ctx, session, domains.OpFreezeDomain.String(domains.OperationNames), id, nil); err != nil {
+	params := map[string]any{
+		"entity_id": id,
+	}
+
+	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpFreezeDomain, params); err != nil {
 		return domains.Domain{}, err
 	}
 
@@ -97,7 +122,7 @@ func (cm *calloutMiddleware) ListDomains(ctx context.Context, session authn.Sess
 		"page": page,
 	}
 
-	if err := cm.callOut(ctx, session, domains.OpListDomains.String(domains.OperationNames), "", params); err != nil {
+	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpListDomains, params); err != nil {
 		return domains.DomainsPage{}, err
 	}
 
@@ -106,12 +131,13 @@ func (cm *calloutMiddleware) ListDomains(ctx context.Context, session authn.Sess
 
 func (cm *calloutMiddleware) SendInvitation(ctx context.Context, session authn.Session, invitation domains.Invitation) (domains.Invitation, error) {
 	params := map[string]any{
+		"entity_id":  invitation.DomainID,
 		"invitation": invitation,
 	}
 
 	// While entity here is technically an invitation, Domain is used as
 	// the entity in callout since the invitation refers to the domain.
-	if err := cm.callOut(ctx, session, domains.OpSendInvitation.String(domains.OperationNames), invitation.DomainID, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpSendDomainInvitation, params); err != nil {
 		return domains.Invitation{}, err
 	}
 
@@ -123,7 +149,7 @@ func (cm *calloutMiddleware) ListInvitations(ctx context.Context, session authn.
 		"page": page,
 	}
 
-	if err := cm.callOut(ctx, session, domains.OpListInvitations.String(domains.OperationNames), "", params); err != nil {
+	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpListInvitations, params); err != nil {
 		return domains.InvitationPage{}, err
 	}
 
@@ -132,10 +158,11 @@ func (cm *calloutMiddleware) ListInvitations(ctx context.Context, session authn.
 
 func (cm *calloutMiddleware) ListDomainInvitations(ctx context.Context, session authn.Session, page domains.InvitationPageMeta) (domains.InvitationPage, error) {
 	params := map[string]any{
-		"page": page,
+		"entity_id": page.DomainID,
+		"page":      page,
 	}
 
-	if err := cm.callOut(ctx, session, domains.OpListDomainInvitations.String(domains.OperationNames), page.DomainID, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpListDomainInvitations, params); err != nil {
 		return domains.InvitationPage{}, err
 	}
 
@@ -143,9 +170,13 @@ func (cm *calloutMiddleware) ListDomainInvitations(ctx context.Context, session 
 }
 
 func (cm *calloutMiddleware) AcceptInvitation(ctx context.Context, session authn.Session, domainID string) (domains.Invitation, error) {
+	params := map[string]any{
+		"entity_id": domainID,
+	}
+
 	// Similar to sending an invitation, Domain is used as the
 	// entity in callout since the invitation refers to the domain.
-	if err := cm.callOut(ctx, session, domains.OpAcceptInvitation.String(domains.OperationNames), domainID, nil); err != nil {
+	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpAcceptInvitation, params); err != nil {
 		return domains.Invitation{}, err
 	}
 
@@ -153,9 +184,13 @@ func (cm *calloutMiddleware) AcceptInvitation(ctx context.Context, session authn
 }
 
 func (cm *calloutMiddleware) RejectInvitation(ctx context.Context, session authn.Session, domainID string) (domains.Invitation, error) {
+	params := map[string]any{
+		"entity_id": domainID,
+	}
+
 	// Similar to sending and accepting, Domain is used as
 	// the entity in callout since the invitation refers to the domain.
-	if err := cm.callOut(ctx, session, domains.OpRejectInvitation.String(domains.OperationNames), domainID, nil); err != nil {
+	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpRejectInvitation, params); err != nil {
 		return domains.Invitation{}, err
 	}
 
@@ -164,21 +199,27 @@ func (cm *calloutMiddleware) RejectInvitation(ctx context.Context, session authn
 
 func (cm *calloutMiddleware) DeleteInvitation(ctx context.Context, session authn.Session, inviteeUserID, domainID string) error {
 	params := map[string]any{
+		"entity_id":       domainID,
 		"invitee_user_id": inviteeUserID,
 	}
 
-	if err := cm.callOut(ctx, session, domains.OpDeleteInvitation.String(domains.OperationNames), domainID, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpDeleteDomainInvitation, params); err != nil {
 		return err
 	}
 
 	return cm.svc.DeleteInvitation(ctx, session, inviteeUserID, domainID)
 }
 
-func (cm *calloutMiddleware) callOut(ctx context.Context, session authn.Session, op, entityID string, pld map[string]any) error {
+func (cm *calloutMiddleware) callOut(ctx context.Context, session authn.Session, entityType string, op svcutil.Operation, pld map[string]any) error {
+	var entityID string
+	if id, ok := pld["entity_id"].(string); ok {
+		entityID = id
+	}
+
 	req := callout.Request{
 		BaseRequest: callout.BaseRequest{
-			Operation:  op,
-			EntityType: policies.DomainType,
+			Operation:  cm.entitiesOps.OperationName(entityType, op),
+			EntityType: entityType,
 			EntityID:   entityID,
 			CallerID:   session.UserID,
 			CallerType: policies.UserType,

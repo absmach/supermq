@@ -23,7 +23,6 @@ var ErrEntityTypeNotFound = errors.New("entity type not found")
 type entitiesOperations[K OperationKey] map[string]Operations[K]
 
 func NewEntitiesOperations[K OperationKey](entitiesPermission EntitiesPermission, entitiesOperationDetails EntitiesOperationDetails[K], filterEntities ...string) (EntitiesOperations[K], error) {
-
 	if len(filterEntities) == 0 {
 		return newEntitiesOperations(entitiesPermission, entitiesOperationDetails)
 	}

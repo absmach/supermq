@@ -8,25 +8,32 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/clients"
+	"github.com/absmach/supermq/domains"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/callout"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
 	rolemw "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
+	"github.com/absmach/supermq/pkg/svcutil"
 )
 
 var _ clients.Service = (*calloutMiddleware)(nil)
 
 type calloutMiddleware struct {
-	svc     clients.Service
-	repo    clients.Repository
-	callout callout.Callout
+	svc         clients.Service
+	repo        clients.Repository
+	callout     callout.Callout
+	entitiesOps svcutil.EntitiesOperations[svcutil.Operation]
 	rolemw.RoleManagerCalloutMiddleware
 }
 
-func NewCallout(svc clients.Service, repo clients.Repository, callout callout.Callout) (clients.Service, error) {
-	call, err := rolemw.NewCallout(policies.ClientType, svc, callout)
+func NewCallout(svc clients.Service, repo clients.Repository, entitiesOps svcutil.EntitiesOperations[svcutil.Operation], roleOps svcutil.Operations[svcutil.RoleOperation], callout callout.Callout) (clients.Service, error) {
+	call, err := rolemw.NewCallout(policies.ClientType, svc, callout, roleOps)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := entitiesOps.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -34,6 +41,7 @@ func NewCallout(svc clients.Service, repo clients.Repository, callout callout.Ca
 		svc:                          svc,
 		repo:                         repo,
 		callout:                      callout,
+		entitiesOps:                  entitiesOps,
 		RoleManagerCalloutMiddleware: call,
 	}, nil
 }
@@ -44,7 +52,7 @@ func (cm *calloutMiddleware) CreateClients(ctx context.Context, session authn.Se
 		"count":    len(client),
 	}
 
-	if err := cm.callOut(ctx, session, clients.OpCreateClient.String(clients.OperationNames), "", params); err != nil {
+	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpCreateDomainClients, params); err != nil {
 		return []clients.Client{}, []roles.RoleProvision{}, err
 	}
 
@@ -52,7 +60,10 @@ func (cm *calloutMiddleware) CreateClients(ctx context.Context, session authn.Se
 }
 
 func (cm *calloutMiddleware) View(ctx context.Context, session authn.Session, id string, withRoles bool) (clients.Client, error) {
-	if err := cm.callOut(ctx, session, clients.OpViewClient.String(clients.OperationNames), id, nil); err != nil {
+	params := map[string]any{
+		"entity_id": id,
+	}
+	if err := cm.callOut(ctx, session, policies.ClientType, clients.OpViewClient, params); err != nil {
 		return clients.Client{}, err
 	}
 
@@ -64,7 +75,7 @@ func (cm *calloutMiddleware) ListClients(ctx context.Context, session authn.Sess
 		"pagemeta": pm,
 	}
 
-	if err := cm.callOut(ctx, session, clients.OpListClients.String(clients.OperationNames), "", params); err != nil {
+	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpListDomainClients, params); err != nil {
 		return clients.ClientsPage{}, err
 	}
 
@@ -77,7 +88,7 @@ func (cm *calloutMiddleware) ListUserClients(ctx context.Context, session authn.
 		"pagemeta": pm,
 	}
 
-	if err := cm.callOut(ctx, session, clients.OpListUserClients.String(clients.OperationNames), "", params); err != nil {
+	if err := cm.callOut(ctx, session, policies.ClientType, clients.OpListUserClients, params); err != nil {
 		return clients.ClientsPage{}, err
 	}
 
@@ -85,7 +96,11 @@ func (cm *calloutMiddleware) ListUserClients(ctx context.Context, session authn.
 }
 
 func (cm *calloutMiddleware) Update(ctx context.Context, session authn.Session, client clients.Client) (clients.Client, error) {
-	if err := cm.callOut(ctx, session, clients.OpUpdateClient.String(clients.OperationNames), client.ID, nil); err != nil {
+	params := map[string]any{
+		"entity_id": client.ID,
+	}
+
+	if err := cm.callOut(ctx, session, policies.ClientType, clients.OpUpdateClient, params); err != nil {
 		return clients.Client{}, err
 	}
 
@@ -93,7 +108,11 @@ func (cm *calloutMiddleware) Update(ctx context.Context, session authn.Session, 
 }
 
 func (cm *calloutMiddleware) UpdateTags(ctx context.Context, session authn.Session, client clients.Client) (clients.Client, error) {
-	if err := cm.callOut(ctx, session, clients.OpUpdateClientTags.String(clients.OperationNames), client.ID, nil); err != nil {
+	params := map[string]any{
+		"entity_id": client.ID,
+	}
+
+	if err := cm.callOut(ctx, session, policies.ClientType, clients.OpUpdateClientTags, params); err != nil {
 		return clients.Client{}, err
 	}
 
@@ -101,7 +120,11 @@ func (cm *calloutMiddleware) UpdateTags(ctx context.Context, session authn.Sessi
 }
 
 func (cm *calloutMiddleware) UpdateSecret(ctx context.Context, session authn.Session, id, key string) (clients.Client, error) {
-	if err := cm.callOut(ctx, session, clients.OpUpdateClientSecret.String(clients.OperationNames), id, nil); err != nil {
+	params := map[string]any{
+		"entity_id": id,
+	}
+
+	if err := cm.callOut(ctx, session, policies.ClientType, clients.OpUpdateClientSecret, params); err != nil {
 		return clients.Client{}, err
 	}
 
@@ -109,7 +132,11 @@ func (cm *calloutMiddleware) UpdateSecret(ctx context.Context, session authn.Ses
 }
 
 func (cm *calloutMiddleware) Enable(ctx context.Context, session authn.Session, id string) (clients.Client, error) {
-	if err := cm.callOut(ctx, session, clients.OpEnableClient.String(clients.OperationNames), id, nil); err != nil {
+	params := map[string]any{
+		"entity_id": id,
+	}
+
+	if err := cm.callOut(ctx, session, policies.ClientType, clients.OpEnableClient, params); err != nil {
 		return clients.Client{}, err
 	}
 
@@ -117,7 +144,11 @@ func (cm *calloutMiddleware) Enable(ctx context.Context, session authn.Session, 
 }
 
 func (cm *calloutMiddleware) Disable(ctx context.Context, session authn.Session, id string) (clients.Client, error) {
-	if err := cm.callOut(ctx, session, clients.OpDisableClient.String(clients.OperationNames), id, nil); err != nil {
+	params := map[string]any{
+		"entity_id": id,
+	}
+
+	if err := cm.callOut(ctx, session, policies.ClientType, clients.OpDisableClient, params); err != nil {
 		return clients.Client{}, err
 	}
 
@@ -125,7 +156,11 @@ func (cm *calloutMiddleware) Disable(ctx context.Context, session authn.Session,
 }
 
 func (cm *calloutMiddleware) Delete(ctx context.Context, session authn.Session, id string) error {
-	if err := cm.callOut(ctx, session, clients.OpDeleteClient.String(clients.OperationNames), id, nil); err != nil {
+	params := map[string]any{
+		"entity_id": id,
+	}
+
+	if err := cm.callOut(ctx, session, policies.ClientType, clients.OpDeleteClient, params); err != nil {
 		return err
 	}
 
@@ -134,10 +169,11 @@ func (cm *calloutMiddleware) Delete(ctx context.Context, session authn.Session, 
 
 func (cm *calloutMiddleware) SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) error {
 	params := map[string]any{
+		"entity_id": id,
 		"parent_id": parentGroupID,
 	}
 
-	if err := cm.callOut(ctx, session, clients.OpSetParentGroup.String(clients.OperationNames), id, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.ClientType, clients.OpSetParentGroup, params); err != nil {
 		return err
 	}
 
@@ -152,10 +188,11 @@ func (cm *calloutMiddleware) RemoveParentGroup(ctx context.Context, session auth
 
 	if th.ParentGroup != "" {
 		params := map[string]any{
+			"entity_id": id,
 			"parent_id": th.ParentGroup,
 		}
 
-		if err := cm.callOut(ctx, session, clients.OpRemoveParentGroup.String(clients.OperationNames), id, params); err != nil {
+		if err := cm.callOut(ctx, session, policies.ClientType, clients.OpRemoveParentGroup, params); err != nil {
 			return err
 		}
 	}
@@ -163,11 +200,16 @@ func (cm *calloutMiddleware) RemoveParentGroup(ctx context.Context, session auth
 	return cm.svc.RemoveParentGroup(ctx, session, id)
 }
 
-func (cm *calloutMiddleware) callOut(ctx context.Context, session authn.Session, op, entityID string, pld map[string]any) error {
+func (cm *calloutMiddleware) callOut(ctx context.Context, session authn.Session, entityType string, op svcutil.Operation, pld map[string]any) error {
+	var entityID string
+	if id, ok := pld["entity_id"].(string); ok {
+		entityID = id
+	}
+
 	req := callout.Request{
 		BaseRequest: callout.BaseRequest{
-			Operation:  op,
-			EntityType: policies.ClientType,
+			Operation:  cm.entitiesOps.OperationName(entityType, op),
+			EntityType: entityType,
 			EntityID:   entityID,
 			CallerID:   session.UserID,
 			CallerType: policies.UserType,
