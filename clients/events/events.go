@@ -22,12 +22,8 @@ const (
 	clientDisable      = clientPrefix + "disable"
 	clientRemove       = clientPrefix + "remove"
 	clientView         = clientPrefix + "view"
-	clientViewPerms    = clientPrefix + "view_perms"
 	clientList         = clientPrefix + "list"
-	clientListByGroup  = clientPrefix + "list_by_channel"
 	clientListByUser   = clientPrefix + "list_by_user"
-	clientIdentify     = clientPrefix + "identify"
-	clientAuthorize    = clientPrefix + "authorize"
 	clientSetParent    = clientPrefix + "set_parent"
 	clientRemoveParent = clientPrefix + "remove_parent"
 )
@@ -37,13 +33,11 @@ var (
 	_ events.Event = (*updateClientEvent)(nil)
 	_ events.Event = (*changeClientStatusEvent)(nil)
 	_ events.Event = (*viewClientEvent)(nil)
-	_ events.Event = (*viewClientPermsEvent)(nil)
 	_ events.Event = (*listClientEvent)(nil)
-	_ events.Event = (*listClientByGroupEvent)(nil)
-	_ events.Event = (*identifyClientEvent)(nil)
-	_ events.Event = (*authorizeClientEvent)(nil)
-	_ events.Event = (*shareClientEvent)(nil)
+	_ events.Event = (*listUserClientEvent)(nil)
 	_ events.Event = (*removeClientEvent)(nil)
+	_ events.Event = (*setParentGroupEvent)(nil)
+	_ events.Event = (*removeParentGroupEvent)(nil)
 )
 
 type createClientEvent struct {
@@ -196,25 +190,6 @@ func (vce viewClientEvent) Encode() (map[string]any, error) {
 	return val, nil
 }
 
-type viewClientPermsEvent struct {
-	permissions []string
-	authn.Session
-	requestID string
-}
-
-func (vcpe viewClientPermsEvent) Encode() (map[string]any, error) {
-	val := map[string]any{
-		"operation":   clientViewPerms,
-		"permissions": vcpe.permissions,
-		"domain":      vcpe.DomainID,
-		"user_id":     vcpe.UserID,
-		"token_type":  vcpe.Type.String(),
-		"super_admin": vcpe.SuperAdmin,
-		"request_id":  vcpe.requestID,
-	}
-	return val, nil
-}
-
 type listClientEvent struct {
 	clients.Page
 	authn.Session
@@ -308,122 +283,6 @@ func (lce listUserClientEvent) Encode() (map[string]any, error) {
 	}
 
 	return val, nil
-}
-
-type listClientByGroupEvent struct {
-	clients.Page
-	channelID string
-	authn.Session
-	requestID string
-}
-
-func (lcge listClientByGroupEvent) Encode() (map[string]any, error) {
-	val := map[string]any{
-		"operation":   clientListByGroup,
-		"total":       lcge.Total,
-		"offset":      lcge.Offset,
-		"limit":       lcge.Limit,
-		"channel_id":  lcge.channelID,
-		"domain":      lcge.DomainID,
-		"user_id":     lcge.UserID,
-		"token_type":  lcge.Type.String(),
-		"super_admin": lcge.SuperAdmin,
-		"request_id":  lcge.requestID,
-	}
-
-	if lcge.Name != "" {
-		val["name"] = lcge.Name
-	}
-	if lcge.Order != "" {
-		val["order"] = lcge.Order
-	}
-	if lcge.Dir != "" {
-		val["dir"] = lcge.Dir
-	}
-	if lcge.Metadata != nil {
-		val["metadata"] = lcge.Metadata
-	}
-	if lcge.Tag != "" {
-		val["tag"] = lcge.Tag
-	}
-	if lcge.Status.String() != "" {
-		val["status"] = lcge.Status.String()
-	}
-	if lcge.Identity != "" {
-		val["identity"] = lcge.Identity
-	}
-
-	return val, nil
-}
-
-type identifyClientEvent struct {
-	clientID string
-	authn.Session
-	requestID string
-}
-
-func (ice identifyClientEvent) Encode() (map[string]any, error) {
-	return map[string]any{
-		"operation":   clientIdentify,
-		"id":          ice.clientID,
-		"domain":      ice.DomainID,
-		"user_id":     ice.UserID,
-		"token_type":  ice.Type.String(),
-		"super_admin": ice.SuperAdmin,
-		"request_id":  ice.requestID,
-	}, nil
-}
-
-type authorizeClientEvent struct {
-	clientID   string
-	channelID  string
-	permission string
-	authn.Session
-	requestID string
-}
-
-func (ice authorizeClientEvent) Encode() (map[string]any, error) {
-	val := map[string]any{
-		"operation":   clientAuthorize,
-		"id":          ice.clientID,
-		"domain":      ice.DomainID,
-		"user_id":     ice.UserID,
-		"token_type":  ice.Type.String(),
-		"super_admin": ice.SuperAdmin,
-		"request_id":  ice.requestID,
-	}
-
-	if ice.permission != "" {
-		val["permission"] = ice.permission
-	}
-	if ice.channelID != "" {
-		val["channelID"] = ice.channelID
-	}
-
-	return val, nil
-}
-
-type shareClientEvent struct {
-	action   string
-	id       string
-	relation string
-	userIDs  []string
-	authn.Session
-	requestID string
-}
-
-func (sce shareClientEvent) Encode() (map[string]any, error) {
-	return map[string]any{
-		"operation":   clientPrefix + sce.action,
-		"id":          sce.id,
-		"relation":    sce.relation,
-		"user_ids":    sce.userIDs,
-		"domain":      sce.DomainID,
-		"user_id":     sce.UserID,
-		"token_type":  sce.Type.String(),
-		"super_admin": sce.SuperAdmin,
-		"request_id":  sce.requestID,
-	}, nil
 }
 
 type removeClientEvent struct {

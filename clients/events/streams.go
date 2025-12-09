@@ -25,12 +25,8 @@ const (
 	disableStream      = supermqPrefix + clientDisable
 	removeStream       = supermqPrefix + clientRemove
 	viewStream         = supermqPrefix + clientView
-	viewPermsStream    = supermqPrefix + clientViewPerms
 	listStream         = supermqPrefix + clientList
 	listByUserStream   = supermqPrefix + clientListByUser
-	listByGroupStream  = supermqPrefix + clientListByGroup
-	identifyStream     = supermqPrefix + clientIdentify
-	authorizeStream    = supermqPrefix + clientAuthorize
 	setParentStream    = supermqPrefix + clientSetParent
 	removeParentStream = supermqPrefix + clientRemoveParent
 )

@@ -26,7 +26,6 @@ const (
 	groupRetrieveGroupHierarchy  = groupPrefix + "retrieve_group_hierarchy"
 	groupAddParentGroup          = groupPrefix + "add_parent_group"
 	groupRemoveParentGroup       = groupPrefix + "remove_parent_group"
-	groupViewParentGroup         = groupPrefix + "view_parent_group"
 	groupAddChildrenGroups       = groupPrefix + "add_children_groups"
 	groupRemoveChildrenGroups    = groupPrefix + "remove_children_groups"
 	groupRemoveAllChildrenGroups = groupPrefix + "remove_all_children_groups"
@@ -43,7 +42,6 @@ var (
 	_ events.Event = (*listGroupEvent)(nil)
 	_ events.Event = (*addParentGroupEvent)(nil)
 	_ events.Event = (*removeParentGroupEvent)(nil)
-	_ events.Event = (*viewParentGroupEvent)(nil)
 	_ events.Event = (*addChildrenGroupsEvent)(nil)
 	_ events.Event = (*removeChildrenGroupsEvent)(nil)
 	_ events.Event = (*removeAllChildrenGroupsEvent)(nil)
@@ -358,21 +356,6 @@ func (rpge removeParentGroupEvent) Encode() (map[string]any, error) {
 		"token_type":  rpge.Type.String(),
 		"super_admin": rpge.SuperAdmin,
 		"request_id":  rpge.requestID,
-	}, nil
-}
-
-type viewParentGroupEvent struct {
-	id        string
-	domainID  string
-	requestID string
-}
-
-func (vpge viewParentGroupEvent) Encode() (map[string]any, error) {
-	return map[string]any{
-		"operation":  groupViewParentGroup,
-		"id":         vpge.id,
-		"domain":     vpge.domainID,
-		"request_id": vpge.requestID,
 	}, nil
 }
 

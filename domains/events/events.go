@@ -33,7 +33,6 @@ const (
 var (
 	_ events.Event = (*createDomainEvent)(nil)
 	_ events.Event = (*retrieveDomainEvent)(nil)
-	_ events.Event = (*retrieveDomainStatusEvent)(nil)
 	_ events.Event = (*updateDomainEvent)(nil)
 	_ events.Event = (*enableDomainEvent)(nil)
 	_ events.Event = (*disableDomainEvent)(nil)
@@ -117,27 +116,6 @@ func (rde retrieveDomainEvent) Encode() (map[string]any, error) {
 	if rde.UpdatedBy != "" {
 		val["updated_by"] = rde.UpdatedBy
 	}
-	return val, nil
-}
-
-type retrieveDomainStatusEvent struct {
-	id     string
-	status domains.Status
-	authn.Session
-	requestID string
-}
-
-func (rdse retrieveDomainStatusEvent) Encode() (map[string]any, error) {
-	val := map[string]any{
-		"operation":   domainRetrieve,
-		"id":          rdse.id,
-		"status":      rdse.status.String(),
-		"user_id":     rdse.UserID,
-		"token_type":  rdse.Type.String(),
-		"super_admin": rdse.SuperAdmin,
-		"request_id":  rdse.requestID,
-	}
-
 	return val, nil
 }
 
