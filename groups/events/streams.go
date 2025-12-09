@@ -29,7 +29,6 @@ const (
 	retrieveHierarchyStream = supermqPrefix + groupRetrieveGroupHierarchy
 	addParentStream         = supermqPrefix + groupAddParentGroup
 	removeParentStream      = supermqPrefix + groupRemoveParentGroup
-	viewParentStream        = supermqPrefix + groupViewParentGroup
 	addChildrenStream       = supermqPrefix + groupAddChildrenGroups
 	removeChildrenStream    = supermqPrefix + groupRemoveChildrenGroups
 	removeAllChildrenStream = supermqPrefix + groupRemoveAllChildrenGroups
