@@ -9,8 +9,10 @@ import (
 	"github.com/absmach/supermq/pkg/errors"
 )
 
-type EntitiesPermission map[string]map[string]Permission
-type EntitiesOperationDetails[K OperationKey] map[string]map[K]OperationDetails
+type (
+	EntitiesPermission                       map[string]map[string]Permission
+	EntitiesOperationDetails[K OperationKey] map[string]map[K]OperationDetails
+)
 
 type EntitiesOperations[K OperationKey] interface {
 	GetPermission(et string, op K) (Permission, error)

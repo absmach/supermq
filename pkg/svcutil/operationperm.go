@@ -9,8 +9,10 @@ import (
 	"github.com/absmach/supermq/pkg/errors"
 )
 
-var ErrMergeInvalidOperations = errors.New("failed to merge: invalid operations type")
-var ErrRemoveInvalidOperations = errors.New("failed to remove: invalid operations type")
+var (
+	ErrMergeInvalidOperations  = errors.New("failed to merge: invalid operations type")
+	ErrRemoveInvalidOperations = errors.New("failed to remove: invalid operations type")
+)
 
 type Permission string
 
