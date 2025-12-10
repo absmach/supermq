@@ -28,6 +28,7 @@ import (
 	pClients "github.com/absmach/supermq/clients/private"
 	"github.com/absmach/supermq/domains"
 	dpostgres "github.com/absmach/supermq/domains/postgres"
+	svcgroups "github.com/absmach/supermq/groups"
 	gpostgres "github.com/absmach/supermq/groups/postgres"
 	redisclient "github.com/absmach/supermq/internal/clients/redis"
 	smqlog "github.com/absmach/supermq/logger"
@@ -384,14 +385,21 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 		return nil, nil, fmt.Errorf("failed to get domain permissions: %w", err)
 	}
 
+	groupOps, _, err := permConfig.GetEntityPermissions("groups")
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get group permissions: %w", err)
+	}
+
 	entitiesOps, err := svcutil.NewEntitiesOperations(
 		svcutil.EntitiesPermission{
 			policies.ClientType: clientOps,
 			policies.DomainType: domainOps,
+			policies.GroupType:  groupOps,
 		},
 		svcutil.EntitiesOperationDetails[svcutil.Operation]{
 			policies.ClientType: clients.OperationDetails(),
 			policies.DomainType: domains.OperationDetails(),
+			policies.GroupType:  svcgroups.OperationDetails(),
 		},
 	)
 	if err != nil {
