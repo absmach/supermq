@@ -17,6 +17,7 @@ import (
 	grpcChannelsV1 "github.com/absmach/supermq/api/grpc/channels/v1"
 	grpcClientsV1 "github.com/absmach/supermq/api/grpc/clients/v1"
 	grpcGroupsV1 "github.com/absmach/supermq/api/grpc/groups/v1"
+	"github.com/absmach/supermq/domains"
 	dpostgres "github.com/absmach/supermq/domains/postgres"
 	"github.com/absmach/supermq/groups"
 	gpsvc "github.com/absmach/supermq/groups"
@@ -342,9 +343,20 @@ func newService(ctx context.Context, authz smqauthz.Authorization, policy polici
 		return nil, nil, fmt.Errorf("failed to get group permissions: %w", err)
 	}
 
+	domainOps, _, err := permConfig.GetEntityPermissions("domains")
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get domain permissions: %w", err)
+	}
+
 	entitiesOps, err := svcutil.NewEntitiesOperations(
-		svcutil.EntitiesPermission{policies.GroupType: groupOps},
-		svcutil.EntitiesOperationDetails[svcutil.Operation]{policies.GroupType: groups.OperationDetails()},
+		svcutil.EntitiesPermission{
+			policies.GroupType: groupOps,
+			policies.DomainType: domainOps,
+		},
+		svcutil.EntitiesOperationDetails[svcutil.Operation]{
+			policies.GroupType: groups.OperationDetails(),
+			policies.DomainType: domains.OperationDetails(),
+		},
 	)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create entities operations: %w", err)

@@ -26,6 +26,7 @@ import (
 	"github.com/absmach/supermq/clients/middleware"
 	"github.com/absmach/supermq/clients/postgres"
 	pClients "github.com/absmach/supermq/clients/private"
+	"github.com/absmach/supermq/domains"
 	dpostgres "github.com/absmach/supermq/domains/postgres"
 	gpostgres "github.com/absmach/supermq/groups/postgres"
 	redisclient "github.com/absmach/supermq/internal/clients/redis"
@@ -378,9 +379,20 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 		return nil, nil, fmt.Errorf("failed to get client permissions: %w", err)
 	}
 
+	domainOps, _, err := permConfig.GetEntityPermissions("domains")
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get domain permissions: %w", err)
+	}
+
 	entitiesOps, err := svcutil.NewEntitiesOperations(
-		svcutil.EntitiesPermission{policies.ClientType: clientOps},
-		svcutil.EntitiesOperationDetails[svcutil.Operation]{policies.ClientType: clients.OperationDetails()},
+		svcutil.EntitiesPermission{
+			policies.ClientType: clientOps,
+			policies.DomainType: domainOps,
+		},
+		svcutil.EntitiesOperationDetails[svcutil.Operation]{
+			policies.ClientType: clients.OperationDetails(),
+			policies.DomainType: domains.OperationDetails(),
+		},
 	)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create entities operations: %w", err)

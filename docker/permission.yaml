@@ -108,12 +108,12 @@ domains:
     - list_invitation: membership_permission
     - list_domain_invitation: manage_role_permission
     - delete_invitation: manage_role_permission
-    - create_clients: create_permission
-    - list_clients: read_permission
-    - create_channels: create_permission
-    - list_channels: read_permission
-    - create_groups: create_permission
-    - list_groups: read_permission
+    - create_clients: client_create_permission
+    - list_clients: client_read_permission
+    - create_channels: channel_create_permission
+    - list_channels: channel_read_permission
+    - create_groups: group_create_permission
+    - list_groups: group_read_permission
   roles_operations:
     - add: manage_role_permission
     - remove: manage_role_permission
