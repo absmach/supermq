@@ -5,7 +5,7 @@ package groups
 
 import "github.com/absmach/supermq/pkg/svcutil"
 
-// Group Operations
+// Group Operations.
 const (
 	OpViewGroup svcutil.Operation = iota
 	OpUpdateGroup
@@ -102,5 +102,4 @@ func OperationDetails() map[svcutil.Operation]svcutil.OperationDetails {
 			PermissionRequired: false, // hardcoded to superadmin
 		},
 	}
-
 }

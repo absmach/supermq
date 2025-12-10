@@ -7,7 +7,7 @@ import (
 	"github.com/absmach/supermq/pkg/svcutil"
 )
 
-// Client Operations
+// Client Operations.
 const (
 	OpViewClient svcutil.Operation = iota
 	OpUpdateClient
@@ -74,5 +74,4 @@ func OperationDetails() map[svcutil.Operation]svcutil.OperationDetails {
 			PermissionRequired: false, // hardcoded to superadmin
 		},
 	}
-
 }
