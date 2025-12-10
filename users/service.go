@@ -28,9 +28,31 @@ import (
 const defaultUsernamePrefix = "user"
 
 var (
-	errIssueToken       = errors.New("failed to issue token")
-	errRecoveryToken    = errors.New("failed to generate password recovery token")
-	errLoginDisableUser = errors.New("failed to login in disabled user")
+	errIssueToken                   = errors.New("failed to issue token")
+	errRecoveryToken                = errors.New("failed to generate password recovery token")
+	errLoginDisableUser             = errors.New("failed to login in disabled user")
+	errRetrieveUserVerification     = errors.New("failed to retrieve user verification")
+	errCreateUserVerification       = errors.New("failed to create user verification")
+	errAddUserVerification          = errors.New("failed to add user verification")
+	errEncodeUserVerification       = errors.New("failed to encode user verification")
+	errSendUserVerification         = errors.New("failed to send user verification email")
+	errMatchUserVerification        = errors.New("user verification does not match with stored verification")
+	errValidateUserVerification     = errors.New("failed to validate user verification")
+	errUpdateUserVerification       = errors.New("failed to update user verification")
+	errUpdateUserVerificationStatus = errors.New("failed to update user verification status")
+	errRetrieveUserFromDB           = errors.New("failed to retrieve user with provided id from database")
+	errAuthorizedListUsers          = errors.New("not authorized to list users")
+	errListUsersFromDB              = errors.New("failed to list users from database")
+	errSearchUsersFromDB            = errors.New("failed to search users from database")
+	errAuthorizedUpdateUser         = errors.New("not authorized to update user details")
+	errUpdateUserDB                 = errors.New("failed to update user details in database")
+	errSimilarUpdateEmail           = errors.New("new email is similar to the current email")
+	errRetrieveUserByEmail          = errors.New("failed to retrieve user with provided email from database")
+	errSendPasswordReset            = errors.New("failed to send password reset email")
+	errHashingSecret                = errors.New("failed to hash user secret")
+	errAuthorizedUpdateUserRole     = errors.New("not authorized to update user role")
+	errUpdateUserRole               = errors.New("failed to update user role")
+	errDeleteUser                   = errors.New("failed to delete user")
 
 	usernameRegExp = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{34}[a-z0-9]$`)
 )
@@ -77,16 +99,16 @@ func (svc service) Register(ctx context.Context, session authn.Session, u User, 
 	}
 
 	if u.Status != DisabledStatus && u.Status != EnabledStatus {
-		return User{}, errors.NewRequestErrorWithErr(svcerr.ErrInvalidStatus.Msg(), svcerr.ErrRegisterUser)
+		return User{}, errors.NewRequestErrorWithErr(svcerr.ErrInvalidStatus.Msg(), errors.Wrap(svcerr.ErrRegisterUser, svcerr.ErrInvalidStatus))
 	}
 	if u.Role != UserRole && u.Role != AdminRole {
-		return User{}, errors.NewRequestErrorWithErr(svcerr.ErrInvalidRole.Msg(), svcerr.ErrRegisterUser)
+		return User{}, errors.NewRequestErrorWithErr(svcerr.ErrInvalidRole.Msg(), errors.Wrap(svcerr.ErrRegisterUser, svcerr.ErrInvalidRole))
 	}
 	u.ID = userID
 	u.CreatedAt = time.Now().UTC()
 
 	if err := svc.addUserPolicy(ctx, u.ID, u.Role); err != nil {
-		return User{}, err
+		return User{}, errors.NewServiceErrorWithErr(svcerr.ErrAddPolicies.Msg(), errors.Wrap(svcerr.ErrRegisterUser, err))
 	}
 	defer func() {
 		if err != nil {
@@ -97,7 +119,7 @@ func (svc service) Register(ctx context.Context, session authn.Session, u User, 
 	}()
 	user, err := svc.users.Save(ctx, u)
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrRegisterUser, err)
+		return User{}, errors.NewServiceErrorWithErr(svcerr.ErrFailedToSaveEntityDB.Msg(), errors.Wrap(svcerr.ErrRegisterUser, err))
 	}
 	return user, nil
 }
@@ -105,35 +127,35 @@ func (svc service) Register(ctx context.Context, session authn.Session, u User, 
 func (svc service) SendVerification(ctx context.Context, session authn.Session) error {
 	dbUser, err := svc.users.RetrieveByID(ctx, session.UserID)
 	if err != nil {
-		return err
+		return errors.NewServiceErrorWithErr(errRetrieveUserFromDB.Msg(), errors.Wrap(errRetrieveUserFromDB, err))
 	}
 
 	if !dbUser.VerifiedAt.IsZero() {
-		return svcerr.ErrUserAlreadyVerified
+		return errors.NewConflictErrorWithErr(svcerr.ErrUserAlreadyVerified.Msg(), svcerr.ErrUserAlreadyVerified)
 	}
 
 	uv, err := svc.users.RetrieveUserVerification(ctx, dbUser.ID, dbUser.Email)
 	if err != nil && err != repoerr.ErrNotFound {
-		return err
+		return errors.NewServiceErrorWithErr(errRetrieveUserVerification.Msg(), errors.Wrap(errRetrieveUserVerification, err))
 	}
 
 	if err = uv.Valid(); err != nil {
 		uv, err = NewUserVerification(dbUser.ID, dbUser.Email)
 		if err != nil {
-			return errors.Wrap(svcerr.ErrCreateEntity, err)
+			return errors.NewServiceErrorWithErr(errCreateUserVerification.Msg(), errors.Wrap(errCreateUserVerification, err))
 		}
 		if err := svc.users.AddUserVerification(ctx, uv); err != nil {
-			return errors.Wrap(svcerr.ErrCreateEntity, err)
+			return errors.NewServiceErrorWithErr(errAddUserVerification.Msg(), errors.Wrap(errAddUserVerification, err))
 		}
 	}
 
 	uvs, err := uv.Encode()
 	if err != nil {
-		return errors.Wrap(svcerr.ErrCreateEntity, err)
+		return errors.NewServiceErrorWithErr(errEncodeUserVerification.Msg(), errors.Wrap(errEncodeUserVerification, err))
 	}
 
 	if err := svc.email.SendVerification([]string{dbUser.Email}, dbUser.Credentials.Username, uvs); err != nil {
-		return errors.Wrap(svcerr.ErrCreateEntity, err)
+		return errors.NewServiceErrorWithErr(errSendUserVerification.Msg(), errors.Wrap(errSendUserVerification, err))
 	}
 	return nil
 }
@@ -141,28 +163,28 @@ func (svc service) SendVerification(ctx context.Context, session authn.Session) 
 func (svc service) VerifyEmail(ctx context.Context, token string) (User, error) {
 	var received UserVerification
 	if err := received.Decode(token); err != nil {
-		return User{}, errors.Wrap(svcerr.ErrInvalidUserVerification, err)
+		return User{}, errors.NewServiceErrorWithErr(svcerr.ErrInvalidUserVerification.Msg(), errors.Wrap(svcerr.ErrInvalidUserVerification, err))
 	}
 
 	stored, err := svc.users.RetrieveUserVerification(ctx, received.UserID, received.Email)
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		return User{}, errors.NewServiceErrorWithErr(errRetrieveUserVerification.Msg(), errors.Wrap(errRetrieveUserVerification, err))
 	}
 
 	if err := stored.Match(received); err != nil {
-		return User{}, err
+		return User{}, errors.NewServiceErrorWithErr(errMatchUserVerification.Msg(), errors.Wrap(errMatchUserVerification, err))
 	}
 
 	if err := stored.Valid(); err != nil {
 		if err == svcerr.ErrUserVerificationExpired {
-			return User{}, err
+			return User{}, errors.NewServiceErrorWithErr(svcerr.ErrUserVerificationExpired.Msg(), svcerr.ErrUserVerificationExpired)
 		}
-		return User{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
+		return User{}, errors.NewServiceErrorWithErr(errValidateUserVerification.Msg(), errors.Wrap(errValidateUserVerification, err))
 	}
 
 	stored.UsedAt = time.Now().UTC()
 	if err = svc.users.UpdateUserVerification(ctx, stored); err != nil {
-		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return User{}, errors.NewServiceErrorWithErr(errUpdateUserVerification.Msg(), errors.Wrap(errUpdateUserVerification, err))
 	}
 
 	user := User{
@@ -172,10 +194,10 @@ func (svc service) VerifyEmail(ctx context.Context, token string) (User, error) 
 	}
 	user, err = svc.users.UpdateVerifiedAt(ctx, user)
 	if err == repoerr.ErrNotFound {
-		return User{}, svcerr.ErrInvalidUserVerification
+		return User{}, errors.NewServiceErrorWithErr(svcerr.ErrInvalidUserVerification.Msg(), errors.Wrap(svcerr.ErrInvalidUserVerification, err))
 	}
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return User{}, errors.NewServiceErrorWithErr(errUpdateUserVerificationStatus.Msg(), errors.Wrap(errUpdateUserVerificationStatus, err))
 	}
 
 	return user, nil
@@ -192,20 +214,20 @@ func (svc service) IssueToken(ctx context.Context, identity, secret string) (*gr
 	}
 
 	if err == repoerr.ErrNotFound {
-		return &grpcTokenV1.Token{}, errors.Wrap(svcerr.ErrLogin, err)
+		return &grpcTokenV1.Token{}, errors.NewAuthNErrorWithErr(svcerr.ErrLogin.Msg(), errors.Wrap(svcerr.ErrLogin, err))
 	}
 
 	if err != nil {
-		return &grpcTokenV1.Token{}, errors.Wrap(svcerr.ErrAuthentication, err)
+		return &grpcTokenV1.Token{}, errors.NewAuthNErrorWithErr(svcerr.ErrAuthentication.Msg(), errors.Wrap(svcerr.ErrAuthentication, err))
 	}
 
 	if err := svc.hasher.Compare(secret, dbUser.Credentials.Secret); err != nil {
-		return &grpcTokenV1.Token{}, errors.Wrap(svcerr.ErrLogin, err)
+		return &grpcTokenV1.Token{}, errors.NewAuthNErrorWithErr(svcerr.ErrLogin.Msg(), errors.Wrap(svcerr.ErrLogin, err))
 	}
 
 	token, err := svc.token.Issue(ctx, &grpcTokenV1.IssueReq{UserId: dbUser.ID, UserRole: uint32(dbUser.Role + 1), Type: uint32(smqauth.AccessKey), Verified: !dbUser.VerifiedAt.IsZero()})
 	if err != nil {
-		return &grpcTokenV1.Token{}, errors.Wrap(errIssueToken, err)
+		return &grpcTokenV1.Token{}, errors.NewServiceErrorWithErr(errIssueToken.Msg(), errors.Wrap(errIssueToken, err))
 	}
 
 	return token, nil
@@ -214,19 +236,24 @@ func (svc service) IssueToken(ctx context.Context, identity, secret string) (*gr
 func (svc service) RefreshToken(ctx context.Context, session authn.Session, refreshToken string) (*grpcTokenV1.Token, error) {
 	dbUser, err := svc.users.RetrieveByID(ctx, session.UserID)
 	if err != nil {
-		return &grpcTokenV1.Token{}, errors.Wrap(svcerr.ErrAuthentication, err)
+		return &grpcTokenV1.Token{}, errors.NewAuthNErrorWithErr(errRetrieveUserFromDB.Msg(), errors.Wrap(errRetrieveUserFromDB, err))
 	}
 	if dbUser.Status == DisabledStatus {
-		return &grpcTokenV1.Token{}, errors.Wrap(svcerr.ErrAuthentication, errLoginDisableUser)
+		return &grpcTokenV1.Token{}, errors.NewAuthNErrorWithErr(errLoginDisableUser.Msg(), errLoginDisableUser)
 	}
 
-	return svc.token.Refresh(ctx, &grpcTokenV1.RefreshReq{RefreshToken: refreshToken, Verified: !dbUser.VerifiedAt.IsZero()})
+	token, err := svc.token.Refresh(ctx, &grpcTokenV1.RefreshReq{RefreshToken: refreshToken, Verified: !dbUser.VerifiedAt.IsZero()})
+	if err != nil {
+		return &grpcTokenV1.Token{}, errors.NewServiceErrorWithErr(errIssueToken.Msg(), errors.Wrap(errIssueToken, err))
+	}
+
+	return token, nil
 }
 
 func (svc service) View(ctx context.Context, session authn.Session, id string) (User, error) {
 	user, err := svc.users.RetrieveByID(ctx, id)
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		return User{}, errors.NewServiceErrorWithErr(errRetrieveUserFromDB.Msg(), errors.Wrap(errRetrieveUserFromDB, err))
 	}
 
 	if session.UserID != id {
@@ -248,7 +275,7 @@ func (svc service) View(ctx context.Context, session authn.Session, id string) (
 func (svc service) ViewProfile(ctx context.Context, session authn.Session) (User, error) {
 	user, err := svc.users.RetrieveByID(ctx, session.UserID)
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		return User{}, errors.NewServiceErrorWithErr(errRetrieveUserFromDB.Msg(), errors.Wrap(errRetrieveUserFromDB, err))
 	}
 	user.Credentials.Secret = ""
 
@@ -257,15 +284,15 @@ func (svc service) ViewProfile(ctx context.Context, session authn.Session) (User
 
 func (svc service) ListUsers(ctx context.Context, session authn.Session, pm Page) (UsersPage, error) {
 	if err := svc.checkSuperAdmin(ctx, session); err != nil {
-		return UsersPage{}, err
+		return UsersPage{}, errors.NewAuthZErrorWithErr(errAuthorizedListUsers.Msg(), errors.Wrap(errAuthorizedListUsers, err))
 	}
 
 	pm.Role = AllRole
 	pg, err := svc.users.RetrieveAll(ctx, pm)
 	if err != nil {
-		return UsersPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		return UsersPage{}, errors.NewServiceErrorWithErr(errListUsersFromDB.Msg(), errors.Wrap(errListUsersFromDB, err))
 	}
-	return pg, err
+	return pg, nil
 }
 
 func (svc service) SearchUsers(ctx context.Context, pm Page) (UsersPage, error) {
@@ -281,7 +308,7 @@ func (svc service) SearchUsers(ctx context.Context, pm Page) (UsersPage, error) 
 
 	cp, err := svc.users.SearchUsers(ctx, page)
 	if err != nil {
-		return UsersPage{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		return UsersPage{}, errors.NewServiceErrorWithErr(errSearchUsersFromDB.Msg(), errors.Wrap(errSearchUsersFromDB, err))
 	}
 
 	return cp, nil
@@ -290,18 +317,18 @@ func (svc service) SearchUsers(ctx context.Context, pm Page) (UsersPage, error) 
 func (svc service) Update(ctx context.Context, session authn.Session, id string, usr UserReq) (User, error) {
 	if session.UserID != id {
 		if err := svc.checkSuperAdmin(ctx, session); err != nil {
-			return User{}, err
+			return User{}, errors.NewAuthZErrorWithErr(errAuthorizedUpdateUser.Msg(), errors.Wrap(errAuthorizedUpdateUser, err))
 		}
 	}
 	u, err := svc.users.RetrieveByID(ctx, id)
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return User{}, errors.NewServiceErrorWithErr(errRetrieveUserFromDB.Msg(), errors.Wrap(errRetrieveUserFromDB, err))
 	}
 	if u.AuthProvider != "" {
 		if changed(usr.FirstName, u.FirstName) ||
 			changed(usr.LastName, u.LastName) ||
 			changed(usr.ProfilePicture, u.ProfilePicture) {
-			return User{}, svcerr.ErrExternalAuthProviderCouldNotUpdate
+			return User{}, errors.NewServiceErrorWithErr(svcerr.ErrExternalAuthProviderCouldNotUpdate.Msg(), svcerr.ErrExternalAuthProviderCouldNotUpdate)
 		}
 	}
 	updatedAt := time.Now().UTC()
@@ -310,7 +337,7 @@ func (svc service) Update(ctx context.Context, session authn.Session, id string,
 
 	user, err := svc.users.Update(ctx, id, usr)
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return User{}, errors.NewServiceErrorWithErr(errUpdateUserDB.Msg(), errors.Wrap(errUpdateUserDB, err))
 	}
 	return user, nil
 }
@@ -318,7 +345,7 @@ func (svc service) Update(ctx context.Context, session authn.Session, id string,
 func (svc service) UpdateTags(ctx context.Context, session authn.Session, id string, usr UserReq) (User, error) {
 	if session.UserID != id {
 		if err := svc.checkSuperAdmin(ctx, session); err != nil {
-			return User{}, err
+			return User{}, errors.NewAuthZErrorWithErr(errAuthorizedUpdateUser.Msg(), errors.Wrap(errAuthorizedUpdateUser, err))
 		}
 	}
 
@@ -328,7 +355,7 @@ func (svc service) UpdateTags(ctx context.Context, session authn.Session, id str
 
 	user, err := svc.users.Update(ctx, id, usr)
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return User{}, errors.NewServiceErrorWithErr(errUpdateUserDB.Msg(), errors.Wrap(errUpdateUserDB, err))
 	}
 
 	return user, nil
@@ -337,16 +364,16 @@ func (svc service) UpdateTags(ctx context.Context, session authn.Session, id str
 func (svc service) UpdateProfilePicture(ctx context.Context, session authn.Session, id string, usr UserReq) (User, error) {
 	if session.UserID != id {
 		if err := svc.checkSuperAdmin(ctx, session); err != nil {
-			return User{}, err
+			return User{}, errors.NewAuthZErrorWithErr(errAuthorizedUpdateUser.Msg(), errors.Wrap(errAuthorizedUpdateUser, err))
 		}
 	}
 
 	u, err := svc.users.RetrieveByID(ctx, id)
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return User{}, errors.NewServiceErrorWithErr(errRetrieveUserFromDB.Msg(), errors.Wrap(errRetrieveUserFromDB, err))
 	}
 	if u.AuthProvider != "" {
-		return User{}, svcerr.ErrExternalAuthProviderCouldNotUpdate
+		return User{}, errors.NewServiceErrorWithErr(svcerr.ErrExternalAuthProviderCouldNotUpdate.Msg(), svcerr.ErrExternalAuthProviderCouldNotUpdate)
 	}
 
 	updatedAt := time.Now().UTC()
@@ -355,7 +382,7 @@ func (svc service) UpdateProfilePicture(ctx context.Context, session authn.Sessi
 
 	user, err := svc.users.Update(ctx, id, usr)
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return User{}, errors.NewServiceErrorWithErr(errUpdateUserDB.Msg(), errors.Wrap(errUpdateUserDB, err))
 	}
 
 	return user, nil
@@ -364,18 +391,18 @@ func (svc service) UpdateProfilePicture(ctx context.Context, session authn.Sessi
 func (svc service) UpdateEmail(ctx context.Context, session authn.Session, userID, email string) (User, error) {
 	if session.UserID != userID {
 		if err := svc.checkSuperAdmin(ctx, session); err != nil {
-			return User{}, err
+			return User{}, errors.NewAuthZErrorWithErr(errAuthorizedUpdateUser.Msg(), errors.Wrap(errAuthorizedUpdateUser, err))
 		}
 	}
 	oldUsr, err := svc.users.RetrieveByID(ctx, userID)
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return User{}, errors.NewServiceErrorWithErr(errRetrieveUserFromDB.Msg(), errors.Wrap(errRetrieveUserFromDB, err))
 	}
 	if oldUsr.AuthProvider != "" {
-		return User{}, svcerr.ErrExternalAuthProviderCouldNotUpdate
+		return User{}, errors.NewServiceErrorWithErr(svcerr.ErrExternalAuthProviderCouldNotUpdate.Msg(), svcerr.ErrExternalAuthProviderCouldNotUpdate)
 	}
 	if oldUsr.Email == email {
-		return User{}, fmt.Errorf("current email is same as update requested email")
+		return User{}, errors.NewConflictErrorWithErr(errSimilarUpdateEmail.Msg(), errSimilarUpdateEmail)
 	}
 
 	usr := User{
@@ -388,7 +415,7 @@ func (svc service) UpdateEmail(ctx context.Context, session authn.Session, userI
 
 	user, err := svc.users.UpdateEmail(ctx, usr)
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return User{}, errors.NewServiceErrorWithErr(errUpdateUserDB.Msg(), errors.Wrap(errUpdateUserDB, err))
 	}
 	return user, nil
 }
@@ -396,7 +423,7 @@ func (svc service) UpdateEmail(ctx context.Context, session authn.Session, userI
 func (svc service) SendPasswordReset(ctx context.Context, email string) error {
 	user, err := svc.users.RetrieveByEmail(ctx, email)
 	if err != nil {
-		return errors.Wrap(svcerr.ErrViewEntity, err)
+		return errors.NewServiceErrorWithErr(errRetrieveUserByEmail.Msg(), errors.Wrap(errRetrieveUserByEmail, err))
 	}
 
 	issueReq := &grpcTokenV1.IssueReq{
@@ -406,21 +433,25 @@ func (svc service) SendPasswordReset(ctx context.Context, email string) error {
 	}
 	token, err := svc.token.Issue(ctx, issueReq)
 	if err != nil {
-		return errors.Wrap(errRecoveryToken, err)
+		return errors.NewServiceErrorWithErr(errRecoveryToken.Msg(), errors.Wrap(errRecoveryToken, err))
 	}
 
-	return svc.email.SendPasswordReset([]string{email}, user.Credentials.Username, token.AccessToken)
+	if err := svc.email.SendPasswordReset([]string{email}, user.Credentials.Username, token.AccessToken); err != nil {
+		return errors.NewServiceErrorWithErr(errSendPasswordReset.Msg(), errors.Wrap(errSendPasswordReset, err))
+	}
+
+	return nil
 }
 
 func (svc service) ResetSecret(ctx context.Context, session authn.Session, secret string) error {
 	u, err := svc.users.RetrieveByID(ctx, session.UserID)
 	if err != nil {
-		return errors.Wrap(svcerr.ErrViewEntity, err)
+		return errors.NewServiceErrorWithErr(errRetrieveUserFromDB.Msg(), errors.Wrap(errRetrieveUserFromDB, err))
 	}
 
 	secret, err = svc.hasher.Hash(secret)
 	if err != nil {
-		return errors.Wrap(svcerr.ErrMalformedEntity, err)
+		return errors.NewServiceErrorWithErr(errHashingSecret.Msg(), errors.Wrap(errHashingSecret, err))
 	}
 	u = User{
 		ID:    u.ID,
@@ -432,7 +463,7 @@ func (svc service) ResetSecret(ctx context.Context, session authn.Session, secre
 		UpdatedBy: session.UserID,
 	}
 	if _, err := svc.users.UpdateSecret(ctx, u); err != nil {
-		return errors.Wrap(svcerr.ErrAuthorization, err)
+		return errors.NewServiceErrorWithErr(errUpdateUserDB.Msg(), errors.Wrap(errUpdateUserDB, err))
 	}
 	return nil
 }
@@ -440,14 +471,14 @@ func (svc service) ResetSecret(ctx context.Context, session authn.Session, secre
 func (svc service) UpdateSecret(ctx context.Context, session authn.Session, oldSecret, newSecret string) (User, error) {
 	dbUser, err := svc.users.RetrieveByID(ctx, session.UserID)
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrViewEntity, err)
+		return User{}, errors.NewServiceErrorWithErr(errRetrieveUserFromDB.Msg(), errors.Wrap(errRetrieveUserFromDB, err))
 	}
 	if _, err := svc.IssueToken(ctx, dbUser.Credentials.Username, oldSecret); err != nil {
 		return User{}, err
 	}
 	newSecret, err = svc.hasher.Hash(newSecret)
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrMalformedEntity, err)
+		return User{}, errors.NewServiceErrorWithErr(errHashingSecret.Msg(), errors.Wrap(errHashingSecret, err))
 	}
 	dbUser.Credentials.Secret = newSecret
 	dbUser.UpdatedAt = time.Now().UTC()
@@ -455,7 +486,7 @@ func (svc service) UpdateSecret(ctx context.Context, session authn.Session, oldS
 
 	dbUser, err = svc.users.UpdateSecret(ctx, dbUser)
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return User{}, errors.NewServiceErrorWithErr(errUpdateUserDB.Msg(), errors.Wrap(errUpdateUserDB, err))
 	}
 
 	return dbUser, nil
@@ -464,7 +495,7 @@ func (svc service) UpdateSecret(ctx context.Context, session authn.Session, oldS
 func (svc service) UpdateUsername(ctx context.Context, session authn.Session, id, username string) (User, error) {
 	if session.UserID != id {
 		if err := svc.checkSuperAdmin(ctx, session); err != nil {
-			return User{}, err
+			return User{}, errors.NewAuthZErrorWithErr(errAuthorizedUpdateUser.Msg(), errors.Wrap(errAuthorizedUpdateUser, err))
 		}
 	}
 
@@ -478,14 +509,14 @@ func (svc service) UpdateUsername(ctx context.Context, session authn.Session, id
 	}
 	updatedUser, err := svc.users.UpdateUsername(ctx, usr)
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return User{}, errors.NewServiceErrorWithErr(errUpdateUserDB.Msg(), errors.Wrap(errUpdateUserDB, err))
 	}
 	return updatedUser, nil
 }
 
 func (svc service) UpdateRole(ctx context.Context, session authn.Session, usr User) (User, error) {
 	if err := svc.checkSuperAdmin(ctx, session); err != nil {
-		return User{}, err
+		return User{}, errors.NewAuthZErrorWithErr(errAuthorizedUpdateUserRole.Msg(), errors.Wrap(errAuthorizedUpdateUserRole, err))
 	}
 	usr = User{
 		ID:        usr.ID,
@@ -495,16 +526,16 @@ func (svc service) UpdateRole(ctx context.Context, session authn.Session, usr Us
 	}
 
 	if err := svc.updateUserPolicy(ctx, usr.ID, usr.Role); err != nil {
-		return User{}, err
+		return User{}, errors.NewServiceErrorWithErr(errUpdateUserRole.Msg(), errors.Wrap(errUpdateUserRole, err))
 	}
 
 	u, err := svc.users.UpdateRole(ctx, usr)
 	if err != nil {
 		// If failed to update role in DB, then revert back to platform admin policies in spicedb
 		if errRollback := svc.updateUserPolicy(ctx, usr.ID, UserRole); errRollback != nil {
-			return User{}, errors.Wrap(errRollback, err)
+			return User{}, errors.NewServiceError(errRollback.Error())
 		}
-		return User{}, errors.Wrap(svcerr.ErrUpdateEntity, err)
+		return User{}, errors.NewServiceErrorWithErr(errUpdateUserRole.Msg(), errors.Wrap(errUpdateUserRole, err))
 	}
 	return u, nil
 }
@@ -517,7 +548,7 @@ func (svc service) Enable(ctx context.Context, session authn.Session, id string)
 	}
 	user, err := svc.changeUserStatus(ctx, session, u)
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrEnableUser, err)
+		return User{}, errors.NewServiceErrorWithErr(svcerr.ErrEnableUser.Msg(), errors.Wrap(svcerr.ErrEnableUser, err))
 	}
 
 	return user, nil
@@ -531,7 +562,7 @@ func (svc service) Disable(ctx context.Context, session authn.Session, id string
 	}
 	user, err := svc.changeUserStatus(ctx, session, user)
 	if err != nil {
-		return User{}, errors.Wrap(svcerr.ErrDisableUser, err)
+		return User{}, errors.NewServiceErrorWithErr(svcerr.ErrDisableUser.Msg(), errors.Wrap(svcerr.ErrDisableUser, err))
 	}
 
 	return user, nil
@@ -567,7 +598,7 @@ func (svc service) Delete(ctx context.Context, session authn.Session, id string)
 	}
 
 	if _, err := svc.changeUserStatus(ctx, session, user); err != nil {
-		return err
+		return errors.NewServiceErrorWithErr(errDeleteUser.Msg(), errors.Wrap(errDeleteUser, err))
 	}
 
 	return nil

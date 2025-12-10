@@ -5,6 +5,7 @@ package errors
 
 import (
 	"encoding/json"
+	"errors"
 )
 
 // Error specifies an API that must be fullfiled by error type.
@@ -16,7 +17,7 @@ type Error interface {
 	Msg() string
 
 	// Err returns wrapped error.
-	Err() Error
+	Err() error
 
 	// MarshalJSON returns a marshaled error.
 	MarshalJSON() ([]byte, error)
@@ -27,14 +28,14 @@ var _ Error = (*customError)(nil)
 // customError represents a SuperMQ error.
 type customError struct {
 	msg string
-	err Error
+	err error
 }
 
 // New returns an Error that formats as the given text.
 func New(text string) Error {
 	return &customError{
 		msg: text,
-		err: nil,
+		err: errors.New(text),
 	}
 }
 
@@ -42,30 +43,21 @@ func (ce *customError) Error() string {
 	if ce == nil {
 		return ""
 	}
-	if ce.err == nil {
-		return ce.msg
-	}
-	return ce.msg + " : " + ce.err.Error()
+	return ce.err.Error()
 }
 
 func (ce *customError) Msg() string {
 	return ce.msg
 }
 
-func (ce *customError) Err() Error {
+func (ce *customError) Err() error {
 	return ce.err
 }
 
 func (ce *customError) MarshalJSON() ([]byte, error) {
-	var val string
-	if e := ce.Err(); e != nil {
-		val = e.Msg()
-	}
 	return json.Marshal(&struct {
-		Err string `json:"error"`
 		Msg string `json:"message"`
 	}{
-		Err: val,
 		Msg: ce.Msg(),
 	})
 }
@@ -75,14 +67,8 @@ func Contains(e1, e2 error) bool {
 	if e1 == nil || e2 == nil {
 		return e2 == e1
 	}
-	ce, ok := e1.(Error)
-	if ok {
-		if ce.Msg() == e2.Error() {
-			return true
-		}
-		return Contains(ce.Err(), e2)
-	}
-	return e1.Error() == e2.Error()
+
+	return errors.Is(e1, e2)
 }
 
 // Wrap returns an Error that wrap err with wrapper.
@@ -95,15 +81,9 @@ func Wrap(wrapper, err error) error {
 		return ne.Wrap(wrapper)
 	}
 
-	if w, ok := wrapper.(Error); ok {
-		return &customError{
-			msg: w.Msg(),
-			err: cast(err),
-		}
-	}
 	return &customError{
 		msg: wrapper.Error(),
-		err: cast(err),
+		err: errors.Join(wrapper, err),
 	}
 }
 
@@ -128,6 +108,6 @@ func cast(err error) Error {
 	}
 	return &customError{
 		msg: err.Error(),
-		err: nil,
+		err: err,
 	}
 }

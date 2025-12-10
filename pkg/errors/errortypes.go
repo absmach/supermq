@@ -3,6 +3,8 @@
 
 package errors
 
+import "errors"
+
 type TypedError interface {
 	Error
 	Wrap(e error) error
@@ -14,13 +16,16 @@ type RequestError struct {
 	customError
 }
 
-func wrap(wrapper error, err Error) Error {
+func wrap(wrapper, err error) Error {
 	if wrapper == nil || err == nil {
-		return cast(wrapper)
+		return &customError{
+			msg: wrapper.Error(),
+			err: wrapper,
+		}
 	}
 	return &customError{
 		msg: wrapper.Error(),
-		err: cast(err),
+		err: errors.Join(wrapper, err),
 	}
 }
 
@@ -43,7 +48,7 @@ func NewRequestErrorWithErr(message string, err error) error {
 	return &RequestError{
 		customError: customError{
 			msg: message,
-			err: cast(err),
+			err: err,
 		},
 	}
 }
@@ -73,7 +78,7 @@ func NewAuthNErrorWithErr(message string, err error) error {
 	return &AuthNError{
 		customError: customError{
 			msg: message,
-			err: cast(err),
+			err: err,
 		},
 	}
 }
@@ -130,10 +135,66 @@ func NewInternalError() error {
 }
 
 func NewInternalErrorWithErr(err error) error {
-	return &AuthZError{
+	return &InternalError{
 		customError: customError{
 			msg: "internal server error",
 			err: cast(err),
+		},
+	}
+}
+
+type ConflictError struct {
+	customError
+}
+
+func (e *ConflictError) Wrap(err error) error {
+	e.err = wrap(err, e.err)
+	return &ConflictError{
+		customError: e.customError,
+	}
+}
+
+func NewConflictError(message string) error {
+	return &ConflictError{
+		customError: customError{
+			msg: message,
+		},
+	}
+}
+
+func NewConflictErrorWithErr(message string, err error) error {
+	return &ConflictError{
+		customError: customError{
+			msg: message,
+			err: cast(err),
+		},
+	}
+}
+
+type ServiceError struct {
+	customError
+}
+
+func (e *ServiceError) Wrap(err error) error {
+	e.err = wrap(err, e.err)
+	return &ServiceError{
+		customError: e.customError,
+	}
+}
+
+func NewServiceError(message string) error {
+	return &ServiceError{
+		customError: customError{
+			msg: message,
+		},
+	}
+}
+
+func NewServiceErrorWithErr(message string, err error) error {
+	return &ServiceError{
+		customError: customError{
+			msg: message,
+			err: err,
 		},
 	}
 }

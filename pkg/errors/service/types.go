@@ -108,4 +108,7 @@ var (
 
 	// ErrExternalAuthProviderCouldNotUpdate indicates that users authenticated via external provider cannot update their account details directly.
 	ErrExternalAuthProviderCouldNotUpdate = errors.New("account details can only be updated through your authentication provider's settings")
+
+	// ErrFailedToSaveEntityDB indicates failure to save entity to database.
+	ErrFailedToSaveEntityDB = errors.New("failed to save entity to database")
 )
