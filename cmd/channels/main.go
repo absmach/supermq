@@ -26,6 +26,7 @@ import (
 	"github.com/absmach/supermq/channels/middleware"
 	"github.com/absmach/supermq/channels/postgres"
 	pChannels "github.com/absmach/supermq/channels/private"
+	"github.com/absmach/supermq/clients"
 	"github.com/absmach/supermq/domains"
 	dpostgres "github.com/absmach/supermq/domains/postgres"
 	"github.com/absmach/supermq/groups"
@@ -389,16 +390,23 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, cach
 		return nil, nil, fmt.Errorf("failed to get group permissions: %w", err)
 	}
 
+	clientOps, _, err := permConfig.GetEntityPermissions("clients")
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get client permissions: %w", err)
+	}
+
 	entitiesOps, err := svcutil.NewEntitiesOperations(
 		svcutil.EntitiesPermission{
 			policies.ChannelType: channelOps,
 			policies.DomainType:  domainOps,
 			policies.GroupType:   groupOps,
+			policies.ClientType:  clientOps,
 		},
 		svcutil.EntitiesOperationDetails[svcutil.Operation]{
 			policies.ChannelType: channels.OperationDetails(),
 			policies.DomainType:  domains.OperationDetails(),
 			policies.GroupType:   groups.OperationDetails(),
+			policies.ClientType:  clients.OperationDetails(),
 		},
 	)
 	if err != nil {
