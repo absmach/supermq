@@ -15,7 +15,7 @@ import (
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
-	rolemw "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
+	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 	"github.com/absmach/supermq/pkg/svcutil"
 )
 
@@ -25,30 +25,28 @@ var _ domains.Service = (*authorizationMiddleware)(nil)
 var ErrMemberExist = errors.New("user is already a member of the domain")
 
 type authorizationMiddleware struct {
-	svc   domains.Service
-	authz smqauthz.Authorization
-	opp   svcutil.OperationPerm
-	rolemw.RoleManagerAuthorizationMiddleware
+	svc         domains.Service
+	authz       smqauthz.Authorization
+	entitiesOps svcutil.EntitiesOperations[svcutil.Operation]
+	rOps        svcutil.Operations[svcutil.RoleOperation]
+	rmMW.RoleManagerAuthorizationMiddleware
 }
 
 // NewAuthorization adds authorization to the domains service.
-func NewAuthorization(entityType string, svc domains.Service, authz smqauthz.Authorization, domainsOpPerm, rolesOpPerm map[svcutil.Operation]svcutil.Permission) (domains.Service, error) {
-	opp := domains.NewOperationPerm()
-	if err := opp.AddOperationPermissionMap(domainsOpPerm); err != nil {
-		return nil, err
-	}
-	if err := opp.Validate(); err != nil {
-		return nil, err
+func NewAuthorization(entityType string, svc domains.Service, authz smqauthz.Authorization, entitiesOps svcutil.EntitiesOperations[svcutil.Operation], domainRoleOps svcutil.Operations[svcutil.RoleOperation]) (domains.Service, error) {
+	if err := entitiesOps.Validate(); err != nil {
+		return &authorizationMiddleware{}, err
 	}
 
-	ram, err := rolemw.NewAuthorization(entityType, svc, authz, rolesOpPerm)
+	ram, err := rmMW.NewAuthorization(entityType, svc, authz, domainRoleOps)
 	if err != nil {
-		return nil, err
+		return &authorizationMiddleware{}, err
 	}
 	return &authorizationMiddleware{
 		svc:                                svc,
 		authz:                              authz,
-		opp:                                opp,
+		entitiesOps:                        entitiesOps,
+		rOps:                               domainRoleOps,
 		RoleManagerAuthorizationMiddleware: ram,
 	}, nil
 }
@@ -63,7 +61,7 @@ func (am *authorizationMiddleware) RetrieveDomain(ctx context.Context, session a
 		return am.svc.RetrieveDomain(ctx, session, id, withRoles)
 	}
 
-	if err := am.authorize(ctx, domains.OpRetrieveDomain, authz.PolicyReq{
+	if err := am.authorize(ctx, policies.DomainType, domains.OpRetrieveDomain, authz.PolicyReq{
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
@@ -77,7 +75,7 @@ func (am *authorizationMiddleware) RetrieveDomain(ctx context.Context, session a
 }
 
 func (am *authorizationMiddleware) UpdateDomain(ctx context.Context, session authn.Session, id string, d domains.DomainReq) (domains.Domain, error) {
-	if err := am.authorize(ctx, domains.OpUpdateDomain, authz.PolicyReq{
+	if err := am.authorize(ctx, policies.DomainType, domains.OpUpdateDomain, authz.PolicyReq{
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
@@ -91,7 +89,7 @@ func (am *authorizationMiddleware) UpdateDomain(ctx context.Context, session aut
 }
 
 func (am *authorizationMiddleware) EnableDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
-	if err := am.authorize(ctx, domains.OpEnableDomain, authz.PolicyReq{
+	if err := am.authorize(ctx, policies.DomainType, domains.OpEnableDomain, authz.PolicyReq{
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
@@ -105,7 +103,7 @@ func (am *authorizationMiddleware) EnableDomain(ctx context.Context, session aut
 }
 
 func (am *authorizationMiddleware) DisableDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
-	if err := am.authorize(ctx, domains.OpDisableDomain, authz.PolicyReq{
+	if err := am.authorize(ctx, policies.DomainType, domains.OpDisableDomain, authz.PolicyReq{
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
@@ -144,7 +142,15 @@ func (am *authorizationMiddleware) ListDomains(ctx context.Context, session auth
 
 func (am *authorizationMiddleware) SendInvitation(ctx context.Context, session authn.Session, invitation domains.Invitation) (domains.Invitation, error) {
 	domainUserId := auth.EncodeDomainUserID(invitation.DomainID, invitation.InviteeUserID)
-	if err := am.extAuthorize(ctx, domainUserId, policies.MembershipPermission, policies.DomainType, invitation.DomainID); err == nil {
+	req := authz.PolicyReq{
+		SubjectType: policies.UserType,
+		SubjectKind: policies.UsersKind,
+		Subject:     domainUserId,
+		Permission:  policies.MembershipPermission,
+		ObjectType:  policies.DomainType,
+		Object:      invitation.DomainID,
+	}
+	if err := am.authz.Authorize(ctx, req); err != nil {
 		// return error if the user is already a member of the domain
 		return domains.Invitation{}, errors.Wrap(svcerr.ErrConflict, ErrMemberExist)
 	}
@@ -161,7 +167,13 @@ func (am *authorizationMiddleware) ListInvitations(ctx context.Context, session 
 }
 
 func (am *authorizationMiddleware) ListDomainInvitations(ctx context.Context, session authn.Session, page domains.InvitationPageMeta) (invs domains.InvitationPage, err error) {
-	if err := am.extAuthorize(ctx, session.DomainUserID, policies.AdminPermission, policies.DomainType, session.DomainID); err != nil {
+	if err := am.authorize(ctx, policies.DomainType, domains.OpListDomainInvitations, authz.PolicyReq{
+		Subject:     session.DomainUserID,
+		SubjectType: policies.UserType,
+		SubjectKind: policies.UsersKind,
+		Object:      session.DomainID,
+		ObjectType:  policies.DomainType,
+	}); err != nil {
 		return domains.InvitationPage{}, err
 	}
 
@@ -185,11 +197,12 @@ func (am *authorizationMiddleware) DeleteInvitation(ctx context.Context, session
 	return am.svc.DeleteInvitation(ctx, session, inviteeUserID, domainID)
 }
 
-func (am *authorizationMiddleware) authorize(ctx context.Context, op svcutil.Operation, authReq authz.PolicyReq) error {
-	perm, err := am.opp.GetPermission(op)
+func (am *authorizationMiddleware) authorize(ctx context.Context, entityType string, op svcutil.Operation, authReq authz.PolicyReq) error {
+	perm, err := am.entitiesOps.GetPermission(entityType, op)
 	if err != nil {
 		return err
 	}
+
 	authReq.Permission = perm.String()
 
 	if err := am.authz.Authorize(ctx, authReq); err != nil {
@@ -242,21 +255,5 @@ func (am *authorizationMiddleware) checkSuperAdmin(ctx context.Context, session 
 	}); err != nil {
 		return err
 	}
-	return nil
-}
-
-func (am *authorizationMiddleware) extAuthorize(ctx context.Context, subj, perm, objType, obj string) error {
-	req := authz.PolicyReq{
-		SubjectType: policies.UserType,
-		SubjectKind: policies.UsersKind,
-		Subject:     subj,
-		Permission:  perm,
-		ObjectType:  objType,
-		Object:      obj,
-	}
-	if err := am.authz.Authorize(ctx, req); err != nil {
-		return err
-	}
-
 	return nil
 }

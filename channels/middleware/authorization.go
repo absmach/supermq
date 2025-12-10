@@ -5,10 +5,12 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/channels"
+	"github.com/absmach/supermq/clients"
+	"github.com/absmach/supermq/domains"
+	"github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/pkg/authn"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	"github.com/absmach/supermq/pkg/connections"
@@ -16,7 +18,7 @@ import (
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
-	rolemw "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
+	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 	"github.com/absmach/supermq/pkg/svcutil"
 )
 
@@ -42,50 +44,36 @@ var (
 var _ channels.Service = (*authorizationMiddleware)(nil)
 
 type authorizationMiddleware struct {
-	svc    channels.Service
-	repo   channels.Repository
-	authz  smqauthz.Authorization
-	opp    svcutil.OperationPerm
-	extOpp svcutil.ExternalOperationPerm
-	rolemw.RoleManagerAuthorizationMiddleware
+	svc         channels.Service
+	repo        channels.Repository
+	authz       smqauthz.Authorization
+	entitiesOps svcutil.EntitiesOperations[svcutil.Operation]
+	rmMW.RoleManagerAuthorizationMiddleware
 }
 
 // NewAuthorization adds authorization to the channels service.
 func NewAuthorization(
+	entityType string,
 	svc channels.Service,
-	repo channels.Repository,
 	authz smqauthz.Authorization,
-	channelsOpPerm, rolesOpPerm map[svcutil.Operation]svcutil.Permission,
-	extOpPerm map[svcutil.ExternalOperation]svcutil.Permission,
+	repo channels.Repository,
+	entitiesOps svcutil.EntitiesOperations[svcutil.Operation],
+	roleOps svcutil.Operations[svcutil.RoleOperation],
 ) (channels.Service, error) {
-	opp := channels.NewOperationPerm()
-	if err := opp.AddOperationPermissionMap(channelsOpPerm); err != nil {
+	if err := entitiesOps.Validate(); err != nil {
 		return nil, err
 	}
-	if err := opp.Validate(); err != nil {
-		return nil, err
-	}
-
-	extOpp := channels.NewExternalOperationPerm()
-	if err := extOpp.AddOperationPermissionMap(extOpPerm); err != nil {
-		return nil, err
-	}
-	if err := extOpp.Validate(); err != nil {
-		return nil, err
-	}
-
-	ram, err := rolemw.NewAuthorization(policies.ChannelType, svc, authz, rolesOpPerm)
+	ram, err := rmMW.NewAuthorization(policies.ChannelType, svc, authz, roleOps)
 	if err != nil {
 		return nil, err
 	}
 
 	return &authorizationMiddleware{
 		svc:                                svc,
-		repo:                               repo,
 		authz:                              authz,
+		repo:                               repo,
+		entitiesOps:                        entitiesOps,
 		RoleManagerAuthorizationMiddleware: ram,
-		opp:                                opp,
-		extOpp:                             extOpp,
 	}, nil
 }
 
@@ -102,7 +90,7 @@ func (am *authorizationMiddleware) CreateChannels(ctx context.Context, session a
 			return []channels.Channel{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}
 	}
-	if err := am.extAuthorize(ctx, channels.DomainOpCreateChannel, smqauthz.PolicyReq{
+	if err := am.authorize(ctx, policies.DomainType, domains.OpCreateDomainChannels, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
 		Subject:     session.DomainUserID,
@@ -110,20 +98,6 @@ func (am *authorizationMiddleware) CreateChannels(ctx context.Context, session a
 		Object:      session.DomainID,
 	}); err != nil {
 		return []channels.Channel{}, []roles.RoleProvision{}, errors.Wrap(err, errDomainCreateChannels)
-	}
-
-	for _, ch := range chs {
-		if ch.ParentGroup != "" {
-			if err := am.extAuthorize(ctx, channels.GroupOpSetChildChannel, smqauthz.PolicyReq{
-				Domain:      session.DomainID,
-				SubjectType: policies.UserType,
-				Subject:     session.DomainUserID,
-				ObjectType:  policies.GroupType,
-				Object:      ch.ParentGroup,
-			}); err != nil {
-				return []channels.Channel{}, []roles.RoleProvision{}, errors.Wrap(err, errors.Wrap(errGroupSetChildChannels, fmt.Errorf("channel name %s parent group id %s", ch.Name, ch.ParentGroup)))
-			}
-		}
 	}
 
 	return am.svc.CreateChannels(ctx, session, chs...)
@@ -143,7 +117,7 @@ func (am *authorizationMiddleware) ViewChannel(ctx context.Context, session auth
 		}
 	}
 
-	if err := am.authorize(ctx, channels.OpViewChannel, smqauthz.PolicyReq{
+	if err := am.authorize(ctx, policies.ChannelType, channels.OpViewChannel, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
 		Subject:     session.DomainUserID,
@@ -211,7 +185,7 @@ func (am *authorizationMiddleware) UpdateChannel(ctx context.Context, session au
 		}
 	}
 
-	if err := am.authorize(ctx, channels.OpUpdateChannel, smqauthz.PolicyReq{
+	if err := am.authorize(ctx, policies.ChannelType, channels.OpUpdateChannel, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
 		Subject:     session.DomainUserID,
@@ -238,7 +212,7 @@ func (am *authorizationMiddleware) UpdateChannelTags(ctx context.Context, sessio
 		}
 	}
 
-	if err := am.authorize(ctx, channels.OpUpdateChannelTags, smqauthz.PolicyReq{
+	if err := am.authorize(ctx, policies.ChannelType, channels.OpUpdateChannelTags, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
 		Subject:     session.DomainUserID,
@@ -265,7 +239,7 @@ func (am *authorizationMiddleware) EnableChannel(ctx context.Context, session au
 		}
 	}
 
-	if err := am.authorize(ctx, channels.OpEnableChannel, smqauthz.PolicyReq{
+	if err := am.authorize(ctx, policies.ChannelType, channels.OpEnableChannel, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
 		Subject:     session.DomainUserID,
@@ -292,7 +266,7 @@ func (am *authorizationMiddleware) DisableChannel(ctx context.Context, session a
 		}
 	}
 
-	if err := am.authorize(ctx, channels.OpDisableChannel, smqauthz.PolicyReq{
+	if err := am.authorize(ctx, policies.ChannelType, channels.OpDisableChannel, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
 		Subject:     session.DomainUserID,
@@ -318,7 +292,7 @@ func (am *authorizationMiddleware) RemoveChannel(ctx context.Context, session au
 			return errors.Wrap(svcerr.ErrUnauthorizedPAT, err)
 		}
 	}
-	if err := am.authorize(ctx, channels.OpDeleteChannel, smqauthz.PolicyReq{
+	if err := am.authorize(ctx, policies.ChannelType, channels.OpDeleteChannel, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
 		Subject:     session.DomainUserID,
@@ -359,7 +333,7 @@ func (am *authorizationMiddleware) Connect(ctx context.Context, session authn.Se
 		}
 	}
 	for _, chID := range chIDs {
-		if err := am.authorize(ctx, channels.OpConnectClient, smqauthz.PolicyReq{
+		if err := am.authorize(ctx, policies.ChannelType, channels.OpConnectClient, smqauthz.PolicyReq{
 			Domain:      session.DomainID,
 			SubjectType: policies.UserType,
 			Subject:     session.DomainUserID,
@@ -371,7 +345,7 @@ func (am *authorizationMiddleware) Connect(ctx context.Context, session authn.Se
 	}
 
 	for _, thID := range thIDs {
-		if err := am.extAuthorize(ctx, channels.ClientsOpConnectChannel, smqauthz.PolicyReq{
+		if err := am.authorize(ctx, policies.ClientType, clients.OpConnectToChannel, smqauthz.PolicyReq{
 			Domain:      session.DomainID,
 			SubjectType: policies.UserType,
 			Subject:     session.DomainUserID,
@@ -414,7 +388,7 @@ func (am *authorizationMiddleware) Disconnect(ctx context.Context, session authn
 	}
 
 	for _, chID := range chIDs {
-		if err := am.authorize(ctx, channels.OpDisconnectClient, smqauthz.PolicyReq{
+		if err := am.authorize(ctx, policies.ChannelType, channels.OpDisconnectClient, smqauthz.PolicyReq{
 			Domain:      session.DomainID,
 			SubjectType: policies.UserType,
 			Subject:     session.DomainUserID,
@@ -426,7 +400,7 @@ func (am *authorizationMiddleware) Disconnect(ctx context.Context, session authn
 	}
 
 	for _, thID := range thIDs {
-		if err := am.extAuthorize(ctx, channels.ClientsOpDisconnectChannel, smqauthz.PolicyReq{
+		if err := am.authorize(ctx, policies.ClientType, clients.OpDisconnectFromChannel, smqauthz.PolicyReq{
 			Domain:      session.DomainID,
 			SubjectType: policies.UserType,
 			Subject:     session.DomainUserID,
@@ -454,7 +428,7 @@ func (am *authorizationMiddleware) SetParentGroup(ctx context.Context, session a
 		}
 	}
 
-	if err := am.authorize(ctx, channels.OpSetParentGroup, smqauthz.PolicyReq{
+	if err := am.authorize(ctx, policies.ChannelType, channels.OpSetParentGroup, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
 		Subject:     session.DomainUserID,
@@ -464,7 +438,7 @@ func (am *authorizationMiddleware) SetParentGroup(ctx context.Context, session a
 		return errors.Wrap(err, errSetParentGroup)
 	}
 
-	if err := am.extAuthorize(ctx, channels.GroupOpSetChildChannel, smqauthz.PolicyReq{
+	if err := am.authorize(ctx, policies.GroupType, groups.OpGroupSetChildChannel, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
 		Subject:     session.DomainUserID,
@@ -491,7 +465,7 @@ func (am *authorizationMiddleware) RemoveParentGroup(ctx context.Context, sessio
 		}
 	}
 
-	if err := am.authorize(ctx, channels.OpSetParentGroup, smqauthz.PolicyReq{
+	if err := am.authorize(ctx, policies.ChannelType, channels.OpRemoveParentGroup, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		SubjectType: policies.UserType,
 		Subject:     session.DomainUserID,
@@ -505,8 +479,9 @@ func (am *authorizationMiddleware) RemoveParentGroup(ctx context.Context, sessio
 	if err != nil {
 		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
+
 	if ch.ParentGroup != "" {
-		if err := am.extAuthorize(ctx, channels.GroupOpSetChildChannel, smqauthz.PolicyReq{
+		if err := am.authorize(ctx, policies.GroupType, groups.OpGroupRemoveChildChannel, smqauthz.PolicyReq{
 			Domain:      session.DomainID,
 			SubjectType: policies.UserType,
 			Subject:     session.DomainUserID,
@@ -521,23 +496,8 @@ func (am *authorizationMiddleware) RemoveParentGroup(ctx context.Context, sessio
 	return nil
 }
 
-func (am *authorizationMiddleware) authorize(ctx context.Context, op svcutil.Operation, req smqauthz.PolicyReq) error {
-	perm, err := am.opp.GetPermission(op)
-	if err != nil {
-		return err
-	}
-
-	req.Permission = perm.String()
-
-	if err := am.authz.Authorize(ctx, req); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (am *authorizationMiddleware) extAuthorize(ctx context.Context, extOp svcutil.ExternalOperation, req smqauthz.PolicyReq) error {
-	perm, err := am.extOpp.GetPermission(extOp)
+func (am *authorizationMiddleware) authorize(ctx context.Context, entityType string, op svcutil.Operation, req smqauthz.PolicyReq) error {
+	perm, err := am.entitiesOps.GetPermission(entityType, op)
 	if err != nil {
 		return err
 	}

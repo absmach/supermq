@@ -20,16 +20,12 @@ type RoleManagerAuthorizationMiddleware struct {
 	entityType string
 	svc        roles.RoleManager
 	authz      smqauthz.Authorization
-	opp        svcutil.OperationPerm
+	ops        svcutil.Operations[svcutil.RoleOperation]
 }
 
 // NewAuthorization adds authorization for role related methods to the core service.
-func NewAuthorization(entityType string, svc roles.RoleManager, authz smqauthz.Authorization, opPerm map[svcutil.Operation]svcutil.Permission) (RoleManagerAuthorizationMiddleware, error) {
-	opp := roles.NewOperationPerm()
-	if err := opp.AddOperationPermissionMap(opPerm); err != nil {
-		return RoleManagerAuthorizationMiddleware{}, err
-	}
-	if err := opp.Validate(); err != nil {
+func NewAuthorization(entityType string, svc roles.RoleManager, authz smqauthz.Authorization, roleOps svcutil.Operations[svcutil.RoleOperation]) (RoleManagerAuthorizationMiddleware, error) {
+	if err := roleOps.Validate(); err != nil {
 		return RoleManagerAuthorizationMiddleware{}, err
 	}
 
@@ -37,19 +33,10 @@ func NewAuthorization(entityType string, svc roles.RoleManager, authz smqauthz.A
 		entityType: entityType,
 		svc:        svc,
 		authz:      authz,
-		opp:        opp,
+		ops:        roleOps,
 	}
-	if err := ram.validate(); err != nil {
-		return RoleManagerAuthorizationMiddleware{}, err
-	}
-	return ram, nil
-}
 
-func (ram RoleManagerAuthorizationMiddleware) validate() error {
-	if err := ram.opp.Validate(); err != nil {
-		return err
-	}
-	return nil
+	return ram, nil
 }
 
 func (ram RoleManagerAuthorizationMiddleware) AddRole(ctx context.Context, session authn.Session, entityID, roleName string, optionalActions []string, optionalMembers []string) (roles.RoleProvision, error) {
@@ -304,8 +291,8 @@ func (ram RoleManagerAuthorizationMiddleware) RoleRemoveMembers(ctx context.Cont
 	return ram.svc.RoleRemoveMembers(ctx, session, entityID, roleID, members)
 }
 
-func (ram RoleManagerAuthorizationMiddleware) authorize(ctx context.Context, op svcutil.Operation, pr smqauthz.PolicyReq) error {
-	perm, err := ram.opp.GetPermission(op)
+func (ram RoleManagerAuthorizationMiddleware) authorize(ctx context.Context, op svcutil.RoleOperation, pr smqauthz.PolicyReq) error {
+	perm, err := ram.ops.GetPermission(op)
 	if err != nil {
 		return err
 	}

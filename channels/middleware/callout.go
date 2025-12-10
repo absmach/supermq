@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/channels"
+	"github.com/absmach/supermq/domains"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/callout"
 	"github.com/absmach/supermq/pkg/connections"
@@ -16,20 +17,26 @@ import (
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
 	rolemw "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
+	"github.com/absmach/supermq/pkg/svcutil"
 )
 
 var _ channels.Service = (*calloutMiddleware)(nil)
 
 type calloutMiddleware struct {
-	svc     channels.Service
-	repo    channels.Repository
-	callout callout.Callout
+	svc         channels.Service
+	repo        channels.Repository
+	callout     callout.Callout
+	entitiesOps svcutil.EntitiesOperations[svcutil.Operation]
 	rolemw.RoleManagerCalloutMiddleware
 }
 
-func NewCallout(svc channels.Service, repo channels.Repository, callout callout.Callout) (channels.Service, error) {
-	call, err := rolemw.NewCallout(policies.ChannelType, svc, callout)
+func NewCallout(svc channels.Service, repo channels.Repository, entitiesOps svcutil.EntitiesOperations[svcutil.Operation], roleOps svcutil.Operations[svcutil.RoleOperation], callout callout.Callout) (channels.Service, error) {
+	call, err := rolemw.NewCallout(policies.ChannelType, svc, callout, roleOps)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := entitiesOps.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -37,6 +44,7 @@ func NewCallout(svc channels.Service, repo channels.Repository, callout callout.
 		svc:                          svc,
 		repo:                         repo,
 		callout:                      callout,
+		entitiesOps:                  entitiesOps,
 		RoleManagerCalloutMiddleware: call,
 	}, nil
 }
@@ -47,7 +55,7 @@ func (cm *calloutMiddleware) CreateChannels(ctx context.Context, session authn.S
 		"count":    len(chs),
 	}
 
-	if err := cm.callOut(ctx, session, channels.OpCreateChannel.String(channels.OperationNames), "", params); err != nil {
+	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpCreateDomainChannels, params); err != nil {
 		return []channels.Channel{}, []roles.RoleProvision{}, err
 	}
 
@@ -55,7 +63,11 @@ func (cm *calloutMiddleware) CreateChannels(ctx context.Context, session authn.S
 }
 
 func (cm *calloutMiddleware) ViewChannel(ctx context.Context, session authn.Session, id string, withRoles bool) (channels.Channel, error) {
-	if err := cm.callOut(ctx, session, channels.OpViewChannel.String(channels.OperationNames), id, nil); err != nil {
+	params := map[string]any{
+		"entity_id": id,
+	}
+
+	if err := cm.callOut(ctx, session, policies.ChannelType, channels.OpViewChannel, params); err != nil {
 		return channels.Channel{}, err
 	}
 
@@ -67,7 +79,7 @@ func (cm *calloutMiddleware) ListChannels(ctx context.Context, session authn.Ses
 		"pagemeta": pm,
 	}
 
-	if err := cm.callOut(ctx, session, channels.OpListChannels.String(channels.OperationNames), "", params); err != nil {
+	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpListDomainChannels, params); err != nil {
 		return channels.ChannelsPage{}, err
 	}
 
@@ -80,7 +92,7 @@ func (cm *calloutMiddleware) ListUserChannels(ctx context.Context, session authn
 		"pagemeta": pm,
 	}
 
-	if err := cm.callOut(ctx, session, channels.OpListUserChannels.String(channels.OperationNames), "", params); err != nil {
+	if err := cm.callOut(ctx, session, policies.ChannelType, channels.OpListUserChannels, params); err != nil {
 		return channels.ChannelsPage{}, err
 	}
 
@@ -88,7 +100,11 @@ func (cm *calloutMiddleware) ListUserChannels(ctx context.Context, session authn
 }
 
 func (cm *calloutMiddleware) UpdateChannel(ctx context.Context, session authn.Session, channel channels.Channel) (channels.Channel, error) {
-	if err := cm.callOut(ctx, session, channels.OpUpdateChannel.String(channels.OperationNames), channel.ID, nil); err != nil {
+	params := map[string]any{
+		"entity_id": channel.ID,
+	}
+
+	if err := cm.callOut(ctx, session, policies.ChannelType, channels.OpUpdateChannel, params); err != nil {
 		return channels.Channel{}, err
 	}
 
@@ -96,7 +112,11 @@ func (cm *calloutMiddleware) UpdateChannel(ctx context.Context, session authn.Se
 }
 
 func (cm *calloutMiddleware) UpdateChannelTags(ctx context.Context, session authn.Session, channel channels.Channel) (channels.Channel, error) {
-	if err := cm.callOut(ctx, session, channels.OpUpdateChannelTags.String(channels.OperationNames), channel.ID, nil); err != nil {
+	params := map[string]any{
+		"entity_id": channel.ID,
+	}
+
+	if err := cm.callOut(ctx, session, policies.ChannelType, channels.OpUpdateChannelTags, params); err != nil {
 		return channels.Channel{}, err
 	}
 
@@ -104,7 +124,11 @@ func (cm *calloutMiddleware) UpdateChannelTags(ctx context.Context, session auth
 }
 
 func (cm *calloutMiddleware) EnableChannel(ctx context.Context, session authn.Session, id string) (channels.Channel, error) {
-	if err := cm.callOut(ctx, session, channels.OpEnableChannel.String(channels.OperationNames), id, nil); err != nil {
+	params := map[string]any{
+		"entity_id": id,
+	}
+
+	if err := cm.callOut(ctx, session, policies.ChannelType, channels.OpEnableChannel, params); err != nil {
 		return channels.Channel{}, err
 	}
 
@@ -112,7 +136,11 @@ func (cm *calloutMiddleware) EnableChannel(ctx context.Context, session authn.Se
 }
 
 func (cm *calloutMiddleware) DisableChannel(ctx context.Context, session authn.Session, id string) (channels.Channel, error) {
-	if err := cm.callOut(ctx, session, channels.OpDisableChannel.String(channels.OperationNames), id, nil); err != nil {
+	params := map[string]any{
+		"entity_id": id,
+	}
+
+	if err := cm.callOut(ctx, session, policies.ChannelType, channels.OpDisableChannel, params); err != nil {
 		return channels.Channel{}, err
 	}
 
@@ -120,7 +148,11 @@ func (cm *calloutMiddleware) DisableChannel(ctx context.Context, session authn.S
 }
 
 func (cm *calloutMiddleware) RemoveChannel(ctx context.Context, session authn.Session, id string) error {
-	if err := cm.callOut(ctx, session, channels.OpDeleteChannel.String(channels.OperationNames), id, nil); err != nil {
+	params := map[string]any{
+		"entity_id": id,
+	}
+
+	if err := cm.callOut(ctx, session, policies.ChannelType, channels.OpDeleteChannel, params); err != nil {
 		return err
 	}
 
@@ -134,7 +166,7 @@ func (cm *calloutMiddleware) Connect(ctx context.Context, session authn.Session,
 		"connection_types": connTypes,
 	}
 
-	if err := cm.callOut(ctx, session, channels.OpConnectClient.String(channels.OperationNames), "", params); err != nil {
+	if err := cm.callOut(ctx, session, policies.ChannelType, channels.OpConnectClient, params); err != nil {
 		return err
 	}
 
@@ -148,7 +180,7 @@ func (cm *calloutMiddleware) Disconnect(ctx context.Context, session authn.Sessi
 		"connection_types": connTypes,
 	}
 
-	if err := cm.callOut(ctx, session, channels.OpDisconnectClient.String(channels.OperationNames), "", params); err != nil {
+	if err := cm.callOut(ctx, session, policies.ChannelType, channels.OpDisconnectClient, params); err != nil {
 		return err
 	}
 
@@ -157,10 +189,11 @@ func (cm *calloutMiddleware) Disconnect(ctx context.Context, session authn.Sessi
 
 func (cm *calloutMiddleware) SetParentGroup(ctx context.Context, session authn.Session, parentGroupID string, id string) error {
 	params := map[string]any{
+		"entity_id":       id,
 		"parent_group_id": parentGroupID,
 	}
 
-	if err := cm.callOut(ctx, session, channels.OpSetParentGroup.String(channels.OperationNames), id, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.ChannelType, channels.OpSetParentGroup, params); err != nil {
 		return err
 	}
 
@@ -174,23 +207,28 @@ func (cm *calloutMiddleware) RemoveParentGroup(ctx context.Context, session auth
 	}
 	if ch.ParentGroup != "" {
 		params := map[string]any{
+			"entity_id":       id,
 			"parent_group_id": ch.ParentGroup,
 		}
 
-		if err := cm.callOut(ctx, session, channels.OpRemoveParentGroup.String(channels.OperationNames), id, params); err != nil {
+		if err := cm.callOut(ctx, session, policies.ChannelType, channels.OpRemoveParentGroup, params); err != nil {
 			return err
 		}
-
-		return cm.svc.RemoveParentGroup(ctx, session, id)
 	}
-	return nil
+
+	return cm.svc.RemoveParentGroup(ctx, session, id)
 }
 
-func (cm *calloutMiddleware) callOut(ctx context.Context, session authn.Session, op, entityID string, pld map[string]any) error {
+func (cm *calloutMiddleware) callOut(ctx context.Context, session authn.Session, entityType string, op svcutil.Operation, pld map[string]any) error {
+	var entityID string
+	if id, ok := pld["entity_id"].(string); ok {
+		entityID = id
+	}
+
 	req := callout.Request{
 		BaseRequest: callout.BaseRequest{
-			Operation:  op,
-			EntityType: policies.ChannelType,
+			Operation:  cm.entitiesOps.OperationName(entityType, op),
+			EntityType: entityType,
 			EntityID:   entityID,
 			CallerID:   session.UserID,
 			CallerType: policies.UserType,

@@ -26,7 +26,9 @@ import (
 	"github.com/absmach/supermq/clients/middleware"
 	"github.com/absmach/supermq/clients/postgres"
 	pClients "github.com/absmach/supermq/clients/private"
+	"github.com/absmach/supermq/domains"
 	dpostgres "github.com/absmach/supermq/domains/postgres"
+	svcgroups "github.com/absmach/supermq/groups"
 	gpostgres "github.com/absmach/supermq/groups/postgres"
 	redisclient "github.com/absmach/supermq/internal/clients/redis"
 	smqlog "github.com/absmach/supermq/logger"
@@ -51,6 +53,7 @@ import (
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/sid"
 	spicedbdecoder "github.com/absmach/supermq/pkg/spicedb"
+	"github.com/absmach/supermq/pkg/svcutil"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/authzed/authzed-go/v1"
 	"github.com/authzed/grpcutil"
@@ -96,6 +99,7 @@ type config struct {
 	SpicedbPort         string        `env:"SMQ_SPICEDB_PORT"               envDefault:"50051"`
 	SpicedbPreSharedKey string        `env:"SMQ_SPICEDB_PRE_SHARED_KEY"     envDefault:"12345678"`
 	SpicedbSchemaFile   string        `env:"SMQ_SPICEDB_SCHEMA_FILE"        envDefault:"schema.zed"`
+	PermissionsFile     string        `env:"SMQ_PERMISSIONS_FILE"           envDefault:"permission.yaml"`
 }
 
 func main() {
@@ -259,8 +263,15 @@ func main() {
 		return
 	}
 
+	permConfig, err := svcutil.ParsePermissionsFile(cfg.PermissionsFile)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to parse permissions file: %s", err))
+		exitCode = 1
+		return
+	}
+
 	svc, psvc, err := newService(ctx, db, dbConfig, authz, policyEvaluator, policyService, cacheclient,
-		cfg, channelsgRPC, groupsClient, tracer, logger, callout)
+		cfg, channelsgRPC, groupsClient, tracer, logger, callout, permConfig)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create services: %s", err))
 		exitCode = 1
@@ -331,7 +342,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz smqauthz.Authorization, pe policies.Evaluator, ps policies.Service, cacheClient *redis.Client, cfg config, channels grpcChannelsV1.ChannelsServiceClient, groups grpcGroupsV1.GroupsServiceClient, tracer trace.Tracer, logger *slog.Logger, callout callout.Callout) (clients.Service, pClients.Service, error) {
+func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz smqauthz.Authorization, pe policies.Evaluator, ps policies.Service, cacheClient *redis.Client, cfg config, channels grpcChannelsV1.ChannelsServiceClient, groups grpcGroupsV1.GroupsServiceClient, tracer trace.Tracer, logger *slog.Logger, callout callout.Callout, permConfig *svcutil.PermissionConfig) (clients.Service, pClients.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	repo := postgres.NewRepository(database)
 
@@ -364,12 +375,48 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 	counter, latency := prometheus.MakeMetrics(svcName, "api")
 	csvc = middleware.NewMetrics(csvc, counter, latency)
 
-	csvc, err = middleware.NewAuthorization(policies.ClientType, csvc, authz, repo, clients.NewOperationPermissionMap(), clients.NewRolesOperationPermissionMap(), clients.NewExternalOperationPermissionMap())
+	clientOps, clientRoleOps, err := permConfig.GetEntityPermissions("clients")
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get client permissions: %w", err)
+	}
+
+	domainOps, _, err := permConfig.GetEntityPermissions("domains")
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get domain permissions: %w", err)
+	}
+
+	groupOps, _, err := permConfig.GetEntityPermissions("groups")
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get group permissions: %w", err)
+	}
+
+	entitiesOps, err := svcutil.NewEntitiesOperations(
+		svcutil.EntitiesPermission{
+			policies.ClientType: clientOps,
+			policies.DomainType: domainOps,
+			policies.GroupType:  groupOps,
+		},
+		svcutil.EntitiesOperationDetails[svcutil.Operation]{
+			policies.ClientType: clients.OperationDetails(),
+			policies.DomainType: domains.OperationDetails(),
+			policies.GroupType:  svcgroups.OperationDetails(),
+		},
+	)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create entities operations: %w", err)
+	}
+
+	roleOps, err := svcutil.NewOperations(roles.Operations(), clientRoleOps)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create role operations: %w", err)
+	}
+
+	csvc, err = middleware.NewAuthorization(policies.ClientType, csvc, authz, repo, entitiesOps, roleOps)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	csvc, err = middleware.NewCallout(csvc, repo, callout)
+	csvc, err = middleware.NewCallout(csvc, repo, entitiesOps, roleOps, callout)
 	if err != nil {
 		return nil, nil, err
 	}
