@@ -7,7 +7,7 @@ import (
 	"github.com/absmach/supermq/pkg/svcutil"
 )
 
-// Channel Operations
+// Channel Operations.
 const (
 	OpViewChannel svcutil.Operation = iota
 	OpUpdateChannel
@@ -69,5 +69,4 @@ func OperationDetails() map[svcutil.Operation]svcutil.OperationDetails {
 			PermissionRequired: false, // hardcoded to superadmin
 		},
 	}
-
 }

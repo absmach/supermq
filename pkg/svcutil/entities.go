@@ -66,7 +66,7 @@ func newEntitiesOperations[K OperationKey](entitiesPermission EntitiesPermission
 	return eops, nil
 }
 
-// Implement the interface
+// Implement the interface.
 func (eo entitiesOperations[K]) GetPermission(et string, op K) (Permission, error) {
 	if ops, ok := eo[et]; ok {
 		return ops.GetPermission(op)
