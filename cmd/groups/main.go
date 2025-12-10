@@ -350,11 +350,11 @@ func newService(ctx context.Context, authz smqauthz.Authorization, policy polici
 
 	entitiesOps, err := svcutil.NewEntitiesOperations(
 		svcutil.EntitiesPermission{
-			policies.GroupType: groupOps,
+			policies.GroupType:  groupOps,
 			policies.DomainType: domainOps,
 		},
 		svcutil.EntitiesOperationDetails[svcutil.Operation]{
-			policies.GroupType: groups.OperationDetails(),
+			policies.GroupType:  groups.OperationDetails(),
 			policies.DomainType: domains.OperationDetails(),
 		},
 	)
