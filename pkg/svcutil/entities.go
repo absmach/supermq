@@ -61,7 +61,6 @@ func newEntitiesOperations[K OperationKey](entitiesPermission EntitiesPermission
 		ops, err := NewOperations(opDetails, opPerm)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create new operations for %s entity: %w", entity, err)
-
 		}
 		eops[entity] = ops
 	}
