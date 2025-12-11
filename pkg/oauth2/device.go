@@ -1,0 +1,91 @@
+// Copyright (c) Abstract Machines
+// SPDX-License-Identifier: Apache-2.0
+
+package oauth2
+
+import (
+	"errors"
+	"time"
+)
+
+const (
+	// DeviceCodeLength is the length of the user code (e.g., "ABCD-EFGH").
+	DeviceCodeLength = 8
+
+	// DeviceCodePollTimeout is the timeout for polling device code status.
+	DeviceCodePollTimeout = 5 * time.Second
+
+	// CodeCheckInterval is the minimum interval between polling requests.
+	CodeCheckInterval = 3 * time.Second
+
+	// DeviceStatePrefix is the prefix used in state parameter for device flow.
+	DeviceStatePrefix = "device:"
+
+	// DeviceCodeExpiry is the time after which device codes expire.
+	DeviceCodeExpiry = 10 * time.Minute
+)
+
+var (
+	// ErrDeviceCodeExpired indicates that the device code has expired.
+	ErrDeviceCodeExpired = errors.New("device code expired")
+
+	// ErrDeviceCodePending indicates that the user hasn't authorized the device yet.
+	ErrDeviceCodePending = errors.New("authorization pending")
+
+	// ErrSlowDown indicates that the client is polling too frequently.
+	ErrSlowDown = errors.New("slow down")
+
+	// ErrAccessDenied indicates that the user denied the authorization request.
+	ErrAccessDenied = errors.New("access denied")
+
+	// ErrInvalidState indicates that the OAuth state parameter is invalid.
+	ErrInvalidState = errors.New("invalid state")
+
+	// ErrEmptyCode indicates that the authorization code is empty.
+	ErrEmptyCode = errors.New("empty code")
+
+	// ErrInvalidProvider indicates that the OAuth provider is not found or disabled.
+	ErrInvalidProvider = errors.New("invalid provider")
+
+	// ErrDeviceCodeNotFound indicates that the device code was not found.
+	ErrDeviceCodeNotFound = errors.New("device code not found")
+
+	// ErrUserCodeNotFound indicates that the user code was not found.
+	ErrUserCodeNotFound = errors.New("user code not found")
+)
+
+// DeviceCode represents an OAuth2 device authorization code.
+type DeviceCode struct {
+	DeviceCode      string    `json:"device_code"`
+	UserCode        string    `json:"user_code"`
+	VerificationURI string    `json:"verification_uri"`
+	ExpiresIn       int       `json:"expires_in"`
+	Interval        int       `json:"interval"`
+	Provider        string    `json:"provider,omitempty"`
+	CreatedAt       time.Time `json:"created_at,omitempty"`
+	State           string    `json:"state,omitempty"`
+	AccessToken     string    `json:"access_token,omitempty"`
+	Approved        bool      `json:"approved,omitempty"`
+	Denied          bool      `json:"denied,omitempty"`
+	LastPoll        time.Time `json:"last_poll,omitempty"`
+}
+
+// DeviceCodeStore manages device authorization codes.
+// It provides operations to save, retrieve, update, and delete device codes
+// used in the OAuth2 device authorization flow.
+type DeviceCodeStore interface {
+	// Save stores a new device code.
+	Save(code DeviceCode) error
+
+	// Get retrieves a device code by its device code value.
+	Get(deviceCode string) (DeviceCode, error)
+
+	// GetByUserCode retrieves a device code by its user code.
+	GetByUserCode(userCode string) (DeviceCode, error)
+
+	// Update updates an existing device code.
+	Update(code DeviceCode) error
+
+	// Delete removes a device code.
+	Delete(deviceCode string) error
+}
