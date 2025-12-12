@@ -71,14 +71,14 @@ func Contains(e1, e2 error) bool {
 	return errors.Is(e1, e2)
 }
 
-// Wrap returns an Error that wrap err with wrapper.
+// Wrap returns an Error that wraps err with wrapper.
 func Wrap(wrapper, err error) error {
 	if wrapper == nil || err == nil {
 		return wrapper
 	}
 
-	if ne, ok := err.(TypedError); ok {
-		return ne.Wrap(wrapper)
+	if ne, ok := err.(NestError); ok {
+		return ne.Embed(wrapper)
 	}
 
 	return &customError{
