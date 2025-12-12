@@ -35,7 +35,7 @@ type customError struct {
 func New(text string) Error {
 	return &customError{
 		msg: text,
-		err: errors.New(text),
+		err: nil,
 	}
 }
 
@@ -43,7 +43,10 @@ func (ce *customError) Error() string {
 	if ce == nil {
 		return ""
 	}
-	return ce.err.Error()
+	if ce.err == nil {
+		return ce.msg
+	}
+	return ce.msg + " : " + ce.err.Error()
 }
 
 func (ce *customError) Msg() string {
@@ -67,23 +70,28 @@ func Contains(e1, e2 error) bool {
 	if e1 == nil || e2 == nil {
 		return e2 == e1
 	}
+	ce, ok := e1.(Error)
+	if ok {
+		if ce.Msg() == e2.Error() {
+			return true
+		}
+		return Contains(ce.Err(), e2)
+	}
 
 	return errors.Is(e1, e2)
 }
 
-// Wrap returns an Error that wraps err with wrapper.
+// Wrap returns an Error that wrap err with wrapper.
 func Wrap(wrapper, err error) error {
 	if wrapper == nil || err == nil {
 		return wrapper
 	}
-
 	if ne, ok := err.(NestError); ok {
 		return ne.Embed(wrapper)
 	}
-
 	return &customError{
 		msg: wrapper.Error(),
-		err: errors.Join(wrapper, err),
+		err: cast(err),
 	}
 }
 
@@ -108,6 +116,6 @@ func cast(err error) Error {
 	}
 	return &customError{
 		msg: err.Error(),
-		err: err,
+		err: nil,
 	}
 }
