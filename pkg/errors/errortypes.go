@@ -1,0 +1,156 @@
+// Copyright (c) Abstract Machines
+// SPDX-License-Identifier: Apache-2.0
+
+package errors
+
+import "errors"
+
+type NestError interface {
+	Error
+	Embed(e error) error
+}
+
+var _ NestError = (*customError)(nil)
+
+func (e *customError) Embed(err error) error {
+	e.err = errors.Join(err, e.err)
+	return e
+}
+
+type RequestError struct {
+	customError
+}
+
+var _ NestError = (*RequestError)(nil)
+
+func NewRequestError(message string) error {
+	return &RequestError{
+		customError: customError{
+			msg: message,
+		},
+	}
+}
+
+func NewRequestErrorWithErr(message string, err error) error {
+	return &RequestError{
+		customError: customError{
+			msg: message,
+			err: err,
+		},
+	}
+}
+
+type AuthNError struct {
+	customError
+}
+
+var _ NestError = (*AuthNError)(nil)
+
+func NewAuthNError(message string) error {
+	return &AuthNError{
+		customError: customError{
+			msg: message,
+		},
+	}
+}
+
+func NewAuthNErrorWithErr(message string, err error) error {
+	return &AuthNError{
+		customError: customError{
+			msg: message,
+			err: err,
+		},
+	}
+}
+
+var _ NestError = (*AuthZError)(nil)
+
+type AuthZError struct {
+	customError
+}
+
+func NewAuthZError(message string) error {
+	return &AuthZError{
+		customError: customError{
+			msg: message,
+		},
+	}
+}
+
+func NewAuthZErrorWithErr(message string, err error) error {
+	return &AuthZError{
+		customError: customError{
+			msg: message,
+			err: cast(err),
+		},
+	}
+}
+
+type InternalError struct {
+	customError
+}
+
+var _ NestError = (*InternalError)(nil)
+
+func NewInternalError() error {
+	return &InternalError{
+		customError: customError{
+			msg: "internal server error",
+		},
+	}
+}
+
+func NewInternalErrorWithErr(err error) error {
+	return &InternalError{
+		customError: customError{
+			msg: "internal server error",
+			err: cast(err),
+		},
+	}
+}
+
+type ConflictError struct {
+	customError
+}
+
+var _ NestError = (*ConflictError)(nil)
+
+func NewConflictError(message string) error {
+	return &ConflictError{
+		customError: customError{
+			msg: message,
+		},
+	}
+}
+
+func NewConflictErrorWithErr(message string, err error) error {
+	return &ConflictError{
+		customError: customError{
+			msg: message,
+			err: cast(err),
+		},
+	}
+}
+
+type ServiceError struct {
+	customError
+}
+
+var _ NestError = (*ServiceError)(nil)
+
+func NewServiceError(message string) error {
+	return &ServiceError{
+		customError: customError{
+			msg: message,
+		},
+	}
+}
+
+func NewServiceErrorWithErr(message string, err error) error {
+	return &ServiceError{
+		customError: customError{
+			msg: message,
+			err: err,
+		},
+	}
+}

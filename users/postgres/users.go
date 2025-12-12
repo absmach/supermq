@@ -18,18 +18,20 @@ import (
 	"github.com/absmach/supermq/pkg/postgres"
 	"github.com/absmach/supermq/users"
 	"github.com/jackc/pgtype"
-	"github.com/jackc/pgx/v5/pgconn"
 )
-
-var pgDuplicateErrCode = "23505"
 
 type userRepo struct {
 	Repository users.UserRepository
+	eh         errors.Handler
 }
 
 func NewRepository(db postgres.Database) users.Repository {
+	errHandlerOptions := []errors.HandlerOption{
+		postgres.WithDuplicateErrors(NewDuplicateErrors()),
+	}
 	return &userRepo{
 		Repository: users.UserRepository{DB: db},
+		eh:         postgres.NewErrorHandler(errHandlerOptions...),
 	}
 }
 
@@ -45,7 +47,7 @@ func (repo *userRepo) Save(ctx context.Context, c users.User) (users.User, error
 
 	row, err := repo.Repository.DB.NamedQueryContext(ctx, q, dbu)
 	if err != nil {
-		return users.User{}, handleSaveError(repoerr.ErrCreateEntity, err)
+		return users.User{}, repo.eh.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
 	defer row.Close()
@@ -63,18 +65,6 @@ func (repo *userRepo) Save(ctx context.Context, c users.User) (users.User, error
 	}
 
 	return user, nil
-}
-
-func handleSaveError(wrapper, err error) error {
-	if pqErr, ok := err.(*pgconn.PgError); ok && pqErr.Code == pgDuplicateErrCode {
-		switch pqErr.ConstraintName {
-		case "clients_email_key":
-			return errors.ErrEmailAlreadyExists
-		case "clients_username_key":
-			return errors.ErrUsernameNotAvailable
-		}
-	}
-	return postgres.HandleError(wrapper, err)
 }
 
 func (repo *userRepo) CheckSuperAdmin(ctx context.Context, adminID string) error {
@@ -247,7 +237,7 @@ func (repo *userRepo) update(ctx context.Context, user users.User, query string)
 
 	row, err := repo.Repository.DB.NamedQueryContext(ctx, query, dbu)
 	if err != nil {
-		return users.User{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
+		return users.User{}, repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	defer row.Close()
 

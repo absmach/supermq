@@ -103,6 +103,12 @@ var (
 	// ErrUserVerificationExpired indicates user verification is expired.
 	ErrUserVerificationExpired = errors.New("verification expired, please generate new verification")
 
+	// ErrRegisterUser indicates error in register a user.
+	ErrRegisterUser = errors.New("failed to register user")
+
 	// ErrExternalAuthProviderCouldNotUpdate indicates that users authenticated via external provider cannot update their account details directly.
 	ErrExternalAuthProviderCouldNotUpdate = errors.New("account details can only be updated through your authentication provider's settings")
+
+	// ErrFailedToSaveEntityDB indicates failure to save entity to database.
+	ErrFailedToSaveEntityDB = errors.New("failed to save entity to database")
 )
