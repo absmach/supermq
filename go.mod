@@ -39,7 +39,7 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/sqids/sqids-go v0.4.1
 	github.com/stretchr/testify v1.11.1
-	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.63.0
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.64.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.63.0
 	go.opentelemetry.io/otel v1.39.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.39.0
@@ -49,7 +49,7 @@ require (
 	golang.org/x/crypto v0.46.0
 	golang.org/x/oauth2 v0.34.0
 	golang.org/x/sync v0.19.0
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251022142026-3a174f9686a8
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217
 	google.golang.org/grpc v1.77.0
 	google.golang.org/protobuf v1.36.10
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
