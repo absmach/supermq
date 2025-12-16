@@ -31,7 +31,6 @@ const (
 	secret          = "secret"
 	contentType     = "application/json"
 	id              = "123e4567-e89b-12d3-a456-000000000001"
-	email           = "user@example.com"
 	loginDuration   = 30 * time.Minute
 	refreshDuration = 24 * time.Hour
 	invalidDuration = 7 * 24 * time.Hour
@@ -80,7 +79,9 @@ func newService() auth.Service {
 	idProvider := uuid.NewMock()
 	pService := new(policymocks.Service)
 	pEvaluator = new(policymocks.Evaluator)
-	t := jwt.New([]byte(secret))
+	repo := new(mocks.TokensRepository)
+	tcache := new(mocks.TokensCache)
+	t := jwt.New([]byte(secret), repo, tcache)
 
 	return auth.New(krepo, pRepo, cache, hash, idProvider, t, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration)
 }
@@ -350,5 +351,58 @@ func TestRevoke(t *testing.T) {
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 		repoCall.Unset()
+	}
+}
+
+func TestRevokeToken(t *testing.T) {
+	svc := new(mocks.Service)
+
+	ts := newServer(svc)
+	defer ts.Close()
+	client := ts.Client()
+
+	cases := []struct {
+		desc   string
+		id     string
+		token  string
+		err    error
+		status int
+	}{
+		{
+			desc:   "revoke an existing token",
+			token:  "token",
+			status: http.StatusNoContent,
+		},
+		{
+			desc:   "revoke a non-existing token",
+			token:  "token",
+			err:    svcerr.ErrAuthentication,
+			status: http.StatusUnauthorized,
+		},
+		{
+			desc:   "revoke invalid token",
+			token:  "wrong",
+			err:    svcerr.ErrAuthentication,
+			status: http.StatusUnauthorized,
+		},
+		{
+			desc:   "revoke empty token",
+			token:  "",
+			status: http.StatusUnauthorized,
+		},
+	}
+
+	for _, tc := range cases {
+		req := testRequest{
+			client: client,
+			method: http.MethodDelete,
+			url:    fmt.Sprintf("%s/keys/", ts.URL),
+			token:  tc.token,
+		}
+		svcCall := svc.On("RevokeToken", mock.Anything, tc.token).Return(tc.err)
+		res, err := req.make()
+		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+		svcCall.Unset()
 	}
 }
