@@ -8,107 +8,113 @@ import "github.com/absmach/supermq/pkg/errors"
 // Wrapper for Service errors.
 var (
 	// ErrAuthentication indicates failure occurred while authenticating the entity.
-	ErrAuthentication = errors.New("failed to perform authentication over the entity")
+	ErrAuthentication = errors.NewServiceError("failed to perform authentication over the entity")
 
 	// ErrAuthorization indicates failure occurred while authorizing the entity.
-	ErrAuthorization = errors.New("failed to perform authorization over the entity")
+	ErrAuthorization = errors.NewServiceError("failed to perform authorization over the entity")
 
 	// ErrDomainAuthorization indicates failure occurred while authorizing the domain.
-	ErrDomainAuthorization = errors.New("failed to perform authorization over the domain")
+	ErrDomainAuthorization = errors.NewServiceError("failed to perform authorization over the domain")
 
 	// ErrLogin indicates wrong login credentials.
-	ErrLogin = errors.New("invalid credentials")
+	ErrLogin = errors.NewServiceError("invalid credentials")
 
 	// ErrMalformedEntity indicates a malformed entity specification.
-	ErrMalformedEntity = errors.New("malformed entity specification")
+	ErrMalformedEntity = errors.NewServiceError("malformed entity specification")
 
 	// ErrNotFound indicates a non-existent entity request.
-	ErrNotFound = errors.New("entity not found")
+	ErrNotFound = errors.NewServiceError("entity not found")
 
 	// ErrConflict indicates that entity already exists.
-	ErrConflict = errors.New("entity already exists")
+	ErrConflict = errors.NewServiceError("entity already exists")
 
 	// ErrCreateEntity indicates error in creating entity or entities.
-	ErrCreateEntity = errors.New("failed to create entity")
+	ErrCreateEntity = errors.NewServiceError("failed to create entity")
 
 	// ErrRemoveEntity indicates error in removing entity.
-	ErrRemoveEntity = errors.New("failed to remove entity")
+	ErrRemoveEntity = errors.NewServiceError("failed to remove entity")
 
 	// ErrViewEntity indicates error in viewing entity or entities.
-	ErrViewEntity = errors.New("view entity failed")
+	ErrViewEntity = errors.NewServiceError("view entity failed")
 
 	// ErrUpdateEntity indicates error in updating entity or entities.
-	ErrUpdateEntity = errors.New("update entity failed")
+	ErrUpdateEntity = errors.NewServiceError("update entity failed")
 
 	// ErrInvalidStatus indicates an invalid status.
-	ErrInvalidStatus = errors.New("invalid status")
+	ErrInvalidStatus = errors.NewServiceError("invalid status")
 
 	// ErrInvalidRole indicates that an invalid role.
-	ErrInvalidRole = errors.New("invalid client role")
+	ErrInvalidRole = errors.NewServiceError("invalid client role")
 
 	// ErrInvalidPolicy indicates that an invalid policy.
-	ErrInvalidPolicy = errors.New("invalid policy")
+	ErrInvalidPolicy = errors.NewServiceError("invalid policy")
 
 	// ErrEnableClient indicates error in enabling client.
-	ErrEnableClient = errors.New("failed to enable client")
+	ErrEnableClient = errors.NewServiceError("failed to enable client")
 
 	// ErrDisableClient indicates error in disabling client.
-	ErrDisableClient = errors.New("failed to disable client")
+	ErrDisableClient = errors.NewServiceError("failed to disable client")
 
 	// ErrAddPolicies indicates error in adding policies.
-	ErrAddPolicies = errors.New("failed to add policies")
+	ErrAddPolicies = errors.NewServiceError("failed to add policies")
 
 	// ErrDeletePolicies indicates error in removing policies.
-	ErrDeletePolicies = errors.New("failed to remove policies")
+	ErrDeletePolicies = errors.NewServiceError("failed to remove policies")
 
 	// ErrSearch indicates error in searching clients.
-	ErrSearch = errors.New("failed to search clients")
+	ErrSearch = errors.NewServiceError("failed to search clients")
 
 	// ErrInvitationAlreadyRejected indicates that the invitation is already rejected.
-	ErrInvitationAlreadyRejected = errors.New("invitation already rejected")
+	ErrInvitationAlreadyRejected = errors.NewServiceError("invitation already rejected")
 
 	// ErrInvitationAlreadyAccepted indicates that the invitation is already accepted.
-	ErrInvitationAlreadyAccepted = errors.New("invitation already accepted")
+	ErrInvitationAlreadyAccepted = errors.NewServiceError("invitation already accepted")
 
 	// ErrParentGroupAuthorization indicates failure occurred while authorizing the parent group.
-	ErrParentGroupAuthorization = errors.New("failed to authorize parent group")
+	ErrParentGroupAuthorization = errors.NewServiceError("failed to authorize parent group")
 
 	// ErrMissingUsername indicates that the user's names are missing.
-	ErrMissingUsername = errors.New("missing usernames")
+	ErrMissingUsername = errors.NewServiceError("missing usernames")
 
 	// ErrEnableUser indicates error in enabling user.
-	ErrEnableUser = errors.New("failed to enable user")
+	ErrEnableUser = errors.NewServiceError("failed to enable user")
 
 	// ErrDisableUser indicates error in disabling user.
-	ErrDisableUser = errors.New("failed to disable user")
+	ErrDisableUser = errors.NewServiceError("failed to disable user")
 
 	// ErrRollbackRepo indicates a failure to rollback repository.
-	ErrRollbackRepo = errors.New("failed to rollback repo")
+	ErrRollbackRepo = errors.NewServiceError("failed to rollback repo")
 
 	// ErrUnauthorizedPAT indicates failure occurred while authorizing PAT.
-	ErrUnauthorizedPAT = errors.New("failed to authorize PAT")
+	ErrUnauthorizedPAT = errors.NewServiceError("failed to authorize PAT")
 
 	// ErrRetainOneMember indicates that at least one owner must be retained in the entity.
-	ErrRetainOneMember = errors.New("must retain at least one member")
+	ErrRetainOneMember = errors.NewServiceError("must retain at least one member")
 
 	// ErrSuperAdminAction indicates that the user is not a super admin.
-	ErrSuperAdminAction = errors.New("not authorized to perform admin action")
+	ErrSuperAdminAction = errors.NewServiceError("not authorized to perform admin action")
 
 	// ErrUserAlreadyVerified indicates user is already verified.
-	ErrUserAlreadyVerified = errors.New("user already verified")
+	ErrUserAlreadyVerified = errors.NewServiceError("user already verified")
 
 	// ErrInvalidUserVerification indicates user verification is invalid.
-	ErrInvalidUserVerification = errors.New("invalid verification")
+	ErrInvalidUserVerification = errors.NewServiceError("invalid verification")
 
 	// ErrUserVerificationExpired indicates user verification is expired.
-	ErrUserVerificationExpired = errors.New("verification expired, please generate new verification")
+	ErrUserVerificationExpired = errors.NewServiceError("verification expired, please generate NewServiceError verification")
 
 	// ErrRegisterUser indicates error in register a user.
-	ErrRegisterUser = errors.New("failed to register user")
+	ErrRegisterUser = errors.NewServiceError("failed to register user")
 
 	// ErrExternalAuthProviderCouldNotUpdate indicates that users authenticated via external provider cannot update their account details directly.
-	ErrExternalAuthProviderCouldNotUpdate = errors.New("account details can only be updated through your authentication provider's settings")
+	ErrExternalAuthProviderCouldNotUpdate = errors.NewServiceError("account details can only be updated through your authentication provider's settings")
 
 	// ErrFailedToSaveEntityDB indicates failure to save entity to database.
-	ErrFailedToSaveEntityDB = errors.New("failed to save entity to database")
+	ErrFailedToSaveEntityDB = errors.NewServiceError("failed to save entity to database")
+
+	// ErrIssueProviderID indicates failure to issue unique ID from ID provider.
+	ErrIssueProviderID = errors.NewServiceError("failed to issue unique ID from id provider")
+
+	// ErrHashPassword indicates failure to hash password.
+	ErrHashPassword = errors.NewServiceError("failed to hash password")
 )

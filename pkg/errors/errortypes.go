@@ -46,7 +46,7 @@ type AuthNError struct {
 
 var _ NestError = (*AuthNError)(nil)
 
-func NewAuthNError(message string) error {
+func NewAuthNError(message string) NestError {
 	return &AuthNError{
 		customError: customError{
 			msg: message,
@@ -54,7 +54,7 @@ func NewAuthNError(message string) error {
 	}
 }
 
-func NewAuthNErrorWithErr(message string, err error) error {
+func NewAuthNErrorWithErr(message string, err error) NestError {
 	return &AuthNError{
 		customError: customError{
 			msg: message,
@@ -63,13 +63,23 @@ func NewAuthNErrorWithErr(message string, err error) error {
 	}
 }
 
+func (e *AuthNError) Embed(err error) error {
+	e.customError.Embed(err)
+	return e
+}
+
 var _ NestError = (*AuthZError)(nil)
 
 type AuthZError struct {
 	customError
 }
 
-func NewAuthZError(message string) error {
+func (e *AuthZError) Embed(err error) error {
+	e.customError.Embed(err)
+	return e
+}
+
+func NewAuthZError(message string) NestError {
 	return &AuthZError{
 		customError: customError{
 			msg: message,
@@ -77,7 +87,7 @@ func NewAuthZError(message string) error {
 	}
 }
 
-func NewAuthZErrorWithErr(message string, err error) error {
+func NewAuthZErrorWithErr(message string, err error) NestError {
 	return &AuthZError{
 		customError: customError{
 			msg: message,
@@ -100,7 +110,7 @@ func NewInternalError() error {
 	}
 }
 
-func NewInternalErrorWithErr(err error) error {
+func NewInternalErrorWithErr(err error) NestError {
 	return &InternalError{
 		customError: customError{
 			msg: "internal server error",
@@ -115,7 +125,7 @@ type ConflictError struct {
 
 var _ NestError = (*ConflictError)(nil)
 
-func NewConflictError(message string) error {
+func NewConflictError(message string) NestError {
 	return &ConflictError{
 		customError: customError{
 			msg: message,
@@ -123,7 +133,7 @@ func NewConflictError(message string) error {
 	}
 }
 
-func NewConflictErrorWithErr(message string, err error) error {
+func NewConflictErrorWithErr(message string, err error) NestError {
 	return &ConflictError{
 		customError: customError{
 			msg: message,
@@ -138,7 +148,7 @@ type ServiceError struct {
 
 var _ NestError = (*ServiceError)(nil)
 
-func NewServiceError(message string) error {
+func NewServiceError(message string) NestError {
 	return &ServiceError{
 		customError: customError{
 			msg: message,
@@ -146,11 +156,16 @@ func NewServiceError(message string) error {
 	}
 }
 
-func NewServiceErrorWithErr(message string, err error) error {
+func NewServiceErrorWithErr(message string, err error) NestError {
 	return &ServiceError{
 		customError: customError{
 			msg: message,
 			err: err,
 		},
 	}
+}
+
+func (e *ServiceError) Embed(err error) error {
+	e.customError.Embed(err)
+	return e
 }
