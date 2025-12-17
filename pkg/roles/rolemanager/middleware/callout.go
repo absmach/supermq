@@ -9,9 +9,9 @@ import (
 
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/callout"
+	"github.com/absmach/supermq/pkg/permissions"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
-	"github.com/absmach/supermq/pkg/permissions"
 )
 
 var _ roles.RoleManager = (*RoleManagerCalloutMiddleware)(nil)

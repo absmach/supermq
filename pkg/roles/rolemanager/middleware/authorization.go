@@ -9,9 +9,9 @@ import (
 	"github.com/absmach/supermq/pkg/authn"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	"github.com/absmach/supermq/pkg/errors"
+	"github.com/absmach/supermq/pkg/permissions"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
-	"github.com/absmach/supermq/pkg/permissions"
 )
 
 var _ roles.RoleManager = (*RoleManagerAuthorizationMiddleware)(nil)

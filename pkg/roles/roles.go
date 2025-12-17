@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/pkg/authn"
-	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/permissions"
+	"github.com/absmach/supermq/pkg/policies"
 )
 
 type Action string
