@@ -23,7 +23,7 @@ type RequestError struct {
 
 var _ NestError = (*RequestError)(nil)
 
-func NewRequestError(message string) error {
+func NewRequestError(message string) NestError {
 	return &RequestError{
 		customError: customError{
 			msg: message,
@@ -31,13 +31,18 @@ func NewRequestError(message string) error {
 	}
 }
 
-func NewRequestErrorWithErr(message string, err error) error {
+func NewRequestErrorWithErr(message string, err error) NestError {
 	return &RequestError{
 		customError: customError{
 			msg: message,
 			err: err,
 		},
 	}
+}
+
+func (e *RequestError) Embed(err error) error {
+	e.customError.Embed(err)
+	return e
 }
 
 type AuthNError struct {
@@ -119,29 +124,6 @@ func NewInternalErrorWithErr(err error) NestError {
 	}
 }
 
-type ConflictError struct {
-	customError
-}
-
-var _ NestError = (*ConflictError)(nil)
-
-func NewConflictError(message string) NestError {
-	return &ConflictError{
-		customError: customError{
-			msg: message,
-		},
-	}
-}
-
-func NewConflictErrorWithErr(message string, err error) NestError {
-	return &ConflictError{
-		customError: customError{
-			msg: message,
-			err: cast(err),
-		},
-	}
-}
-
 type ServiceError struct {
 	customError
 }
@@ -160,7 +142,7 @@ func NewServiceErrorWithErr(message string, err error) NestError {
 	return &ServiceError{
 		customError: customError{
 			msg: message,
-			err: err,
+			err: cast(err),
 		},
 	}
 }

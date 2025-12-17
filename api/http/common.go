@@ -203,12 +203,6 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
-	case *errors.ConflictError:
-		w.WriteHeader(http.StatusConflict)
-		if err := json.NewEncoder(w).Encode(retErr); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		return
 	case *errors.ServiceError:
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		if err := json.NewEncoder(w).Encode(retErr); err != nil {
@@ -217,9 +211,6 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		return
 	case *errors.InternalError:
 		w.WriteHeader(http.StatusInternalServerError)
-		if err := json.NewEncoder(w).Encode(retErr); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
 		return
 	}
 

@@ -35,7 +35,7 @@ type customError struct {
 func New(text string) Error {
 	return &customError{
 		msg: text,
-		err: nil,
+		err: errors.New(text),
 	}
 }
 
@@ -46,7 +46,7 @@ func (ce *customError) Error() string {
 	if ce.err == nil {
 		return ce.msg
 	}
-	return ce.msg + " : " + ce.err.Error()
+	return ce.err.Error()
 }
 
 func (ce *customError) Msg() string {

@@ -5,7 +5,6 @@ package postgres
 
 import (
 	"github.com/absmach/supermq/pkg/errors"
-	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
@@ -40,11 +39,11 @@ func (eh errHandler) HandleError(wrapper, err error) error {
 			if knownErr, ok := eh.duplicateErrors.GetError(pqErr.ConstraintName); ok {
 				return errors.Wrap(wrapper, knownErr)
 			}
-			return errors.Wrap(repoerr.ErrConflict, err)
+			return errors.Wrap(wrapper, err)
 		case errInvalid, errInvalidChar, errTruncation, errUntranslatable:
-			return errors.Wrap(repoerr.ErrMalformedEntity, err)
+			return errors.Wrap(wrapper, err)
 		case errFK:
-			return errors.Wrap(repoerr.ErrCreateEntity, err)
+			return errors.Wrap(wrapper, err)
 		}
 	}
 
