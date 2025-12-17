@@ -13,10 +13,10 @@ import (
 	"github.com/absmach/supermq/pkg/callout"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/pkg/permissions"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
-	rolemw "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
-	"github.com/absmach/supermq/pkg/permissions"
+	rolemgr "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 )
 
 var _ groups.Service = (*calloutMiddleware)(nil)
@@ -26,11 +26,11 @@ type calloutMiddleware struct {
 	repo        groups.Repository
 	callout     callout.Callout
 	entitiesOps permissions.EntitiesOperations[permissions.Operation]
-	rolemw.RoleManagerCalloutMiddleware
+	rolemgr.RoleManagerCalloutMiddleware
 }
 
 func NewCallout(svc groups.Service, repo groups.Repository, entitiesOps permissions.EntitiesOperations[permissions.Operation], roleOps permissions.Operations[permissions.RoleOperation], callout callout.Callout) (groups.Service, error) {
-	call, err := rolemw.NewCallout(policies.GroupType, svc, callout, roleOps)
+	call, err := rolemgr.NewCallout(policies.GroupType, svc, callout, roleOps)
 	if err != nil {
 		return nil, err
 	}
