@@ -55,7 +55,7 @@ import (
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/sid"
 	spicedbdecoder "github.com/absmach/supermq/pkg/spicedb"
-	"github.com/absmach/supermq/pkg/svcutil"
+	"github.com/absmach/supermq/pkg/permissions"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/authzed/authzed-go/v1"
 	"github.com/authzed/grpcutil"
@@ -262,7 +262,7 @@ func main() {
 	defer cacheclient.Close()
 	cache := cache.NewChannelsCache(cacheclient, cfg.CacheKeyDuration)
 
-	permConfig, err := svcutil.ParsePermissionsFile(cfg.PermissionsFile)
+	permConfig, err := permissions.ParsePermissionsFile(cfg.PermissionsFile)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to parse permissions file: %s", err))
 		exitCode = 1
@@ -344,7 +344,7 @@ func main() {
 func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, cache channels.Cache, authz smqauthz.Authorization,
 	pe policies.Evaluator, ps policies.Service, cfg config, tracer trace.Tracer, clientsClient grpcClientsV1.ClientsServiceClient,
 	groupsClient grpcGroupsV1.GroupsServiceClient, da pkgDomains.Authorization, logger *slog.Logger, callout callout.Callout,
-	permConfig *svcutil.PermissionConfig,
+	permConfig *permissions.PermissionConfig,
 ) (channels.Service, pChannels.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	repo := postgres.NewRepository(database)
@@ -395,14 +395,14 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, cach
 		return nil, nil, fmt.Errorf("failed to get client permissions: %w", err)
 	}
 
-	entitiesOps, err := svcutil.NewEntitiesOperations(
-		svcutil.EntitiesPermission{
+	entitiesOps, err := permissions.NewEntitiesOperations(
+		permissions.EntitiesPermission{
 			policies.ChannelType: channelOps,
 			policies.DomainType:  domainOps,
 			policies.GroupType:   groupOps,
 			policies.ClientType:  clientOps,
 		},
-		svcutil.EntitiesOperationDetails[svcutil.Operation]{
+		permissions.EntitiesOperationDetails[permissions.Operation]{
 			policies.ChannelType: channels.OperationDetails(),
 			policies.DomainType:  domains.OperationDetails(),
 			policies.GroupType:   groups.OperationDetails(),
@@ -413,7 +413,7 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, cach
 		return nil, nil, fmt.Errorf("failed to create entities operations: %w", err)
 	}
 
-	roleOps, err := svcutil.NewOperations(roles.Operations(), channelRoleOps)
+	roleOps, err := permissions.NewOperations(roles.Operations(), channelRoleOps)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create role operations: %w", err)
 	}

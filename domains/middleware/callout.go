@@ -13,7 +13,7 @@ import (
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
 	rolemw "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
-	"github.com/absmach/supermq/pkg/svcutil"
+	"github.com/absmach/supermq/pkg/permissions"
 )
 
 var _ domains.Service = (*calloutMiddleware)(nil)
@@ -21,11 +21,11 @@ var _ domains.Service = (*calloutMiddleware)(nil)
 type calloutMiddleware struct {
 	svc         domains.Service
 	callout     callout.Callout
-	entitiesOps svcutil.EntitiesOperations[svcutil.Operation]
+	entitiesOps permissions.EntitiesOperations[permissions.Operation]
 	rolemw.RoleManagerCalloutMiddleware
 }
 
-func NewCallout(svc domains.Service, entitiesOps svcutil.EntitiesOperations[svcutil.Operation], roleOps svcutil.Operations[svcutil.RoleOperation], callout callout.Callout) (domains.Service, error) {
+func NewCallout(svc domains.Service, entitiesOps permissions.EntitiesOperations[permissions.Operation], roleOps permissions.Operations[permissions.RoleOperation], callout callout.Callout) (domains.Service, error) {
 	call, err := rolemw.NewCallout(policies.DomainType, svc, callout, roleOps)
 	if err != nil {
 		return nil, err
@@ -210,7 +210,7 @@ func (cm *calloutMiddleware) DeleteInvitation(ctx context.Context, session authn
 	return cm.svc.DeleteInvitation(ctx, session, inviteeUserID, domainID)
 }
 
-func (cm *calloutMiddleware) callOut(ctx context.Context, session authn.Session, entityType string, op svcutil.Operation, pld map[string]any) error {
+func (cm *calloutMiddleware) callOut(ctx context.Context, session authn.Session, entityType string, op permissions.Operation, pld map[string]any) error {
 	var entityID string
 	if id, ok := pld["entity_id"].(string); ok {
 		entityID = id

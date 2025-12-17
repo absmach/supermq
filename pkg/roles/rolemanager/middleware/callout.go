@@ -11,7 +11,7 @@ import (
 	"github.com/absmach/supermq/pkg/callout"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
-	"github.com/absmach/supermq/pkg/svcutil"
+	"github.com/absmach/supermq/pkg/permissions"
 )
 
 var _ roles.RoleManager = (*RoleManagerCalloutMiddleware)(nil)
@@ -20,10 +20,10 @@ type RoleManagerCalloutMiddleware struct {
 	entityType string
 	svc        roles.RoleManager
 	callout    callout.Callout
-	roleOps    svcutil.Operations[svcutil.RoleOperation]
+	roleOps    permissions.Operations[permissions.RoleOperation]
 }
 
-func NewCallout(entityType string, svc roles.RoleManager, callout callout.Callout, roleOps svcutil.Operations[svcutil.RoleOperation]) (RoleManagerCalloutMiddleware, error) {
+func NewCallout(entityType string, svc roles.RoleManager, callout callout.Callout, roleOps permissions.Operations[permissions.RoleOperation]) (RoleManagerCalloutMiddleware, error) {
 	if err := roleOps.Validate(); err != nil {
 		return RoleManagerCalloutMiddleware{}, err
 	}
@@ -248,7 +248,7 @@ func (rcm *RoleManagerCalloutMiddleware) RemoveMemberFromAllRoles(ctx context.Co
 	return rcm.svc.RemoveMemberFromAllRoles(ctx, session, memberID)
 }
 
-func (rcm *RoleManagerCalloutMiddleware) callOut(ctx context.Context, session authn.Session, op svcutil.RoleOperation, pld map[string]any) error {
+func (rcm *RoleManagerCalloutMiddleware) callOut(ctx context.Context, session authn.Session, op permissions.RoleOperation, pld map[string]any) error {
 	var entityID string
 	if id, ok := pld["entity_id"].(string); ok {
 		entityID = id

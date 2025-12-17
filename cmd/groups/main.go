@@ -48,7 +48,7 @@ import (
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/sid"
 	spicedbdecoder "github.com/absmach/supermq/pkg/spicedb"
-	"github.com/absmach/supermq/pkg/svcutil"
+	"github.com/absmach/supermq/pkg/permissions"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/authzed/authzed-go/v1"
 	"github.com/authzed/grpcutil"
@@ -242,7 +242,7 @@ func main() {
 		return
 	}
 
-	permConfig, err := svcutil.ParsePermissionsFile(cfg.PermissionsFile)
+	permConfig, err := permissions.ParsePermissionsFile(cfg.PermissionsFile)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to parse permissions file: %s", err))
 		exitCode = 1
@@ -313,7 +313,7 @@ func main() {
 
 func newService(ctx context.Context, authz smqauthz.Authorization, policy policies.Service, db *sqlx.DB,
 	dbConfig pgclient.Config, channels grpcChannelsV1.ChannelsServiceClient,
-	clients grpcClientsV1.ClientsServiceClient, tracer trace.Tracer, logger *slog.Logger, c config, callout callout.Callout, permConfig *svcutil.PermissionConfig,
+	clients grpcClientsV1.ClientsServiceClient, tracer trace.Tracer, logger *slog.Logger, c config, callout callout.Callout, permConfig *permissions.PermissionConfig,
 ) (groups.Service, pgroups.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	idp := uuid.New()
@@ -348,12 +348,12 @@ func newService(ctx context.Context, authz smqauthz.Authorization, policy polici
 		return nil, nil, fmt.Errorf("failed to get domain permissions: %w", err)
 	}
 
-	entitiesOps, err := svcutil.NewEntitiesOperations(
-		svcutil.EntitiesPermission{
+	entitiesOps, err := permissions.NewEntitiesOperations(
+		permissions.EntitiesPermission{
 			policies.GroupType:  groupOps,
 			policies.DomainType: domainOps,
 		},
-		svcutil.EntitiesOperationDetails[svcutil.Operation]{
+		permissions.EntitiesOperationDetails[permissions.Operation]{
 			policies.GroupType:  groups.OperationDetails(),
 			policies.DomainType: domains.OperationDetails(),
 		},
@@ -362,7 +362,7 @@ func newService(ctx context.Context, authz smqauthz.Authorization, policy polici
 		return nil, nil, fmt.Errorf("failed to create entities operations: %w", err)
 	}
 
-	roleOps, err := svcutil.NewOperations(roles.Operations(), groupRoleOps)
+	roleOps, err := permissions.NewOperations(roles.Operations(), groupRoleOps)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create role operations: %w", err)
 	}

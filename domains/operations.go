@@ -4,11 +4,11 @@
 package domains
 
 import (
-	"github.com/absmach/supermq/pkg/svcutil"
+	"github.com/absmach/supermq/pkg/permissions"
 )
 
 const (
-	OpCreateDomain svcutil.Operation = iota
+	OpCreateDomain permissions.Operation = iota
 	OpUpdateDomain
 	OpRetrieveDomain
 	OpEnableDomain
@@ -33,8 +33,8 @@ const (
 	OpListDomainGroups
 )
 
-func OperationDetails() map[svcutil.Operation]svcutil.OperationDetails {
-	ops := map[svcutil.Operation]svcutil.OperationDetails{
+func OperationDetails() map[permissions.Operation]permissions.OperationDetails {
+	ops := map[permissions.Operation]permissions.OperationDetails{
 		OpUpdateDomain: {
 			Name:               "update",
 			PermissionRequired: true,

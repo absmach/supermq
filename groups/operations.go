@@ -3,11 +3,11 @@
 
 package groups
 
-import "github.com/absmach/supermq/pkg/svcutil"
+import "github.com/absmach/supermq/pkg/permissions"
 
 // Group Operations.
 const (
-	OpViewGroup svcutil.Operation = iota
+	OpViewGroup permissions.Operation = iota
 	OpUpdateGroup
 	OpUpdateGroupTags
 	OpEnableGroup
@@ -27,8 +27,8 @@ const (
 	OpListUserGroups
 )
 
-func OperationDetails() map[svcutil.Operation]svcutil.OperationDetails {
-	return map[svcutil.Operation]svcutil.OperationDetails{
+func OperationDetails() map[permissions.Operation]permissions.OperationDetails {
+	return map[permissions.Operation]permissions.OperationDetails{
 		OpViewGroup: {
 			Name:               "view",
 			PermissionRequired: true,

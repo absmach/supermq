@@ -13,10 +13,10 @@ import (
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/pkg/permissions"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
-	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
-	"github.com/absmach/supermq/pkg/svcutil"
+	rolemgr "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 )
 
 var _ domains.Service = (*authorizationMiddleware)(nil)
@@ -27,18 +27,18 @@ var ErrMemberExist = errors.New("user is already a member of the domain")
 type authorizationMiddleware struct {
 	svc         domains.Service
 	authz       smqauthz.Authorization
-	entitiesOps svcutil.EntitiesOperations[svcutil.Operation]
-	rOps        svcutil.Operations[svcutil.RoleOperation]
-	rmMW.RoleManagerAuthorizationMiddleware
+	entitiesOps permissions.EntitiesOperations[permissions.Operation]
+	rOps        permissions.Operations[permissions.RoleOperation]
+	rolemgr.RoleManagerAuthorizationMiddleware
 }
 
 // NewAuthorization adds authorization to the domains service.
-func NewAuthorization(entityType string, svc domains.Service, authz smqauthz.Authorization, entitiesOps svcutil.EntitiesOperations[svcutil.Operation], domainRoleOps svcutil.Operations[svcutil.RoleOperation]) (domains.Service, error) {
+func NewAuthorization(entityType string, svc domains.Service, authz smqauthz.Authorization, entitiesOps permissions.EntitiesOperations[permissions.Operation], domainRoleOps permissions.Operations[permissions.RoleOperation]) (domains.Service, error) {
 	if err := entitiesOps.Validate(); err != nil {
 		return &authorizationMiddleware{}, err
 	}
 
-	ram, err := rmMW.NewAuthorization(entityType, svc, authz, domainRoleOps)
+	ram, err := rolemgr.NewAuthorization(entityType, svc, authz, domainRoleOps)
 	if err != nil {
 		return &authorizationMiddleware{}, err
 	}
@@ -197,7 +197,7 @@ func (am *authorizationMiddleware) DeleteInvitation(ctx context.Context, session
 	return am.svc.DeleteInvitation(ctx, session, inviteeUserID, domainID)
 }
 
-func (am *authorizationMiddleware) authorize(ctx context.Context, entityType string, op svcutil.Operation, authReq authz.PolicyReq) error {
+func (am *authorizationMiddleware) authorize(ctx context.Context, entityType string, op permissions.Operation, authReq authz.PolicyReq) error {
 	perm, err := am.entitiesOps.GetPermission(entityType, op)
 	if err != nil {
 		return err

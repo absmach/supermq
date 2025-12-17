@@ -9,7 +9,7 @@ import (
 
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/policies"
-	"github.com/absmach/supermq/pkg/svcutil"
+	"github.com/absmach/supermq/pkg/permissions"
 )
 
 type Action string
@@ -186,7 +186,7 @@ type Repository interface {
 }
 
 const (
-	OpAddRole svcutil.RoleOperation = iota
+	OpAddRole permissions.RoleOperation = iota
 	OpRemoveRole
 	OpUpdateRoleName
 	OpRetrieveRole
@@ -204,8 +204,8 @@ const (
 	OpListAvailableActions
 )
 
-func Operations() map[svcutil.RoleOperation]svcutil.OperationDetails {
-	ops := map[svcutil.RoleOperation]svcutil.OperationDetails{
+func Operations() map[permissions.RoleOperation]permissions.OperationDetails {
+	ops := map[permissions.RoleOperation]permissions.OperationDetails{
 		OpAddRole: {
 			Name:               "add",
 			PermissionRequired: true,

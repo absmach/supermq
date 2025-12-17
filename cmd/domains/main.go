@@ -45,7 +45,7 @@ import (
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/sid"
 	spicedbdecoder "github.com/absmach/supermq/pkg/spicedb"
-	"github.com/absmach/supermq/pkg/svcutil"
+	"github.com/absmach/supermq/pkg/permissions"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/authzed/authzed-go/v1"
 	"github.com/authzed/grpcutil"
@@ -274,7 +274,7 @@ func newDomainService(ctx context.Context, domainsRepo domainsSvc.Repository, ca
 		return nil, err
 	}
 
-	permConfig, err := svcutil.ParsePermissionsFile(cfg.PermissionsFile)
+	permConfig, err := permissions.ParsePermissionsFile(cfg.PermissionsFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse permissions file: %w", err)
 	}
@@ -293,15 +293,15 @@ func newDomainService(ctx context.Context, domainsRepo domainsSvc.Repository, ca
 		return nil, fmt.Errorf("failed to get domain permissions: %w", err)
 	}
 
-	entitiesOps, err := svcutil.NewEntitiesOperations(
-		svcutil.EntitiesPermission{policies.DomainType: domainOps},
-		svcutil.EntitiesOperationDetails[svcutil.Operation]{policies.DomainType: domains.OperationDetails()},
+	entitiesOps, err := permissions.NewEntitiesOperations(
+		permissions.EntitiesPermission{policies.DomainType: domainOps},
+		permissions.EntitiesOperationDetails[permissions.Operation]{policies.DomainType: domains.OperationDetails()},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create entities operations: %w", err)
 	}
 
-	roleOps, err := svcutil.NewOperations(roles.Operations(), domainRoleOps)
+	roleOps, err := permissions.NewOperations(roles.Operations(), domainRoleOps)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create role operations: %w", err)
 	}

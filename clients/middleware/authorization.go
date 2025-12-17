@@ -14,10 +14,10 @@ import (
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/pkg/permissions"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
-	rmMW "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
-	"github.com/absmach/supermq/pkg/svcutil"
+	rolemgr "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 )
 
 var (
@@ -41,8 +41,8 @@ type authorizationMiddleware struct {
 	svc         clients.Service
 	repo        clients.Repository
 	authz       smqauthz.Authorization
-	entitiesOps svcutil.EntitiesOperations[svcutil.Operation]
-	rmMW.RoleManagerAuthorizationMiddleware
+	entitiesOps permissions.EntitiesOperations[permissions.Operation]
+	rolemgr.RoleManagerAuthorizationMiddleware
 }
 
 // NewAuthorization adds authorization to the clients service.
@@ -51,13 +51,13 @@ func NewAuthorization(
 	svc clients.Service,
 	authz smqauthz.Authorization,
 	repo clients.Repository,
-	entitiesOps svcutil.EntitiesOperations[svcutil.Operation],
-	roleOps svcutil.Operations[svcutil.RoleOperation],
+	entitiesOps permissions.EntitiesOperations[permissions.Operation],
+	roleOps permissions.Operations[permissions.RoleOperation],
 ) (clients.Service, error) {
 	if err := entitiesOps.Validate(); err != nil {
 		return nil, err
 	}
-	ram, err := rmMW.NewAuthorization(policies.ClientType, svc, authz, roleOps)
+	ram, err := rolemgr.NewAuthorization(policies.ClientType, svc, authz, roleOps)
 	if err != nil {
 		return nil, err
 	}
@@ -409,7 +409,7 @@ func (am *authorizationMiddleware) RemoveParentGroup(ctx context.Context, sessio
 	return nil
 }
 
-func (am *authorizationMiddleware) authorize(ctx context.Context, entityType string, op svcutil.Operation, req smqauthz.PolicyReq) error {
+func (am *authorizationMiddleware) authorize(ctx context.Context, entityType string, op permissions.Operation, req smqauthz.PolicyReq) error {
 	perm, err := am.entitiesOps.GetPermission(entityType, op)
 	if err != nil {
 		return err

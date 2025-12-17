@@ -4,12 +4,12 @@
 package channels
 
 import (
-	"github.com/absmach/supermq/pkg/svcutil"
+	"github.com/absmach/supermq/pkg/permissions"
 )
 
 // Channel Operations.
 const (
-	OpViewChannel svcutil.Operation = iota
+	OpViewChannel permissions.Operation = iota
 	OpUpdateChannel
 	OpUpdateChannelTags
 	OpEnableChannel
@@ -22,8 +22,8 @@ const (
 	OpListUserChannels
 )
 
-func OperationDetails() map[svcutil.Operation]svcutil.OperationDetails {
-	return map[svcutil.Operation]svcutil.OperationDetails{
+func OperationDetails() map[permissions.Operation]permissions.OperationDetails {
+	return map[permissions.Operation]permissions.OperationDetails{
 		OpViewChannel: {
 			Name:               "view",
 			PermissionRequired: true,

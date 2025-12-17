@@ -17,7 +17,7 @@ import (
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
 	rolemw "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
-	"github.com/absmach/supermq/pkg/svcutil"
+	"github.com/absmach/supermq/pkg/permissions"
 )
 
 var _ channels.Service = (*calloutMiddleware)(nil)
@@ -26,11 +26,11 @@ type calloutMiddleware struct {
 	svc         channels.Service
 	repo        channels.Repository
 	callout     callout.Callout
-	entitiesOps svcutil.EntitiesOperations[svcutil.Operation]
+	entitiesOps permissions.EntitiesOperations[permissions.Operation]
 	rolemw.RoleManagerCalloutMiddleware
 }
 
-func NewCallout(svc channels.Service, repo channels.Repository, entitiesOps svcutil.EntitiesOperations[svcutil.Operation], roleOps svcutil.Operations[svcutil.RoleOperation], callout callout.Callout) (channels.Service, error) {
+func NewCallout(svc channels.Service, repo channels.Repository, entitiesOps permissions.EntitiesOperations[permissions.Operation], roleOps permissions.Operations[permissions.RoleOperation], callout callout.Callout) (channels.Service, error) {
 	call, err := rolemw.NewCallout(policies.ChannelType, svc, callout, roleOps)
 	if err != nil {
 		return nil, err
@@ -219,7 +219,7 @@ func (cm *calloutMiddleware) RemoveParentGroup(ctx context.Context, session auth
 	return cm.svc.RemoveParentGroup(ctx, session, id)
 }
 
-func (cm *calloutMiddleware) callOut(ctx context.Context, session authn.Session, entityType string, op svcutil.Operation, pld map[string]any) error {
+func (cm *calloutMiddleware) callOut(ctx context.Context, session authn.Session, entityType string, op permissions.Operation, pld map[string]any) error {
 	var entityID string
 	if id, ok := pld["entity_id"].(string); ok {
 		entityID = id

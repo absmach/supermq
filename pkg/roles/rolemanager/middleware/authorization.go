@@ -11,7 +11,7 @@ import (
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
-	"github.com/absmach/supermq/pkg/svcutil"
+	"github.com/absmach/supermq/pkg/permissions"
 )
 
 var _ roles.RoleManager = (*RoleManagerAuthorizationMiddleware)(nil)
@@ -20,11 +20,11 @@ type RoleManagerAuthorizationMiddleware struct {
 	entityType string
 	svc        roles.RoleManager
 	authz      smqauthz.Authorization
-	ops        svcutil.Operations[svcutil.RoleOperation]
+	ops        permissions.Operations[permissions.RoleOperation]
 }
 
 // NewAuthorization adds authorization for role related methods to the core service.
-func NewAuthorization(entityType string, svc roles.RoleManager, authz smqauthz.Authorization, roleOps svcutil.Operations[svcutil.RoleOperation]) (RoleManagerAuthorizationMiddleware, error) {
+func NewAuthorization(entityType string, svc roles.RoleManager, authz smqauthz.Authorization, roleOps permissions.Operations[permissions.RoleOperation]) (RoleManagerAuthorizationMiddleware, error) {
 	if err := roleOps.Validate(); err != nil {
 		return RoleManagerAuthorizationMiddleware{}, err
 	}
@@ -291,7 +291,7 @@ func (ram RoleManagerAuthorizationMiddleware) RoleRemoveMembers(ctx context.Cont
 	return ram.svc.RoleRemoveMembers(ctx, session, entityID, roleID, members)
 }
 
-func (ram RoleManagerAuthorizationMiddleware) authorize(ctx context.Context, op svcutil.RoleOperation, pr smqauthz.PolicyReq) error {
+func (ram RoleManagerAuthorizationMiddleware) authorize(ctx context.Context, op permissions.RoleOperation, pr smqauthz.PolicyReq) error {
 	perm, err := ram.ops.GetPermission(op)
 	if err != nil {
 		return err

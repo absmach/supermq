@@ -14,10 +14,10 @@ import (
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/pkg/permissions"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/absmach/supermq/pkg/roles"
-	rolemw "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
-	"github.com/absmach/supermq/pkg/svcutil"
+	rolemgr "github.com/absmach/supermq/pkg/roles/rolemanager/middleware"
 )
 
 var (
@@ -46,8 +46,8 @@ type authorizationMiddleware struct {
 	svc         groups.Service
 	repo        groups.Repository
 	authz       smqauthz.Authorization
-	entitiesOps svcutil.EntitiesOperations[svcutil.Operation]
-	rolemw.RoleManagerAuthorizationMiddleware
+	entitiesOps permissions.EntitiesOperations[permissions.Operation]
+	rolemgr.RoleManagerAuthorizationMiddleware
 }
 
 // NewAuthorization adds authorization to the groups service.
@@ -56,13 +56,13 @@ func NewAuthorization(
 	svc groups.Service,
 	authz smqauthz.Authorization,
 	repo groups.Repository,
-	entitiesOps svcutil.EntitiesOperations[svcutil.Operation],
-	roleOps svcutil.Operations[svcutil.RoleOperation],
+	entitiesOps permissions.EntitiesOperations[permissions.Operation],
+	roleOps permissions.Operations[permissions.RoleOperation],
 ) (groups.Service, error) {
 	if err := entitiesOps.Validate(); err != nil {
 		return nil, err
 	}
-	ram, err := rolemw.NewAuthorization(entityType, svc, authz, roleOps)
+	ram, err := rolemgr.NewAuthorization(entityType, svc, authz, roleOps)
 	if err != nil {
 		return nil, err
 	}
@@ -575,7 +575,7 @@ func (am *authorizationMiddleware) checkSuperAdmin(ctx context.Context, session 
 	return nil
 }
 
-func (am *authorizationMiddleware) authorize(ctx context.Context, entityType string, op svcutil.Operation, pr smqauthz.PolicyReq) error {
+func (am *authorizationMiddleware) authorize(ctx context.Context, entityType string, op permissions.Operation, pr smqauthz.PolicyReq) error {
 	perm, err := am.entitiesOps.GetPermission(entityType, op)
 	if err != nil {
 		return err

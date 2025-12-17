@@ -53,7 +53,7 @@ import (
 	httpserver "github.com/absmach/supermq/pkg/server/http"
 	"github.com/absmach/supermq/pkg/sid"
 	spicedbdecoder "github.com/absmach/supermq/pkg/spicedb"
-	"github.com/absmach/supermq/pkg/svcutil"
+	"github.com/absmach/supermq/pkg/permissions"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/authzed/authzed-go/v1"
 	"github.com/authzed/grpcutil"
@@ -263,7 +263,7 @@ func main() {
 		return
 	}
 
-	permConfig, err := svcutil.ParsePermissionsFile(cfg.PermissionsFile)
+	permConfig, err := permissions.ParsePermissionsFile(cfg.PermissionsFile)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to parse permissions file: %s", err))
 		exitCode = 1
@@ -342,7 +342,7 @@ func main() {
 	}
 }
 
-func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz smqauthz.Authorization, pe policies.Evaluator, ps policies.Service, cacheClient *redis.Client, cfg config, channels grpcChannelsV1.ChannelsServiceClient, groups grpcGroupsV1.GroupsServiceClient, tracer trace.Tracer, logger *slog.Logger, callout callout.Callout, permConfig *svcutil.PermissionConfig) (clients.Service, pClients.Service, error) {
+func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, authz smqauthz.Authorization, pe policies.Evaluator, ps policies.Service, cacheClient *redis.Client, cfg config, channels grpcChannelsV1.ChannelsServiceClient, groups grpcGroupsV1.GroupsServiceClient, tracer trace.Tracer, logger *slog.Logger, callout callout.Callout, permConfig *permissions.PermissionConfig) (clients.Service, pClients.Service, error) {
 	database := pg.NewDatabase(db, dbConfig, tracer)
 	repo := postgres.NewRepository(database)
 
@@ -390,13 +390,13 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 		return nil, nil, fmt.Errorf("failed to get group permissions: %w", err)
 	}
 
-	entitiesOps, err := svcutil.NewEntitiesOperations(
-		svcutil.EntitiesPermission{
+	entitiesOps, err := permissions.NewEntitiesOperations(
+		permissions.EntitiesPermission{
 			policies.ClientType: clientOps,
 			policies.DomainType: domainOps,
 			policies.GroupType:  groupOps,
 		},
-		svcutil.EntitiesOperationDetails[svcutil.Operation]{
+		permissions.EntitiesOperationDetails[permissions.Operation]{
 			policies.ClientType: clients.OperationDetails(),
 			policies.DomainType: domains.OperationDetails(),
 			policies.GroupType:  svcgroups.OperationDetails(),
@@ -406,7 +406,7 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 		return nil, nil, fmt.Errorf("failed to create entities operations: %w", err)
 	}
 
-	roleOps, err := svcutil.NewOperations(roles.Operations(), clientRoleOps)
+	roleOps, err := permissions.NewOperations(roles.Operations(), clientRoleOps)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create role operations: %w", err)
 	}

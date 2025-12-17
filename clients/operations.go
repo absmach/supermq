@@ -4,12 +4,12 @@
 package clients
 
 import (
-	"github.com/absmach/supermq/pkg/svcutil"
+	"github.com/absmach/supermq/pkg/permissions"
 )
 
 // Client Operations.
 const (
-	OpViewClient svcutil.Operation = iota
+	OpViewClient permissions.Operation = iota
 	OpUpdateClient
 	OpUpdateClientTags
 	OpUpdateClientSecret
@@ -23,8 +23,8 @@ const (
 	OpListUserClients
 )
 
-func OperationDetails() map[svcutil.Operation]svcutil.OperationDetails {
-	return map[svcutil.Operation]svcutil.OperationDetails{
+func OperationDetails() map[permissions.Operation]permissions.OperationDetails {
+	return map[permissions.Operation]permissions.OperationDetails{
 		OpViewClient: {
 			Name:               "view",
 			PermissionRequired: true,
