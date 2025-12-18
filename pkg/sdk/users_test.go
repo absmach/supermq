@@ -20,6 +20,7 @@ import (
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
+	"github.com/absmach/supermq/pkg/oauth2"
 	oauth2mocks "github.com/absmach/supermq/pkg/oauth2/mocks"
 	sdk "github.com/absmach/supermq/pkg/sdk"
 	"github.com/absmach/supermq/pkg/uuid"
@@ -27,6 +28,7 @@ import (
 	httpapi "github.com/absmach/supermq/users/api"
 	umocks "github.com/absmach/supermq/users/mocks"
 	"github.com/go-chi/chi/v5"
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -46,7 +48,9 @@ func setupUsers() (*httptest.Server, *umocks.Service, *authnmocks.Authentication
 	authn := new(authnmocks.Authentication)
 	am := smqauthn.NewAuthNMiddleware(authn, smqauthn.WithDomainCheck(false), smqauthn.WithAllowUnverifiedUser(true))
 	token := new(authmocks.TokenServiceClient)
-	httpapi.MakeHandler(usvc, am, token, true, mux, logger, "", passRegex, idp, provider)
+	redisClient := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
+	p := []oauth2.Provider{provider}
+	httpapi.MakeHandler(usvc, am, token, true, mux, logger, "", passRegex, idp, redisClient, p, p)
 
 	return httptest.NewServer(mux), usvc, authn
 }

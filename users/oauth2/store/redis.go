@@ -1,0 +1,143 @@
+// Copyright (c) Abstract Machines
+// SPDX-License-Identifier: Apache-2.0
+
+package store
+
+// import (
+// 	"context"
+// 	"encoding/json"
+// 	"fmt"
+
+// 	"github.com/redis/go-redis/v9"
+// )
+
+// const (
+// 	deviceCodePrefix = "oauth:device:code:"
+// 	userCodePrefix   = "oauth:device:user:"
+// )
+
+// // redisDeviceCodeStore is a Redis-based implementation of DeviceCodeStore.
+// type redisDeviceCodeStore struct {
+// 	client *redis.Client
+// 	ctx    context.Context
+// }
+
+// // NewRedisDeviceCodeStore creates a new Redis-based device code store.
+// func NewRedisDeviceCodeStore(ctx context.Context, client *redis.Client) DeviceCodeStore {
+// 	return &redisDeviceCodeStore{
+// 		client: client,
+// 		ctx:    ctx,
+// 	}
+// }
+
+// func (s *redisDeviceCodeStore) Save(code DeviceCode) error {
+// 	data, err := json.Marshal(code)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to marshal device code: %w", err)
+// 	}
+
+// 	// Store device code with expiry
+// 	deviceKey := deviceCodePrefix + code.DeviceCode
+// 	if err := s.client.Set(s.ctx, deviceKey, data, DeviceCodeExpiry).Err(); err != nil {
+// 		return fmt.Errorf("failed to save device code: %w", err)
+// 	}
+
+// 	// Store user code to device code mapping with expiry
+// 	userKey := userCodePrefix + code.UserCode
+// 	if err := s.client.Set(s.ctx, userKey, code.DeviceCode, DeviceCodeExpiry).Err(); err != nil {
+// 		return fmt.Errorf("failed to save user code mapping: %w", err)
+// 	}
+
+// 	return nil
+// }
+
+// func (s *redisDeviceCodeStore) Get(deviceCode string) (DeviceCode, error) {
+// 	deviceKey := deviceCodePrefix + deviceCode
+// 	data, err := s.client.Get(s.ctx, deviceKey).Bytes()
+// 	if err != nil {
+// 		if err == redis.Nil {
+// 			return DeviceCode{}, ErrDeviceCodeNotFound
+// 		}
+// 		return DeviceCode{}, fmt.Errorf("failed to get device code: %w", err)
+// 	}
+
+// 	var code DeviceCode
+// 	if err := json.Unmarshal(data, &code); err != nil {
+// 		return DeviceCode{}, fmt.Errorf("failed to unmarshal device code: %w", err)
+// 	}
+
+// 	return code, nil
+// }
+
+// func (s *redisDeviceCodeStore) GetByUserCode(userCode string) (DeviceCode, error) {
+// 	// First, get the device code from user code mapping
+// 	userKey := userCodePrefix + userCode
+// 	deviceCode, err := s.client.Get(s.ctx, userKey).Result()
+// 	if err != nil {
+// 		if err == redis.Nil {
+// 			return DeviceCode{}, ErrUserCodeNotFound
+// 		}
+// 		return DeviceCode{}, fmt.Errorf("failed to get device code by user code: %w", err)
+// 	}
+
+// 	// Then, get the actual device code data
+// 	return s.Get(deviceCode)
+// }
+
+// func (s *redisDeviceCodeStore) Update(code DeviceCode) error {
+// 	// Get the existing code to check if it exists
+// 	existing, err := s.Get(code.DeviceCode)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	// Preserve the creation time and user code from existing
+// 	code.CreatedAt = existing.CreatedAt
+// 	code.UserCode = existing.UserCode
+
+// 	data, err := json.Marshal(code)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to marshal device code: %w", err)
+// 	}
+
+// 	// Calculate remaining TTL
+// 	deviceKey := deviceCodePrefix + code.DeviceCode
+// 	ttl, err := s.client.TTL(s.ctx, deviceKey).Result()
+// 	if err != nil {
+// 		return fmt.Errorf("failed to get TTL: %w", err)
+// 	}
+
+// 	// If TTL is negative (key doesn't exist or no expiry), use default
+// 	if ttl < 0 {
+// 		ttl = DeviceCodeExpiry
+// 	}
+
+// 	// Update the device code with remaining TTL
+// 	if err := s.client.Set(s.ctx, deviceKey, data, ttl).Err(); err != nil {
+// 		return fmt.Errorf("failed to update device code: %w", err)
+// 	}
+
+// 	return nil
+// }
+
+// func (s *redisDeviceCodeStore) Delete(deviceCode string) error {
+// 	// Get the code first to find the user code
+// 	code, err := s.Get(deviceCode)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	// Delete both device code and user code mapping
+// 	deviceKey := deviceCodePrefix + deviceCode
+// 	userKey := userCodePrefix + code.UserCode
+
+// 	pipe := s.client.Pipeline()
+// 	pipe.Del(s.ctx, deviceKey)
+// 	pipe.Del(s.ctx, userKey)
+
+// 	if _, err := pipe.Exec(s.ctx); err != nil {
+// 		return fmt.Errorf("failed to delete device code: %w", err)
+// 	}
+
+// 	return nil
+// }

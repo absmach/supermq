@@ -34,6 +34,70 @@ supermq-cli users create <user_name> <user_email> <user_password> <user_token>
 supermq-cli users token <user_email> <user_password>
 ```
 
+#### OAuth Authentication
+
+Authenticate using OAuth providers (e.g., Google) to obtain access tokens using the device authorization flow.
+
+```bash
+supermq-cli users oauth <provider>
+```
+
+Example with Google:
+
+```bash
+supermq-cli users oauth google
+```
+
+**How it works (Device Authorization Flow):**
+
+The CLI uses the OAuth 2.0 Device Authorization Flow, which is specifically designed for command-line applications and devices with limited input capabilities:
+
+1. The CLI requests a device code from the OAuth provider
+2. You receive a short user code (e.g., `ABCD-EFGH`) and a verification URL
+3. Visit the verification URL in any browser (on any device)
+4. Enter the user code when prompted
+5. Authorize the application in your browser
+6. The CLI automatically detects the authorization and retrieves your tokens
+7. Tokens are displayed in JSON format
+
+**Example Output:**
+
+```
+=== OAuth Device Authorization ===
+
+Please complete authentication in your browser:
+
+  1. Visit: https://auth.example.com/device
+  2. Enter code: ABCD-EFGH
+
+Waiting for authorization...
+
+✓ Authentication successful!
+
+{
+  "access_token": "eyJhbGc...",
+  "refresh_token": "eyJhbGc..."
+}
+```
+
+**Benefits of Device Flow:**
+
+- **No local server needed** - Works in any environment (containers, SSH, etc.)
+- **Cross-device authentication** - Authenticate on your phone/tablet while using CLI
+- **Better security** - No need to open ports or handle callbacks
+- **Works everywhere** - Headless servers, restricted networks, Docker containers
+
+**Prerequisites:**
+
+The OAuth provider must be configured on the SuperMQ server. For Google OAuth, the following environment variables must be set:
+
+- `SMQ_GOOGLE_CLIENT_ID` - Google OAuth client ID
+- `SMQ_GOOGLE_CLIENT_SECRET` - Google OAuth client secret
+- `SMQ_GOOGLE_REDIRECT_URL` - OAuth redirect URL (e.g., `http://localhost:9002/oauth/callback/google`)
+- `SMQ_GOOGLE_STATE` - OAuth state parameter for security
+
+See the [Users Service README](../users/README.md#oauth-configuration) for more details.
+
 #### Get User
 
 ```bash

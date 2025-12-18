@@ -10,6 +10,7 @@ networks:
 
 volumes:
   supermq-users-db-volume:
+  supermq-users-redis-volume:
   supermq-groups-db-volume:
   supermq-clients-db-volume:
   supermq-channels-db-volume:
@@ -826,11 +827,21 @@ services:
     volumes:
       - supermq-users-db-volume:/var/lib/postgresql/data
 
+  users-redis:
+    image: docker.io/redis:8.2.2-alpine3.22
+    container_name: supermq-users-redis
+    restart: on-failure
+    networks:
+      - supermq-base-net
+    volumes:
+      - supermq-users-redis-volume:/data
+
   users:
     image: docker.io/supermq/users:${SMQ_RELEASE_TAG}
     container_name: supermq-users
     depends_on:
       - users-db
+      - users-redis
       - auth
       - nats
     restart: on-failure
@@ -867,6 +878,7 @@ services:
       SMQ_USERS_DB_SSL_CERT: ${SMQ_USERS_DB_SSL_CERT}
       SMQ_USERS_DB_SSL_KEY: ${SMQ_USERS_DB_SSL_KEY}
       SMQ_USERS_DB_SSL_ROOT_CERT: ${SMQ_USERS_DB_SSL_ROOT_CERT}
+      SMQ_USERS_CACHE_URL: ${SMQ_USERS_CACHE_URL}
       SMQ_USERS_ALLOW_SELF_REGISTER: ${SMQ_USERS_ALLOW_SELF_REGISTER}
       SMQ_EMAIL_HOST: ${SMQ_EMAIL_HOST}
       SMQ_EMAIL_PORT: ${SMQ_EMAIL_PORT}
@@ -892,6 +904,14 @@ services:
       SMQ_GOOGLE_CLIENT_SECRET: ${SMQ_GOOGLE_CLIENT_SECRET}
       SMQ_GOOGLE_REDIRECT_URL: ${SMQ_GOOGLE_REDIRECT_URL}
       SMQ_GOOGLE_STATE: ${SMQ_GOOGLE_STATE}
+      SMQ_GOOGLE_DEVICE_CLIENT_ID: ${SMQ_GOOGLE_DEVICE_CLIENT_ID}
+      SMQ_GOOGLE_DEVICE_CLIENT_SECRET: ${SMQ_GOOGLE_DEVICE_CLIENT_SECRET}
+      SMQ_GOOGLE_DEVICE_REDIRECT_URL: ${SMQ_GOOGLE_DEVICE_REDIRECT_URL}
+      SMQ_GOOGLE_DEVICE_STATE: ${SMQ_GOOGLE_DEVICE_STATE}
+      SMQ_GOOGLE_USER_CLIENT_ID: ${SMQ_GOOGLE_USER_CLIENT_ID}
+      SMQ_GOOGLE_USER_CLIENT_SECRET: ${SMQ_GOOGLE_USER_CLIENT_SECRET}
+      SMQ_GOOGLE_USER_REDIRECT_URL: ${SMQ_GOOGLE_USER_REDIRECT_URL}
+      SMQ_GOOGLE_USER_STATE: ${SMQ_GOOGLE_USER_STATE}
       SMQ_OAUTH_UI_REDIRECT_URL: ${SMQ_OAUTH_UI_REDIRECT_URL}
       SMQ_OAUTH_UI_ERROR_URL: ${SMQ_OAUTH_UI_ERROR_URL}
       SMQ_USERS_DELETE_INTERVAL: ${SMQ_USERS_DELETE_INTERVAL}

@@ -6004,6 +6004,314 @@ func (_c *SDK_ListGroupMembers_Call) RunAndReturn(run func(ctx context.Context, 
 	return _c
 }
 
+// OAuthAuthorizationURL provides a mock function for the type SDK
+func (_mock *SDK) OAuthAuthorizationURL(ctx context.Context, provider string, redirectURL string) (string, string, errors.SDKError) {
+	ret := _mock.Called(ctx, provider, redirectURL)
+
+	if len(ret) == 0 {
+		panic("no return value specified for OAuthAuthorizationURL")
+	}
+
+	var r0 string
+	var r1 string
+	var r2 errors.SDKError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) (string, string, errors.SDKError)); ok {
+		return returnFunc(ctx, provider, redirectURL)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) string); ok {
+		r0 = returnFunc(ctx, provider, redirectURL)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string) string); ok {
+		r1 = returnFunc(ctx, provider, redirectURL)
+	} else {
+		r1 = ret.Get(1).(string)
+	}
+	if returnFunc, ok := ret.Get(2).(func(context.Context, string, string) errors.SDKError); ok {
+		r2 = returnFunc(ctx, provider, redirectURL)
+	} else {
+		if ret.Get(2) != nil {
+			r2 = ret.Get(2).(errors.SDKError)
+		}
+	}
+	return r0, r1, r2
+}
+
+// SDK_OAuthAuthorizationURL_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OAuthAuthorizationURL'
+type SDK_OAuthAuthorizationURL_Call struct {
+	*mock.Call
+}
+
+// OAuthAuthorizationURL is a helper method to define mock.On call
+//   - ctx context.Context
+//   - provider string
+//   - redirectURL string
+func (_e *SDK_Expecter) OAuthAuthorizationURL(ctx interface{}, provider interface{}, redirectURL interface{}) *SDK_OAuthAuthorizationURL_Call {
+	return &SDK_OAuthAuthorizationURL_Call{Call: _e.mock.On("OAuthAuthorizationURL", ctx, provider, redirectURL)}
+}
+
+func (_c *SDK_OAuthAuthorizationURL_Call) Run(run func(ctx context.Context, provider string, redirectURL string)) *SDK_OAuthAuthorizationURL_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *SDK_OAuthAuthorizationURL_Call) Return(s string, s1 string, sDKError errors.SDKError) *SDK_OAuthAuthorizationURL_Call {
+	_c.Call.Return(s, s1, sDKError)
+	return _c
+}
+
+func (_c *SDK_OAuthAuthorizationURL_Call) RunAndReturn(run func(ctx context.Context, provider string, redirectURL string) (string, string, errors.SDKError)) *SDK_OAuthAuthorizationURL_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// OAuthCallback provides a mock function for the type SDK
+func (_mock *SDK) OAuthCallback(ctx context.Context, provider string, code string, state string, redirectURL string) (sdk.Token, errors.SDKError) {
+	ret := _mock.Called(ctx, provider, code, state, redirectURL)
+
+	if len(ret) == 0 {
+		panic("no return value specified for OAuthCallback")
+	}
+
+	var r0 sdk.Token
+	var r1 errors.SDKError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, string, string) (sdk.Token, errors.SDKError)); ok {
+		return returnFunc(ctx, provider, code, state, redirectURL)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, string, string) sdk.Token); ok {
+		r0 = returnFunc(ctx, provider, code, state, redirectURL)
+	} else {
+		r0 = ret.Get(0).(sdk.Token)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string, string, string) errors.SDKError); ok {
+		r1 = returnFunc(ctx, provider, code, state, redirectURL)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+	return r0, r1
+}
+
+// SDK_OAuthCallback_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OAuthCallback'
+type SDK_OAuthCallback_Call struct {
+	*mock.Call
+}
+
+// OAuthCallback is a helper method to define mock.On call
+//   - ctx context.Context
+//   - provider string
+//   - code string
+//   - state string
+//   - redirectURL string
+func (_e *SDK_Expecter) OAuthCallback(ctx interface{}, provider interface{}, code interface{}, state interface{}, redirectURL interface{}) *SDK_OAuthCallback_Call {
+	return &SDK_OAuthCallback_Call{Call: _e.mock.On("OAuthCallback", ctx, provider, code, state, redirectURL)}
+}
+
+func (_c *SDK_OAuthCallback_Call) Run(run func(ctx context.Context, provider string, code string, state string, redirectURL string)) *SDK_OAuthCallback_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		var arg4 string
+		if args[4] != nil {
+			arg4 = args[4].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+		)
+	})
+	return _c
+}
+
+func (_c *SDK_OAuthCallback_Call) Return(token sdk.Token, sDKError errors.SDKError) *SDK_OAuthCallback_Call {
+	_c.Call.Return(token, sDKError)
+	return _c
+}
+
+func (_c *SDK_OAuthCallback_Call) RunAndReturn(run func(ctx context.Context, provider string, code string, state string, redirectURL string) (sdk.Token, errors.SDKError)) *SDK_OAuthCallback_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// OAuthDeviceCode provides a mock function for the type SDK
+func (_mock *SDK) OAuthDeviceCode(ctx context.Context, provider string) (sdk.DeviceCode, errors.SDKError) {
+	ret := _mock.Called(ctx, provider)
+
+	if len(ret) == 0 {
+		panic("no return value specified for OAuthDeviceCode")
+	}
+
+	var r0 sdk.DeviceCode
+	var r1 errors.SDKError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (sdk.DeviceCode, errors.SDKError)); ok {
+		return returnFunc(ctx, provider)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) sdk.DeviceCode); ok {
+		r0 = returnFunc(ctx, provider)
+	} else {
+		r0 = ret.Get(0).(sdk.DeviceCode)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) errors.SDKError); ok {
+		r1 = returnFunc(ctx, provider)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+	return r0, r1
+}
+
+// SDK_OAuthDeviceCode_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OAuthDeviceCode'
+type SDK_OAuthDeviceCode_Call struct {
+	*mock.Call
+}
+
+// OAuthDeviceCode is a helper method to define mock.On call
+//   - ctx context.Context
+//   - provider string
+func (_e *SDK_Expecter) OAuthDeviceCode(ctx interface{}, provider interface{}) *SDK_OAuthDeviceCode_Call {
+	return &SDK_OAuthDeviceCode_Call{Call: _e.mock.On("OAuthDeviceCode", ctx, provider)}
+}
+
+func (_c *SDK_OAuthDeviceCode_Call) Run(run func(ctx context.Context, provider string)) *SDK_OAuthDeviceCode_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *SDK_OAuthDeviceCode_Call) Return(deviceCode sdk.DeviceCode, sDKError errors.SDKError) *SDK_OAuthDeviceCode_Call {
+	_c.Call.Return(deviceCode, sDKError)
+	return _c
+}
+
+func (_c *SDK_OAuthDeviceCode_Call) RunAndReturn(run func(ctx context.Context, provider string) (sdk.DeviceCode, errors.SDKError)) *SDK_OAuthDeviceCode_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// OAuthDeviceToken provides a mock function for the type SDK
+func (_mock *SDK) OAuthDeviceToken(ctx context.Context, provider string, deviceCode string) (sdk.Token, errors.SDKError) {
+	ret := _mock.Called(ctx, provider, deviceCode)
+
+	if len(ret) == 0 {
+		panic("no return value specified for OAuthDeviceToken")
+	}
+
+	var r0 sdk.Token
+	var r1 errors.SDKError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) (sdk.Token, errors.SDKError)); ok {
+		return returnFunc(ctx, provider, deviceCode)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) sdk.Token); ok {
+		r0 = returnFunc(ctx, provider, deviceCode)
+	} else {
+		r0 = ret.Get(0).(sdk.Token)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string) errors.SDKError); ok {
+		r1 = returnFunc(ctx, provider, deviceCode)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.SDKError)
+		}
+	}
+	return r0, r1
+}
+
+// SDK_OAuthDeviceToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OAuthDeviceToken'
+type SDK_OAuthDeviceToken_Call struct {
+	*mock.Call
+}
+
+// OAuthDeviceToken is a helper method to define mock.On call
+//   - ctx context.Context
+//   - provider string
+//   - deviceCode string
+func (_e *SDK_Expecter) OAuthDeviceToken(ctx interface{}, provider interface{}, deviceCode interface{}) *SDK_OAuthDeviceToken_Call {
+	return &SDK_OAuthDeviceToken_Call{Call: _e.mock.On("OAuthDeviceToken", ctx, provider, deviceCode)}
+}
+
+func (_c *SDK_OAuthDeviceToken_Call) Run(run func(ctx context.Context, provider string, deviceCode string)) *SDK_OAuthDeviceToken_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *SDK_OAuthDeviceToken_Call) Return(token sdk.Token, sDKError errors.SDKError) *SDK_OAuthDeviceToken_Call {
+	_c.Call.Return(token, sDKError)
+	return _c
+}
+
+func (_c *SDK_OAuthDeviceToken_Call) RunAndReturn(run func(ctx context.Context, provider string, deviceCode string) (sdk.Token, errors.SDKError)) *SDK_OAuthDeviceToken_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // RefreshToken provides a mock function for the type SDK
 func (_mock *SDK) RefreshToken(ctx context.Context, token string) (sdk.Token, errors.SDKError) {
 	ret := _mock.Called(ctx, token)

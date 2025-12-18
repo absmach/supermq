@@ -34,9 +34,9 @@ var httpClient = &http.Client{
 	Timeout: defTimeout,
 }
 
-var _ mgoauth2.Provider = (*config)(nil)
+var _ mgoauth2.Provider = (*provider)(nil)
 
-type config struct {
+type provider struct {
 	config        *oauth2.Config
 	state         string
 	uiRedirectURL string
@@ -45,7 +45,7 @@ type config struct {
 
 // NewProvider returns a new Google OAuth provider.
 func NewProvider(cfg mgoauth2.Config, uiRedirectURL, errorURL string) mgoauth2.Provider {
-	return &config{
+	return &provider{
 		config: &oauth2.Config{
 			ClientID:     cfg.ClientID,
 			ClientSecret: cfg.ClientSecret,
@@ -59,27 +59,27 @@ func NewProvider(cfg mgoauth2.Config, uiRedirectURL, errorURL string) mgoauth2.P
 	}
 }
 
-func (cfg *config) Name() string {
+func (cfg *provider) Name() string {
 	return providerName
 }
 
-func (cfg *config) State() string {
+func (cfg *provider) State() string {
 	return cfg.state
 }
 
-func (cfg *config) RedirectURL() string {
+func (cfg *provider) RedirectURL() string {
 	return cfg.uiRedirectURL
 }
 
-func (cfg *config) ErrorURL() string {
+func (cfg *provider) ErrorURL() string {
 	return cfg.errorURL
 }
 
-func (cfg *config) IsEnabled() bool {
+func (cfg *provider) IsEnabled() bool {
 	return cfg.config.ClientID != "" && cfg.config.ClientSecret != ""
 }
 
-func (cfg *config) Exchange(ctx context.Context, code string) (oauth2.Token, error) {
+func (cfg *provider) Exchange(ctx context.Context, code string) (oauth2.Token, error) {
 	token, err := cfg.config.Exchange(ctx, code)
 	if err != nil {
 		return oauth2.Token{}, err
@@ -88,7 +88,19 @@ func (cfg *config) Exchange(ctx context.Context, code string) (oauth2.Token, err
 	return *token, nil
 }
 
-func (cfg *config) UserInfo(accessToken string) (uclient.User, error) {
+func (cfg *provider) ExchangeWithRedirect(ctx context.Context, code, redirectURL string) (oauth2.Token, error) {
+	// Create a temporary config with the custom redirect URL
+	tempConfig := *cfg.config
+	tempConfig.RedirectURL = redirectURL
+	token, err := tempConfig.Exchange(ctx, code)
+	if err != nil {
+		return oauth2.Token{}, err
+	}
+
+	return *token, nil
+}
+
+func (cfg *provider) UserInfo(accessToken string) (uclient.User, error) {
 	resp, err := httpClient.Get(userInfoURL + url.QueryEscape(accessToken))
 	if err != nil {
 		return uclient.User{}, err
@@ -110,4 +122,15 @@ func (cfg *config) UserInfo(accessToken string) (uclient.User, error) {
 	}
 
 	return user, nil
+}
+
+func (cfg *provider) GetAuthURL() string {
+	return cfg.config.AuthCodeURL(cfg.state)
+}
+
+func (cfg *provider) GetAuthURLWithRedirect(redirectURL string) string {
+	// Create a temporary config with the custom redirect URL
+	tempConfig := *cfg.config
+	tempConfig.RedirectURL = redirectURL
+	return tempConfig.AuthCodeURL(cfg.state)
 }

@@ -57,6 +57,7 @@ The service is configured using the environment variables presented in the follo
 | `SMQ_JAEGER_TRACE_RATIO`            | Jaeger sampling ratio                                                   | 1.0                               |
 | `SMQ_SEND_TELEMETRY`                | Send telemetry to supermq call home server.                             | true                              |
 | `SMQ_USERS_INSTANCE_ID`             | SuperMQ instance ID                                                     | ""                                |
+| `SMQ_USERS_CACHE_URL`               | Cache database URL                                                      | redis://localhost:6379/0          |
 
 ## Deployment
 
@@ -120,6 +121,7 @@ SMQ_OAUTH_UI_ERROR_URL=http://localhost:9095/error \
 SMQ_USERS_DELETE_INTERVAL=24h \
 SMQ_USERS_DELETE_AFTER=720h \
 SMQ_USERS_INSTANCE_ID="" \
+SMQ_USERS_CACHE_URL=redis://localhost:6379/0 \
 $GOBIN/supermq-users
 ```
 

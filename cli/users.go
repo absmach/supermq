@@ -25,6 +25,7 @@ const (
 	username             = "username"
 	email                = "email"
 	role                 = "role"
+	oauth                = "oauth"
 
 	// Usage strings for user operations.
 	usageUserCreate         = "cli users create <first_name> <last_name> <email> <username> <password> [user_auth_token]"
@@ -53,14 +54,15 @@ Available update options:
 	usageUserSearch           = "cli users search <query> <user_auth_token>\nQuery format: username=<value>|firstname=<value>|lastname=<value>|id=<value>[&offset=<value>][&limit=<value>]\nExample: cli users search \"username=john_doe\" <user_auth_token>"
 	usageUserSendVerification = "cli users sendverification <user_auth_token>"
 	usageUserVerifyEmail      = "cli users verifyemail <verification_token>"
+	usageUserOAuth            = "cli users oauth <provider>"
 )
 
 func NewUsersCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "users <user_id|all|create|token|refreshtoken|profile|resetpasswordrequest|resetpassword|password|search|sendverification|verifyemail> [operation] [args...]",
+		Use:   "users <user_id|all|create|token|refreshtoken|profile|resetpasswordrequest|resetpassword|password|search|sendverification|verifyemail|oauth> [operation] [args...]",
 		Short: "Users management",
-		Long: `Format: 
-  users <create|token|refreshtoken|profile|resetpasswordrequest|resetpassword|password|search|sendverification|verifyemail> [args...]
+		Long: `Format:
+  users <create|token|refreshtoken|profile|resetpasswordrequest|resetpassword|password|search|sendverification|verifyemail|oauth> [args...]
   users <user_id|all> <operation> [args...]
 
 Operations (require user_id/all): get, update, enable, disable, delete
@@ -77,6 +79,7 @@ Examples:
   users search "firstname=john&limit=10" <user_auth_token>
   users sendverification <user_auth_token>
   users verifyemail <verification_token>
+  users oauth <provider>
   users all get <user_auth_token>
   users <user_id> get <user_auth_token>
   users <user_id> update <JSON_string> <user_auth_token>
@@ -175,6 +178,9 @@ Examples:
 					return
 				}
 				handleUserSearch(cmd, args[1], args[2:])
+				return
+			case oauth:
+				handleUserOAuth(cmd, args[1], args[2:])
 				return
 			}
 
@@ -589,4 +595,17 @@ func handleUserSearch(cmd *cobra.Command, query string, args []string) {
 	}
 
 	logJSONCmd(*cmd, users)
+}
+
+func handleUserOAuth(cmd *cobra.Command, provider string, args []string) {
+	if len(args) != 0 {
+		logUsageCmd(*cmd, usageUserOAuth)
+		return
+	}
+
+	// Use device flow by default for better CLI experience
+	if err := performOAuthDeviceLogin(cmd, provider); err != nil {
+		logErrorCmd(*cmd, err)
+		return
+	}
 }
