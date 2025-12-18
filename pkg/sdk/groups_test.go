@@ -211,7 +211,7 @@ func TestCreateGroup(t *testing.T) {
 			svcRes:   groups.Group{},
 			svcErr:   nil,
 			response: sdk.Group{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrNameSize), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrNameSize, http.StatusBadRequest),
 		},
 		{
 			desc:     "create group with name that is too long",
@@ -226,7 +226,7 @@ func TestCreateGroup(t *testing.T) {
 			svcRes:   groups.Group{},
 			svcErr:   nil,
 			response: sdk.Group{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrNameSize), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrNameSize, http.StatusBadRequest),
 		},
 		{
 			desc:     "create group with request that cannot be marshalled",
@@ -243,7 +243,7 @@ func TestCreateGroup(t *testing.T) {
 			svcRes:   groups.Group{},
 			svcErr:   nil,
 			response: sdk.Group{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:     "create group with service response that cannot be unmarshalled",
@@ -262,7 +262,7 @@ func TestCreateGroup(t *testing.T) {
 			svcRes:   uGroup,
 			svcErr:   nil,
 			response: sdk.Group{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -425,7 +425,7 @@ func TestListGroups(t *testing.T) {
 			svcRes:   groups.Page{},
 			svcErr:   nil,
 			response: sdk.GroupsPage{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrLimitSize), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrLimitSize, http.StatusBadRequest),
 		},
 		{
 			desc:     "list groups with given name",
@@ -480,7 +480,7 @@ func TestListGroups(t *testing.T) {
 			svcRes:   groups.Page{},
 			svcErr:   nil,
 			response: sdk.GroupsPage{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:     "list groups with service response that cannot be unmarshalled",
@@ -513,7 +513,7 @@ func TestListGroups(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.GroupsPage{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -615,9 +615,9 @@ func TestViewGroup(t *testing.T) {
 			withRoles: false,
 			groupID:   wrongID,
 			svcRes:    groups.Group{},
-			svcErr:    svcerr.ErrViewEntity,
+			svcErr:    svcerr.ErrNotFound,
 			response:  sdk.Group{},
-			err:       errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
 		},
 		{
 			desc:      "view group with service response that cannot be unmarshalled",
@@ -634,7 +634,7 @@ func TestViewGroup(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.Group{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 		{
 			desc:      "view group with empty id",
@@ -753,7 +753,7 @@ func TestUpdateGroup(t *testing.T) {
 			svcRes:   groups.Group{},
 			svcErr:   svcerr.ErrNotFound,
 			response: sdk.Group{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
 		},
 		{
 			desc:     "update group name with invalid token",
@@ -822,7 +822,7 @@ func TestUpdateGroup(t *testing.T) {
 			svcRes:   groups.Group{},
 			svcErr:   nil,
 			response: sdk.Group{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:     "update group with service response that cannot be unmarshalled",
@@ -849,7 +849,7 @@ func TestUpdateGroup(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.Group{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 
@@ -984,7 +984,7 @@ func TestUpdateGroupTags(t *testing.T) {
 			svcRes:   groups.Group{},
 			svcErr:   nil,
 			response: sdk.Group{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:           "update group tags with a response that can't be unmarshalled",
@@ -1001,7 +1001,7 @@ func TestUpdateGroupTags(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.Group{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -1066,7 +1066,7 @@ func TestEnableGroup(t *testing.T) {
 			svcRes:   groups.Group{},
 			svcErr:   svcerr.ErrNotFound,
 			response: sdk.Group{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
 		},
 		{
 			desc:            "enable group with invalid token",
@@ -1096,7 +1096,7 @@ func TestEnableGroup(t *testing.T) {
 			svcRes:   groups.Group{},
 			svcErr:   nil,
 			response: sdk.Group{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "enable group with service response that cannot be unmarshalled",
@@ -1112,7 +1112,7 @@ func TestEnableGroup(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.Group{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -1177,7 +1177,7 @@ func TestDisableGroup(t *testing.T) {
 			svcRes:   groups.Group{},
 			svcErr:   svcerr.ErrNotFound,
 			response: sdk.Group{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
 		},
 		{
 			desc:            "disable group with invalid token",
@@ -1207,7 +1207,7 @@ func TestDisableGroup(t *testing.T) {
 			svcRes:   groups.Group{},
 			svcErr:   nil,
 			response: sdk.Group{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "disable group with service response that cannot be unmarshalled",
@@ -1223,7 +1223,7 @@ func TestDisableGroup(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.Group{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -1389,7 +1389,7 @@ func TestSetGroupParent(t *testing.T) {
 			groupID:  "",
 			parentID: parentID,
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "set group parent with empty parent id",
@@ -1398,7 +1398,7 @@ func TestSetGroupParent(t *testing.T) {
 			groupID:  groupID,
 			parentID: "",
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidIDFormat), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrInvalidIDFormat, http.StatusBadRequest),
 		},
 	}
 
@@ -1485,7 +1485,7 @@ func TestRemoveGroupParent(t *testing.T) {
 			groupID:  "",
 			parentID: parentID,
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 	}
 
@@ -1572,7 +1572,7 @@ func TestAddChildrenGroups(t *testing.T) {
 			groupID:     "",
 			childrenIDs: []string{childID},
 			svcErr:      nil,
-			err:         errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:         errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:        "add children group with empty children ids",
@@ -1581,7 +1581,7 @@ func TestAddChildrenGroups(t *testing.T) {
 			groupID:     groupID,
 			childrenIDs: []string{},
 			svcErr:      nil,
-			err:         errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingChildrenGroupIDs), http.StatusBadRequest),
+			err:         errors.NewSDKErrorWithStatus(apiutil.ErrMissingChildrenGroupIDs, http.StatusBadRequest),
 		},
 	}
 
@@ -1668,7 +1668,7 @@ func TestRemoveChildrenGroups(t *testing.T) {
 			groupID:     "",
 			childrenIDs: []string{childID},
 			svcErr:      nil,
-			err:         errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:         errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:        "remove children group with empty children ids",
@@ -1677,7 +1677,7 @@ func TestRemoveChildrenGroups(t *testing.T) {
 			groupID:     groupID,
 			childrenIDs: []string{},
 			svcErr:      nil,
-			err:         errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingChildrenGroupIDs), http.StatusBadRequest),
+			err:         errors.NewSDKErrorWithStatus(apiutil.ErrMissingChildrenGroupIDs, http.StatusBadRequest),
 		},
 	}
 
@@ -1757,7 +1757,7 @@ func TestRemoveAllChildrenGroups(t *testing.T) {
 			token:    validToken,
 			groupID:  "",
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 	}
 
@@ -1925,7 +1925,7 @@ func TestListChildrenGroups(t *testing.T) {
 			svcRes:   groups.Page{},
 			svcErr:   nil,
 			response: sdk.GroupsPage{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrLimitSize), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrLimitSize, http.StatusBadRequest),
 		},
 		{
 			desc:     "list children groups with given metadata",
@@ -1978,7 +1978,7 @@ func TestListChildrenGroups(t *testing.T) {
 			svcRes:   groups.Page{},
 			svcErr:   nil,
 			response: sdk.GroupsPage{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:     "list children groups with service response that cannot be unmarshalled",
@@ -2010,7 +2010,7 @@ func TestListChildrenGroups(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.GroupsPage{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 
@@ -2186,7 +2186,7 @@ func TestHierarchy(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.GroupsHierarchyPage{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 
@@ -2307,7 +2307,7 @@ func TestCreateGroupRole(t *testing.T) {
 			svcRes:   roles.RoleProvision{},
 			svcErr:   nil,
 			response: sdk.Role{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidIDFormat), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrInvalidIDFormat, http.StatusBadRequest),
 		},
 		{
 			desc:     "create group role with empty role name",
@@ -2322,7 +2322,7 @@ func TestCreateGroupRole(t *testing.T) {
 			svcRes:   roles.RoleProvision{},
 			svcErr:   nil,
 			response: sdk.Role{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleName), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleName, http.StatusBadRequest),
 		},
 	}
 
@@ -2454,7 +2454,7 @@ func TestListGroupRoles(t *testing.T) {
 			svcRes:   roles.RolePage{},
 			svcErr:   nil,
 			response: sdk.RolesPage{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 	}
 
@@ -2560,7 +2560,7 @@ func TestViewGroupRole(t *testing.T) {
 			svcRes:   roles.Role{},
 			svcErr:   nil,
 			response: sdk.Role{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "view group role with invalid role id",
@@ -2690,7 +2690,7 @@ func TestUpdateGroupRole(t *testing.T) {
 			svcRes:      roles.Role{},
 			svcErr:      nil,
 			response:    sdk.Role{},
-			err:         errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:         errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 	}
 
@@ -2778,7 +2778,7 @@ func TestDeleteGroupRole(t *testing.T) {
 			domainID: domainID,
 			groupID:  "",
 			roleID:   roleID,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "delete group role with invalid role id",
@@ -2889,7 +2889,7 @@ func TestAddGroupRoleActions(t *testing.T) {
 			roleID:   roleID,
 			actions:  actions,
 			response: []string{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "add group role actions with invalid role id",
@@ -2911,7 +2911,7 @@ func TestAddGroupRoleActions(t *testing.T) {
 			actions:  []string{},
 			svcErr:   nil,
 			response: []string{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPolicyEntityType), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingPolicyEntityType, http.StatusBadRequest),
 		},
 	}
 
@@ -3004,7 +3004,7 @@ func TestListGroupRoleActions(t *testing.T) {
 			domainID: domainID,
 			groupID:  "",
 			roleID:   roleID,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "list group role actions with invalid role id",
@@ -3022,7 +3022,7 @@ func TestListGroupRoleActions(t *testing.T) {
 			groupID:  groupID,
 			roleID:   "",
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleID, http.StatusBadRequest),
 		},
 	}
 
@@ -3117,7 +3117,7 @@ func TestRemoveGroupRoleActions(t *testing.T) {
 			groupID:  "",
 			roleID:   roleID,
 			actions:  actions,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "remove group role actions with invalid role id",
@@ -3137,7 +3137,7 @@ func TestRemoveGroupRoleActions(t *testing.T) {
 			roleID:   roleID,
 			actions:  []string{},
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPolicyEntityType), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingPolicyEntityType, http.StatusBadRequest),
 		},
 	}
 
@@ -3224,7 +3224,7 @@ func TestRemoveAllGroupRoleActions(t *testing.T) {
 			domainID: domainID,
 			groupID:  "",
 			roleID:   roleID,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "remove all group role actions with invalid role id",
@@ -3242,7 +3242,7 @@ func TestRemoveAllGroupRoleActions(t *testing.T) {
 			groupID:  groupID,
 			roleID:   "",
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleID, http.StatusBadRequest),
 		},
 	}
 
@@ -3344,7 +3344,7 @@ func TestAddGroupRoleMembers(t *testing.T) {
 			roleID:   roleID,
 			members:  members,
 			response: []string{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "add group role members with invalid role id",
@@ -3366,7 +3366,7 @@ func TestAddGroupRoleMembers(t *testing.T) {
 			members:  []string{},
 			svcErr:   nil,
 			response: []string{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleMembers), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleMembers, http.StatusBadRequest),
 		},
 	}
 
@@ -3490,7 +3490,7 @@ func TestListGroupRoleMembers(t *testing.T) {
 			},
 			groupID: "",
 			roleID:  roleID,
-			err:     errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:     errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "list group role members with invalid role id",
@@ -3516,7 +3516,7 @@ func TestListGroupRoleMembers(t *testing.T) {
 			},
 			roleID: "",
 			svcErr: nil,
-			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleID), http.StatusBadRequest),
+			err:    errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleID, http.StatusBadRequest),
 		},
 	}
 
@@ -3611,7 +3611,7 @@ func TestRemoveGroupRoleMembers(t *testing.T) {
 			groupID:  "",
 			roleID:   roleID,
 			members:  members,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "remove group role members with invalid role id",
@@ -3631,7 +3631,7 @@ func TestRemoveGroupRoleMembers(t *testing.T) {
 			roleID:   roleID,
 			members:  []string{},
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleMembers), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleMembers, http.StatusBadRequest),
 		},
 	}
 
@@ -3718,7 +3718,7 @@ func TestRemoveAllGroupRoleMembers(t *testing.T) {
 			domainID: domainID,
 			groupID:  "",
 			roleID:   roleID,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "remove all group role members with invalid role id",
@@ -3736,7 +3736,7 @@ func TestRemoveAllGroupRoleMembers(t *testing.T) {
 			groupID:  groupID,
 			roleID:   "",
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleID, http.StatusBadRequest),
 		},
 	}
 

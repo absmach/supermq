@@ -132,7 +132,7 @@ func TestCreateChannel(t *testing.T) {
 			svcRes:           []channels.Channel{},
 			svcErr:           nil,
 			response:         sdk.Channel{},
-			err:              errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:              errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc: "create channel with parent group",
@@ -214,7 +214,7 @@ func TestCreateChannel(t *testing.T) {
 			svcRes:           []channels.Channel{iChannel},
 			svcErr:           nil,
 			response:         sdk.Channel{},
-			err:              errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:              errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -316,7 +316,7 @@ func TestCreateChannels(t *testing.T) {
 			svcRes:            []channels.Channel{},
 			svcErr:            nil,
 			response:          []sdk.Channel{},
-			err:               errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:               errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:              "create channels with service response that can't be unmarshalled",
@@ -334,7 +334,7 @@ func TestCreateChannels(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: []sdk.Channel{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 
@@ -493,7 +493,7 @@ func TestListChannels(t *testing.T) {
 			svcRes:   channels.ChannelsPage{},
 			svcErr:   nil,
 			response: sdk.ChannelsPage{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrLimitSize), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrLimitSize, http.StatusBadRequest),
 		},
 		{
 			desc:     "list channels with level",
@@ -571,7 +571,7 @@ func TestListChannels(t *testing.T) {
 			svcRes:   channels.ChannelsPage{},
 			svcErr:   nil,
 			response: sdk.ChannelsPage{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:     "list channels with service response that can't be unmarshalled",
@@ -599,7 +599,7 @@ func TestListChannels(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.ChannelsPage{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 
@@ -709,9 +709,9 @@ func TestViewChannel(t *testing.T) {
 			withRoles: false,
 			channelID: wrongID,
 			svcRes:    channels.Channel{},
-			svcErr:    svcerr.ErrViewEntity,
+			svcErr:    svcerr.ErrNotFound,
 			response:  sdk.Channel{},
-			err:       errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
 		},
 		{
 			desc:      "view channel with empty channel id",
@@ -738,7 +738,7 @@ func TestViewChannel(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.Channel{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 
@@ -889,7 +889,7 @@ func TestUpdateChannel(t *testing.T) {
 			svcRes:   channels.Channel{},
 			svcErr:   svcerr.ErrNotFound,
 			response: sdk.Channel{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
 		},
 		{
 			desc:     "update channel description with invalid channel id",
@@ -904,7 +904,7 @@ func TestUpdateChannel(t *testing.T) {
 			svcRes:   channels.Channel{},
 			svcErr:   svcerr.ErrNotFound,
 			response: sdk.Channel{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
 		},
 		{
 			desc:     "update channel metadata with invalid channel id",
@@ -923,7 +923,7 @@ func TestUpdateChannel(t *testing.T) {
 			svcRes:   channels.Channel{},
 			svcErr:   svcerr.ErrNotFound,
 			response: sdk.Channel{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
 		},
 		{
 			desc:     "update channel with invalid token",
@@ -971,7 +971,7 @@ func TestUpdateChannel(t *testing.T) {
 			svcRes:           channels.Channel{},
 			svcErr:           nil,
 			response:         sdk.Channel{},
-			err:              errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrNameSize), http.StatusBadRequest),
+			err:              errors.NewSDKErrorWithStatus(apiutil.ErrNameSize, http.StatusBadRequest),
 		},
 		{
 			desc:     "update channel that can't be marshalled",
@@ -988,7 +988,7 @@ func TestUpdateChannel(t *testing.T) {
 			svcRes:           channels.Channel{},
 			svcErr:           nil,
 			response:         sdk.Channel{},
-			err:              errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:              errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:     "update channel with service response that can't be unmarshalled",
@@ -1010,7 +1010,7 @@ func TestUpdateChannel(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.Channel{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 		{
 			desc:     "update channel with empty channel id",
@@ -1157,7 +1157,7 @@ func TestUpdateChannelTags(t *testing.T) {
 			svcRes:   channels.Channel{},
 			svcErr:   nil,
 			response: sdk.Channel{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:             "update channel tags with a response that can't be unmarshalled",
@@ -1174,7 +1174,7 @@ func TestUpdateChannelTags(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.Channel{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -1256,7 +1256,7 @@ func TestEnableChannel(t *testing.T) {
 			svcRes:    channels.Channel{},
 			svcErr:    svcerr.ErrNotFound,
 			response:  sdk.Channel{},
-			err:       errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
+			err:       errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
 		},
 		{
 			desc:      "enable channel with empty channel id",
@@ -1266,7 +1266,7 @@ func TestEnableChannel(t *testing.T) {
 			svcRes:    channels.Channel{},
 			svcErr:    nil,
 			response:  sdk.Channel{},
-			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:      "enable channel with service response that can't be unmarshalled",
@@ -1281,7 +1281,7 @@ func TestEnableChannel(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.Channel{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -1366,7 +1366,7 @@ func TestDisableChannel(t *testing.T) {
 			svcRes:    channels.Channel{},
 			svcErr:    svcerr.ErrNotFound,
 			response:  sdk.Channel{},
-			err:       errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
+			err:       errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
 		},
 		{
 			desc:      "disable channel with empty channel id",
@@ -1376,7 +1376,7 @@ func TestDisableChannel(t *testing.T) {
 			svcRes:    channels.Channel{},
 			svcErr:    nil,
 			response:  sdk.Channel{},
-			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:      "disable channel with service response that can't be unmarshalled",
@@ -1391,7 +1391,7 @@ func TestDisableChannel(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.Channel{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -1572,7 +1572,7 @@ func TestConnect(t *testing.T) {
 				Types:      []string{"Publish", "Subscribe"},
 			},
 			svcErr: nil,
-			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:    errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "connect with empty client id",
@@ -1584,7 +1584,7 @@ func TestConnect(t *testing.T) {
 				Types:      []string{"Publish", "Subscribe"},
 			},
 			svcErr: nil,
-			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:    errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 	}
 	for _, tc := range cases {
@@ -1679,7 +1679,7 @@ func TestDisconnect(t *testing.T) {
 				Types:      []string{"Publish", "Subscribe"},
 			},
 			svcErr: svcerr.ErrAuthorization,
-			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidIDFormat), http.StatusBadRequest),
+			err:    errors.NewSDKErrorWithStatus(apiutil.ErrInvalidIDFormat, http.StatusBadRequest),
 		},
 		{
 			desc:     "disconnect with empty channel id",
@@ -1691,7 +1691,7 @@ func TestDisconnect(t *testing.T) {
 				Types:      []string{"Publish", "Subscribe"},
 			},
 			svcErr: nil,
-			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:    errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "disconnect with empty client id",
@@ -1703,7 +1703,7 @@ func TestDisconnect(t *testing.T) {
 				Types:      []string{"Publish", "Subscribe"},
 			},
 			svcErr: nil,
-			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:    errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 	}
 	for _, tc := range cases {
@@ -1802,7 +1802,7 @@ func TestConnectClients(t *testing.T) {
 			clientID:  clientID,
 			connType:  "Publish",
 			svcErr:    nil,
-			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:      "connect with empty client id",
@@ -1812,7 +1812,7 @@ func TestConnectClients(t *testing.T) {
 			clientID:  "",
 			connType:  "Publish",
 			svcErr:    nil,
-			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidIDFormat), http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(apiutil.ErrInvalidIDFormat, http.StatusBadRequest),
 		},
 	}
 	for _, tc := range cases {
@@ -1895,7 +1895,7 @@ func TestDisconnectClients(t *testing.T) {
 			channelID: wrongID,
 			clientID:  clientID,
 			connType:  "Publish",
-			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidIDFormat), http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(apiutil.ErrInvalidIDFormat, http.StatusBadRequest),
 		},
 		{
 			desc:      "disconnect with empty channel id",
@@ -1905,7 +1905,7 @@ func TestDisconnectClients(t *testing.T) {
 			clientID:  clientID,
 			connType:  "Publish",
 			svcErr:    nil,
-			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:      "disconnect with empty client id",
@@ -1915,7 +1915,7 @@ func TestDisconnectClients(t *testing.T) {
 			clientID:  "",
 			connType:  "Publish",
 			svcErr:    nil,
-			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidIDFormat), http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(apiutil.ErrInvalidIDFormat, http.StatusBadRequest),
 		},
 	}
 	for _, tc := range cases {
@@ -2002,7 +2002,7 @@ func TestSetChannelParent(t *testing.T) {
 			channelID: "",
 			parentID:  parentID,
 			svcErr:    nil,
-			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:      "set channel parent with empty parent id",
@@ -2011,7 +2011,7 @@ func TestSetChannelParent(t *testing.T) {
 			channelID: channel.ID,
 			parentID:  "",
 			svcErr:    nil,
-			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingParentGroupID), http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(apiutil.ErrMissingParentGroupID, http.StatusBadRequest),
 		},
 	}
 
@@ -2097,7 +2097,7 @@ func TestRemoveChannelParent(t *testing.T) {
 			channelID: "",
 			parentID:  parentID,
 			svcErr:    nil,
-			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 	}
 

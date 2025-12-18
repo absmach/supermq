@@ -153,7 +153,7 @@ func TestSendMessage(t *testing.T) {
 			authRes:  &grpcClientsV1.AuthnRes{Authenticated: true, Id: ""},
 			authErr:  nil,
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrEmptyMessage), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrEmptyMessage, http.StatusBadRequest),
 		},
 		{
 			desc:     "publish message with channel subtopic",

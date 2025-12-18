@@ -136,7 +136,7 @@ func TestCreateUser(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingUsername), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingUsername, http.StatusBadRequest),
 		},
 		{
 			desc:  "register user with first name too long",
@@ -151,7 +151,7 @@ func TestCreateUser(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrNameSize), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrNameSize, http.StatusBadRequest),
 		},
 		{
 			desc:  "register user with empty userName",
@@ -171,7 +171,7 @@ func TestCreateUser(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingUsername), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingUsername, http.StatusBadRequest),
 		},
 		{
 			desc:  "register user with empty secret",
@@ -191,7 +191,7 @@ func TestCreateUser(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPass), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingPass, http.StatusBadRequest),
 		},
 		{
 			desc:  "register user with secret that is too short",
@@ -211,7 +211,7 @@ func TestCreateUser(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrPasswordFormat), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrPasswordFormat, http.StatusBadRequest),
 		},
 		{
 			desc:  "register a user with request that can't be marshalled",
@@ -232,7 +232,7 @@ func TestCreateUser(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:             "register a user with response that can't be unmarshalled",
@@ -254,7 +254,7 @@ func TestCreateUser(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -412,7 +412,7 @@ func TestListUsers(t *testing.T) {
 			svcRes:   users.UsersPage{},
 			svcErr:   nil,
 			response: sdk.UsersPage{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrLimitSize), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrLimitSize, http.StatusBadRequest),
 		},
 		{
 			desc:  "list users with given metadata",
@@ -523,7 +523,7 @@ func TestListUsers(t *testing.T) {
 			svcRes:   users.UsersPage{},
 			svcErr:   nil,
 			response: sdk.UsersPage{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:  "list users with response that can't be unmarshalled",
@@ -553,7 +553,7 @@ func TestListUsers(t *testing.T) {
 				},
 			},
 			response: sdk.UsersPage{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 
@@ -671,7 +671,7 @@ func TestSearchUsers(t *testing.T) {
 				Limit:     limit,
 				FirstName: "",
 			},
-			err: errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrEmptySearchQuery), http.StatusBadRequest),
+			err: errors.NewSDKErrorWithStatus(apiutil.ErrEmptySearchQuery, http.StatusBadRequest),
 		},
 		{
 			desc:  "search for users with invalid length of query",
@@ -681,7 +681,7 @@ func TestSearchUsers(t *testing.T) {
 				Limit:    limit,
 				Username: "a",
 			},
-			err: errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrLenSearchQuery, apiutil.ErrValidation), http.StatusBadRequest),
+			err: errors.NewSDKErrorWithStatus(apiutil.ErrValidation, http.StatusBadRequest),
 		},
 		{
 			desc:  "search for users with invalid limit",
@@ -691,7 +691,7 @@ func TestSearchUsers(t *testing.T) {
 				Limit:    0,
 				Username: "user_10",
 			},
-			err: errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrLimitSize), http.StatusBadRequest),
+			err: errors.NewSDKErrorWithStatus(apiutil.ErrLimitSize, http.StatusBadRequest),
 		},
 	}
 
@@ -761,9 +761,9 @@ func TestViewUser(t *testing.T) {
 			token:    validToken,
 			userID:   wrongID,
 			svcRes:   users.User{},
-			svcErr:   svcerr.ErrViewEntity,
+			svcErr:   svcerr.ErrNotFound,
 			response: sdk.User{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
 		},
 		{
 			desc:     "view user with empty id",
@@ -788,7 +788,7 @@ func TestViewUser(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -867,7 +867,7 @@ func TestUserProfile(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -1009,7 +1009,7 @@ func TestUpdateUser(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:  "update user with response that can't be unmarshalled",
@@ -1031,7 +1031,7 @@ func TestUpdateUser(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 
@@ -1155,7 +1155,7 @@ func TestUpdateUserTags(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:  "update user tags with request that can't be marshalled",
@@ -1170,7 +1170,7 @@ func TestUpdateUserTags(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:  "update user tags with response that can't be unmarshalled",
@@ -1192,7 +1192,7 @@ func TestUpdateUserTags(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -1318,7 +1318,7 @@ func TestUpdateUserEmail(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:  "update email with response that can't be unmarshalled",
@@ -1340,7 +1340,7 @@ func TestUpdateUserEmail(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -1398,9 +1398,9 @@ func TestResetPasswordRequest(t *testing.T) {
 			desc:     "reset password request with invalid email",
 			email:    "invalidemail",
 			svcRes:   users.User{},
-			svcErr:   svcerr.ErrViewEntity,
+			svcErr:   svcerr.ErrNotFound,
 			issueRes: &grpcTokenV1.Token{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
 		},
 		{
 			desc:     "reset password request with empty email",
@@ -1408,7 +1408,7 @@ func TestResetPasswordRequest(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   nil,
 			issueRes: &grpcTokenV1.Token{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingEmail), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingEmail, http.StatusBadRequest),
 		},
 	}
 	for _, tc := range cases {
@@ -1478,7 +1478,7 @@ func TestResetPassword(t *testing.T) {
 			newPassword:  "",
 			confPassword: newPassword,
 			svcErr:       nil,
-			err:          errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPass), http.StatusBadRequest),
+			err:          errors.NewSDKErrorWithStatus(apiutil.ErrMissingPass, http.StatusBadRequest),
 		},
 		{
 			desc:         "reset password with empty confirm password",
@@ -1487,7 +1487,7 @@ func TestResetPassword(t *testing.T) {
 			newPassword:  newPassword,
 			confPassword: "",
 			svcErr:       nil,
-			err:          errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingConfPass), http.StatusBadRequest),
+			err:          errors.NewSDKErrorWithStatus(apiutil.ErrMissingConfPass, http.StatusBadRequest),
 		},
 		{
 			desc:         "reset password with new password not matching confirm password",
@@ -1496,7 +1496,7 @@ func TestResetPassword(t *testing.T) {
 			newPassword:  newPassword,
 			confPassword: "wrongPassword",
 			svcErr:       nil,
-			err:          errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidResetPass), http.StatusBadRequest),
+			err:          errors.NewSDKErrorWithStatus(apiutil.ErrInvalidResetPass, http.StatusBadRequest),
 		},
 		{
 			desc:         "reset password with weak password",
@@ -1505,7 +1505,7 @@ func TestResetPassword(t *testing.T) {
 			newPassword:  "weak",
 			confPassword: "weak",
 			svcErr:       nil,
-			err:          errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrPasswordFormat), http.StatusBadRequest),
+			err:          errors.NewSDKErrorWithStatus(apiutil.ErrPasswordFormat, http.StatusBadRequest),
 		},
 	}
 	for _, tc := range cases {
@@ -1590,7 +1590,7 @@ func TestUpdatePassword(t *testing.T) {
 			svcRes:      users.User{},
 			svcErr:      nil,
 			response:    sdk.User{},
-			err:         errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPass), http.StatusBadRequest),
+			err:         errors.NewSDKErrorWithStatus(apiutil.ErrMissingPass, http.StatusBadRequest),
 		},
 		{
 			desc:        "update password with empty new password",
@@ -1600,7 +1600,7 @@ func TestUpdatePassword(t *testing.T) {
 			svcRes:      users.User{},
 			svcErr:      nil,
 			response:    sdk.User{},
-			err:         errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPass), http.StatusBadRequest),
+			err:         errors.NewSDKErrorWithStatus(apiutil.ErrMissingPass, http.StatusBadRequest),
 		},
 		{
 			desc:        "update password with invalid new password",
@@ -1610,7 +1610,7 @@ func TestUpdatePassword(t *testing.T) {
 			svcRes:      users.User{},
 			svcErr:      nil,
 			response:    sdk.User{},
-			err:         errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrPasswordFormat), http.StatusBadRequest),
+			err:         errors.NewSDKErrorWithStatus(apiutil.ErrPasswordFormat, http.StatusBadRequest),
 		},
 		{
 			desc:        "update password with invalid old password",
@@ -1636,7 +1636,7 @@ func TestUpdatePassword(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -1757,7 +1757,7 @@ func TestUpdateUserRole(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:  "update user role with request that can't be marshalled",
@@ -1772,7 +1772,7 @@ func TestUpdateUserRole(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:  "update user role with response that can't be unmarshalled",
@@ -1794,7 +1794,7 @@ func TestUpdateUserRole(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -1930,7 +1930,7 @@ func TestUpdateUsername(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:  "update username with response that can't be unmarshalled",
@@ -1958,7 +1958,7 @@ func TestUpdateUsername(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -2085,7 +2085,7 @@ func TestUpdateProfilePicture(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:  "update profile picture with request that can't be marshalled",
@@ -2100,7 +2100,7 @@ func TestUpdateProfilePicture(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:  "update profile picture with response that can't be unmarshalled",
@@ -2121,7 +2121,7 @@ func TestUpdateProfilePicture(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -2284,7 +2284,7 @@ func TestDisableUser(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:   "disable user with response that can't be unmarshalled",
@@ -2299,7 +2299,7 @@ func TestDisableUser(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.User{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {

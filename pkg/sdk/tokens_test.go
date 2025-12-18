@@ -85,7 +85,7 @@ func TestIssueToken(t *testing.T) {
 			svcRes:   &grpcTokenV1.Token{},
 			svcErr:   nil,
 			response: sdk.Token{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingUsernameEmail), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingUsernameEmail, http.StatusBadRequest),
 		},
 		{
 			desc: "issue token with empty secret",
@@ -96,7 +96,7 @@ func TestIssueToken(t *testing.T) {
 			svcRes:   &grpcTokenV1.Token{},
 			svcErr:   nil,
 			response: sdk.Token{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPass), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingPass, http.StatusBadRequest),
 		},
 	}
 	for _, tc := range cases {

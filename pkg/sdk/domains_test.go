@@ -149,7 +149,7 @@ func TestCreateDomain(t *testing.T) {
 			svcRes:   domains.Domain{},
 			svcErr:   nil,
 			response: sdk.Domain{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:   "create domain with response that cannot be unmarshalled",
@@ -165,7 +165,7 @@ func TestCreateDomain(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.Domain{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -294,7 +294,7 @@ func TestUpdateDomain(t *testing.T) {
 			svcRes:   domains.Domain{},
 			svcErr:   nil,
 			response: sdk.Domain{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:     "update domain with response that cannot be unmarshalled",
@@ -313,7 +313,7 @@ func TestUpdateDomain(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.Domain{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -439,7 +439,7 @@ func TestViewDomain(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.Domain{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -568,7 +568,7 @@ func TestListDomians(t *testing.T) {
 			svcRes:   domains.DomainsPage{},
 			svcErr:   nil,
 			response: sdk.DomainsPage{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:  "list domains with request that cannot be marshalled",
@@ -592,7 +592,7 @@ func TestListDomians(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.DomainsPage{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -938,7 +938,7 @@ func TestCreateDomainRole(t *testing.T) {
 			svcRes:   roles.RoleProvision{},
 			svcErr:   nil,
 			response: sdk.Role{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleName), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleName, http.StatusBadRequest),
 		},
 	}
 
@@ -1487,7 +1487,7 @@ func TestAddDomainRoleActions(t *testing.T) {
 			actions:  []string{},
 			svcErr:   nil,
 			response: []string{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPolicyEntityType), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingPolicyEntityType, http.StatusBadRequest),
 		},
 	}
 
@@ -1589,7 +1589,7 @@ func TestListDomainRoleActions(t *testing.T) {
 			domainID: domainID,
 			roleID:   "",
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleID, http.StatusBadRequest),
 		},
 	}
 
@@ -1695,7 +1695,7 @@ func TestRemoveDomainRoleActions(t *testing.T) {
 			roleID:   roleID,
 			actions:  []string{},
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPolicyEntityType), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingPolicyEntityType, http.StatusBadRequest),
 		},
 	}
 
@@ -1791,7 +1791,7 @@ func TestRemoveAllDomainRoleActions(t *testing.T) {
 			domainID: domainID,
 			roleID:   "",
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleID, http.StatusBadRequest),
 		},
 	}
 
@@ -1906,7 +1906,7 @@ func TestAddDomainRoleMembers(t *testing.T) {
 			members:  []string{},
 			svcErr:   nil,
 			response: []string{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleMembers), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleMembers, http.StatusBadRequest),
 		},
 	}
 
@@ -2047,7 +2047,7 @@ func TestListDomainRoleMembers(t *testing.T) {
 			},
 			roleID: "",
 			svcErr: nil,
-			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleID), http.StatusBadRequest),
+			err:    errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleID, http.StatusBadRequest),
 		},
 	}
 
@@ -2153,7 +2153,7 @@ func TestRemoveDomainRoleMembers(t *testing.T) {
 			roleID:   roleID,
 			members:  []string{},
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleMembers), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleMembers, http.StatusBadRequest),
 		},
 	}
 
@@ -2249,7 +2249,7 @@ func TestRemoveAllDomainRoleMembers(t *testing.T) {
 			domainID: domainID,
 			roleID:   "",
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleID, http.StatusBadRequest),
 		},
 	}
 

@@ -80,10 +80,10 @@ var (
 	ErrInvalidPolicy = errors.New("invalid policy")
 
 	// ErrEnableClient indicates error in enabling client.
-	ErrEnableClient = errors.New("failed to enable client")
+	ErrEnableClient = errors.NewServiceError("failed to enable client")
 
 	// ErrDisableClient indicates error in disabling client.
-	ErrDisableClient = errors.New("failed to disable client")
+	ErrDisableClient = errors.NewServiceError("failed to disable client")
 
 	// ErrSearch indicates error in searching clients.
 	ErrSearch = errors.New("failed to search clients")

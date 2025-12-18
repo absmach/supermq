@@ -225,7 +225,7 @@ func TestRetrieveJournal(t *testing.T) {
 			svcRes:   journal.JournalsPage{},
 			svcErr:   nil,
 			response: sdk.JournalsPage{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidEntityType), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrInvalidEntityType, http.StatusBadRequest),
 		},
 		{
 			desc:       "retrieve journal with empty entity ID",
@@ -273,7 +273,7 @@ func TestRetrieveJournal(t *testing.T) {
 			svcRes:   journal.JournalsPage{},
 			svcErr:   nil,
 			response: sdk.JournalsPage{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrLimitSize), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrLimitSize, http.StatusBadRequest),
 		},
 		{
 			desc:       "retrieve journal with invalid page metadata",
@@ -292,7 +292,7 @@ func TestRetrieveJournal(t *testing.T) {
 			svcRes:   journal.JournalsPage{},
 			svcErr:   nil,
 			response: sdk.JournalsPage{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:       "retrieve journal with response that cannot be unmarshalled",
@@ -325,7 +325,7 @@ func TestRetrieveJournal(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.JournalsPage{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {

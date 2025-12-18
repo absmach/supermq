@@ -136,7 +136,7 @@ func TestCreateClient(t *testing.T) {
 			svcRes:   []clients.Client{},
 			svcErr:   nil,
 			response: sdk.Client{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrNameSize), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrNameSize, http.StatusBadRequest),
 		},
 		{
 			desc:     "create a client with invalid id",
@@ -154,7 +154,7 @@ func TestCreateClient(t *testing.T) {
 			svcRes:   []clients.Client{},
 			svcErr:   nil,
 			response: sdk.Client{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidIDFormat), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrInvalidIDFormat, http.StatusBadRequest),
 		},
 		{
 			desc:     "create a client with a request that can't be marshalled",
@@ -170,7 +170,7 @@ func TestCreateClient(t *testing.T) {
 			svcRes:   []clients.Client{},
 			svcErr:   nil,
 			response: sdk.Client{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:            "create a client with a response that can't be unmarshalled",
@@ -188,7 +188,7 @@ func TestCreateClient(t *testing.T) {
 			}},
 			svcErr:   nil,
 			response: sdk.Client{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -281,7 +281,7 @@ func TestCreateClients(t *testing.T) {
 			svcRes:               []clients.Client{},
 			svcErr:               nil,
 			response:             []sdk.Client{},
-			err:                  errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:                  errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:                 "create new clients with a response that can't be unmarshalled",
@@ -299,7 +299,7 @@ func TestCreateClients(t *testing.T) {
 			}},
 			svcErr:   nil,
 			response: []sdk.Client{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -422,7 +422,7 @@ func TestListClients(t *testing.T) {
 			svcRes:   clients.ClientsPage{},
 			svcErr:   nil,
 			response: sdk.ClientsPage{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrLimitSize), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrLimitSize, http.StatusBadRequest),
 		},
 		{
 			desc:     "list all clients with name size greater than max",
@@ -441,7 +441,7 @@ func TestListClients(t *testing.T) {
 			svcRes:   clients.ClientsPage{},
 			svcErr:   nil,
 			response: sdk.ClientsPage{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrNameSize), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrNameSize, http.StatusBadRequest),
 		},
 		{
 			desc:     "list all clients with status",
@@ -532,7 +532,7 @@ func TestListClients(t *testing.T) {
 			svcRes:   clients.ClientsPage{},
 			svcErr:   nil,
 			response: sdk.ClientsPage{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:     "list all clients with response that can't be unmarshalled",
@@ -566,7 +566,7 @@ func TestListClients(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.ClientsPage{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -670,9 +670,9 @@ func TestViewClient(t *testing.T) {
 			withRoles: false,
 			clientID:  wrongID,
 			svcRes:    clients.Client{},
-			svcErr:    svcerr.ErrViewEntity,
+			svcErr:    svcerr.ErrNotFound,
 			response:  sdk.Client{},
-			err:       errors.NewSDKErrorWithStatus(svcerr.ErrViewEntity, http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
 		},
 		{
 			desc:      "view client with empty client id",
@@ -701,7 +701,7 @@ func TestViewClient(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.Client{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -852,7 +852,7 @@ func TestUpdateClient(t *testing.T) {
 			svcRes:   clients.Client{},
 			svcErr:   nil,
 			response: sdk.Client{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:            "update client with a response that can't be unmarshalled",
@@ -870,7 +870,7 @@ func TestUpdateClient(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.Client{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -988,7 +988,7 @@ func TestUpdateClientTags(t *testing.T) {
 			svcRes:   clients.Client{},
 			svcErr:   nil,
 			response: sdk.Client{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "update client tags with a request that can't be marshalled",
@@ -1004,7 +1004,7 @@ func TestUpdateClientTags(t *testing.T) {
 			svcRes:   clients.Client{},
 			svcErr:   nil,
 			response: sdk.Client{},
-			err:      errors.NewSDKError(errors.New("json: unsupported type: chan int")),
+			err:      errors.NewSDKError(fmt.Errorf("json: unsupported type: chan int")),
 		},
 		{
 			desc:            "update client tags with a response that can't be unmarshalled",
@@ -1022,7 +1022,7 @@ func TestUpdateClientTags(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.Client{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -1125,7 +1125,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			svcRes:    clients.Client{},
 			svcErr:    nil,
 			response:  sdk.Client{},
-			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:      "update client with empty new secret",
@@ -1136,7 +1136,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			svcRes:    clients.Client{},
 			svcErr:    nil,
 			response:  sdk.Client{},
-			err:       errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingSecret), http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(apiutil.ErrMissingSecret, http.StatusBadRequest),
 		},
 		{
 			desc:      "update client secret with a response that can't be unmarshalled",
@@ -1154,7 +1154,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.Client{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -1240,7 +1240,7 @@ func TestEnableClient(t *testing.T) {
 			svcRes:   clients.Client{},
 			svcErr:   nil,
 			response: sdk.Client{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "enable client with a response that can't be unmarshalled",
@@ -1257,7 +1257,7 @@ func TestEnableClient(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.Client{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -1333,7 +1333,7 @@ func TestDisableClient(t *testing.T) {
 			svcRes:   clients.Client{},
 			svcErr:   svcerr.ErrDisableClient,
 			response: sdk.Client{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrDisableClient, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrDisableClient, http.StatusUnprocessableEntity),
 		},
 		{
 			desc:     "disable client with empty client id",
@@ -1343,7 +1343,7 @@ func TestDisableClient(t *testing.T) {
 			svcRes:   clients.Client{},
 			svcErr:   nil,
 			response: sdk.Client{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "disable client with a response that can't be unmarshalled",
@@ -1360,7 +1360,7 @@ func TestDisableClient(t *testing.T) {
 			},
 			svcErr:   nil,
 			response: sdk.Client{},
-			err:      errors.NewSDKError(errors.New("unexpected end of JSON input")),
+			err:      errors.NewSDKError(fmt.Errorf("unexpected end of JSON input")),
 		},
 	}
 	for _, tc := range cases {
@@ -1527,7 +1527,7 @@ func TestSetClientParent(t *testing.T) {
 			clientID: "",
 			parentID: parentID,
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "set client parent with empty parent id",
@@ -1536,7 +1536,7 @@ func TestSetClientParent(t *testing.T) {
 			clientID: clientID,
 			parentID: "",
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingParentGroupID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingParentGroupID, http.StatusBadRequest),
 		},
 	}
 
@@ -1622,7 +1622,7 @@ func TestRemoveClientParent(t *testing.T) {
 			clientID: "",
 			parentID: parentID,
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 	}
 
@@ -1741,7 +1741,7 @@ func TestCreateClientRole(t *testing.T) {
 			svcRes:   roles.RoleProvision{},
 			svcErr:   nil,
 			response: sdk.Role{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrInvalidIDFormat), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrInvalidIDFormat, http.StatusBadRequest),
 		},
 		{
 			desc:     "create client role with empty role name",
@@ -1756,7 +1756,7 @@ func TestCreateClientRole(t *testing.T) {
 			svcRes:   roles.RoleProvision{},
 			svcErr:   nil,
 			response: sdk.Role{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleName), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleName, http.StatusBadRequest),
 		},
 	}
 
@@ -1887,7 +1887,7 @@ func TestListClientRoles(t *testing.T) {
 			svcRes:   roles.RolePage{},
 			svcErr:   nil,
 			response: sdk.RolesPage{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 	}
 
@@ -1993,7 +1993,7 @@ func TestViewClientRole(t *testing.T) {
 			svcRes:   roles.Role{},
 			svcErr:   nil,
 			response: sdk.Role{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "view client role with invalid role id",
@@ -2122,7 +2122,7 @@ func TestUpdateClientRole(t *testing.T) {
 			svcRes:      roles.Role{},
 			svcErr:      nil,
 			response:    sdk.Role{},
-			err:         errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:         errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 	}
 
@@ -2209,7 +2209,7 @@ func TestDeleteClientRole(t *testing.T) {
 			domainID: domainID,
 			clientID: "",
 			roleID:   roleID,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "delete client role with invalid role id",
@@ -2319,7 +2319,7 @@ func TestAddClientRoleActions(t *testing.T) {
 			roleID:   roleID,
 			actions:  actions,
 			response: []string{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "add client role actions with invalid role id",
@@ -2341,7 +2341,7 @@ func TestAddClientRoleActions(t *testing.T) {
 			actions:  []string{},
 			svcErr:   nil,
 			response: []string{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPolicyEntityType), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingPolicyEntityType, http.StatusBadRequest),
 		},
 	}
 
@@ -2433,7 +2433,7 @@ func TestListClientRoleActions(t *testing.T) {
 			domainID: domainID,
 			clientID: "",
 			roleID:   roleID,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "list client role actions with invalid role id",
@@ -2451,7 +2451,7 @@ func TestListClientRoleActions(t *testing.T) {
 			clientID: clientID,
 			roleID:   "",
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleID, http.StatusBadRequest),
 		},
 	}
 
@@ -2545,7 +2545,7 @@ func TestRemoveClientRoleActions(t *testing.T) {
 			clientID: "",
 			roleID:   roleID,
 			actions:  actions,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "remove client role actions with invalid role id",
@@ -2565,7 +2565,7 @@ func TestRemoveClientRoleActions(t *testing.T) {
 			roleID:   roleID,
 			actions:  []string{},
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingPolicyEntityType), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingPolicyEntityType, http.StatusBadRequest),
 		},
 	}
 
@@ -2651,7 +2651,7 @@ func TestRemoveAllClientRoleActions(t *testing.T) {
 			domainID: domainID,
 			clientID: "",
 			roleID:   roleID,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "remove all client role actions with invalid role id",
@@ -2669,7 +2669,7 @@ func TestRemoveAllClientRoleActions(t *testing.T) {
 			clientID: clientID,
 			roleID:   "",
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleID, http.StatusBadRequest),
 		},
 	}
 
@@ -2770,7 +2770,7 @@ func TestAddClientRoleMembers(t *testing.T) {
 			roleID:   roleID,
 			members:  members,
 			response: []string{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "add client role members with invalid role id",
@@ -2792,7 +2792,7 @@ func TestAddClientRoleMembers(t *testing.T) {
 			members:  []string{},
 			svcErr:   nil,
 			response: []string{},
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleMembers), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleMembers, http.StatusBadRequest),
 		},
 	}
 
@@ -2915,7 +2915,7 @@ func TestListClientRoleMembers(t *testing.T) {
 			},
 			clientID: "",
 			roleID:   roleID,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "list client role members with invalid role id",
@@ -2941,7 +2941,7 @@ func TestListClientRoleMembers(t *testing.T) {
 			},
 			roleID: "",
 			svcErr: nil,
-			err:    errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleID), http.StatusBadRequest),
+			err:    errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleID, http.StatusBadRequest),
 		},
 	}
 
@@ -3035,7 +3035,7 @@ func TestRemoveClientRoleMembers(t *testing.T) {
 			clientID: "",
 			roleID:   roleID,
 			members:  members,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "remove client role members with invalid role id",
@@ -3055,7 +3055,7 @@ func TestRemoveClientRoleMembers(t *testing.T) {
 			roleID:   roleID,
 			members:  []string{},
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleMembers), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleMembers, http.StatusBadRequest),
 		},
 	}
 
@@ -3141,7 +3141,7 @@ func TestRemoveAllClientRoleMembers(t *testing.T) {
 			domainID: domainID,
 			clientID: "",
 			roleID:   roleID,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingID, http.StatusBadRequest),
 		},
 		{
 			desc:     "remove all client role members with invalid role id",
@@ -3159,7 +3159,7 @@ func TestRemoveAllClientRoleMembers(t *testing.T) {
 			clientID: clientID,
 			roleID:   "",
 			svcErr:   nil,
-			err:      errors.NewSDKErrorWithStatus(errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingRoleID), http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingRoleID, http.StatusBadRequest),
 		},
 	}
 
