@@ -61,6 +61,7 @@ var (
 		"subgroup_remove_role_users",
 		"subgroup_view_role_users",
 	}
+	errGroupExists = errors.NewRequestError("group already exists")
 )
 
 func TestSave(t *testing.T) {
@@ -106,7 +107,7 @@ func TestSave(t *testing.T) {
 		{
 			desc:  "add duplicate group",
 			group: validGroup,
-			err:   repoerr.ErrConflict,
+			err:   errGroupExists,
 		},
 		{
 			desc:  "add group with parent",
@@ -125,7 +126,7 @@ func TestSave(t *testing.T) {
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
 			},
-			err: repoerr.ErrMalformedEntity,
+			err: repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add group with invalid domain",
@@ -138,7 +139,7 @@ func TestSave(t *testing.T) {
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
 			},
-			err: repoerr.ErrMalformedEntity,
+			err: repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add group with invalid parent",
@@ -164,7 +165,7 @@ func TestSave(t *testing.T) {
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
 			},
-			err: repoerr.ErrMalformedEntity,
+			err: repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add group with invalid description",
@@ -177,7 +178,7 @@ func TestSave(t *testing.T) {
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
 			},
-			err: repoerr.ErrMalformedEntity,
+			err: repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add group with invalid metadata",
@@ -205,7 +206,7 @@ func TestSave(t *testing.T) {
 				CreatedAt:   validTimestamp,
 				Status:      groups.EnabledStatus,
 			},
-			err: repoerr.ErrMalformedEntity,
+			err: repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add group with duplicate name",

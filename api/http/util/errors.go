@@ -10,7 +10,7 @@ import "github.com/absmach/supermq/pkg/errors"
 // errors are logged twice.
 var (
 	// ErrValidation indicates that an error was returned by the API.
-	ErrValidation = errors.New("something went wrong with the request")
+	ErrValidation = errors.NewRequestError("something went wrong with the request")
 
 	// ErrBearerToken indicates missing or invalid bearer user token.
 	ErrBearerToken = errors.New("missing or invalid bearer user token")
@@ -274,4 +274,7 @@ var (
 
 	// ErrEmailNotVerified indicates invalid email not verified.
 	ErrEmailNotVerified = errors.NewRequestError("email not verified")
+
+	// ErrMalformedRequest indicates malformed request body.
+	ErrMalformedRequestBody = errors.NewRequestError("malformed request body")
 )

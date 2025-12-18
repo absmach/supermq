@@ -41,6 +41,7 @@ var (
 
 type groupRepository struct {
 	db postgres.Database
+	eh errors.Handler
 	rolesPostgres.Repository
 }
 
@@ -48,9 +49,12 @@ type groupRepository struct {
 // repository.
 func New(db postgres.Database) groups.Repository {
 	roleRepo := rolesPostgres.NewRepository(db, policies.GroupType, rolesTableNamePrefix, entityTableName, entityIDColumnName)
-
+	errHandlerOptions := []errors.HandlerOption{
+		postgres.WithDuplicateErrors(NewDuplicateErrors()),
+	}
 	return &groupRepository{
 		db:         db,
+		eh:         postgres.NewErrorHandler(errHandlerOptions...),
 		Repository: roleRepo,
 	}
 }
@@ -62,19 +66,19 @@ func (repo groupRepository) Save(ctx context.Context, g groups.Group) (groups.Gr
 	}
 	dbg, err := toDBGroup(g)
 	if err != nil {
-		return groups.Group{}, err
+		return groups.Group{}, repo.eh.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
 	row, err := repo.db.NamedQueryContext(ctx, q, dbg)
 	if err != nil {
-		return groups.Group{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
+		return groups.Group{}, repo.eh.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
 	defer row.Close()
 	row.Next()
 	dbg = dbGroup{}
 	if err := row.StructScan(&dbg); err != nil {
-		return groups.Group{}, err
+		return groups.Group{}, repo.eh.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
 	return toGroup(dbg)
@@ -107,7 +111,7 @@ func (repo groupRepository) Update(ctx context.Context, g groups.Group) (groups.
 
 	row, err := repo.db.NamedQueryContext(ctx, q, dbu)
 	if err != nil {
-		return groups.Group{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
+		return groups.Group{}, repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 
 	defer row.Close()
@@ -116,7 +120,7 @@ func (repo groupRepository) Update(ctx context.Context, g groups.Group) (groups.
 	}
 	dbu = dbGroup{}
 	if err := row.StructScan(&dbu); err != nil {
-		return groups.Group{}, errors.Wrap(err, repoerr.ErrUpdateEntity)
+		return groups.Group{}, repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	return toGroup(dbu)
 }
@@ -134,14 +138,14 @@ func (repo groupRepository) UpdateTags(ctx context.Context, group groups.Group) 
 
 	row, err := repo.db.NamedQueryContext(ctx, q, dbg)
 	if err != nil {
-		return groups.Group{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
+		return groups.Group{}, repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	defer row.Close()
 
 	dbg = dbGroup{}
 	if row.Next() {
 		if err := row.StructScan(&dbg); err != nil {
-			return groups.Group{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
+			return groups.Group{}, repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 		}
 
 		return toGroup(dbg)
@@ -160,7 +164,7 @@ func (repo groupRepository) ChangeStatus(ctx context.Context, group groups.Group
 	}
 	row, err := repo.db.NamedQueryContext(ctx, qc, dbg)
 	if err != nil {
-		return groups.Group{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
+		return groups.Group{}, repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	defer row.Close()
 	if ok := row.Next(); !ok {
@@ -168,7 +172,7 @@ func (repo groupRepository) ChangeStatus(ctx context.Context, group groups.Group
 	}
 	dbg = dbGroup{}
 	if err := row.StructScan(&dbg); err != nil {
-		return groups.Group{}, errors.Wrap(err, repoerr.ErrUpdateEntity)
+		return groups.Group{}, repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 
 	return toGroup(dbg)
@@ -184,7 +188,7 @@ func (repo groupRepository) RetrieveByID(ctx context.Context, id string) (groups
 
 	row, err := repo.db.NamedQueryContext(ctx, q, dbg)
 	if err != nil {
-		return groups.Group{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return groups.Group{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	defer row.Close()
 
@@ -193,7 +197,7 @@ func (repo groupRepository) RetrieveByID(ctx context.Context, id string) (groups
 		return groups.Group{}, repoerr.ErrNotFound
 	}
 	if err := row.StructScan(&dbg); err != nil {
-		return groups.Group{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return groups.Group{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	return toGroup(dbg)
 }
@@ -341,17 +345,17 @@ func (repo groupRepository) RetrieveByIDWithRoles(ctx context.Context, id, membe
 	}
 	row, err := repo.db.NamedQueryContext(ctx, query, parameters)
 	if err != nil {
-		return groups.Group{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return groups.Group{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	defer row.Close()
 
 	dbg := dbGroup{}
 	if !row.Next() {
-		return groups.Group{}, errors.Wrap(repoerr.ErrNotFound, err)
+		return groups.Group{}, repoerr.ErrNotFound
 	}
 
 	if err := row.StructScan(&dbg); err != nil {
-		return groups.Group{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return groups.Group{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 
 	return toGroup(dbg)
@@ -394,7 +398,7 @@ func (repo groupRepository) RetrieveByIDAndUser(ctx context.Context, domainID, u
 
 	row, err := repo.db.NamedQueryContext(ctx, q, dbg)
 	if err != nil {
-		return groups.Group{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return groups.Group{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	defer row.Close()
 
@@ -403,7 +407,7 @@ func (repo groupRepository) RetrieveByIDAndUser(ctx context.Context, domainID, u
 		return groups.Group{}, repoerr.ErrNotFound
 	}
 	if err := row.StructScan(&dbg); err != nil {
-		return groups.Group{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return groups.Group{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	return toGroup(dbg)
 }
@@ -446,13 +450,13 @@ func (repo groupRepository) RetrieveAll(ctx context.Context, pm groups.PageMeta)
 	if !pm.OnlyTotal {
 		rows, err := repo.db.NamedQueryContext(ctx, q, dbPageMeta)
 		if err != nil {
-			return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+			return groups.Page{}, repo.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 		}
 		defer rows.Close()
 
 		items, err = repo.processRows(rows)
 		if err != nil {
-			return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+			return groups.Page{}, repo.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 		}
 	}
 
@@ -465,7 +469,7 @@ func (repo groupRepository) RetrieveAll(ctx context.Context, pm groups.PageMeta)
 
 	total, err := postgres.Total(ctx, repo.db, cq, dbPageMeta)
 	if err != nil {
-		return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+		return groups.Page{}, repo.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
 
 	page := groups.Page{PageMeta: pm}
@@ -490,13 +494,13 @@ func (repo groupRepository) RetrieveByIDs(ctx context.Context, pm groups.PageMet
 	}
 	rows, err := repo.db.NamedQueryContext(ctx, q, dbPageMeta)
 	if err != nil {
-		return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+		return groups.Page{}, repo.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
 	defer rows.Close()
 
 	items, err := repo.processRows(rows)
 	if err != nil {
-		return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+		return groups.Page{}, repo.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
 
 	cq := fmt.Sprintf(`	SELECT COUNT(*) AS total_count
@@ -508,7 +512,7 @@ func (repo groupRepository) RetrieveByIDs(ctx context.Context, pm groups.PageMet
 
 	total, err := postgres.Total(ctx, repo.db, cq, dbPageMeta)
 	if err != nil {
-		return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+		return groups.Page{}, repo.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
 
 	page := groups.Page{PageMeta: pm}
@@ -570,13 +574,13 @@ func (repo groupRepository) RetrieveHierarchy(ctx context.Context, domainID, use
 
 	rows, err := repo.db.NamedQueryContext(ctx, query, parameters)
 	if err != nil {
-		return groups.HierarchyPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+		return groups.HierarchyPage{}, repo.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
 	defer rows.Close()
 
 	items, err := repo.processRows(rows)
 	if err != nil {
-		return groups.HierarchyPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+		return groups.HierarchyPage{}, repo.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
 
 	return groups.HierarchyPage{HierarchyPageMeta: hm, Groups: items}, nil
@@ -589,7 +593,7 @@ func (repo groupRepository) AssignParentGroup(ctx context.Context, parentGroupID
 
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
+		return repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	defer func() {
 		if err != nil {
@@ -602,13 +606,13 @@ func (repo groupRepository) AssignParentGroup(ctx context.Context, parentGroupID
 	pq := `SELECT id, path FROM groups WHERE id = $1 LIMIT 1;`
 	rows, err := tx.Queryx(pq, parentGroupID)
 	if err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
+		return repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	defer rows.Close()
 
 	pGroups, err := repo.processRows(rows)
 	if err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
+		return repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	if len(pGroups) == 0 {
 		return repoerr.ErrUpdateEntity
@@ -645,12 +649,12 @@ func (repo groupRepository) AssignParentGroup(ctx context.Context, parentGroupID
 
 	crows, err := tx.NamedQuery(query, params)
 	if err != nil {
-		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
+		return repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	defer crows.Close()
 	cgroups, err := repo.processRows(crows)
 	if err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
+		return repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 
 	childrenPaths := []string{}
@@ -666,11 +670,11 @@ func (repo groupRepository) AssignParentGroup(ctx context.Context, parentGroupID
 				WHERE path <@ ANY($2::ltree[]);`
 
 	if _, err := tx.Exec(query, pGroup.Path, childrenPaths); err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
+		return repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
+		return repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	return nil
 }
@@ -682,7 +686,7 @@ func (repo groupRepository) UnassignParentGroup(ctx context.Context, parentGroup
 
 	tx, err := repo.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
+		return repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	defer func() {
 		if err != nil {
@@ -694,13 +698,13 @@ func (repo groupRepository) UnassignParentGroup(ctx context.Context, parentGroup
 	pq := `SELECT id, path FROM groups WHERE id = $1 LIMIT 1;`
 	rows, err := tx.Queryx(pq, parentGroupID)
 	if err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
+		return repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	defer rows.Close()
 
 	pGroups, err := repo.processRows(rows)
 	if err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
+		return repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	if len(pGroups) == 0 {
 		return repoerr.ErrUpdateEntity
@@ -725,12 +729,12 @@ func (repo groupRepository) UnassignParentGroup(ctx context.Context, parentGroup
 	}
 	crows, err := tx.NamedQuery(query, parameters)
 	if err != nil {
-		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
+		return repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	defer crows.Close()
 	cgroups, err := repo.processRows(crows)
 	if err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
+		return repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 
 	childrenPaths := []string{}
@@ -746,11 +750,11 @@ func (repo groupRepository) UnassignParentGroup(ctx context.Context, parentGroup
 				WHERE path <@ ANY($2::ltree[]);`
 
 	if _, err := tx.Exec(query, pGroup.Path, childrenPaths); err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
+		return repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return errors.Wrap(repoerr.ErrUpdateEntity, err)
+		return repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	return nil
 }
@@ -764,7 +768,7 @@ func (repo groupRepository) UnassignAllChildrenGroups(ctx context.Context, id st
 
 	result, err := repo.db.NamedExecContext(ctx, query, dbGroup{ParentID: &id})
 	if err != nil {
-		return postgres.HandleError(repoerr.ErrUpdateEntity, err)
+		return repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	if rows, _ := result.RowsAffected(); rows == 0 {
 		return repoerr.ErrNotFound
@@ -778,7 +782,7 @@ func (repo groupRepository) Delete(ctx context.Context, groupID string) error {
 
 	result, err := repo.db.ExecContext(ctx, q, groupID)
 	if err != nil {
-		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
+		return repo.eh.HandleError(repoerr.ErrRemoveEntity, err)
 	}
 	if rows, _ := result.RowsAffected(); rows == 0 {
 		return repoerr.ErrNotFound
@@ -922,13 +926,13 @@ func (repo groupRepository) retrieveGroups(ctx context.Context, domainID, userID
 	if !pm.OnlyTotal {
 		rows, err := repo.db.NamedQueryContext(ctx, q, dbPageMeta)
 		if err != nil {
-			return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+			return groups.Page{}, repo.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 		}
 		defer rows.Close()
 
 		items, err = repo.processRows(rows)
 		if err != nil {
-			return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+			return groups.Page{}, repo.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 		}
 	}
 
@@ -943,7 +947,7 @@ func (repo groupRepository) retrieveGroups(ctx context.Context, domainID, userID
 
 	total, err := postgres.Total(ctx, repo.db, cq, dbPageMeta)
 	if err != nil {
-		return groups.Page{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+		return groups.Page{}, repo.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
 
 	page := groups.Page{PageMeta: pm}

@@ -63,7 +63,7 @@ func DecodeGroupUpdate(_ context.Context, r *http.Request) (any, error) {
 		id: chi.URLParam(r, "groupID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	return req, nil
 }
@@ -77,7 +77,7 @@ func decodeUpdateGroupTags(_ context.Context, r *http.Request) (any, error) {
 		id: chi.URLParam(r, "groupID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 
 	return req, nil
@@ -126,7 +126,7 @@ func decodeAddParentGroupRequest(_ context.Context, r *http.Request) (any, error
 		id: chi.URLParam(r, "groupID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	return req, nil
 }
@@ -146,7 +146,7 @@ func decodeAddChildrenGroupsRequest(_ context.Context, r *http.Request) (any, er
 		id: chi.URLParam(r, "groupID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	return req, nil
 }
@@ -159,7 +159,7 @@ func decodeRemoveChildrenGroupsRequest(_ context.Context, r *http.Request) (any,
 		id: chi.URLParam(r, "groupID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	return req, nil
 }

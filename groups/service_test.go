@@ -85,9 +85,8 @@ var (
 		Status:   groups.EnabledStatus,
 		Children: children,
 	}
-	validID          = testsutil.GenerateUUID(&testing.T{})
-	errRollbackRoles = errors.New("failed to rollback roles")
-	validSession     = authn.Session{UserID: validID, DomainID: validID, DomainUserID: validID}
+	validID      = testsutil.GenerateUUID(&testing.T{})
+	validSession = authn.Session{UserID: validID, DomainID: validID, DomainUserID: validID}
 )
 
 var (
@@ -165,7 +164,7 @@ func TestCreateGroup(t *testing.T) {
 			group:    validGroup,
 			saveResp: groups.Group{},
 			saveErr:  errors.ErrMalformedEntity,
-			err:      errors.Wrap(svcerr.ErrCreateEntity, errors.ErrMalformedEntity),
+			err:      errors.ErrMalformedEntity,
 		},
 		{
 			desc:  " create group with failed to add policies",
@@ -176,7 +175,7 @@ func TestCreateGroup(t *testing.T) {
 				Domain:    validID,
 			},
 			addPoliciesErr: svcerr.ErrAuthorization,
-			err:            errors.Wrap(svcerr.ErrAddPolicies, errors.Wrap(svcerr.ErrCreateEntity, svcerr.ErrAuthorization)),
+			err:            svcerr.ErrAddPolicies,
 		},
 		{
 			desc:  " create group with failed to add policies and failed rollback",
@@ -188,7 +187,7 @@ func TestCreateGroup(t *testing.T) {
 			},
 			addPoliciesErr: svcerr.ErrAuthorization,
 			deleteErr:      svcerr.ErrRemoveEntity,
-			err:            errors.Wrap(svcerr.ErrAddPolicies, errors.Wrap(apiutil.ErrRollbackTx, svcerr.ErrRemoveEntity)),
+			err:            svcerr.ErrRemoveEntity,
 		},
 		{
 			desc:  "create group with failed to add roles",
@@ -199,7 +198,7 @@ func TestCreateGroup(t *testing.T) {
 				Domain:    validID,
 			},
 			addRoleErr: svcerr.ErrCreateEntity,
-			err:        errors.Wrap(svcerr.ErrAddPolicies, errors.Wrap(svcerr.ErrCreateEntity, svcerr.ErrCreateEntity)),
+			err:        svcerr.ErrAddPolicies,
 		},
 		{
 			desc:  "create groups with failed to add roles and failed to delete policies",
@@ -211,7 +210,7 @@ func TestCreateGroup(t *testing.T) {
 			},
 			addRoleErr:        svcerr.ErrCreateEntity,
 			deletePoliciesErr: svcerr.ErrRemoveEntity,
-			err:               errors.Wrap(svcerr.ErrAddPolicies, errors.Wrap(svcerr.ErrCreateEntity, errors.Wrap(errRollbackRoles, svcerr.ErrRemoveEntity))),
+			err:               svcerr.ErrAddPolicies,
 		},
 	}
 
@@ -223,7 +222,7 @@ func TestCreateGroup(t *testing.T) {
 			repoCall1 := repo.On("AddRoles", context.Background(), mock.Anything).Return([]roles.RoleProvision{}, tc.addRoleErr)
 			repoCall2 := repo.On("Delete", context.Background(), mock.Anything).Return(tc.deleteErr)
 			got, _, err := svc.CreateGroup(context.Background(), validSession, tc.group)
-			assert.Equal(t, tc.err, err, fmt.Sprintf("expected error %v but got %v", tc.err, err))
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error %v but got %v", tc.err, err))
 			if err == nil {
 				assert.NotEmpty(t, got.ID)
 				assert.NotEmpty(t, got.CreatedAt)
@@ -418,7 +417,7 @@ func TestEnableGroup(t *testing.T) {
 			retrieveResp: groups.Group{
 				Status: groups.EnabledStatus,
 			},
-			err: errors.ErrStatusAlreadyAssigned,
+			err: svcerr.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:         "enable group with retrieve error",
@@ -472,7 +471,7 @@ func TestDisableGroup(t *testing.T) {
 			retrieveResp: groups.Group{
 				Status: groups.DisabledStatus,
 			},
-			err: errors.ErrStatusAlreadyAssigned,
+			err: svcerr.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:         "disable group with retrieve error",

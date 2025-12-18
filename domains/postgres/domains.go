@@ -20,7 +20,6 @@ import (
 	"github.com/absmach/supermq/pkg/roles"
 	rolesPostgres "github.com/absmach/supermq/pkg/roles/repo/postgres"
 	"github.com/jackc/pgtype"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -31,12 +30,11 @@ const (
 	rolesTableNamePrefix = "domains"
 	entityTableName      = "domains"
 	entityIDColumnName   = "id"
-
-	pgDuplicateErrCode = "23505"
 )
 
 type domainRepo struct {
 	db postgres.Database
+	eh errors.Handler
 	rolesPostgres.Repository
 }
 
@@ -44,8 +42,12 @@ type domainRepo struct {
 // implementation of Domain repository.
 func NewRepository(db postgres.Database) domains.Repository {
 	rmsvcRepo := rolesPostgres.NewRepository(db, policies.DomainType, rolesTableNamePrefix, entityTableName, entityIDColumnName)
+	errHandlerOptions := []errors.HandlerOption{
+		postgres.WithDuplicateErrors(NewDuplicateErrors()),
+	}
 	return &domainRepo{
 		db:         db,
+		eh:         postgres.NewErrorHandler(errHandlerOptions...),
 		Repository: rmsvcRepo,
 	}
 }
@@ -62,7 +64,7 @@ func (repo domainRepo) SaveDomain(ctx context.Context, d domains.Domain) (dd dom
 
 	row, err := repo.db.NamedQueryContext(ctx, q, dbd)
 	if err != nil {
-		return domains.Domain{}, handleSaveError(repoerr.ErrCreateEntity, err)
+		return domains.Domain{}, repo.eh.HandleError(repoerr.ErrCreateEntity, err)
 	}
 	defer row.Close()
 
@@ -72,7 +74,7 @@ func (repo domainRepo) SaveDomain(ctx context.Context, d domains.Domain) (dd dom
 
 	dbd = dbDomain{}
 	if err := row.StructScan(&dbd); err != nil {
-		return domains.Domain{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
+		return domains.Domain{}, repo.eh.HandleError(repoerr.ErrFailedOpDB, err)
 	}
 
 	domain, err := toDomain(dbd)
@@ -81,16 +83,6 @@ func (repo domainRepo) SaveDomain(ctx context.Context, d domains.Domain) (dd dom
 	}
 
 	return domain, nil
-}
-
-func handleSaveError(wrapper, err error) error {
-	if pqErr, ok := err.(*pgconn.PgError); ok && pqErr.Code == pgDuplicateErrCode {
-		switch pqErr.ConstraintName {
-		case "domains_route_key":
-			return errors.ErrRouteNotAvailable
-		}
-	}
-	return postgres.HandleError(wrapper, err)
 }
 
 // RetrieveDomainByIDWithRoles retrieves Domain by its unique ID along with member roles.
@@ -176,14 +168,14 @@ func (repo domainRepo) RetrieveDomainByIDWithRoles(ctx context.Context, id strin
 
 	rows, err := repo.db.NamedQueryContext(ctx, q, dbdp)
 	if err != nil {
-		return domains.Domain{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+		return domains.Domain{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	defer rows.Close()
 
 	dbd := dbDomain{}
 	if rows.Next() {
 		if err = rows.StructScan(&dbd); err != nil {
-			return domains.Domain{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+			return domains.Domain{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 		}
 
 		domain, err := toDomain(dbd)
@@ -207,14 +199,14 @@ func (repo domainRepo) RetrieveDomainByID(ctx context.Context, id string) (domai
 
 	rows, err := repo.db.NamedQueryContext(ctx, q, dbdp)
 	if err != nil {
-		return domains.Domain{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+		return domains.Domain{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	defer rows.Close()
 
 	dbd := dbDomain{}
 	if rows.Next() {
 		if err = rows.StructScan(&dbd); err != nil {
-			return domains.Domain{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+			return domains.Domain{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 		}
 
 		domain, err := toDomain(dbd)
@@ -238,14 +230,14 @@ func (repo domainRepo) RetrieveDomainByRoute(ctx context.Context, route string) 
 
 	rows, err := repo.db.NamedQueryContext(ctx, q, dbdom)
 	if err != nil {
-		return domains.Domain{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+		return domains.Domain{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	defer rows.Close()
 
 	dbd := dbDomain{}
 	if rows.Next() {
 		if err = rows.StructScan(&dbd); err != nil {
-			return domains.Domain{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+			return domains.Domain{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 		}
 
 		domain, err := toDomain(dbd)
@@ -284,13 +276,13 @@ func (repo domainRepo) RetrieveAllDomainsByIDs(ctx context.Context, pm domains.P
 
 	rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
 	if err != nil {
-		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+		return domains.DomainsPage{}, repo.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
 	defer rows.Close()
 
 	doms, err := repo.processRows(rows)
 	if err != nil {
-		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+		return domains.DomainsPage{}, repo.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
 
 	cq := "SELECT COUNT(*) FROM domains d"
@@ -300,7 +292,7 @@ func (repo domainRepo) RetrieveAllDomainsByIDs(ctx context.Context, pm domains.P
 
 	total, err := postgres.Total(ctx, repo.db, cq, dbPage)
 	if err != nil {
-		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+		return domains.DomainsPage{}, repo.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
 
 	return domains.DomainsPage{
@@ -370,13 +362,13 @@ func (repo domainRepo) ListDomains(ctx context.Context, pm domains.Page) (domain
 	if !pm.OnlyTotal {
 		rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
 		if err != nil {
-			return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+			return domains.DomainsPage{}, repo.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 		}
 		defer rows.Close()
 
 		doms, err = repo.processRows(rows)
 		if err != nil {
-			return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+			return domains.DomainsPage{}, repo.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 		}
 	}
 
@@ -393,7 +385,7 @@ func (repo domainRepo) ListDomains(ctx context.Context, pm domains.Page) (domain
 
 	total, err := postgres.Total(ctx, repo.db, cq, dbPage)
 	if err != nil {
-		return domains.DomainsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+		return domains.DomainsPage{}, repo.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
 
 	return domains.DomainsPage{
@@ -451,7 +443,7 @@ func (repo domainRepo) UpdateDomain(ctx context.Context, id string, dr domains.D
 
 	row, err := repo.db.NamedQueryContext(ctx, q, dbd)
 	if err != nil {
-		return domains.Domain{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
+		return domains.Domain{}, repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	defer row.Close()
 
@@ -461,7 +453,7 @@ func (repo domainRepo) UpdateDomain(ctx context.Context, id string, dr domains.D
 
 	dbd = dbDomain{}
 	if err := row.StructScan(&dbd); err != nil {
-		return domains.Domain{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
+		return domains.Domain{}, repo.eh.HandleError(repoerr.ErrFailedOpDB, err)
 	}
 
 	domain, err := toDomain(dbd)
@@ -478,7 +470,7 @@ func (repo domainRepo) DeleteDomain(ctx context.Context, id string) error {
 
 	res, err := repo.db.ExecContext(ctx, q, id)
 	if err != nil {
-		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
+		return repo.eh.HandleError(repoerr.ErrRemoveEntity, err)
 	}
 	if rows, _ := res.RowsAffected(); rows == 0 {
 		return repoerr.ErrNotFound

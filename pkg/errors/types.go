@@ -16,9 +16,6 @@ var (
 	// ErrEmptyPath indicates empty file path.
 	ErrEmptyPath = New("empty file path")
 
-	// ErrStatusAlreadyAssigned indicated that the client or group has already been assigned the status.
-	ErrStatusAlreadyAssigned = New("status already assigned")
-
 	// ErrRollbackTx indicates failed to rollback transaction.
 	ErrRollbackTx = New("failed to rollback transaction")
 
@@ -50,5 +47,5 @@ var (
 	ErrTryAgain = New("Something went wrong, please try again")
 
 	// ErrRouteNotAvailable indicates that the username is not available.
-	ErrRouteNotAvailable = New("route not available")
+	ErrRouteNotAvailable = NewRequestError("route not available")
 )

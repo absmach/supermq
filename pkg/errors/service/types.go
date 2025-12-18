@@ -52,9 +52,20 @@ var (
 	// ErrHashPassword indicates failure to hash password.
 	ErrHashPassword = errors.NewServiceError("failed to hash password")
 
-	// Request Errors (NewRequestError)
+	// ErrStatusAlreadyAssigned indicated that the client or group has already been assigned the status.
+	ErrStatusAlreadyAssigned = errors.NewServiceError("status already assigned")
+
+	// ErrDeletePolicies indicates error in removing policies.
+	ErrDeletePolicies = errors.NewServiceError("failed to remove policies")
+
 	// ErrMissingUsername indicates that the user's names are missing.
 	ErrMissingUsername = errors.NewRequestError("missing usernames")
+
+	// ErrInvalidStatus indicates an invalid status.
+	ErrInvalidStatus = errors.NewRequestError("invalid status")
+
+	// ErrInvalidRole indicates that an invalid role.
+	ErrInvalidRole = errors.NewRequestError("invalid client role")
 
 	// ErrMalformedEntity indicates a malformed entity specification.
 	ErrMalformedEntity = errors.New("malformed entity specification")
@@ -65,12 +76,6 @@ var (
 	// ErrConflict indicates that entity already exists.
 	ErrConflict = errors.New("entity already exists")
 
-	// ErrInvalidStatus indicates an invalid status.
-	ErrInvalidStatus = errors.New("invalid status")
-
-	// ErrInvalidRole indicates that an invalid role.
-	ErrInvalidRole = errors.New("invalid client role")
-
 	// ErrInvalidPolicy indicates that an invalid policy.
 	ErrInvalidPolicy = errors.New("invalid policy")
 
@@ -80,17 +85,14 @@ var (
 	// ErrDisableClient indicates error in disabling client.
 	ErrDisableClient = errors.New("failed to disable client")
 
-	// ErrDeletePolicies indicates error in removing policies.
-	ErrDeletePolicies = errors.New("failed to remove policies")
-
 	// ErrSearch indicates error in searching clients.
 	ErrSearch = errors.New("failed to search clients")
 
 	// ErrInvitationAlreadyRejected indicates that the invitation is already rejected.
-	ErrInvitationAlreadyRejected = errors.New("invitation already rejected")
+	ErrInvitationAlreadyRejected = errors.NewRequestError("invitation already rejected")
 
 	// ErrInvitationAlreadyAccepted indicates that the invitation is already accepted.
-	ErrInvitationAlreadyAccepted = errors.New("invitation already accepted")
+	ErrInvitationAlreadyAccepted = errors.NewRequestError("invitation already accepted")
 
 	// ErrParentGroupAuthorization indicates failure occurred while authorizing the parent group.
 	ErrParentGroupAuthorization = errors.New("failed to authorize parent group")

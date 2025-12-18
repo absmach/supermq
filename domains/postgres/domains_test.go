@@ -21,8 +21,9 @@ import (
 const invalid = "invalid"
 
 var (
-	domainID = testsutil.GenerateUUID(&testing.T{})
-	userID   = testsutil.GenerateUUID(&testing.T{})
+	domainID        = testsutil.GenerateUUID(&testing.T{})
+	userID          = testsutil.GenerateUUID(&testing.T{})
+	errDomainExists = errors.New("domain already exists")
 )
 
 func TestSaveDomain(t *testing.T) {
@@ -72,7 +73,7 @@ func TestSaveDomain(t *testing.T) {
 				UpdatedBy: userID,
 				Status:    domains.EnabledStatus,
 			},
-			err: repoerr.ErrConflict,
+			err: errDomainExists,
 		},
 		{
 			desc: "add domain with empty ID",

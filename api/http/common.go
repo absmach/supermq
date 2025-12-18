@@ -6,6 +6,7 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/mail"
 	"regexp"
@@ -16,7 +17,6 @@ import (
 	"github.com/absmach/supermq/clients"
 	"github.com/absmach/supermq/groups"
 	"github.com/absmach/supermq/pkg/errors"
-	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/users"
 	"github.com/gofrs/uuid/v5"
 )
@@ -219,147 +219,142 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	fmt.Println("Unhandled error type in EncodeError:", err)
+	fmt.Println("Error details:", err.Error())
+	fmt.Printf("Error type: %T\n", err)
 
-	var wrapper error
-	if errors.Contains(err, apiutil.ErrValidation) {
-		wrapper, err = errors.Unwrap(err)
-	}
+	// var wrapper error
+	// if errors.Contains(err, apiutil.ErrValidation) {
+	// 	wrapper, err = errors.Unwrap(err)
+	// }
 
-	switch {
-	case errors.Contains(err, errors.ErrTryAgain):
-		w.WriteHeader(http.StatusUnprocessableEntity)
-	case errors.Contains(err, errors.ErrEmailAlreadyExists),
-		errors.Contains(err, errors.ErrUsernameNotAvailable),
-		errors.Contains(err, errors.ErrRouteNotAvailable),
-		errors.Contains(err, errors.ErrChannelRouteNotAvailable),
-		errors.Contains(err, errors.ErrDomainRouteNotAvailable),
-		errors.Contains(err, svcerr.ErrExternalAuthProviderCouldNotUpdate):
-		w.WriteHeader(http.StatusBadRequest)
-	case errors.Contains(err, svcerr.ErrAuthorization),
-		errors.Contains(err, svcerr.ErrDomainAuthorization),
-		errors.Contains(err, svcerr.ErrUnauthorizedPAT),
-		errors.Contains(err, svcerr.ErrSuperAdminAction):
-		err = unwrap(err)
-		w.WriteHeader(http.StatusForbidden)
+	// switch {
+	// case errors.Contains(err, errors.ErrTryAgain):
+	// 	w.WriteHeader(http.StatusUnprocessableEntity)
+	// case errors.Contains(err, errors.ErrEmailAlreadyExists),
+	// 	errors.Contains(err, errors.ErrUsernameNotAvailable),
+	// 	errors.Contains(err, errors.ErrRouteNotAvailable),
+	// 	errors.Contains(err, errors.ErrChannelRouteNotAvailable),
+	// 	errors.Contains(err, errors.ErrDomainRouteNotAvailable),
+	// 	errors.Contains(err, svcerr.ErrExternalAuthProviderCouldNotUpdate):
+	// 	w.WriteHeader(http.StatusBadRequest)
+	// case errors.Contains(err, svcerr.ErrAuthorization),
+	// 	errors.Contains(err, svcerr.ErrDomainAuthorization),
+	// 	errors.Contains(err, svcerr.ErrUnauthorizedPAT),
+	// 	errors.Contains(err, svcerr.ErrSuperAdminAction):
+	// 	err = unwrap(err)
+	// 	w.WriteHeader(http.StatusForbidden)
 
-	case errors.Contains(err, svcerr.ErrAuthentication),
-		errors.Contains(err, apiutil.ErrBearerToken),
-		errors.Contains(err, svcerr.ErrLogin),
-		errors.Contains(err, apiutil.ErrUnsupportedTokenType):
-		err = unwrap(err)
-		w.WriteHeader(http.StatusUnauthorized)
-	case errors.Contains(err, svcerr.ErrMalformedEntity),
-		errors.Contains(err, apiutil.ErrMalformedPolicy),
-		errors.Contains(err, apiutil.ErrMissingSecret),
-		errors.Contains(err, errors.ErrMalformedEntity),
-		errors.Contains(err, apiutil.ErrMissingID),
-		errors.Contains(err, apiutil.ErrInvalidVerification),
-		errors.Contains(err, apiutil.ErrMissingName),
-		errors.Contains(err, apiutil.ErrMissingEmail),
-		errors.Contains(err, apiutil.ErrInvalidEmail),
-		errors.Contains(err, apiutil.ErrMissingHost),
-		errors.Contains(err, apiutil.ErrInvalidResetPass),
-		errors.Contains(err, apiutil.ErrEmptyList),
-		errors.Contains(err, apiutil.ErrMissingMemberKind),
-		errors.Contains(err, apiutil.ErrMissingMemberType),
-		errors.Contains(err, apiutil.ErrLimitSize),
-		errors.Contains(err, apiutil.ErrBearerKey),
-		errors.Contains(err, svcerr.ErrInvalidStatus),
-		errors.Contains(err, apiutil.ErrNameSize),
-		errors.Contains(err, apiutil.ErrInvalidIDFormat),
-		errors.Contains(err, apiutil.ErrInvalidQueryParams),
-		errors.Contains(err, apiutil.ErrMissingRelation),
-		errors.Contains(err, apiutil.ErrValidation),
-		errors.Contains(err, apiutil.ErrMissingPass),
-		errors.Contains(err, apiutil.ErrMissingConfPass),
-		errors.Contains(err, apiutil.ErrPasswordFormat),
-		errors.Contains(err, svcerr.ErrInvalidRole),
-		errors.Contains(err, svcerr.ErrInvalidPolicy),
-		errors.Contains(err, apiutil.ErrInvitationState),
-		errors.Contains(err, apiutil.ErrInvalidAPIKey),
-		errors.Contains(err, svcerr.ErrViewEntity),
-		errors.Contains(err, apiutil.ErrMissingCertData),
-		errors.Contains(err, apiutil.ErrInvalidContact),
-		errors.Contains(err, apiutil.ErrInvalidTopic),
-		errors.Contains(err, apiutil.ErrInvalidCertData),
-		errors.Contains(err, apiutil.ErrEmptyMessage),
-		errors.Contains(err, apiutil.ErrInvalidLevel),
-		errors.Contains(err, apiutil.ErrInvalidDirection),
-		errors.Contains(err, apiutil.ErrInvalidEntityType),
-		errors.Contains(err, apiutil.ErrMissingEntityType),
-		errors.Contains(err, apiutil.ErrInvalidTimeFormat),
-		errors.Contains(err, svcerr.ErrSearch),
-		errors.Contains(err, apiutil.ErrEmptySearchQuery),
-		errors.Contains(err, apiutil.ErrLenSearchQuery),
-		errors.Contains(err, apiutil.ErrMissingDomainID),
-		errors.Contains(err, apiutil.ErrMissingUserID),
-		errors.Contains(err, apiutil.ErrMissingPATID),
-		errors.Contains(err, apiutil.ErrMissingUsername),
-		errors.Contains(err, apiutil.ErrMissingUsernameEmail),
-		errors.Contains(err, apiutil.ErrMissingFirstName),
-		errors.Contains(err, apiutil.ErrMissingLastName),
-		errors.Contains(err, apiutil.ErrInvalidUsername),
-		errors.Contains(err, apiutil.ErrMissingIdentity),
-		errors.Contains(err, apiutil.ErrInvalidProfilePictureURL),
-		errors.Contains(err, apiutil.ErrSelfParentingNotAllowed),
-		errors.Contains(err, apiutil.ErrMissingChildrenGroupIDs),
-		errors.Contains(err, apiutil.ErrMissingParentGroupID),
-		errors.Contains(err, apiutil.ErrMissingConnectionType),
-		errors.Contains(err, apiutil.ErrMissingRoleName),
-		errors.Contains(err, apiutil.ErrMissingRoleID),
-		errors.Contains(err, apiutil.ErrMissingPolicyEntityType),
-		errors.Contains(err, apiutil.ErrMissingRoleMembers),
-		errors.Contains(err, apiutil.ErrMissingDescription),
-		errors.Contains(err, apiutil.ErrMissingEntityID),
-		errors.Contains(err, apiutil.ErrInvalidRouteFormat),
-		errors.Contains(err, svcerr.ErrRetainOneMember),
-		errors.Contains(err, apiutil.ErrMissingRoute):
-		err = unwrap(err)
-		w.WriteHeader(http.StatusBadRequest)
+	// case errors.Contains(err, svcerr.ErrAuthentication),
+	// 	errors.Contains(err, apiutil.ErrBearerToken),
+	// 	errors.Contains(err, svcerr.ErrLogin),
+	// 	errors.Contains(err, apiutil.ErrUnsupportedTokenType):
+	// 	err = unwrap(err)
+	// 	w.WriteHeader(http.StatusUnauthorized)
+	// case errors.Contains(err, svcerr.ErrMalformedEntity),
+	// 	errors.Contains(err, apiutil.ErrMalformedPolicy),
+	// 	errors.Contains(err, apiutil.ErrMissingSecret),
+	// 	errors.Contains(err, errors.ErrMalformedEntity),
+	// 	errors.Contains(err, apiutil.ErrMissingID),
+	// 	errors.Contains(err, apiutil.ErrInvalidVerification),
+	// 	errors.Contains(err, apiutil.ErrMissingName),
+	// 	errors.Contains(err, apiutil.ErrMissingEmail),
+	// 	errors.Contains(err, apiutil.ErrInvalidEmail),
+	// 	errors.Contains(err, apiutil.ErrMissingHost),
+	// 	errors.Contains(err, apiutil.ErrInvalidResetPass),
+	// 	errors.Contains(err, apiutil.ErrEmptyList),
+	// 	errors.Contains(err, apiutil.ErrMissingMemberKind),
+	// 	errors.Contains(err, apiutil.ErrMissingMemberType),
+	// 	errors.Contains(err, apiutil.ErrLimitSize),
+	// 	errors.Contains(err, apiutil.ErrBearerKey),
+	// 	errors.Contains(err, svcerr.ErrInvalidStatus),
+	// 	errors.Contains(err, apiutil.ErrNameSize),
+	// 	errors.Contains(err, apiutil.ErrInvalidIDFormat),
+	// 	errors.Contains(err, apiutil.ErrInvalidQueryParams),
+	// 	errors.Contains(err, apiutil.ErrMissingRelation),
+	// 	errors.Contains(err, apiutil.ErrValidation),
+	// 	errors.Contains(err, apiutil.ErrMissingPass),
+	// 	errors.Contains(err, apiutil.ErrMissingConfPass),
+	// 	errors.Contains(err, apiutil.ErrPasswordFormat),
+	// 	errors.Contains(err, svcerr.ErrInvalidRole),
+	// 	errors.Contains(err, svcerr.ErrInvalidPolicy),
+	// 	errors.Contains(err, apiutil.ErrInvitationState),
+	// 	errors.Contains(err, apiutil.ErrInvalidAPIKey),
+	// 	errors.Contains(err, svcerr.ErrViewEntity),
+	// 	errors.Contains(err, apiutil.ErrMissingCertData),
+	// 	errors.Contains(err, apiutil.ErrInvalidContact),
+	// 	errors.Contains(err, apiutil.ErrInvalidTopic),
+	// 	errors.Contains(err, apiutil.ErrInvalidCertData),
+	// 	errors.Contains(err, apiutil.ErrEmptyMessage),
+	// 	errors.Contains(err, apiutil.ErrInvalidLevel),
+	// 	errors.Contains(err, apiutil.ErrInvalidDirection),
+	// 	errors.Contains(err, apiutil.ErrInvalidEntityType),
+	// 	errors.Contains(err, apiutil.ErrMissingEntityType),
+	// 	errors.Contains(err, apiutil.ErrInvalidTimeFormat),
+	// 	errors.Contains(err, svcerr.ErrSearch),
+	// 	errors.Contains(err, apiutil.ErrEmptySearchQuery),
+	// 	errors.Contains(err, apiutil.ErrLenSearchQuery),
+	// 	errors.Contains(err, apiutil.ErrMissingDomainID),
+	// 	errors.Contains(err, apiutil.ErrMissingUserID),
+	// 	errors.Contains(err, apiutil.ErrMissingPATID),
+	// 	errors.Contains(err, apiutil.ErrMissingUsername),
+	// 	errors.Contains(err, apiutil.ErrMissingUsernameEmail),
+	// 	errors.Contains(err, apiutil.ErrMissingFirstName),
+	// 	errors.Contains(err, apiutil.ErrMissingLastName),
+	// 	errors.Contains(err, apiutil.ErrInvalidUsername),
+	// 	errors.Contains(err, apiutil.ErrMissingIdentity),
+	// 	errors.Contains(err, apiutil.ErrInvalidProfilePictureURL),
+	// 	errors.Contains(err, apiutil.ErrSelfParentingNotAllowed),
+	// 	errors.Contains(err, apiutil.ErrMissingChildrenGroupIDs),
+	// 	errors.Contains(err, apiutil.ErrMissingParentGroupID),
+	// 	errors.Contains(err, apiutil.ErrMissingConnectionType),
+	// 	errors.Contains(err, apiutil.ErrMissingRoleName),
+	// 	errors.Contains(err, apiutil.ErrMissingRoleID),
+	// 	errors.Contains(err, apiutil.ErrMissingPolicyEntityType),
+	// 	errors.Contains(err, apiutil.ErrMissingRoleMembers),
+	// 	errors.Contains(err, apiutil.ErrMissingDescription),
+	// 	errors.Contains(err, apiutil.ErrMissingEntityID),
+	// 	errors.Contains(err, apiutil.ErrInvalidRouteFormat),
+	// 	errors.Contains(err, svcerr.ErrRetainOneMember),
+	// 	errors.Contains(err, apiutil.ErrMissingRoute):
+	// 	err = unwrap(err)
+	// 	w.WriteHeader(http.StatusBadRequest)
 
-	case errors.Contains(err, svcerr.ErrCreateEntity),
-		errors.Contains(err, svcerr.ErrUpdateEntity),
-		errors.Contains(err, svcerr.ErrRemoveEntity),
-		errors.Contains(err, svcerr.ErrEnableClient),
-		errors.Contains(err, svcerr.ErrEnableUser),
-		errors.Contains(err, svcerr.ErrDisableUser):
-		err = unwrap(err)
-		w.WriteHeader(http.StatusUnprocessableEntity)
+	// case errors.Contains(err, svcerr.ErrCreateEntity),
+	// 	errors.Contains(err, svcerr.ErrUpdateEntity),
+	// 	errors.Contains(err, svcerr.ErrRemoveEntity),
+	// 	errors.Contains(err, svcerr.ErrEnableClient),
+	// 	errors.Contains(err, svcerr.ErrEnableUser),
+	// 	errors.Contains(err, svcerr.ErrDisableUser):
+	// 	err = unwrap(err)
+	// 	w.WriteHeader(http.StatusUnprocessableEntity)
 
-	case errors.Contains(err, svcerr.ErrNotFound):
-		err = unwrap(err)
-		w.WriteHeader(http.StatusNotFound)
+	// case errors.Contains(err, svcerr.ErrNotFound):
+	// 	err = unwrap(err)
+	// 	w.WriteHeader(http.StatusNotFound)
 
-	case errors.Contains(err, errors.ErrStatusAlreadyAssigned),
-		errors.Contains(err, svcerr.ErrInvitationAlreadyRejected),
-		errors.Contains(err, svcerr.ErrInvitationAlreadyAccepted),
-		errors.Contains(err, svcerr.ErrConflict):
-		err = unwrap(err)
-		w.WriteHeader(http.StatusConflict)
+	// case errors.Contains(err, svcerr.ErrStatusAlreadyAssigned),
+	// 	errors.Contains(err, svcerr.ErrInvitationAlreadyRejected),
+	// 	errors.Contains(err, svcerr.ErrInvitationAlreadyAccepted),
+	// 	errors.Contains(err, svcerr.ErrConflict):
+	// 	err = unwrap(err)
+	// 	w.WriteHeader(http.StatusConflict)
 
-	case errors.Contains(err, apiutil.ErrUnsupportedContentType):
-		err = unwrap(err)
-		w.WriteHeader(http.StatusUnsupportedMediaType)
+	// case errors.Contains(err, apiutil.ErrUnsupportedContentType):
+	// 	err = unwrap(err)
+	// 	w.WriteHeader(http.StatusUnsupportedMediaType)
 
-	default:
-		w.WriteHeader(http.StatusInternalServerError)
-	}
+	// default:
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// }
 
-	if wrapper != nil {
-		err = errors.Wrap(wrapper, err)
-	}
+	// if wrapper != nil {
+	// 	err = errors.Wrap(wrapper, err)
+	// }
 
-	if errorVal, ok := err.(errors.Error); ok {
-		if err := json.NewEncoder(w).Encode(errorVal); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-	}
-}
-
-func unwrap(err error) error {
-	wrapper, err := errors.Unwrap(err)
-	if wrapper != nil {
-		return wrapper
-	}
-	return err
+	// if errorVal, ok := err.(errors.Error); ok {
+	// 	if err := json.NewEncoder(w).Encode(errorVal); err != nil {
+	// 		w.WriteHeader(http.StatusInternalServerError)
+	// 	}
+	// }
 }

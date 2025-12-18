@@ -771,8 +771,8 @@ func TestEnable(t *testing.T) {
 			client:               enabledClient1,
 			changeStatusResponse: enabledClient1,
 			retrieveByIDResponse: enabledClient1,
-			changeStatusErr:      errors.ErrStatusAlreadyAssigned,
-			err:                  errors.ErrStatusAlreadyAssigned,
+			changeStatusErr:      svcerr.ErrStatusAlreadyAssigned,
+			err:                  svcerr.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:                 "enable non-existing client",
@@ -844,8 +844,8 @@ func TestDisable(t *testing.T) {
 			client:               disabledClient1,
 			changeStatusResponse: clients.Client{},
 			retrieveByIDResponse: disabledClient1,
-			changeStatusErr:      errors.ErrStatusAlreadyAssigned,
-			err:                  errors.ErrStatusAlreadyAssigned,
+			changeStatusErr:      svcerr.ErrStatusAlreadyAssigned,
+			err:                  svcerr.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:                 "disable non-existing client",

@@ -19,7 +19,12 @@ import (
 	"github.com/absmach/supermq/pkg/roles"
 )
 
-var ErrGroupIDs = errors.New("invalid group ids")
+var (
+	ErrGroupIDs          = errors.New("invalid group ids")
+	errChangeGroupStatus = errors.NewServiceError("failed to change group status")
+	errGroupHaveParent   = errors.NewRequestError("group already have parent")
+	errDifferentParent   = errors.NewRequestError("groups have different parent")
+)
 
 type service struct {
 	repo       Repository
@@ -50,7 +55,7 @@ func NewService(repo Repository, policy policies.Service, idp supermq.IDProvider
 func (svc service) CreateGroup(ctx context.Context, session smqauthn.Session, g Group) (retGr Group, retRps []roles.RoleProvision, retErr error) {
 	groupID, err := svc.idProvider.ID()
 	if err != nil {
-		return Group{}, []roles.RoleProvision{}, err
+		return Group{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrCreateEntity, err)
 	}
 	if g.Status != EnabledStatus && g.Status != DisabledStatus {
 		return Group{}, []roles.RoleProvision{}, svcerr.ErrInvalidStatus
@@ -180,7 +185,7 @@ func (svc service) EnableGroup(ctx context.Context, session smqauthn.Session, id
 	}
 	group, err := svc.changeGroupStatus(ctx, session, group)
 	if err != nil {
-		return Group{}, err
+		return Group{}, errors.Wrap(errChangeGroupStatus, err)
 	}
 	return group, nil
 }
@@ -193,7 +198,7 @@ func (svc service) DisableGroup(ctx context.Context, session smqauthn.Session, i
 	}
 	group, err := svc.changeGroupStatus(ctx, session, group)
 	if err != nil {
-		return Group{}, err
+		return Group{}, errors.Wrap(errChangeGroupStatus, err)
 	}
 	return group, nil
 }
@@ -290,7 +295,7 @@ func (svc service) AddChildrenGroups(ctx context.Context, session smqauthn.Sessi
 
 	for _, childGroup := range childrenGroupsPage.Groups {
 		if childGroup.Parent != "" {
-			return errors.Wrap(svcerr.ErrConflict, fmt.Errorf("%s group already have parent", childGroup.ID))
+			return errors.Wrap(svcerr.ErrConflict, errGroupHaveParent)
 		}
 	}
 
@@ -336,7 +341,7 @@ func (svc service) RemoveChildrenGroups(ctx context.Context, session smqauthn.Se
 
 	for _, group := range childrenGroupsPage.Groups {
 		if group.Parent != "" && group.Parent != parentGroupID {
-			return errors.Wrap(svcerr.ErrConflict, fmt.Errorf("%s group doesn't have same parent", group.ID))
+			return errors.Wrap(svcerr.ErrConflict, errDifferentParent)
 		}
 		pols = append(pols, policies.Policy{
 			Domain:      session.DomainID,
@@ -440,7 +445,7 @@ func (svc service) DeleteGroup(ctx context.Context, session smqauthn.Session, id
 	}
 
 	if err := svc.repo.Delete(ctx, id); err != nil {
-		return err
+		return errors.Wrap(svcerr.ErrRemoveEntity, err)
 	}
 
 	return nil
@@ -452,7 +457,7 @@ func (svc service) changeGroupStatus(ctx context.Context, session smqauthn.Sessi
 		return Group{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	if dbGroup.Status == group.Status {
-		return Group{}, errors.ErrStatusAlreadyAssigned
+		return Group{}, svcerr.ErrStatusAlreadyAssigned
 	}
 
 	group.UpdatedBy = session.UserID

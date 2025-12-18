@@ -86,6 +86,9 @@ func Wrap(wrapper, err error) error {
 	if ne, ok := err.(NestError); ok {
 		return ne.Embed(wrapper)
 	}
+	if ce, ok := wrapper.(NestError); ok {
+		return ce.Embed(err)
+	}
 	return &customError{
 		msg: wrapper.Error(),
 		err: fmt.Errorf("%w: %w", wrapper, err),

@@ -404,7 +404,7 @@ func TestEnableChannel(t *testing.T) {
 			retrieveResp: channels.Channel{
 				Status: channels.EnabledStatus,
 			},
-			err: errors.ErrStatusAlreadyAssigned,
+			err: svcerr.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:         "enable channel with retrieve error",
@@ -467,7 +467,7 @@ func TestDisableChannel(t *testing.T) {
 			retrieveResp: channels.Channel{
 				Status: channels.DisabledStatus,
 			},
-			err: errors.ErrStatusAlreadyAssigned,
+			err: svcerr.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:         "disable channel with retrieve error",

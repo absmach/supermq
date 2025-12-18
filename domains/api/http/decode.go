@@ -21,7 +21,6 @@ const (
 	domainIDKey      = "domain_id"
 	invitedByKey     = "invited_by"
 	roleIDKey        = "role_id"
-	roleNameKey      = "role_name"
 	stateKey         = "state"
 )
 
@@ -31,7 +30,7 @@ func decodeCreateDomainRequest(_ context.Context, r *http.Request) (any, error) 
 	}
 	req := createDomainReq{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 
 	return req, nil
@@ -59,7 +58,7 @@ func decodeUpdateDomainRequest(_ context.Context, r *http.Request) (any, error) 
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 
 	return req, nil
@@ -191,7 +190,7 @@ func decodeSendInvitationReq(_ context.Context, r *http.Request) (any, error) {
 
 	var req sendInvitationReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 
 	return req, nil
@@ -257,7 +256,7 @@ func decodeAcceptInvitationReq(_ context.Context, r *http.Request) (any, error) 
 
 	var req acceptInvitationReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 
 	return req, nil
@@ -269,7 +268,7 @@ func decodeDeleteInvitationReq(_ context.Context, r *http.Request) (any, error) 
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 
 	return req, nil

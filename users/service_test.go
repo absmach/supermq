@@ -1309,7 +1309,7 @@ func TestEnableUser(t *testing.T) {
 			id:                   enabledUser1.ID,
 			user:                 enabledUser1,
 			retrieveByIDResponse: enabledUser1,
-			err:                  errors.ErrStatusAlreadyAssigned,
+			err:                  svcerr.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:                 "enable disabled user with failed to change status",
@@ -1392,7 +1392,7 @@ func TestDisableUser(t *testing.T) {
 			id:                   disabledUser1.ID,
 			user:                 disabledUser1,
 			retrieveByIDResponse: disabledUser1,
-			err:                  errors.ErrStatusAlreadyAssigned,
+			err:                  svcerr.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:                 "disable enabled user with failed to change status",
@@ -1471,7 +1471,7 @@ func TestDeleteUser(t *testing.T) {
 			user:                 deletedUser1,
 			session:              authn.Session{UserID: validID, SuperAdmin: true},
 			retrieveByIDResponse: deletedUser1,
-			err:                  errors.ErrStatusAlreadyAssigned,
+			err:                  svcerr.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:                 "delete enabled user with failed to change status",

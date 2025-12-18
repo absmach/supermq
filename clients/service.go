@@ -388,7 +388,7 @@ func (svc service) changeClientStatus(ctx context.Context, session authn.Session
 		return Client{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	if dbClient.Status == client.Status {
-		return Client{}, errors.ErrStatusAlreadyAssigned
+		return Client{}, svcerr.ErrStatusAlreadyAssigned
 	}
 
 	client.UpdatedBy = session.UserID

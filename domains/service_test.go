@@ -26,26 +26,16 @@ import (
 )
 
 const (
-	secret          = "secret"
-	email           = "test@example.com"
-	id              = "testID"
-	groupName       = "smqx"
-	description     = "Description"
-	memberRelation  = "member"
-	authoritiesObj  = "authorities"
-	loginDuration   = 30 * time.Minute
-	refreshDuration = 24 * time.Hour
-	invalidDuration = 7 * 24 * time.Hour
-	validID         = "d4ebb847-5d0e-4e46-bdd9-b6aceaaa3a22"
+	groupName = "smqx"
+	validID   = "d4ebb847-5d0e-4e46-bdd9-b6aceaaa3a22"
 )
 
 var (
-	ErrExpiry       = errors.New("session is expired")
-	errAddPolicies  = errors.New("failed to add policies")
-	errRollbackRepo = errors.New("failed to rollback repo")
-	inValid         = "invalid"
-	valid           = "valid"
-	domain          = domains.Domain{
+	ErrExpiry      = errors.New("session is expired")
+	errAddPolicies = errors.New("failed to add policies")
+	inValid        = "invalid"
+	valid          = "valid"
+	domain         = domains.Domain{
 		ID:        validID,
 		Name:      groupName,
 		Tags:      []string{"tag1", "tag2"},
@@ -173,7 +163,7 @@ func TestCreateDomain(t *testing.T) {
 			session:         validSession,
 			addPoliciesErr:  errAddPolicies,
 			deleteDomainErr: svcerr.ErrRemoveEntity,
-			err:             errRollbackRepo,
+			err:             svcerr.ErrRemoveEntity,
 		},
 		{
 			desc: "create domain with failed to add roles",
@@ -194,7 +184,7 @@ func TestCreateDomain(t *testing.T) {
 			session:         validSession,
 			addRolesErr:     errors.ErrMalformedEntity,
 			deleteDomainErr: errors.ErrMalformedEntity,
-			err:             errRollbackRepo,
+			err:             errors.ErrMalformedEntity,
 		},
 	}
 
@@ -206,7 +196,7 @@ func TestCreateDomain(t *testing.T) {
 			policyCall := policy.On("AddPolicies", mock.Anything, mock.Anything).Return(tc.addPoliciesErr)
 			policyCall1 := policy.On("DeletePolicies", mock.Anything, mock.Anything).Return(tc.deletePoliciesErr)
 			_, _, err := svc.CreateDomain(context.Background(), tc.session, tc.d)
-			assert.True(t, errors.Contains(err, tc.err))
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.err, err))
 			repoCall.Unset()
 			repoCall1.Unset()
 			repoCall2.Unset()

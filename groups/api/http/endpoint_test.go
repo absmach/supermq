@@ -152,7 +152,7 @@ func TestCreateGroupEndpoint(t *testing.T) {
 			},
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrNameSize,
 		},
 		{
 			desc:     "create group with name that is too long",
@@ -572,7 +572,7 @@ func TestUpdateGroupTagsEndpoint(t *testing.T) {
 			contentType: contentType,
 			data:        fmt.Sprintf(`{"tags":["%s"}`, newTag),
 			status:      http.StatusBadRequest,
-			err:         errors.ErrMalformedEntity,
+			err:         apiutil.ErrMalformedRequestBody,
 		},
 		{
 			desc:        "update group with empty id",
@@ -886,7 +886,7 @@ func TestListGroups(t *testing.T) {
 			token:    validToken,
 			query:    "offset=invalid",
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
 			desc:     "list groups with limit",
@@ -908,7 +908,7 @@ func TestListGroups(t *testing.T) {
 			token:    validToken,
 			query:    "limit=invalid",
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
 			desc:     "list groups with limit greater than max",
@@ -916,7 +916,7 @@ func TestListGroups(t *testing.T) {
 			domainID: validID,
 			query:    fmt.Sprintf("limit=%d", api.MaxLimitSize+1),
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrLimitSize,
 		},
 		{
 			desc:     "list groups with name",
@@ -968,7 +968,7 @@ func TestListGroups(t *testing.T) {
 			token:    validToken,
 			query:    "status=invalid",
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      svcerr.ErrInvalidStatus,
 		},
 		{
 			desc:     "list groups with duplicate status",
@@ -1028,7 +1028,7 @@ func TestListGroups(t *testing.T) {
 			token:    validToken,
 			query:    "metadata=invalid",
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
 			desc:     "list groups with duplicate metadata",
@@ -1330,7 +1330,7 @@ func TestRetrieveGroupHierarchyEndpoint(t *testing.T) {
 			domainID: validID,
 			query:    "level=invalid&dir=-1&tree=false",
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
 			desc:     "retrieve group hierarchy with invalid direction",
@@ -1339,7 +1339,7 @@ func TestRetrieveGroupHierarchyEndpoint(t *testing.T) {
 			domainID: validID,
 			query:    "level=1&dir=invalid&tree=false",
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
 			desc:     "retrieve group hierarchy with invalid tree",
@@ -1348,7 +1348,7 @@ func TestRetrieveGroupHierarchyEndpoint(t *testing.T) {
 			domainID: validID,
 			query:    "level=1&dir=-1&tree=invalid",
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
 			desc:     "retrieve group hierarchy with empty groupID",
@@ -2116,7 +2116,7 @@ func TestListChildrenGroupsEndpoint(t *testing.T) {
 			domainID: validID,
 			query:    "limit=invalid&offset=0",
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
 			desc:     "list children groups with invalid offset",
@@ -2125,7 +2125,7 @@ func TestListChildrenGroupsEndpoint(t *testing.T) {
 			domainID: validID,
 			query:    "limit=1&offset=invalid",
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
 			desc:     "list children groups with empty id",

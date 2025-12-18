@@ -501,7 +501,7 @@ func (svc service) changeChannelStatus(ctx context.Context, userID string, chann
 		return Channel{}, errors.Wrap(svcerr.ErrViewEntity, err)
 	}
 	if dbchannel.Status == channel.Status {
-		return Channel{}, errors.ErrStatusAlreadyAssigned
+		return Channel{}, svcerr.ErrStatusAlreadyAssigned
 	}
 
 	channel.UpdatedBy = userID
