@@ -4,8 +4,6 @@
 package postgres
 
 import (
-	"fmt"
-
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/jackc/pgx/v5/pgconn"
 )
@@ -38,8 +36,10 @@ func (eh errHandler) HandleError(wrapper, err error) error {
 	if ok {
 		switch pqErr.Code {
 		case errDuplicate:
-			if knownErr, ok := eh.duplicateErrors.GetError(pqErr.ConstraintName); ok {
-				return errors.Wrap(wrapper, knownErr)
+			if eh.duplicateErrors != nil {
+				if knownErr, ok := eh.duplicateErrors.GetError(pqErr.ConstraintName); ok {
+					return errors.Wrap(wrapper, knownErr)
+				}
 			}
 			return errors.Wrap(wrapper, err)
 		case errInvalid, errInvalidChar, errTruncation, errUntranslatable:
@@ -48,7 +48,6 @@ func (eh errHandler) HandleError(wrapper, err error) error {
 			return errors.Wrap(wrapper, err)
 		}
 	}
-	rerr := errors.Wrap(wrapper, err)
-	fmt.Println("Unhandled Postgres error:", rerr)
-	return rerr
+
+	return errors.Wrap(wrapper, err)
 }

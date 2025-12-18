@@ -87,7 +87,8 @@ var (
 		"created_at": time.Now().Add(-time.Hour),
 		"name":       "group",
 	}
-	validTimeStamp = time.Now().UTC().Truncate(time.Millisecond)
+	validTimeStamp   = time.Now().UTC().Truncate(time.Millisecond)
+	errJournalExists = errors.NewRequestError("journal entry already exists")
 )
 
 func TestJournalSave(t *testing.T) {
@@ -125,7 +126,7 @@ func TestJournalSave(t *testing.T) {
 				Attributes: payload,
 				Metadata:   payload,
 			},
-			err: repoerr.ErrConflict,
+			err: errJournalExists,
 		},
 		{
 			desc: "with massive journal metadata and attributes",

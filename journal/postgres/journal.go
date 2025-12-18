@@ -18,10 +18,17 @@ import (
 
 type repository struct {
 	db postgres.Database
+	eh errors.Handler
 }
 
 func NewRepository(db postgres.Database) journal.Repository {
-	return &repository{db: db}
+	errHandlerOptions := []errors.HandlerOption{
+		postgres.WithDuplicateErrors(NewDuplicateErrors()),
+	}
+	return &repository{
+		db: db,
+		eh: postgres.NewErrorHandler(errHandlerOptions...),
+	}
 }
 
 func (repo *repository) Save(ctx context.Context, j journal.Journal) (err error) {
@@ -41,11 +48,11 @@ func (repo *repository) Save(ctx context.Context, j journal.Journal) (err error)
 
 	dbJournal, err := toDBJournal(j)
 	if err != nil {
-		return errors.Wrap(repoerr.ErrCreateEntity, err)
+		return repo.eh.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
 	if _, err = repo.db.NamedExecContext(ctx, q, dbJournal); err != nil {
-		return postgres.HandleError(repoerr.ErrCreateEntity, err)
+		return repo.eh.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
 	return nil
@@ -68,7 +75,7 @@ func (repo *repository) RetrieveAll(ctx context.Context, page journal.Page) (jou
 
 	rows, err := repo.db.NamedQueryContext(ctx, q, page)
 	if err != nil {
-		return journal.JournalsPage{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+		return journal.JournalsPage{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	defer rows.Close()
 
@@ -76,7 +83,7 @@ func (repo *repository) RetrieveAll(ctx context.Context, page journal.Page) (jou
 	for rows.Next() {
 		var item dbJournal
 		if err = rows.StructScan(&item); err != nil {
-			return journal.JournalsPage{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+			return journal.JournalsPage{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 		}
 		j, err := toJournal(item)
 		if err != nil {
@@ -89,7 +96,7 @@ func (repo *repository) RetrieveAll(ctx context.Context, page journal.Page) (jou
 
 	total, err := postgres.Total(ctx, repo.db, tq, page)
 	if err != nil {
-		return journal.JournalsPage{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+		return journal.JournalsPage{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 
 	journalsPage := journal.JournalsPage{
