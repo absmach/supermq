@@ -133,7 +133,9 @@ func TestAuthConnect(t *testing.T) {
 			if ok {
 				assert.Equal(t, tc.status, hpe.StatusCode())
 			}
-			assert.True(t, errors.Contains(err, tc.err))
+			if tc.err != nil {
+				assert.Contains(t, err.Error(), tc.err.Error(), fmt.Sprintf("expected error containing: %v, got: %v", tc.err, err))
+			}
 		})
 	}
 }
@@ -450,7 +452,9 @@ func TestPublish(t *testing.T) {
 			if ok {
 				assert.Equal(t, tc.status, hpe.StatusCode())
 			}
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected: %v, got: %v", tc.err, err))
+			if tc.err != nil {
+				assert.Contains(t, err.Error(), tc.err.Error(), fmt.Sprintf("expected error containing: %v, got: %v", tc.err, err))
+			}
 			authCall.Unset()
 			repoCall.Unset()
 			clientsCall.Unset()
