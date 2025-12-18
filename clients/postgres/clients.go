@@ -36,6 +36,7 @@ var _ clients.Repository = (*clientRepo)(nil)
 
 type clientRepo struct {
 	DB postgres.Database
+	eh errors.Handler
 	rolesPostgres.Repository
 }
 
@@ -43,9 +44,12 @@ type clientRepo struct {
 // implementation of Clients repository.
 func NewRepository(db postgres.Database) clients.Repository {
 	repo := rolesPostgres.NewRepository(db, policies.ClientType, rolesTableNamePrefix, entityTableName, entityIDColumnName)
-
+	errHandlerOptions := []errors.HandlerOption{
+		postgres.WithDuplicateErrors(NewDuplicateErrors()),
+	}
 	return &clientRepo{
 		DB:         db,
+		eh:         postgres.NewErrorHandler(errHandlerOptions...),
 		Repository: repo,
 	}
 }
@@ -66,7 +70,7 @@ func (repo *clientRepo) Save(ctx context.Context, cls ...clients.Client) ([]clie
 
 	row, err := repo.DB.NamedQueryContext(ctx, q, dbClients)
 	if err != nil {
-		return []clients.Client{}, postgres.HandleError(repoerr.ErrCreateEntity, err)
+		return []clients.Client{}, repo.eh.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
 	defer row.Close()
@@ -75,7 +79,7 @@ func (repo *clientRepo) Save(ctx context.Context, cls ...clients.Client) ([]clie
 	for row.Next() {
 		dbcli := DBClient{}
 		if err := row.StructScan(&dbcli); err != nil {
-			return []clients.Client{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
+			return []clients.Client{}, repo.eh.HandleError(repoerr.ErrFailedOpDB, err)
 		}
 
 		client, err := ToClient(dbcli)
@@ -108,14 +112,14 @@ func (repo *clientRepo) RetrieveBySecret(ctx context.Context, key, id string, pr
 
 	rows, err := repo.DB.NamedQueryContext(ctx, q, dbc)
 	if err != nil {
-		return clients.Client{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+		return clients.Client{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	defer rows.Close()
 
 	dbc = DBClient{}
 	if rows.Next() {
 		if err = rows.StructScan(&dbc); err != nil {
-			return clients.Client{}, postgres.HandleError(repoerr.ErrViewEntity, err)
+			return clients.Client{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 		}
 
 		client, err := ToClient(dbc)
@@ -365,17 +369,17 @@ func (repo *clientRepo) RetrieveByIDWithRoles(ctx context.Context, id, memberID 
 	}
 	row, err := repo.DB.NamedQueryContext(ctx, query, parameters)
 	if err != nil {
-		return clients.Client{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return clients.Client{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	defer row.Close()
 
 	dbc := DBClient{}
 	if !row.Next() {
-		return clients.Client{}, errors.Wrap(repoerr.ErrNotFound, err)
+		return clients.Client{}, repoerr.ErrNotFound
 	}
 
 	if err := row.StructScan(&dbc); err != nil {
-		return clients.Client{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return clients.Client{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 
 	return ToClient(dbc)
@@ -391,14 +395,14 @@ func (repo *clientRepo) RetrieveByID(ctx context.Context, id string) (clients.Cl
 
 	row, err := repo.DB.NamedQueryContext(ctx, q, dbc)
 	if err != nil {
-		return clients.Client{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return clients.Client{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	defer row.Close()
 
 	dbc = DBClient{}
 	if row.Next() {
 		if err := row.StructScan(&dbc); err != nil {
-			return clients.Client{}, errors.Wrap(repoerr.ErrViewEntity, err)
+			return clients.Client{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 		}
 
 		return ToClient(dbc)
@@ -471,14 +475,14 @@ func (repo *clientRepo) RetrieveAll(ctx context.Context, pm clients.Page) (clien
 	if !pm.OnlyTotal {
 		rows, err := repo.DB.NamedQueryContext(ctx, q, dbPage)
 		if err != nil {
-			return clients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+			return clients.ClientsPage{}, repo.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 		}
 		defer rows.Close()
 
 		for rows.Next() {
 			dbc := DBClient{}
 			if err := rows.StructScan(&dbc); err != nil {
-				return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+				return clients.ClientsPage{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 			}
 
 			c, err := ToClient(dbc)
@@ -497,7 +501,7 @@ func (repo *clientRepo) RetrieveAll(ctx context.Context, pm clients.Page) (clien
 
 	total, err := postgres.Total(ctx, repo.DB, cq, dbPage)
 	if err != nil {
-		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return clients.ClientsPage{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 
 	page := clients.ClientsPage{
@@ -588,14 +592,14 @@ func (repo *clientRepo) retrieveClients(ctx context.Context, domainID, userID st
 	if !pm.OnlyTotal {
 		rows, err := repo.DB.NamedQueryContext(ctx, q, dbPage)
 		if err != nil {
-			return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+			return clients.ClientsPage{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 		}
 		defer rows.Close()
 
 		for rows.Next() {
 			dbc := DBClient{}
 			if err := rows.StructScan(&dbc); err != nil {
-				return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+				return clients.ClientsPage{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 			}
 
 			c, err := ToClient(dbc)
@@ -639,7 +643,7 @@ func (repo *clientRepo) retrieveClients(ctx context.Context, domainID, userID st
 
 	total, err := postgres.Total(ctx, repo.DB, cq, dbPage)
 	if err != nil {
-		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return clients.ClientsPage{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 
 	page := clients.ClientsPage{
@@ -945,7 +949,7 @@ func (repo *clientRepo) SearchClients(ctx context.Context, pm clients.Page) (cli
 
 	rows, err := repo.DB.NamedQueryContext(ctx, q, dbPage)
 	if err != nil {
-		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+		return clients.ClientsPage{}, repo.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 	}
 	defer rows.Close()
 
@@ -953,7 +957,7 @@ func (repo *clientRepo) SearchClients(ctx context.Context, pm clients.Page) (cli
 	for rows.Next() {
 		dbc := DBClient{}
 		if err := rows.StructScan(&dbc); err != nil {
-			return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+			return clients.ClientsPage{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 		}
 
 		c, err := ToClient(dbc)
@@ -967,7 +971,7 @@ func (repo *clientRepo) SearchClients(ctx context.Context, pm clients.Page) (cli
 	cq := fmt.Sprintf(`SELECT COUNT(*) FROM clients c %s;`, tq)
 	total, err := postgres.Total(ctx, repo.DB, cq, dbPage)
 	if err != nil {
-		return clients.ClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return clients.ClientsPage{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 
 	page := clients.ClientsPage{
@@ -990,14 +994,14 @@ func (repo *clientRepo) update(ctx context.Context, client clients.Client, query
 
 	row, err := repo.DB.NamedQueryContext(ctx, query, dbc)
 	if err != nil {
-		return clients.Client{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
+		return clients.Client{}, repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	defer row.Close()
 
 	dbc = DBClient{}
 	if row.Next() {
 		if err := row.StructScan(&dbc); err != nil {
-			return clients.Client{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
+			return clients.Client{}, repo.eh.HandleError(repoerr.ErrUpdateEntity, err)
 		}
 
 		return ToClient(dbc)
@@ -1014,7 +1018,7 @@ func (repo *clientRepo) Delete(ctx context.Context, clientIDs ...string) error {
 	}
 	result, err := repo.DB.NamedExecContext(ctx, q, params)
 	if err != nil {
-		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
+		return repo.eh.HandleError(repoerr.ErrRemoveEntity, err)
 	}
 	if rows, _ := result.RowsAffected(); rows == 0 {
 		return repoerr.ErrNotFound

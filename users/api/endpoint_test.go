@@ -135,16 +135,8 @@ func TestRegister(t *testing.T) {
 			user:        user,
 			token:       validToken,
 			contentType: contentType,
-			status:      http.StatusConflict,
+			status:      http.StatusBadRequest,
 			err:         svcerr.ErrConflict,
-		},
-		{
-			desc:        "register a new user with an empty token",
-			user:        user,
-			token:       "",
-			contentType: contentType,
-			status:      http.StatusUnauthorized,
-			err:         apiutil.ErrBearerToken,
 		},
 		{
 			desc: "register a user that can't be marshalled",
@@ -160,7 +152,7 @@ func TestRegister(t *testing.T) {
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         errors.ErrMalformedEntity,
+			err:         apiutil.ErrMalformedRequestBody,
 		},
 		{
 			desc: "register user with invalid status",
@@ -1002,7 +994,7 @@ func TestUpdate(t *testing.T) {
 			authnRes:    verifiedSession,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         errors.ErrMalformedEntity,
+			err:         apiutil.ErrMalformedRequestBody,
 		},
 		{
 			desc:        "update user with empty id",
@@ -1151,7 +1143,7 @@ func TestUpdateTags(t *testing.T) {
 			token:       validToken,
 			authnRes:    verifiedSession,
 			status:      http.StatusBadRequest,
-			err:         errors.ErrMalformedEntity,
+			err:         apiutil.ErrMalformedRequestBody,
 		},
 	}
 
@@ -1313,7 +1305,7 @@ func TestUpdateEmail(t *testing.T) {
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         errors.ErrMalformedEntity,
+			err:         apiutil.ErrMalformedRequestBody,
 		},
 		{
 			desc: "update user email with service error",
@@ -1467,7 +1459,7 @@ func TestUpdateUsername(t *testing.T) {
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         errors.ErrMalformedEntity,
+			err:         apiutil.ErrMalformedRequestBody,
 		},
 		{
 			desc: "update username with invalid username",
@@ -1602,7 +1594,7 @@ func TestUpdateProfilePicture(t *testing.T) {
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         errors.ErrMalformedEntity,
+			err:         apiutil.ErrMalformedRequestBody,
 		},
 		{
 			desc: "update profile picture with failed to update",
@@ -1686,7 +1678,7 @@ func TestPasswordResetRequest(t *testing.T) {
 			data:        fmt.Sprintf(`{"email": "%s", "host": "%s"}`, "invalid", testhost),
 			contentType: contentType,
 			referer:     testReferer,
-			status:      http.StatusNotFound,
+			status:      http.StatusBadRequest,
 			generateErr: svcerr.ErrNotFound,
 			err:         svcerr.ErrNotFound,
 		},
@@ -1843,9 +1835,9 @@ func TestVerifyEmail(t *testing.T) {
 		{
 			desc:   "verify email with service error",
 			token:  validToken,
-			status: http.StatusBadRequest,
-			svcErr: svcerr.ErrMalformedEntity,
-			err:    svcerr.ErrMalformedEntity,
+			status: http.StatusUnprocessableEntity,
+			svcErr: svcerr.ErrUpdateEntity,
+			err:    svcerr.ErrUpdateEntity,
 		},
 	}
 
@@ -2081,7 +2073,7 @@ func TestUpdateRole(t *testing.T) {
 			authnRes:    verifiedSession,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         errors.ErrMalformedEntity,
+			err:         apiutil.ErrMalformedRequestBody,
 		},
 		{
 			desc:        "update user with service error",
@@ -2237,7 +2229,7 @@ func TestUpdateSecret(t *testing.T) {
 			token:       validToken,
 			authnRes:    verifiedSession,
 			status:      http.StatusBadRequest,
-			err:         errors.ErrMalformedEntity,
+			err:         apiutil.ErrMalformedRequestBody,
 		},
 	}
 
@@ -2317,7 +2309,7 @@ func TestIssueToken(t *testing.T) {
 			data:        fmt.Sprintf(dataFormat, validUsername, secret),
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         errors.ErrMalformedEntity,
+			err:         apiutil.ErrMalformedRequestBody,
 		},
 		{
 			desc:        "issue token with invalid contentype",
@@ -2413,7 +2405,7 @@ func TestRefreshToken(t *testing.T) {
 			token:       validToken,
 			authnRes:    verifiedSession,
 			status:      http.StatusBadRequest,
-			err:         errors.ErrMalformedEntity,
+			err:         apiutil.ErrMalformedRequestBody,
 		},
 		{
 			desc:        "refresh token with invalid contentype",

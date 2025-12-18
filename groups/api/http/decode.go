@@ -22,7 +22,7 @@ func DecodeGroupCreate(_ context.Context, r *http.Request) (any, error) {
 	}
 	var g groups.Group
 	if err := json.NewDecoder(r.Body).Decode(&g); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	req := createGroupReq{
 		Group: g,

@@ -170,7 +170,7 @@ func decodeUpdateClient(_ context.Context, r *http.Request) (any, error) {
 		id: chi.URLParam(r, clientID),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 
 	return req, nil
@@ -185,7 +185,7 @@ func decodeUpdateClientTags(_ context.Context, r *http.Request) (any, error) {
 		id: chi.URLParam(r, clientID),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 
 	return req, nil
@@ -200,7 +200,7 @@ func decodeUpdateClientCredentials(_ context.Context, r *http.Request) (any, err
 		id: chi.URLParam(r, clientID),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 
 	return req, nil
@@ -213,7 +213,7 @@ func decodeCreateClientReq(_ context.Context, r *http.Request) (any, error) {
 
 	var c clients.Client
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	req := createClientReq{
 		client: c,
@@ -229,7 +229,7 @@ func decodeCreateClientsReq(_ context.Context, r *http.Request) (any, error) {
 
 	c := createClientsReq{}
 	if err := json.NewDecoder(r.Body).Decode(&c.Clients); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 
 	return c, nil
@@ -252,7 +252,7 @@ func decodeSetClientParentGroupStatus(_ context.Context, r *http.Request) (any, 
 		id: chi.URLParam(r, clientID),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	return req, nil
 }

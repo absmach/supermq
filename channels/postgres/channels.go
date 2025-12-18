@@ -22,7 +22,6 @@ import (
 	"github.com/absmach/supermq/pkg/roles"
 	rolesPostgres "github.com/absmach/supermq/pkg/roles/repo/postgres"
 	"github.com/jackc/pgtype"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/lib/pq"
 )
 
@@ -30,14 +29,13 @@ const (
 	rolesTableNamePrefix = "channels"
 	entityTableName      = "channels"
 	entityIDColumnName   = "id"
-
-	pgDuplicateErrCode = "23505"
 )
 
 var _ channels.Repository = (*channelRepository)(nil)
 
 type channelRepository struct {
 	db postgres.Database
+	eh errors.Handler
 	rolesPostgres.Repository
 }
 
@@ -45,8 +43,12 @@ type channelRepository struct {
 // repository.
 func NewRepository(db postgres.Database) channels.Repository {
 	rolesRepo := rolesPostgres.NewRepository(db, policies.ChannelType, rolesTableNamePrefix, entityTableName, entityIDColumnName)
+	errHandlerOptions := []errors.HandlerOption{
+		postgres.WithDuplicateErrors(NewDuplicateErrors()),
+	}
 	return &channelRepository{
 		db:         db,
+		eh:         postgres.NewErrorHandler(errHandlerOptions...),
 		Repository: rolesRepo,
 	}
 }
@@ -67,7 +69,7 @@ func (cr *channelRepository) Save(ctx context.Context, chs ...channels.Channel) 
 
 	row, err := cr.db.NamedQueryContext(ctx, q, dbchs)
 	if err != nil {
-		return []channels.Channel{}, handleSaveError(repoerr.ErrCreateEntity, err)
+		return []channels.Channel{}, cr.eh.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
 	defer row.Close()
@@ -77,7 +79,7 @@ func (cr *channelRepository) Save(ctx context.Context, chs ...channels.Channel) 
 	for row.Next() {
 		dbch := dbChannel{}
 		if err := row.StructScan(&dbch); err != nil {
-			return []channels.Channel{}, errors.Wrap(repoerr.ErrFailedOpDB, err)
+			return []channels.Channel{}, cr.eh.HandleError(repoerr.ErrFailedOpDB, err)
 		}
 
 		ch, err := toChannel(dbch)
@@ -87,16 +89,6 @@ func (cr *channelRepository) Save(ctx context.Context, chs ...channels.Channel) 
 		reChs = append(reChs, ch)
 	}
 	return reChs, nil
-}
-
-func handleSaveError(wrapper, err error) error {
-	if pqErr, ok := err.(*pgconn.PgError); ok && pqErr.Code == pgDuplicateErrCode {
-		switch pqErr.ConstraintName {
-		case "unique_domain_route_not_null":
-			return errors.ErrRouteNotAvailable
-		}
-	}
-	return postgres.HandleError(wrapper, err)
 }
 
 func (cr *channelRepository) Update(ctx context.Context, channel channels.Channel) (channels.Channel, error) {
@@ -144,14 +136,14 @@ func (cr *channelRepository) RetrieveByID(ctx context.Context, id string) (chann
 
 	row, err := cr.db.NamedQueryContext(ctx, q, dbch)
 	if err != nil {
-		return channels.Channel{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return channels.Channel{}, cr.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	defer row.Close()
 
 	dbch = dbChannel{}
 	if row.Next() {
 		if err := row.StructScan(&dbch); err != nil {
-			return channels.Channel{}, errors.Wrap(repoerr.ErrViewEntity, err)
+			return channels.Channel{}, cr.eh.HandleError(repoerr.ErrViewEntity, err)
 		}
 		return toChannel(dbch)
 	}
@@ -170,14 +162,14 @@ func (cr *channelRepository) RetrieveByRoute(ctx context.Context, route, domainI
 
 	row, err := cr.db.NamedQueryContext(ctx, q, dbch)
 	if err != nil {
-		return channels.Channel{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return channels.Channel{}, cr.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	defer row.Close()
 
 	dbch = dbChannel{}
 	if row.Next() {
 		if err := row.StructScan(&dbch); err != nil {
-			return channels.Channel{}, errors.Wrap(repoerr.ErrViewEntity, err)
+			return channels.Channel{}, cr.eh.HandleError(repoerr.ErrViewEntity, err)
 		}
 		return toChannel(dbch)
 	}
@@ -368,17 +360,17 @@ func (cr *channelRepository) RetrieveByIDWithRoles(ctx context.Context, id, memb
 	}
 	row, err := cr.db.NamedQueryContext(ctx, query, parameters)
 	if err != nil {
-		return channels.Channel{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return channels.Channel{}, cr.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	defer row.Close()
 
 	dbch := dbChannel{}
 	if !row.Next() {
-		return channels.Channel{}, errors.Wrap(repoerr.ErrNotFound, err)
+		return channels.Channel{}, repoerr.ErrNotFound
 	}
 
 	if err := row.StructScan(&dbch); err != nil {
-		return channels.Channel{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return channels.Channel{}, cr.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 
 	return toChannel(dbch)
@@ -450,14 +442,14 @@ func (cr *channelRepository) RetrieveAll(ctx context.Context, pm channels.Page) 
 	if !pm.OnlyTotal {
 		rows, err := cr.db.NamedQueryContext(ctx, q, dbPage)
 		if err != nil {
-			return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrFailedToRetrieveAllGroups, err)
+			return channels.ChannelsPage{}, cr.eh.HandleError(repoerr.ErrFailedToRetrieveAllGroups, err)
 		}
 		defer rows.Close()
 
 		for rows.Next() {
 			dbch := dbChannel{}
 			if err := rows.StructScan(&dbch); err != nil {
-				return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+				return channels.ChannelsPage{}, cr.eh.HandleError(repoerr.ErrViewEntity, err)
 			}
 
 			ch, err := toChannel(dbch)
@@ -476,7 +468,7 @@ func (cr *channelRepository) RetrieveAll(ctx context.Context, pm channels.Page) 
 
 	total, err := postgres.Total(ctx, cr.db, cq, dbPage)
 	if err != nil {
-		return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return channels.ChannelsPage{}, cr.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 
 	page := channels.ChannelsPage{
@@ -566,14 +558,14 @@ func (repo *channelRepository) retrieveChannels(ctx context.Context, domainID, u
 	if !pm.OnlyTotal {
 		rows, err := repo.db.NamedQueryContext(ctx, q, dbPage)
 		if err != nil {
-			return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+			return channels.ChannelsPage{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 		}
 		defer rows.Close()
 
 		for rows.Next() {
 			dbc := dbChannel{}
 			if err := rows.StructScan(&dbc); err != nil {
-				return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+				return channels.ChannelsPage{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 			}
 
 			c, err := toChannel(dbc)
@@ -617,7 +609,7 @@ func (repo *channelRepository) retrieveChannels(ctx context.Context, domainID, u
 
 	total, err := postgres.Total(ctx, repo.db, cq, dbPage)
 	if err != nil {
-		return channels.ChannelsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return channels.ChannelsPage{}, repo.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 
 	page := channels.ChannelsPage{
@@ -912,7 +904,7 @@ func (cr *channelRepository) Remove(ctx context.Context, ids ...string) error {
 	}
 	result, err := cr.db.NamedExecContext(ctx, q, params)
 	if err != nil {
-		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
+		return cr.eh.HandleError(repoerr.ErrRemoveEntity, err)
 	}
 	if rows, _ := result.RowsAffected(); rows == 0 {
 		return repoerr.ErrNotFound
@@ -928,7 +920,7 @@ func (cr *channelRepository) SetParentGroup(ctx context.Context, ch channels.Cha
 	}
 	result, err := cr.db.NamedExecContext(ctx, q, dbCh)
 	if err != nil {
-		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
+		return cr.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	if rows, _ := result.RowsAffected(); rows == 0 {
 		return repoerr.ErrNotFound
@@ -944,7 +936,7 @@ func (cr *channelRepository) RemoveParentGroup(ctx context.Context, ch channels.
 	}
 	result, err := cr.db.NamedExecContext(ctx, q, dbCh)
 	if err != nil {
-		return postgres.HandleError(repoerr.ErrRemoveEntity, err)
+		return cr.eh.HandleError(repoerr.ErrRemoveEntity, err)
 	}
 	if rows, _ := result.RowsAffected(); rows == 0 {
 		return repoerr.ErrNotFound
@@ -958,7 +950,7 @@ func (cr *channelRepository) AddConnections(ctx context.Context, conns []channel
 			VALUES (:channel_id, :domain_id, :client_id, :type );`
 
 	if _, err := cr.db.NamedExecContext(ctx, q, dbConns); err != nil {
-		return postgres.HandleError(repoerr.ErrCreateEntity, err)
+		return cr.eh.HandleError(repoerr.ErrCreateEntity, err)
 	}
 
 	return nil
@@ -967,7 +959,7 @@ func (cr *channelRepository) AddConnections(ctx context.Context, conns []channel
 func (cr *channelRepository) RemoveConnections(ctx context.Context, conns []channels.Connection) (retErr error) {
 	tx, err := cr.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return errors.Wrap(repoerr.ErrRemoveEntity, err)
+		return cr.eh.HandleError(repoerr.ErrRemoveEntity, err)
 	}
 	defer func() {
 		if retErr != nil {
@@ -985,11 +977,11 @@ func (cr *channelRepository) RemoveConnections(ctx context.Context, conns []chan
 		}
 		dbConn := toDBConnection(conn)
 		if _, err := tx.NamedExec(query, dbConn); err != nil {
-			return errors.Wrap(repoerr.ErrRemoveEntity, errors.Wrap(fmt.Errorf("failed to delete connection for channel_id: %s, domain_id: %s client_id %s", conn.ChannelID, conn.DomainID, conn.ClientID), err))
+			return cr.eh.HandleError(repoerr.ErrRemoveEntity, errors.Wrap(fmt.Errorf("failed to delete connection for channel_id: %s, domain_id: %s client_id %s", conn.ChannelID, conn.DomainID, conn.ClientID), err))
 		}
 	}
 	if err := tx.Commit(); err != nil {
-		return errors.Wrap(repoerr.ErrRemoveEntity, err)
+		return cr.eh.HandleError(repoerr.ErrRemoveEntity, err)
 	}
 	return nil
 }
@@ -999,7 +991,7 @@ func (cr *channelRepository) CheckConnection(ctx context.Context, conn channels.
 	dbConn := toDBConnection(conn)
 	rows, err := cr.db.NamedQueryContext(ctx, query, dbConn)
 	if err != nil {
-		return postgres.HandleError(repoerr.ErrViewEntity, err)
+		return cr.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	defer rows.Close()
 
@@ -1014,7 +1006,7 @@ func (cr *channelRepository) ClientAuthorize(ctx context.Context, conn channels.
 	dbConn := toDBConnection(conn)
 	rows, err := cr.db.NamedQueryContext(ctx, query, dbConn)
 	if err != nil {
-		return postgres.HandleError(repoerr.ErrViewEntity, err)
+		return cr.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	defer rows.Close()
 
@@ -1030,7 +1022,7 @@ func (cr *channelRepository) ChannelConnectionsCount(ctx context.Context, id str
 
 	total, err := postgres.Total(ctx, cr.db, query, dbConn)
 	if err != nil {
-		return 0, postgres.HandleError(repoerr.ErrViewEntity, err)
+		return 0, cr.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	return total, nil
 }
@@ -1041,7 +1033,7 @@ func (cr *channelRepository) DoesChannelHaveConnections(ctx context.Context, id 
 
 	rows, err := cr.db.NamedQueryContext(ctx, query, dbConn)
 	if err != nil {
-		return false, postgres.HandleError(repoerr.ErrViewEntity, err)
+		return false, cr.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	defer rows.Close()
 
@@ -1053,7 +1045,7 @@ func (cr *channelRepository) RemoveClientConnections(ctx context.Context, client
 
 	dbConn := dbConnection{ClientID: clientID}
 	if _, err := cr.db.NamedExecContext(ctx, query, dbConn); err != nil {
-		return errors.Wrap(repoerr.ErrRemoveEntity, err)
+		return cr.eh.HandleError(repoerr.ErrRemoveEntity, err)
 	}
 	return nil
 }
@@ -1063,7 +1055,7 @@ func (cr *channelRepository) RemoveChannelConnections(ctx context.Context, chann
 
 	dbConn := dbConnection{ChannelID: channelID}
 	if _, err := cr.db.NamedExecContext(ctx, query, dbConn); err != nil {
-		return errors.Wrap(repoerr.ErrRemoveEntity, err)
+		return cr.eh.HandleError(repoerr.ErrRemoveEntity, err)
 	}
 	return nil
 }
@@ -1074,7 +1066,7 @@ func (cr *channelRepository) RetrieveParentGroupChannels(ctx context.Context, pa
 
 	rows, err := cr.db.NamedQueryContext(ctx, query, dbChannel{ParentGroup: toNullString(parentGroupID)})
 	if err != nil {
-		return []channels.Channel{}, errors.Wrap(repoerr.ErrViewEntity, err)
+		return []channels.Channel{}, cr.eh.HandleError(repoerr.ErrViewEntity, err)
 	}
 	defer rows.Close()
 
@@ -1082,7 +1074,7 @@ func (cr *channelRepository) RetrieveParentGroupChannels(ctx context.Context, pa
 	for rows.Next() {
 		dbch := dbChannel{}
 		if err := rows.StructScan(&dbch); err != nil {
-			return []channels.Channel{}, errors.Wrap(repoerr.ErrViewEntity, err)
+			return []channels.Channel{}, cr.eh.HandleError(repoerr.ErrViewEntity, err)
 		}
 
 		ch, err := toChannel(dbch)
@@ -1099,7 +1091,7 @@ func (cr *channelRepository) UnsetParentGroupFromChannels(ctx context.Context, p
 	query := "UPDATE channels SET parent_group_id = NULL WHERE parent_group_id = :parent_group_id"
 
 	if _, err := cr.db.NamedExecContext(ctx, query, dbChannel{ParentGroup: toNullString(parentGroupID)}); err != nil {
-		return errors.Wrap(repoerr.ErrRemoveEntity, err)
+		return cr.eh.HandleError(repoerr.ErrRemoveEntity, err)
 	}
 	return nil
 }
@@ -1112,14 +1104,14 @@ func (cr *channelRepository) update(ctx context.Context, ch channels.Channel, qu
 
 	row, err := cr.db.NamedQueryContext(ctx, query, dbch)
 	if err != nil {
-		return channels.Channel{}, postgres.HandleError(repoerr.ErrUpdateEntity, err)
+		return channels.Channel{}, cr.eh.HandleError(repoerr.ErrUpdateEntity, err)
 	}
 	defer row.Close()
 
 	dbch = dbChannel{}
 	if row.Next() {
 		if err := row.StructScan(&dbch); err != nil {
-			return channels.Channel{}, errors.Wrap(repoerr.ErrUpdateEntity, err)
+			return channels.Channel{}, cr.eh.HandleError(repoerr.ErrUpdateEntity, err)
 		}
 
 		return toChannel(dbch)

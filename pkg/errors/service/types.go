@@ -71,10 +71,10 @@ var (
 	ErrMalformedEntity = errors.New("malformed entity specification")
 
 	// ErrNotFound indicates a non-existent entity request.
-	ErrNotFound = errors.New("entity not found")
+	ErrNotFound = errors.NewRequestError("entity not found")
 
 	// ErrConflict indicates that entity already exists.
-	ErrConflict = errors.New("entity already exists")
+	ErrConflict = errors.NewRequestError("entity already exists")
 
 	// ErrInvalidPolicy indicates that an invalid policy.
 	ErrInvalidPolicy = errors.New("invalid policy")
@@ -98,10 +98,10 @@ var (
 	ErrParentGroupAuthorization = errors.New("failed to authorize parent group")
 
 	// ErrEnableUser indicates error in enabling user.
-	ErrEnableUser = errors.New("failed to enable user")
+	ErrEnableUser = errors.NewServiceError("failed to enable user")
 
 	// ErrDisableUser indicates error in disabling user.
-	ErrDisableUser = errors.New("failed to disable user")
+	ErrDisableUser = errors.NewServiceError("failed to disable user")
 
 	// ErrRollbackRepo indicates a failure to rollback repository.
 	ErrRollbackRepo = errors.New("failed to rollback repo")

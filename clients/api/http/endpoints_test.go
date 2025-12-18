@@ -134,7 +134,7 @@ func TestCreateClient(t *testing.T) {
 			token:       validToken,
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			contentType: contentType,
-			status:      http.StatusConflict,
+			status:      http.StatusBadRequest,
 			err:         svcerr.ErrConflict,
 		},
 		{
@@ -161,7 +161,7 @@ func TestCreateClient(t *testing.T) {
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrInvalidIDFormat,
 		},
 		{
 			desc: "register a client that can't be marshalled",
@@ -179,7 +179,7 @@ func TestCreateClient(t *testing.T) {
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         errors.ErrMalformedEntity,
+			err:         apiutil.ErrMalformedRequestBody,
 		},
 		{
 			desc: "register client with invalid status",
@@ -212,7 +212,7 @@ func TestCreateClient(t *testing.T) {
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			contentType: "application/xml",
 			status:      http.StatusUnsupportedMediaType,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrUnsupportedContentType,
 		},
 	}
 
@@ -316,7 +316,7 @@ func TestCreateClients(t *testing.T) {
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrEmptyList,
 			len:         0,
 		},
 		{
@@ -337,7 +337,7 @@ func TestCreateClients(t *testing.T) {
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrInvalidIDFormat,
 		},
 		{
 			desc: "create clients with invalid contentype",
@@ -351,7 +351,7 @@ func TestCreateClients(t *testing.T) {
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			contentType: "application/xml",
 			status:      http.StatusUnsupportedMediaType,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrUnsupportedContentType,
 		},
 		{
 			desc: "create a client that can't be marshalled",
@@ -372,7 +372,7 @@ func TestCreateClients(t *testing.T) {
 			token:       validToken,
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			status:      http.StatusBadRequest,
-			err:         errors.ErrMalformedEntity,
+			err:         apiutil.ErrMalformedRequestBody,
 		},
 		{
 			desc:        "create clients with service error",
@@ -499,7 +499,7 @@ func TestListClients(t *testing.T) {
 			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
 			query:    "offset=invalid",
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
 			desc:     "list clients with limit",
@@ -524,7 +524,7 @@ func TestListClients(t *testing.T) {
 			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
 			query:    "limit=invalid",
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
 			desc:     "list clients with limit greater than max",
@@ -533,7 +533,7 @@ func TestListClients(t *testing.T) {
 			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
 			query:    fmt.Sprintf("limit=%d", api.MaxLimitSize+1),
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrLimitSize,
 		},
 		{
 			desc:     "list clients with name",
@@ -590,7 +590,7 @@ func TestListClients(t *testing.T) {
 			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
 			query:    "status=invalid",
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      svcerr.ErrInvalidStatus,
 		},
 		{
 			desc:     "list clients with duplicate status",
@@ -656,7 +656,7 @@ func TestListClients(t *testing.T) {
 			authnRes: smqauthn.Session{UserID: validID, DomainID: domainID, DomainUserID: domainID + "_" + validID, SuperAdmin: false},
 			query:    "metadata=invalid",
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
 			desc:     "list clients with duplicate metadata",
@@ -913,8 +913,7 @@ func TestUpdateClient(t *testing.T) {
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			contentType: "application/xml",
 			status:      http.StatusUnsupportedMediaType,
-
-			err: apiutil.ErrValidation,
+			err:         apiutil.ErrUnsupportedContentType,
 		},
 		{
 			desc:        "update client with malformed data",
@@ -925,8 +924,7 @@ func TestUpdateClient(t *testing.T) {
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
+			err:         apiutil.ErrMalformedRequestBody,
 		},
 		{
 			desc:        "update client with empty id",
@@ -937,8 +935,7 @@ func TestUpdateClient(t *testing.T) {
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrMissingID,
+			err:         apiutil.ErrMissingID,
 		},
 		{
 			desc:           "update client with name that is too long",
@@ -1020,8 +1017,7 @@ func TestUpdateClientsTags(t *testing.T) {
 			token:    validToken,
 			authnRes: smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			status:   http.StatusOK,
-
-			err: nil,
+			err:      nil,
 		},
 		{
 			desc:        "update client tags with empty token",
@@ -1053,8 +1049,7 @@ func TestUpdateClientsTags(t *testing.T) {
 			token:       validToken,
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			status:      http.StatusForbidden,
-
-			err: svcerr.ErrAuthorization,
+			err:         svcerr.ErrAuthorization,
 		},
 		{
 			desc:        "update client tags with invalid contentype",
@@ -1065,7 +1060,7 @@ func TestUpdateClientsTags(t *testing.T) {
 			token:       validToken,
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			status:      http.StatusUnsupportedMediaType,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrUnsupportedContentType,
 		},
 		{
 			desc:        "update clients tags with empty id",
@@ -1076,8 +1071,7 @@ func TestUpdateClientsTags(t *testing.T) {
 			token:       validToken,
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
+			err:         apiutil.ErrMissingID,
 		},
 		{
 			desc:        "update clients with malfomed data",
@@ -1088,8 +1082,7 @@ func TestUpdateClientsTags(t *testing.T) {
 			token:       validToken,
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			status:      http.StatusBadRequest,
-
-			err: errors.ErrMalformedEntity,
+			err:         apiutil.ErrMalformedRequestBody,
 		},
 	}
 
@@ -1203,7 +1196,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			token:       validToken,
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrMissingID,
 		},
 		{
 			desc: "update client secret with empty secret",
@@ -1220,8 +1213,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			token:       validToken,
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
+			err:         apiutil.ErrMissingSecret,
 		},
 		{
 			desc: "update client secret with invalid contentype",
@@ -1238,8 +1230,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			token:       validToken,
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			status:      http.StatusUnsupportedMediaType,
-
-			err: apiutil.ErrValidation,
+			err:         apiutil.ErrUnsupportedContentType,
 		},
 		{
 			desc: "update client secret with malformed data",
@@ -1256,8 +1247,7 @@ func TestUpdateClientSecret(t *testing.T) {
 			token:       validToken,
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			status:      http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
+			err:         apiutil.ErrMalformedRequestBody,
 		},
 	}
 
@@ -1316,8 +1306,7 @@ func TestEnableClient(t *testing.T) {
 			token:    validToken,
 			authnRes: smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			status:   http.StatusOK,
-
-			err: nil,
+			err:      nil,
 		},
 		{
 			desc:     "enable client with invalid token",
@@ -1337,8 +1326,7 @@ func TestEnableClient(t *testing.T) {
 			token:    validToken,
 			authnRes: smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			status:   http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
+			err:      apiutil.ErrMissingID,
 		},
 	}
 
@@ -1401,8 +1389,7 @@ func TestDisableClient(t *testing.T) {
 			token:    validToken,
 			authnRes: smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			status:   http.StatusOK,
-
-			err: nil,
+			err:      nil,
 		},
 		{
 			desc:     "disable client with invalid token",
@@ -1422,8 +1409,7 @@ func TestDisableClient(t *testing.T) {
 			token:    validToken,
 			authnRes: smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			status:   http.StatusBadRequest,
-
-			err: apiutil.ErrValidation,
+			err:      apiutil.ErrMissingID,
 		},
 	}
 
@@ -1481,8 +1467,7 @@ func TestDeleteClient(t *testing.T) {
 			token:    validToken,
 			authnRes: smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
 			status:   http.StatusNoContent,
-
-			err: nil,
+			err:      nil,
 		},
 		{
 			desc:     "delete client with invalid token",

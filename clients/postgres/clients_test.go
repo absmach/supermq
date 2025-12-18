@@ -101,6 +101,7 @@ var (
 		"subgroup_set_parent",
 		"subgroup_update",
 	}
+	errClientSecretNotAvailable = errors.New("client key is not available")
 )
 
 func TestClientsSave(t *testing.T) {
@@ -189,7 +190,7 @@ func TestClientsSave(t *testing.T) {
 					Status:   clients.EnabledStatus,
 				},
 			},
-			err: repoerr.ErrConflict,
+			err: errClientSecretNotAvailable,
 		},
 		{
 			desc: "add multiple clients with one client having duplicate secret",
@@ -216,7 +217,7 @@ func TestClientsSave(t *testing.T) {
 					Status:   clients.EnabledStatus,
 				},
 			},
-			err: repoerr.ErrConflict,
+			err: errClientSecretNotAvailable,
 		},
 		{
 			desc: "add new client without domain id",
@@ -249,7 +250,7 @@ func TestClientsSave(t *testing.T) {
 					Status:   clients.EnabledStatus,
 				},
 			},
-			err: repoerr.ErrMalformedEntity,
+			err: repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add multiple clients with one client having invalid client id",
@@ -275,7 +276,7 @@ func TestClientsSave(t *testing.T) {
 					Status:   clients.EnabledStatus,
 				},
 			},
-			err: repoerr.ErrMalformedEntity,
+			err: repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add client with invalid client name",
@@ -292,7 +293,7 @@ func TestClientsSave(t *testing.T) {
 					Status:   clients.EnabledStatus,
 				},
 			},
-			err: repoerr.ErrMalformedEntity,
+			err: repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add client with invalid client domain id",
@@ -308,7 +309,7 @@ func TestClientsSave(t *testing.T) {
 					Status:   clients.EnabledStatus,
 				},
 			},
-			err: repoerr.ErrMalformedEntity,
+			err: repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add client with invalid client identity",
@@ -324,7 +325,7 @@ func TestClientsSave(t *testing.T) {
 					Status:   clients.EnabledStatus,
 				},
 			},
-			err: repoerr.ErrMalformedEntity,
+			err: repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add client with a missing client identity",
@@ -390,14 +391,16 @@ func TestClientsSave(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		rClients, err := repo.Save(context.Background(), tc.clients...)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		if err == nil {
-			for i := range rClients {
-				tc.clients[i].Credentials.Secret = rClients[i].Credentials.Secret
+		t.Run(tc.desc, func(t *testing.T) {
+			rClients, err := repo.Save(context.Background(), tc.clients...)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+			if err == nil {
+				for i := range rClients {
+					tc.clients[i].Credentials.Secret = rClients[i].Credentials.Secret
+				}
+				assert.Equal(t, tc.clients, rClients, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.clients, rClients))
 			}
-			assert.Equal(t, tc.clients, rClients, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.clients, rClients))
-		}
+		})
 	}
 }
 

@@ -38,7 +38,7 @@ func decodeCreateChannelReq(_ context.Context, r *http.Request) (any, error) {
 
 	req := createChannelReq{}
 	if err := json.NewDecoder(r.Body).Decode(&req.Channel); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 
 	return req, nil
@@ -51,7 +51,7 @@ func decodeCreateChannelsReq(_ context.Context, r *http.Request) (any, error) {
 
 	req := createChannelsReq{}
 	if err := json.NewDecoder(r.Body).Decode(&req.Channels); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 
 	return req, nil
@@ -188,7 +188,7 @@ func decodeUpdateChannel(_ context.Context, r *http.Request) (any, error) {
 		id: chi.URLParam(r, "channelID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 
 	return req, nil
@@ -203,7 +203,7 @@ func decodeUpdateChannelTags(_ context.Context, r *http.Request) (any, error) {
 		id: chi.URLParam(r, "channelID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 
 	return req, nil
@@ -218,7 +218,7 @@ func decodeSetChannelParentGroupStatus(_ context.Context, r *http.Request) (any,
 		id: chi.URLParam(r, "channelID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	return req, nil
 }
@@ -254,7 +254,7 @@ func decodeConnectChannelClientRequest(_ context.Context, r *http.Request) (any,
 		channelID: chi.URLParam(r, "channelID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 
 	return req, nil
@@ -268,7 +268,7 @@ func decodeDisconnectChannelClientsRequest(_ context.Context, r *http.Request) (
 		channelID: chi.URLParam(r, "channelID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 
 	return req, nil
@@ -281,7 +281,7 @@ func decodeConnectRequest(_ context.Context, r *http.Request) (any, error) {
 
 	req := connectRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 
 	return req, nil
@@ -294,7 +294,7 @@ func decodeDisconnectRequest(_ context.Context, r *http.Request) (any, error) {
 
 	req := disconnectRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 
 	return req, nil

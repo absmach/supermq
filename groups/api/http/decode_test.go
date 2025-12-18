@@ -347,7 +347,7 @@ func TestDecodeGroupCreate(t *testing.T) {
 				"Content-Type":  {api.ContentType},
 			},
 			resp: nil,
-			err:  errors.ErrMalformedEntity,
+			err:  apiutil.ErrMalformedRequestBody,
 		},
 	}
 

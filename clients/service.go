@@ -4,7 +4,6 @@ package clients
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	smq "github.com/absmach/supermq"
@@ -20,9 +19,11 @@ import (
 )
 
 var (
-	errRollbackRepo       = errors.New("failed to rollback repo")
-	errSetParentGroup     = errors.New("client already have parent")
-	errSetSameParentGroup = errors.New("client already assigned to the parent group")
+	errRollbackRepo        = errors.New("failed to rollback repo")
+	errSetParentGroup      = errors.NewRequestError("client already have parent")
+	errSetSameParentGroup  = errors.NewRequestError("client already assigned to the parent group")
+	errParentGroupDomainID = errors.NewRequestError("parent group has invalid domain id")
+	errParentGroupDisabled = errors.NewRequestError("parent group is not enabled")
 )
 var _ Service = (*service)(nil)
 
@@ -59,14 +60,14 @@ func (svc service) CreateClients(ctx context.Context, session authn.Session, cls
 		if c.ID == "" {
 			clientID, err := svc.idProvider.ID()
 			if err != nil {
-				return []Client{}, []roles.RoleProvision{}, err
+				return []Client{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrIssueProviderID, err)
 			}
 			c.ID = clientID
 		}
 		if c.Credentials.Secret == "" {
 			key, err := svc.idProvider.ID()
 			if err != nil {
-				return []Client{}, []roles.RoleProvision{}, err
+				return []Client{}, []roles.RoleProvision{}, errors.Wrap(svcerr.ErrIssueProviderID, err)
 			}
 			c.Credentials.Secret = key
 		}
@@ -260,10 +261,10 @@ func (svc service) SetParentGroup(ctx context.Context, session authn.Session, pa
 		return errors.Wrap(svcerr.ErrUpdateEntity, err)
 	}
 	if resp.GetEntity().GetDomainId() != session.DomainID {
-		return errors.Wrap(svcerr.ErrUpdateEntity, fmt.Errorf("parent group id %s has invalid domain id", parentGroupID))
+		return errors.Wrap(svcerr.ErrUpdateEntity, errParentGroupDomainID)
 	}
 	if resp.GetEntity().GetStatus() != uint32(EnabledStatus) {
-		return errors.Wrap(svcerr.ErrUpdateEntity, fmt.Errorf("parent group id %s is not in enabled state", parentGroupID))
+		return errors.Wrap(svcerr.ErrUpdateEntity, errParentGroupDisabled)
 	}
 
 	var pols []policies.Policy
@@ -326,7 +327,7 @@ func (svc service) RemoveParentGroup(ctx context.Context, session authn.Session,
 		cli := Client{ID: id, UpdatedBy: session.UserID, UpdatedAt: time.Now().UTC()}
 
 		if err := svc.repo.RemoveParentGroup(ctx, cli); err != nil {
-			return err
+			return errors.Wrap(svcerr.ErrUpdateEntity, err)
 		}
 	}
 	return nil

@@ -574,7 +574,7 @@ func TestListChannels(t *testing.T) {
 			token:    validToken,
 			query:    "offset=invalid",
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
 			desc:     "list channels with limit",
@@ -596,7 +596,7 @@ func TestListChannels(t *testing.T) {
 			token:    validToken,
 			query:    "limit=invalid",
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
 			desc:     "list channels with limit greater than max",
@@ -604,7 +604,7 @@ func TestListChannels(t *testing.T) {
 			domainID: validID,
 			query:    fmt.Sprintf("limit=%d", api.MaxLimitSize+1),
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrLimitSize,
 		},
 		{
 			desc:     "list channels with name",
@@ -656,7 +656,7 @@ func TestListChannels(t *testing.T) {
 			token:    validToken,
 			query:    "status=invalid",
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      svcerr.ErrInvalidStatus,
 		},
 		{
 			desc:     "list channels with duplicate status",
@@ -716,7 +716,7 @@ func TestListChannels(t *testing.T) {
 			token:    validToken,
 			query:    "metadata=invalid",
 			status:   http.StatusBadRequest,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
 			desc:     "list channels with duplicate metadata",
@@ -1114,7 +1114,7 @@ func TestUpdateChannelTagsEndpoint(t *testing.T) {
 			contentType: contentType,
 			data:        fmt.Sprintf(`{"tags":["%s"}`, newTag),
 			status:      http.StatusBadRequest,
-			err:         errors.ErrMalformedEntity,
+			err:         apiutil.ErrMalformedRequestBody,
 		},
 		{
 			desc:        "update channel with empty id",

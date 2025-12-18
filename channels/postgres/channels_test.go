@@ -102,6 +102,7 @@ var (
 		"subgroup_set_parent",
 		"subgroup_update",
 	}
+	errChannelExists = errors.New("channel with the given id already exists in the domain")
 )
 
 func TestSave(t *testing.T) {
@@ -143,7 +144,7 @@ func TestSave(t *testing.T) {
 			desc:    "add duplicate channel",
 			channel: validChannel,
 			resp:    []channels.Channel{},
-			err:     repoerr.ErrConflict,
+			err:     errChannelExists,
 		},
 		{
 			desc: "add channel with invalid ID",
@@ -156,7 +157,7 @@ func TestSave(t *testing.T) {
 				Status:    channels.EnabledStatus,
 			},
 			resp: []channels.Channel{},
-			err:  repoerr.ErrMalformedEntity,
+			err:  repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add channel with invalid domain",
@@ -169,7 +170,7 @@ func TestSave(t *testing.T) {
 				Status:    channels.EnabledStatus,
 			},
 			resp: []channels.Channel{},
-			err:  repoerr.ErrMalformedEntity,
+			err:  repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add channel with invalid name",
@@ -182,7 +183,7 @@ func TestSave(t *testing.T) {
 				Status:    channels.EnabledStatus,
 			},
 			resp: []channels.Channel{},
-			err:  repoerr.ErrMalformedEntity,
+			err:  repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add channel with invalid metadata",
@@ -197,7 +198,7 @@ func TestSave(t *testing.T) {
 				Status:    channels.EnabledStatus,
 			},
 			resp: []channels.Channel{},
-			err:  repoerr.ErrMalformedEntity,
+			err:  repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add channel with duplicate name",
@@ -1086,7 +1087,7 @@ func TestSetParentGroup(t *testing.T) {
 			desc:          "set parent group with invalid parent group ID",
 			id:            validChannel.ID,
 			parentGroupID: invalidID,
-			err:           repoerr.ErrMalformedEntity,
+			err:           repoerr.ErrUpdateEntity,
 		},
 	}
 
@@ -1208,7 +1209,7 @@ func TestAddConnection(t *testing.T) {
 				DomainID:  testsutil.GenerateUUID(t),
 				Type:      connections.Publish,
 			},
-			err: repoerr.ErrMalformedEntity,
+			err: repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add connection with invalid channel ID",
@@ -1218,7 +1219,7 @@ func TestAddConnection(t *testing.T) {
 				DomainID:  testsutil.GenerateUUID(t),
 				Type:      connections.Publish,
 			},
-			err: repoerr.ErrMalformedEntity,
+			err: repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add connection with invalid domain ID",
@@ -1228,7 +1229,7 @@ func TestAddConnection(t *testing.T) {
 				DomainID:  invalidID,
 				Type:      connections.Publish,
 			},
-			err: repoerr.ErrMalformedEntity,
+			err: repoerr.ErrCreateEntity,
 		},
 	}
 
