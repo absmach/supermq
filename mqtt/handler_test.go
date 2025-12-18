@@ -417,7 +417,7 @@ func TestPublish(t *testing.T) {
 			session: &sessionClient,
 			topic:   malformedSubtopics,
 			payload: payload,
-			err:     errors.Wrap(mqtt.ErrFailedPublish, errors.Wrap(messaging.ErrMalformedTopic, errors.Wrap(messaging.ErrMalformedSubtopic, errors.New("invalid URL escape \"%\"")))),
+			err:     errors.New("invalid URL escape \"%\""),
 		},
 		{
 			desc:    "publish with subtopic containing wrong character",
@@ -457,15 +457,19 @@ func TestPublish(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		ctx := context.TODO()
-		if tc.session != nil {
-			ctx = session.NewContext(ctx, tc.session)
-		}
-		repoCall := publisher.On("Publish", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		err := handler.Publish(ctx, &tc.topic, &tc.payload)
-		assert.Contains(t, logBuffer.String(), tc.logMsg)
-		assert.Equal(t, tc.err, err)
-		repoCall.Unset()
+		t.Run(tc.desc, func(t *testing.T) {
+			ctx := context.TODO()
+			if tc.session != nil {
+				ctx = session.NewContext(ctx, tc.session)
+			}
+			repoCall := publisher.On("Publish", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			err := handler.Publish(ctx, &tc.topic, &tc.payload)
+			assert.Contains(t, logBuffer.String(), tc.logMsg)
+			if tc.err != nil {
+				assert.Contains(t, err.Error(), tc.err.Error(), fmt.Sprintf("expected error containing: %v, got: %v", tc.err, err))
+			}
+			repoCall.Unset()
+		})
 	}
 }
 

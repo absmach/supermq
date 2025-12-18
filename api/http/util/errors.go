@@ -276,5 +276,5 @@ var (
 	ErrEmailNotVerified = errors.NewRequestError("email not verified")
 
 	// ErrMalformedRequest indicates malformed request body.
-	ErrMalformedRequestBody = errors.NewRequestError("malformed request body")
+	ErrMalformedRequestBody = errors.NewRequestError("Request body is not a valid JSON, Expecting a valid JSON")
 )

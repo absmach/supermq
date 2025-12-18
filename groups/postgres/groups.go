@@ -632,7 +632,7 @@ func (repo groupRepository) AssignParentGroup(ctx context.Context, parentGroupID
 	for _, sPath := range sPaths {
 		for _, cgid := range groupIDs {
 			if sPath == cgid {
-				return errors.Wrap(repoerr.ErrUpdateEntity, fmt.Errorf("cyclic parent, group %s is parent of requested group %s", cgid, parentGroupID))
+				return errors.Wrap(repoerr.ErrUpdateEntity, errCyclicParentGroup)
 			}
 		}
 	}

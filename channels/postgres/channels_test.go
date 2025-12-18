@@ -102,7 +102,7 @@ var (
 		"subgroup_set_parent",
 		"subgroup_update",
 	}
-	errChannelExists = errors.New("channel with the given id already exists in the domain")
+	errChannelExists = errors.New("channel id already exists")
 )
 
 func TestSave(t *testing.T) {

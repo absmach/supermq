@@ -7,13 +7,15 @@ import "github.com/absmach/supermq/pkg/errors"
 
 var _ errors.Mapper = (*duplicateErrors)(nil)
 
+var errCyclicParentGroup = errors.NewRequestError("cyclic parent, group is parent of requested group")
+
 type duplicateErrors struct{}
 
 // GetError maps constraint names to known errors.
 func (d duplicateErrors) GetError(constraint string) (error, bool) {
 	switch constraint {
 	case "groups_pkey":
-		return errors.NewRequestError("group already exists"), true
+		return errors.NewRequestError("group id already exists"), true
 	default:
 		return nil, false
 	}

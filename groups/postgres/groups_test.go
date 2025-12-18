@@ -61,7 +61,7 @@ var (
 		"subgroup_remove_role_users",
 		"subgroup_view_role_users",
 	}
-	errGroupExists = errors.NewRequestError("group already exists")
+	errGroupExists = errors.NewRequestError("group id already exists")
 )
 
 func TestSave(t *testing.T) {

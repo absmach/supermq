@@ -15,7 +15,7 @@ func (d duplicateErrors) GetError(constraint string) (error, bool) {
 	case "unique_domain_route_not_null":
 		return errors.ErrRouteNotAvailable, true
 	case "channels_pkey":
-		return errors.NewRequestError("channel with the given id already exists in the domain"), true
+		return errors.NewRequestError("channel id already exists"), true
 	default:
 		return nil, false
 	}
