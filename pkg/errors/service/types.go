@@ -36,7 +36,7 @@ var (
 
 	// ErrUpdateEntity indicates error in updating entity or entities.
 	ErrUpdateEntity = errors.NewServiceError("update entity failed")
-	
+
 	// ErrAddPolicies indicates error in adding policies.
 	ErrAddPolicies = errors.NewServiceError("failed to add policies")
 

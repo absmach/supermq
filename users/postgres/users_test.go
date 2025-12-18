@@ -82,7 +82,6 @@ func TestUsersSave(t *testing.T) {
 			user: externalUser,
 			err:  nil,
 		},
-
 		{
 			desc: "add user with duplicate user email",
 			user: users.User{
@@ -129,7 +128,7 @@ func TestUsersSave(t *testing.T) {
 				Metadata: users.Metadata{},
 				Status:   users.EnabledStatus,
 			},
-			err: errors.ErrMalformedEntity,
+			err: repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add user with invalid user name",
@@ -145,7 +144,7 @@ func TestUsersSave(t *testing.T) {
 				Metadata: users.Metadata{},
 				Status:   users.EnabledStatus,
 			},
-			err: errors.ErrMalformedEntity,
+			err: repoerr.ErrCreateEntity,
 		},
 		{
 			desc: "add user with a missing username",
@@ -194,12 +193,14 @@ func TestUsersSave(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		rUser, err := repo.Save(context.Background(), tc.user)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		if err == nil {
-			rUser.Credentials.Secret = tc.user.Credentials.Secret
-			assert.Equal(t, tc.user, rUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.user, rUser))
-		}
+		t.Run(tc.desc, func(t *testing.T) {
+			rUser, err := repo.Save(context.Background(), tc.user)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+			if err == nil {
+				rUser.Credentials.Secret = tc.user.Credentials.Secret
+				assert.Equal(t, tc.user, rUser, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.user, rUser))
+			}
+		})
 	}
 }
 
@@ -1307,7 +1308,7 @@ func TestUpdate(t *testing.T) {
 			userReq: users.UserReq{
 				Metadata: &malformedMetadata,
 			},
-			err: repoerr.ErrUpdateEntity,
+			err: repoerr.ErrMalformedEntity,
 		},
 		{
 			desc:   "update empty metadata for enabled user",
@@ -1564,7 +1565,7 @@ func TestUpdateUsername(t *testing.T) {
 					Username: user2.Credentials.Username,
 				},
 			},
-			err: repoerr.ErrConflict,
+			err: errors.ErrUsernameNotAvailable,
 		},
 		{
 			desc: "for disabled user",
@@ -1984,16 +1985,18 @@ func TestRetrieveByIDs(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		switch response, err := repo.RetrieveAllByIDs(context.Background(), c.page); {
-		case err == nil:
-			assert.Nil(t, err, fmt.Sprintf("%s: expected %s got %s\n", c.desc, c.err, err))
-			assert.Equal(t, c.response.Total, response.Total)
-			assert.Equal(t, c.response.Limit, response.Limit)
-			assert.Equal(t, c.response.Offset, response.Offset)
-			assert.ElementsMatch(t, response.Users, c.response.Users)
-		default:
-			assert.True(t, errors.Contains(err, c.err), fmt.Sprintf("expected %s to contain %s\n", err, c.err))
-		}
+		t.Run(c.desc, func(t *testing.T) {
+			switch response, err := repo.RetrieveAllByIDs(context.Background(), c.page); {
+			case err == nil:
+				assert.Nil(t, err, fmt.Sprintf("%s: expected %s got %s\n", c.desc, c.err, err))
+				assert.Equal(t, c.response.Total, response.Total)
+				assert.Equal(t, c.response.Limit, response.Limit)
+				assert.Equal(t, c.response.Offset, response.Offset)
+				assert.ElementsMatch(t, response.Users, c.response.Users)
+			default:
+				assert.True(t, errors.Contains(err, c.err), fmt.Sprintf("expected %s to contain %s\n", err, c.err))
+			}
+		})
 	}
 }
 

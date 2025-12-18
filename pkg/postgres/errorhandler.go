@@ -4,6 +4,8 @@
 package postgres
 
 import (
+	"fmt"
+
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/jackc/pgx/v5/pgconn"
 )
@@ -46,6 +48,7 @@ func (eh errHandler) HandleError(wrapper, err error) error {
 			return errors.Wrap(wrapper, err)
 		}
 	}
-
-	return errors.Wrap(wrapper, err)
+	rerr := errors.Wrap(wrapper, err)
+	fmt.Println("Unhandled Postgres error:", rerr)
+	return rerr
 }

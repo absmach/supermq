@@ -67,13 +67,13 @@ func (svc service) Register(ctx context.Context, session authn.Session, u User, 
 
 	userID, err := svc.idProvider.ID()
 	if err != nil {
-		return User{}, svcerr.ErrIssueProviderID.Embed(err)
+		return User{}, errors.Wrap(svcerr.ErrIssueProviderID, err)
 	}
 
 	if u.Credentials.Secret != "" {
 		hash, err := svc.hasher.Hash(u.Credentials.Secret)
 		if err != nil {
-			return User{}, svcerr.ErrHashPassword.Embed(err)
+			return User{}, errors.Wrap(svcerr.ErrHashPassword, err)
 		}
 		u.Credentials.Secret = hash
 	}
@@ -88,7 +88,7 @@ func (svc service) Register(ctx context.Context, session authn.Session, u User, 
 	u.CreatedAt = time.Now().UTC()
 
 	if err := svc.addUserPolicy(ctx, u.ID, u.Role); err != nil {
-		return User{}, svcerr.ErrAddPolicies.Embed(err)
+		return User{}, errors.Wrap(svcerr.ErrAddPolicies, err)
 	}
 	defer func() {
 		if err != nil {
@@ -152,7 +152,7 @@ func (svc service) VerifyEmail(ctx context.Context, token string) (User, error) 
 	}
 
 	if err := stored.Match(received); err != nil {
-		return User{}, errMatchUserVerification.Embed(err)
+		return User{}, errors.Wrap(errMatchUserVerification, err)
 	}
 
 	if err := stored.Valid(); err != nil {

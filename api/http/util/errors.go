@@ -193,7 +193,7 @@ var (
 	ErrInvalidVisibilityType = errors.NewRequestError("invalid visibility type")
 
 	// ErrUnsupportedContentType indicates unacceptable or lack of Content-Type.
-	ErrUnsupportedContentType = errors.NewRequestError("unsupported content type")
+	ErrUnsupportedContentType = errors.NewMediaTypeError("unsupported content type")
 
 	// ErrRollbackTx indicates failed to rollback transaction.
 	ErrRollbackTx = errors.NewRequestError("failed to rollback transaction")

@@ -6,6 +6,7 @@ package errors
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 )
 
 // Error specifies an API that must be fullfiled by error type.
@@ -43,9 +44,6 @@ func (ce *customError) Error() string {
 	if ce == nil {
 		return ""
 	}
-	if ce.err == nil {
-		return ce.msg
-	}
 	return ce.err.Error()
 }
 
@@ -65,7 +63,6 @@ func (ce *customError) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// Contains inspects if e2 error is contained in any layer of e1 error.
 func Contains(e1, e2 error) bool {
 	if e1 == nil || e2 == nil {
 		return e2 == e1
@@ -91,7 +88,7 @@ func Wrap(wrapper, err error) error {
 	}
 	return &customError{
 		msg: wrapper.Error(),
-		err: cast(err),
+		err: fmt.Errorf("%w: %w", wrapper, err),
 	}
 }
 

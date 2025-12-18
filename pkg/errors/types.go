@@ -35,7 +35,7 @@ var (
 	ErrMissingMember = New("member id is not found")
 
 	// ErrEmailAlreadyExists indicates that the email id already exists.
-	ErrEmailAlreadyExists = New("email id already exists")
+	ErrEmailAlreadyExists = New("email id already registered")
 
 	// ErrUsernameNotAvailable indicates that the username is not available.
 	ErrUsernameNotAvailable = New("username not available")

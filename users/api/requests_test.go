@@ -17,7 +17,6 @@ import (
 
 const (
 	valid      = "valid"
-	invalid    = "invalid"
 	secret     = "QJg58*aMan7j"
 	name       = "user"
 	validEmail = "example@domain.com"

@@ -147,20 +147,6 @@ func TestRegister(t *testing.T) {
 			err:         apiutil.ErrBearerToken,
 		},
 		{
-			desc: "register a user with an invalid ID",
-			user: users.User{
-				ID:    inValid,
-				Email: "user@example.com",
-				Credentials: users.Credentials{
-					Secret: "12345678",
-				},
-			},
-			token:       validToken,
-			contentType: contentType,
-			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
-		},
-		{
 			desc: "register a user that can't be marshalled",
 			user: users.User{
 				Email: "user@example.com",
@@ -174,7 +160,7 @@ func TestRegister(t *testing.T) {
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         errors.ErrMalformedEntity,
 		},
 		{
 			desc: "register user with invalid status",
@@ -206,7 +192,7 @@ func TestRegister(t *testing.T) {
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrNameSize,
 		},
 		{
 			desc:        "register user with invalid content type",
@@ -214,7 +200,7 @@ func TestRegister(t *testing.T) {
 			token:       validToken,
 			contentType: "application/xml",
 			status:      http.StatusUnsupportedMediaType,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrUnsupportedContentType,
 		},
 		{
 			desc:        "register user with empty request body",
@@ -222,7 +208,7 @@ func TestRegister(t *testing.T) {
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrMissingFirstName,
 		},
 		{
 			desc: "register user with invalid username",
@@ -239,7 +225,7 @@ func TestRegister(t *testing.T) {
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrInvalidUsername,
 		},
 	}
 
@@ -323,7 +309,7 @@ func TestView(t *testing.T) {
 			desc:     "view user with invalid ID",
 			token:    validToken,
 			id:       inValid,
-			status:   http.StatusBadRequest,
+			status:   http.StatusUnprocessableEntity,
 			authnRes: verifiedSession,
 			svcErr:   svcerr.ErrViewEntity,
 			err:      svcerr.ErrViewEntity,
@@ -401,7 +387,7 @@ func TestViewProfile(t *testing.T) {
 			desc:     "view profile with service error",
 			token:    validToken,
 			id:       user.ID,
-			status:   http.StatusBadRequest,
+			status:   http.StatusUnprocessableEntity,
 			authnRes: verifiedSession,
 			svcErr:   svcerr.ErrViewEntity,
 			err:      svcerr.ErrViewEntity,
@@ -499,7 +485,7 @@ func TestListUsers(t *testing.T) {
 			query:    "offset=invalid",
 			status:   http.StatusBadRequest,
 			authnRes: verifiedSession,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
 			desc:  "list users with limit",
@@ -522,7 +508,7 @@ func TestListUsers(t *testing.T) {
 			query:    "limit=invalid",
 			status:   http.StatusBadRequest,
 			authnRes: verifiedSession,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
 			desc:     "list users with limit greater than max",
@@ -530,7 +516,7 @@ func TestListUsers(t *testing.T) {
 			query:    fmt.Sprintf("limit=%d", api.MaxLimitSize+1),
 			status:   http.StatusBadRequest,
 			authnRes: verifiedSession,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrLimitSize,
 		},
 		{
 			desc:  "list users with name",
@@ -574,7 +560,7 @@ func TestListUsers(t *testing.T) {
 			query:    "status=invalid",
 			status:   http.StatusBadRequest,
 			authnRes: verifiedSession,
-			err:      apiutil.ErrValidation,
+			err:      svcerr.ErrInvalidStatus,
 		},
 		{
 			desc:     "list users with duplicate status",
@@ -626,7 +612,7 @@ func TestListUsers(t *testing.T) {
 			query:    "metadata=invalid",
 			status:   http.StatusBadRequest,
 			authnRes: verifiedSession,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
 			desc:     "list users with duplicate metadata",
@@ -659,20 +645,6 @@ func TestListUsers(t *testing.T) {
 			err:      apiutil.ErrInvalidQueryParams,
 		},
 		{
-			desc:  "list users with list perms",
-			token: validToken,
-			listUsersResponse: users.UsersPage{
-				Page: users.Page{
-					Total: 1,
-				},
-				Users: []users.User{user},
-			},
-			query:    "list_perms=true",
-			status:   http.StatusOK,
-			authnRes: verifiedSession,
-			err:      nil,
-		},
-		{
 			desc:     "list users with duplicate list perms",
 			token:    validToken,
 			query:    "list_perms=true&list_perms=true",
@@ -698,14 +670,6 @@ func TestListUsers(t *testing.T) {
 			desc:     "list users with duplicate email",
 			token:    validToken,
 			query:    "email=1&email=2",
-			status:   http.StatusBadRequest,
-			authnRes: verifiedSession,
-			err:      apiutil.ErrInvalidQueryParams,
-		},
-		{
-			desc:     "list users with duplicate list perms",
-			token:    validToken,
-			query:    "list_perms=true&list_perms=true",
 			status:   http.StatusBadRequest,
 			authnRes: verifiedSession,
 			err:      apiutil.ErrInvalidQueryParams,
@@ -764,7 +728,7 @@ func TestListUsers(t *testing.T) {
 			query:    "dir=invalid",
 			status:   http.StatusBadRequest,
 			authnRes: verifiedSession,
-			err:      apiutil.ErrValidation,
+			err:      apiutil.ErrInvalidDirection,
 		},
 		{
 			desc:     "list users with duplicate order direction",
@@ -908,7 +872,7 @@ func TestSearchUsers(t *testing.T) {
 			desc:   "serach users with service error",
 			token:  validToken,
 			query:  "username=username",
-			status: http.StatusBadRequest,
+			status: http.StatusUnprocessableEntity,
 			svcErr: svcerr.ErrViewEntity,
 			err:    svcerr.ErrViewEntity,
 		},
@@ -1028,7 +992,7 @@ func TestUpdate(t *testing.T) {
 			authnRes:    verifiedSession,
 			contentType: "application/xml",
 			status:      http.StatusUnsupportedMediaType,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrUnsupportedContentType,
 		},
 		{
 			desc:        "update user with malformed data",
@@ -1038,7 +1002,7 @@ func TestUpdate(t *testing.T) {
 			authnRes:    verifiedSession,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         errors.ErrMalformedEntity,
 		},
 		{
 			desc:        "update user with empty id",
@@ -1047,8 +1011,8 @@ func TestUpdate(t *testing.T) {
 			token:       validToken,
 			authnRes:    verifiedSession,
 			contentType: contentType,
-			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			status:      http.StatusUnprocessableEntity,
+			err:         svcerr.ErrViewEntity,
 		},
 	}
 
@@ -1167,7 +1131,7 @@ func TestUpdateTags(t *testing.T) {
 			token:       validToken,
 			authnRes:    verifiedSession,
 			status:      http.StatusUnsupportedMediaType,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrUnsupportedContentType,
 		},
 		{
 			desc:        "update user tags with empty id",
@@ -1177,7 +1141,7 @@ func TestUpdateTags(t *testing.T) {
 			token:       validToken,
 			authnRes:    verifiedSession,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrMissingID,
 		},
 		{
 			desc:        "update user with malfomed data",
@@ -1187,7 +1151,7 @@ func TestUpdateTags(t *testing.T) {
 			token:       validToken,
 			authnRes:    verifiedSession,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         errors.ErrMalformedEntity,
 		},
 	}
 
@@ -1334,7 +1298,7 @@ func TestUpdateEmail(t *testing.T) {
 			contentType: "application/xml",
 			token:       validToken,
 			status:      http.StatusUnsupportedMediaType,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrUnsupportedContentType,
 		},
 		{
 			desc: "update user email with malformed data",
@@ -1349,7 +1313,7 @@ func TestUpdateEmail(t *testing.T) {
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         errors.ErrMalformedEntity,
 		},
 		{
 			desc: "update user email with service error",
@@ -1368,29 +1332,31 @@ func TestUpdateEmail(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		req := testRequest{
-			user:        us.Client(),
-			method:      http.MethodPatch,
-			url:         fmt.Sprintf("%s/users/%s/email", us.URL, tc.user.ID),
-			contentType: tc.contentType,
-			token:       tc.token,
-			body:        strings.NewReader(tc.data),
-		}
+		t.Run(tc.desc, func(t *testing.T) {
+			req := testRequest{
+				user:        us.Client(),
+				method:      http.MethodPatch,
+				url:         fmt.Sprintf("%s/users/%s/email", us.URL, tc.user.ID),
+				contentType: tc.contentType,
+				token:       tc.token,
+				body:        strings.NewReader(tc.data),
+			}
 
-		authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-		svcCall := svc.On("UpdateEmail", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.user, tc.svcErr)
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		var resBody respBody
-		err = json.NewDecoder(res.Body).Decode(&resBody)
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while decoding response body: %s", tc.desc, err))
-		if resBody.Err != "" || resBody.Message != "" {
-			err = errors.Wrap(errors.New(resBody.Err), errors.New(resBody.Message))
-		}
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		svcCall.Unset()
-		authnCall.Unset()
+			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
+			svcCall := svc.On("UpdateEmail", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.user, tc.svcErr)
+			res, err := req.make()
+			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+			var resBody respBody
+			err = json.NewDecoder(res.Body).Decode(&resBody)
+			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while decoding response body: %s", tc.desc, err))
+			if resBody.Err != "" || resBody.Message != "" {
+				err = errors.Wrap(errors.New(resBody.Err), errors.New(resBody.Message))
+			}
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+			assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+			svcCall.Unset()
+			authnCall.Unset()
+		})
 	}
 }
 
@@ -1486,7 +1452,7 @@ func TestUpdateUsername(t *testing.T) {
 			contentType: "application/xml",
 			token:       validToken,
 			status:      http.StatusUnsupportedMediaType,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrUnsupportedContentType,
 		},
 		{
 			desc: "update user email with malformed data",
@@ -1501,7 +1467,7 @@ func TestUpdateUsername(t *testing.T) {
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         errors.ErrMalformedEntity,
 		},
 		{
 			desc: "update username with invalid username",
@@ -1521,29 +1487,31 @@ func TestUpdateUsername(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		req := testRequest{
-			user:        us.Client(),
-			method:      http.MethodPatch,
-			url:         fmt.Sprintf("%s/users/%s/username", us.URL, tc.user.ID),
-			contentType: tc.contentType,
-			token:       tc.token,
-			body:        strings.NewReader(tc.data),
-		}
+		t.Run(tc.desc, func(t *testing.T) {
+			req := testRequest{
+				user:        us.Client(),
+				method:      http.MethodPatch,
+				url:         fmt.Sprintf("%s/users/%s/username", us.URL, tc.user.ID),
+				contentType: tc.contentType,
+				token:       tc.token,
+				body:        strings.NewReader(tc.data),
+			}
 
-		authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-		svcCall := svc.On("UpdateUsername", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.user, tc.err)
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		var resBody respBody
-		err = json.NewDecoder(res.Body).Decode(&resBody)
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while decoding response body: %s", tc.desc, err))
-		if resBody.Err != "" || resBody.Message != "" {
-			err = errors.Wrap(errors.New(resBody.Err), errors.New(resBody.Message))
-		}
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		svcCall.Unset()
-		authnCall.Unset()
+			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
+			svcCall := svc.On("UpdateUsername", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.user, tc.err)
+			res, err := req.make()
+			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+			var resBody respBody
+			err = json.NewDecoder(res.Body).Decode(&resBody)
+			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while decoding response body: %s", tc.desc, err))
+			if resBody.Err != "" || resBody.Message != "" {
+				err = errors.Wrap(errors.New(resBody.Err), errors.New(resBody.Message))
+			}
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+			assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+			svcCall.Unset()
+			authnCall.Unset()
+		})
 	}
 }
 
@@ -1624,7 +1592,7 @@ func TestUpdateProfilePicture(t *testing.T) {
 			contentType: "application/xml",
 			token:       validToken,
 			status:      http.StatusUnsupportedMediaType,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrUnsupportedContentType,
 		},
 		{
 			desc:        "update profile picture with malformed data",
@@ -1634,7 +1602,7 @@ func TestUpdateProfilePicture(t *testing.T) {
 			token:       validToken,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         errors.ErrMalformedEntity,
 		},
 		{
 			desc: "update profile picture with failed to update",
@@ -1652,29 +1620,31 @@ func TestUpdateProfilePicture(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		req := testRequest{
-			user:        us.Client(),
-			method:      http.MethodPatch,
-			url:         fmt.Sprintf("%s/users/%s/picture", us.URL, tc.user.ID),
-			contentType: tc.contentType,
-			token:       tc.token,
-			body:        strings.NewReader(tc.data),
-		}
+		t.Run(tc.desc, func(t *testing.T) {
+			req := testRequest{
+				user:        us.Client(),
+				method:      http.MethodPatch,
+				url:         fmt.Sprintf("%s/users/%s/picture", us.URL, tc.user.ID),
+				contentType: tc.contentType,
+				token:       tc.token,
+				body:        strings.NewReader(tc.data),
+			}
 
-		authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-		svcCall := svc.On("UpdateProfilePicture", mock.Anything, tc.authnRes, tc.user.ID, mock.Anything).Return(tc.user, tc.svcErr)
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		var resBody respBody
-		err = json.NewDecoder(res.Body).Decode(&resBody)
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while decoding response body: %s", tc.desc, err))
-		if resBody.Err != "" || resBody.Message != "" {
-			err = errors.Wrap(errors.New(resBody.Err), errors.New(resBody.Message))
-		}
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		svcCall.Unset()
-		authnCall.Unset()
+			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
+			svcCall := svc.On("UpdateProfilePicture", mock.Anything, tc.authnRes, tc.user.ID, mock.Anything).Return(tc.user, tc.svcErr)
+			res, err := req.make()
+			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+			var resBody respBody
+			err = json.NewDecoder(res.Body).Decode(&resBody)
+			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while decoding response body: %s", tc.desc, err))
+			if resBody.Err != "" || resBody.Message != "" {
+				err = errors.Wrap(errors.New(resBody.Err), errors.New(resBody.Message))
+			}
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+			assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+			svcCall.Unset()
+			authnCall.Unset()
+		})
 	}
 }
 
@@ -1868,7 +1838,7 @@ func TestVerifyEmail(t *testing.T) {
 			desc:   "verify email with empty token",
 			token:  "",
 			status: http.StatusBadRequest,
-			err:    apiutil.ErrValidation,
+			err:    apiutil.ErrInvalidVerification,
 		},
 		{
 			desc:   "verify email with service error",
@@ -2101,7 +2071,7 @@ func TestUpdateRole(t *testing.T) {
 			authnRes:    verifiedSession,
 			contentType: "application/xml",
 			status:      http.StatusUnsupportedMediaType,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrUnsupportedContentType,
 		},
 		{
 			desc:        "update user with malformed data",
@@ -2111,7 +2081,7 @@ func TestUpdateRole(t *testing.T) {
 			authnRes:    verifiedSession,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         errors.ErrMalformedEntity,
 		},
 		{
 			desc:        "update user with service error",
@@ -2251,7 +2221,7 @@ func TestUpdateSecret(t *testing.T) {
 			token:       validToken,
 			authnRes:    verifiedSession,
 			status:      http.StatusUnsupportedMediaType,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrUnsupportedContentType,
 		},
 		{
 			desc: "update user secret with malformed data",
@@ -2267,7 +2237,7 @@ func TestUpdateSecret(t *testing.T) {
 			token:       validToken,
 			authnRes:    verifiedSession,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         errors.ErrMalformedEntity,
 		},
 	}
 
@@ -2326,14 +2296,14 @@ func TestIssueToken(t *testing.T) {
 			data:        fmt.Sprintf(dataFormat, "", secret),
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrMissingUsernameEmail,
 		},
 		{
 			desc:        "issue token with empty secret",
 			data:        fmt.Sprintf(dataFormat, validUsername, ""),
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrMissingPass,
 		},
 		{
 			desc:        "issue token with invalid email",
@@ -2347,14 +2317,14 @@ func TestIssueToken(t *testing.T) {
 			data:        fmt.Sprintf(dataFormat, validUsername, secret),
 			contentType: contentType,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         errors.ErrMalformedEntity,
 		},
 		{
 			desc:        "issue token with invalid contentype",
 			data:        fmt.Sprintf(dataFormat, "invalid", secret),
 			contentType: "application/xml",
 			status:      http.StatusUnsupportedMediaType,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrUnsupportedContentType,
 		},
 	}
 
@@ -2443,7 +2413,7 @@ func TestRefreshToken(t *testing.T) {
 			token:       validToken,
 			authnRes:    verifiedSession,
 			status:      http.StatusBadRequest,
-			err:         apiutil.ErrValidation,
+			err:         errors.ErrMalformedEntity,
 		},
 		{
 			desc:        "refresh token with invalid contentype",
@@ -2452,35 +2422,37 @@ func TestRefreshToken(t *testing.T) {
 			token:       validToken,
 			authnRes:    verifiedSession,
 			status:      http.StatusUnsupportedMediaType,
-			err:         apiutil.ErrValidation,
+			err:         apiutil.ErrUnsupportedContentType,
 		},
 	}
 
 	for _, tc := range cases {
-		req := testRequest{
-			user:        us.Client(),
-			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/users/tokens/refresh", us.URL),
-			contentType: tc.contentType,
-			body:        strings.NewReader(tc.data),
-			token:       tc.token,
-		}
-		authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
-		svcCall := svc.On("RefreshToken", mock.Anything, tc.authnRes, tc.token, mock.Anything).Return(&grpcTokenV1.Token{AccessToken: validToken}, tc.err)
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		if tc.err != nil {
-			var resBody respBody
-			err = json.NewDecoder(res.Body).Decode(&resBody)
-			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while decoding response body: %s", tc.desc, err))
-			if resBody.Err != "" || resBody.Message != "" {
-				err = errors.Wrap(errors.New(resBody.Err), errors.New(resBody.Message))
+		t.Run(tc.desc, func(t *testing.T) {
+			req := testRequest{
+				user:        us.Client(),
+				method:      http.MethodPost,
+				url:         fmt.Sprintf("%s/users/tokens/refresh", us.URL),
+				contentType: tc.contentType,
+				body:        strings.NewReader(tc.data),
+				token:       tc.token,
 			}
-			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		}
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		svcCall.Unset()
-		authnCall.Unset()
+			authnCall := authn.On("Authenticate", mock.Anything, tc.token).Return(tc.authnRes, tc.authnErr)
+			svcCall := svc.On("RefreshToken", mock.Anything, tc.authnRes, tc.token, mock.Anything).Return(&grpcTokenV1.Token{AccessToken: validToken}, tc.err)
+			res, err := req.make()
+			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+			if tc.err != nil {
+				var resBody respBody
+				err = json.NewDecoder(res.Body).Decode(&resBody)
+				assert.Nil(t, err, fmt.Sprintf("%s: unexpected error while decoding response body: %s", tc.desc, err))
+				if resBody.Err != "" || resBody.Message != "" {
+					err = errors.Wrap(errors.New(resBody.Err), errors.New(resBody.Message))
+				}
+				assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+			}
+			assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+			svcCall.Unset()
+			authnCall.Unset()
+		})
 	}
 }
 

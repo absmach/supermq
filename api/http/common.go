@@ -203,6 +203,12 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
+	case *errors.MediaTypeError:
+		w.WriteHeader(http.StatusUnsupportedMediaType)
+		if err := json.NewEncoder(w).Encode(retErr); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
 	case *errors.ServiceError:
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		if err := json.NewEncoder(w).Encode(retErr); err != nil {
