@@ -44,6 +44,9 @@ func (ce *customError) Error() string {
 	if ce == nil {
 		return ""
 	}
+	if ce.err == nil {
+		return ce.msg
+	}
 	return ce.err.Error()
 }
 

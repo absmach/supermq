@@ -43,8 +43,11 @@ func TestNewSDKError(t *testing.T) {
 		t.Run(c.desc, func(t *testing.T) {
 			sdk := errors.NewSDKError(c.err)
 			if c.err != nil {
-				assert.Equal(t, sdk.StatusCode(), 0)
-				assert.Equal(t, sdk.Error(), fmt.Sprintf("Status: %s: %s", http.StatusText(0), c.err.Error()))
+				assert.NotNil(t, sdk)
+				assert.Equal(t, 0, sdk.StatusCode())
+				assert.Equal(t, fmt.Sprintf("Status: %s: %s", http.StatusText(0), c.err.Error()), sdk.Error())
+			} else {
+				assert.Nil(t, sdk)
 			}
 		})
 	}
@@ -102,8 +105,11 @@ func TestNewSDKErrorWithStatus(t *testing.T) {
 		t.Run(c.desc, func(t *testing.T) {
 			sdk := errors.NewSDKErrorWithStatus(c.err, c.sc)
 			if c.err != nil {
-				assert.Equal(t, sdk.StatusCode(), c.sc)
-				assert.Equal(t, sdk.Error(), fmt.Sprintf("Status: %s: %s", http.StatusText(c.sc), c.err.Error()))
+				assert.NotNil(t, sdk)
+				assert.Equal(t, c.sc, sdk.StatusCode())
+				assert.Equal(t, fmt.Sprintf("Status: %s: %s", http.StatusText(c.sc), c.err.Error()), sdk.Error())
+			} else {
+				assert.Nil(t, sdk)
 			}
 		})
 	}
@@ -196,10 +202,13 @@ func TestCheckError(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.desc, func(t *testing.T) {
 			sdk := errors.CheckError(c.resp, c.codes...)
-			assert.Equal(t, sdk, c.err)
 			if c.err != nil {
-				assert.Equal(t, sdk, c.err)
-				assert.Equal(t, sdk.StatusCode(), c.resp.StatusCode)
+				assert.NotNil(t, sdk)
+				assert.Equal(t, c.err.StatusCode(), sdk.StatusCode())
+				assert.Equal(t, c.err.Error(), sdk.Error())
+				assert.Equal(t, c.resp.StatusCode, sdk.StatusCode())
+			} else {
+				assert.Nil(t, sdk)
 			}
 		})
 	}

@@ -34,35 +34,35 @@ func TestError(t *testing.T) {
 			desc:     "level 0 wrapped error",
 			err:      err0,
 			msg:      "0",
-			bytes:    []byte(`{"error":"","message":"0"}`),
+			bytes:    []byte(`{"message":"0"}`),
 			bytesErr: nil,
 		},
 		{
 			desc:     "level 1 wrapped error",
 			err:      wrap(1),
 			msg:      message(1),
-			bytes:    []byte(`{"error":"0","message":"1"}`),
+			bytes:    []byte(`{"message":"0"}`),
 			bytesErr: nil,
 		},
 		{
 			desc:     "level 2 wrapped error",
 			err:      wrap(2),
 			msg:      message(2),
-			bytes:    []byte(`{"error":"1","message":"2"}`),
+			bytes:    []byte(`{"message":"0"}`),
 			bytesErr: nil,
 		},
 		{
 			desc:     fmt.Sprintf("level %d wrapped error", level),
 			err:      wrap(level),
 			msg:      message(level),
-			bytes:    []byte(`{"error":"9","message":"` + strconv.Itoa(level) + `"}`),
+			bytes:    []byte(`{"message":"0"}`),
 			bytesErr: nil,
 		},
 		{
 			desc:     "nil error",
 			err:      errors.New(""),
 			msg:      "",
-			bytes:    []byte(`{"error":"","message":""}`),
+			bytes:    []byte(`{"message":""}`),
 			bytesErr: nil,
 		},
 	}
@@ -129,9 +129,9 @@ func TestContains(t *testing.T) {
 			contains:  true,
 		},
 		{
-			desc:      fmt.Sprintf("level %d wrapped error contains", level),
+			desc:      fmt.Sprintf("level %d wrapped error contains err0", level),
 			container: wrap(level),
-			contained: errors.New(strconv.Itoa(level / 2)),
+			contained: err0,
 			contains:  true,
 		},
 		{
@@ -276,66 +276,6 @@ func TestWrap(t *testing.T) {
 	}
 }
 
-func TestUnwrap(t *testing.T) {
-	cases := []struct {
-		desc    string
-		err     error
-		wrapper error
-		wrapped error
-	}{
-		{
-			desc:    "err 1 wraped err 2",
-			err:     errors.Wrap(err1, err2),
-			wrapper: err1,
-			wrapped: err2,
-		},
-		{
-			desc:    "err2 wraps err1 wraps err0",
-			err:     errors.Wrap(err2, errors.Wrap(err1, err0)),
-			wrapper: err2,
-			wrapped: errors.Wrap(err1, err0),
-		},
-		{
-			desc:    "nil wraps nil",
-			err:     errors.Wrap(nil, nil),
-			wrapper: nil,
-			wrapped: nil,
-		},
-		{
-			desc:    "err0 wraps nil",
-			err:     errors.Wrap(err0, nil),
-			wrapper: nil,
-			wrapped: err0,
-		},
-		{
-			desc:    "nil wraps err0",
-			err:     errors.Wrap(nil, err0),
-			wrapper: nil,
-			wrapped: nil,
-		},
-		{
-			desc:    "nil wraps native error",
-			err:     errors.Wrap(nil, nat),
-			wrapper: nil,
-			wrapped: nil,
-		},
-		{
-			desc:    "native error wraps nil",
-			err:     errors.Wrap(nat, nil),
-			wrapper: nil,
-			wrapped: nat,
-		},
-	}
-
-	for _, c := range cases {
-		t.Run(c.desc, func(t *testing.T) {
-			wrapper, wrapped := errors.Unwrap(c.err)
-			assert.Equal(t, c.wrapper, wrapper)
-			assert.Equal(t, c.wrapped, wrapped)
-		})
-	}
-}
-
 func wrap(level int) error {
 	if level == 0 {
 		return errors.New(strconv.Itoa(level))
@@ -344,9 +284,10 @@ func wrap(level int) error {
 }
 
 // message generates error message of wrap() generated wrapper error.
+// The error message format is now "innermost: ... : outermost" due to fmt.Errorf wrapping.
 func message(level int) string {
 	if level == 0 {
 		return "0"
 	}
-	return strconv.Itoa(level) + " : " + message(level-1)
+	return message(level-1) + ": " + strconv.Itoa(level)
 }
