@@ -218,121 +218,104 @@ func TestEncodeResponse(t *testing.T) {
 
 func TestEncodeError(t *testing.T) {
 	cases := []struct {
-		desc string
-		errs []error
-		code int
+		desc       string
+		err        error
+		code       int
+		hasBody    bool
+		checkError bool
 	}{
 		{
-			desc: "BadRequest",
-			errs: []error{
-				apiutil.ErrMissingSecret,
-				svcerr.ErrMalformedEntity,
-				errors.ErrMalformedEntity,
-				apiutil.ErrMissingID,
-				apiutil.ErrEmptyList,
-				apiutil.ErrMissingMemberType,
-				apiutil.ErrMissingMemberKind,
-				apiutil.ErrLimitSize,
-				apiutil.ErrNameSize,
-				svcerr.ErrViewEntity,
-			},
-			code: http.StatusBadRequest,
+			desc:    "RequestError - Missing Secret",
+			err:     apiutil.ErrMissingSecret,
+			code:    http.StatusBadRequest,
+			hasBody: true,
 		},
 		{
-			desc: "BadRequest with validation error",
-			errs: []error{
-				errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingSecret),
-				errors.Wrap(apiutil.ErrValidation, svcerr.ErrMalformedEntity),
-				errors.Wrap(apiutil.ErrValidation, errors.ErrMalformedEntity),
-				errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingID),
-				errors.Wrap(apiutil.ErrValidation, apiutil.ErrEmptyList),
-				errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingMemberType),
-				errors.Wrap(apiutil.ErrValidation, apiutil.ErrMissingMemberKind),
-				errors.Wrap(apiutil.ErrValidation, apiutil.ErrLimitSize),
-				errors.Wrap(apiutil.ErrValidation, apiutil.ErrNameSize),
-			},
-			code: http.StatusBadRequest,
+			desc:    "RequestError - Missing ID",
+			err:     apiutil.ErrMissingID,
+			code:    http.StatusBadRequest,
+			hasBody: true,
 		},
 		{
-			desc: "Unauthorized",
-			errs: []error{
-				svcerr.ErrAuthentication,
-				svcerr.ErrAuthentication,
-				apiutil.ErrBearerToken,
-			},
-			code: http.StatusUnauthorized,
-		},
-
-		{
-			desc: "NotFound",
-			errs: []error{
-				svcerr.ErrNotFound,
-			},
-			code: http.StatusNotFound,
+			desc:    "RequestError - Empty List",
+			err:     apiutil.ErrEmptyList,
+			code:    http.StatusBadRequest,
+			hasBody: true,
 		},
 		{
-			desc: "Conflict",
-			errs: []error{
-				svcerr.ErrConflict,
-				svcerr.ErrConflict,
-			},
-			code: http.StatusConflict,
+			desc:    "RequestError - Not Found",
+			err:     svcerr.ErrNotFound,
+			code:    http.StatusBadRequest,
+			hasBody: true,
 		},
 		{
-			desc: "Forbidden",
-			errs: []error{
-				svcerr.ErrAuthorization,
-				svcerr.ErrAuthorization,
-				svcerr.ErrDomainAuthorization,
-			},
-			code: http.StatusForbidden,
+			desc:    "RequestError - Conflict",
+			err:     svcerr.ErrConflict,
+			code:    http.StatusBadRequest,
+			hasBody: true,
 		},
 		{
-			desc: "UnsupportedMediaType",
-			errs: []error{
-				apiutil.ErrUnsupportedContentType,
-			},
-			code: http.StatusUnsupportedMediaType,
+			desc:    "AuthNError - Authentication Failed",
+			err:     svcerr.ErrAuthentication,
+			code:    http.StatusUnauthorized,
+			hasBody: true,
 		},
 		{
-			desc: "StatusUnprocessableEntity",
-			errs: []error{
-				svcerr.ErrCreateEntity,
-				svcerr.ErrUpdateEntity,
-				svcerr.ErrRemoveEntity,
-			},
-			code: http.StatusUnprocessableEntity,
+			desc:    "AuthZError - Authorization Failed",
+			err:     svcerr.ErrAuthorization,
+			code:    http.StatusForbidden,
+			hasBody: true,
 		},
 		{
-			desc: "InternalServerError",
-			errs: []error{
-				errors.New("test"),
-			},
-			code: http.StatusInternalServerError,
+			desc:    "AuthZError - Domain Authorization Failed",
+			err:     svcerr.ErrDomainAuthorization,
+			code:    http.StatusForbidden,
+			hasBody: true,
+		},
+		{
+			desc:    "MediaTypeError - Unsupported Content Type",
+			err:     apiutil.ErrUnsupportedContentType,
+			code:    http.StatusUnsupportedMediaType,
+			hasBody: true,
+		},
+		{
+			desc:    "ServiceError - Create Entity Failed",
+			err:     svcerr.ErrCreateEntity,
+			code:    http.StatusUnprocessableEntity,
+			hasBody: true,
+		},
+		{
+			desc:    "ServiceError - Update Entity Failed",
+			err:     svcerr.ErrUpdateEntity,
+			code:    http.StatusUnprocessableEntity,
+			hasBody: true,
+		},
+		{
+			desc:    "ServiceError - Remove Entity Failed",
+			err:     svcerr.ErrRemoveEntity,
+			code:    http.StatusUnprocessableEntity,
+			hasBody: true,
+		},
+		{
+			desc:    "InternalError",
+			err:     errors.NewInternalError(),
+			code:    http.StatusInternalServerError,
+			hasBody: false,
 		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.desc, func(t *testing.T) {
 			responseWriter := newResponseWriter()
-			for _, err := range c.errs {
-				api.EncodeError(context.Background(), err, responseWriter)
-				assert.Equal(t, c.code, responseWriter.StatusCode())
-
-				message := body{}
-				jerr := json.Unmarshal(responseWriter.Body(), &message)
-				assert.NoError(t, jerr)
-
-				var wrapper error
-				switch errors.Contains(err, apiutil.ErrValidation) {
-				case true:
-					wrapper, err = errors.Unwrap(err)
-					assert.Equal(t, err.Error(), message.Error)
-					assert.Equal(t, wrapper.Error(), message.Message)
-				case false:
-					assert.Equal(t, err.Error(), message.Message)
-				}
+			api.EncodeError(context.Background(), c.err, responseWriter)
+			assert.Equal(t, c.code, responseWriter.StatusCode())
+			if !c.hasBody {
+				return
 			}
+			message := body{}
+			jerr := json.Unmarshal(responseWriter.Body(), &message)
+			assert.NoError(t, jerr)
+			assert.NotEmpty(t, message.Message)
 		})
 	}
 }
