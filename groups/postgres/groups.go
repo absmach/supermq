@@ -983,7 +983,7 @@ direct_groups_with_subgroup AS (
 		grm.member_id AS member_id,
 		gr.id AS role_id,
 		gr."name" AS role_name,
-		array_agg(DISTINCT all_actions."action") AS actions
+		array_agg(DISTINCT gra."action") AS actions
 	FROM
 		groups_role_members grm
 	JOIN
@@ -992,14 +992,13 @@ direct_groups_with_subgroup AS (
 		groups_roles gr ON gr.id = grm.role_id
 	JOIN
 		"groups" g ON g.id = gr.entity_id
-	JOIN
-		groups_role_actions all_actions ON all_actions.role_id = grm.role_id
 	WHERE
 		grm.member_id = '%s'
 		AND g.domain_id = '%s'
-		AND gra."action" LIKE 'subgroup_%%'
 	GROUP BY
 		gr.entity_id, grm.member_id, gr.id, gr."name", g."path", g.id
+	HAVING
+		bool_or(gra."action" LIKE 'subgroup_%%')
 ),
 direct_leaf_groups_with_subgroup  AS (
 	SELECT dgws.*
