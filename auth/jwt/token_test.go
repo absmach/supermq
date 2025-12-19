@@ -26,10 +26,7 @@ const (
 	secret     = "test"
 )
 
-var (
-	errInvalidIssuer = errors.New("invalid token issuer value")
-	reposecret       = []byte("test")
-)
+var reposecret = []byte("test")
 
 func newToken(issuerName string, key auth.Key) string {
 	builder := jwt.NewBuilder()
@@ -194,7 +191,7 @@ func TestParse(t *testing.T) {
 			desc:  "parse token with invalid issuer",
 			key:   auth.Key{},
 			token: inValidToken,
-			err:   errInvalidIssuer,
+			err:   svcerr.ErrAuthentication,
 		},
 		{
 			desc:  "parse token with invalid content",
@@ -212,7 +209,7 @@ func TestParse(t *testing.T) {
 			desc:  "parse token with empty type",
 			key:   emptyTypeKey,
 			token: emptyTypeToken,
-			err:   errors.ErrAuthentication,
+			err:   svcerr.ErrAuthentication,
 		},
 	}
 

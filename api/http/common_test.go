@@ -243,15 +243,15 @@ func TestEncodeError(t *testing.T) {
 			hasBody: true,
 		},
 		{
-			desc:    "RequestError - Not Found",
-			err:     svcerr.ErrNotFound,
+			desc:    "RequestError - Conflict",
+			err:     svcerr.ErrConflict,
 			code:    http.StatusBadRequest,
 			hasBody: true,
 		},
 		{
-			desc:    "RequestError - Conflict",
-			err:     svcerr.ErrConflict,
-			code:    http.StatusBadRequest,
+			desc:    "NotFoundError - Not Found",
+			err:     svcerr.ErrNotFound,
+			code:    http.StatusNotFound,
 			hasBody: true,
 		},
 		{

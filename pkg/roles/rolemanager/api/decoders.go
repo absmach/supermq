@@ -32,7 +32,7 @@ func (d Decoder) DecodeCreateRole(_ context.Context, r *http.Request) (any, erro
 		entityID: chi.URLParam(r, d.entityIDTemplate),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	return req, nil
 }
@@ -135,7 +135,7 @@ func (d Decoder) DecodeRemoveEntityMembers(_ context.Context, r *http.Request) (
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	return req, nil
 }
@@ -159,7 +159,7 @@ func (d Decoder) DecodeUpdateRole(_ context.Context, r *http.Request) (any, erro
 		roleID:   chi.URLParam(r, "roleID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	return req, nil
 }
@@ -190,7 +190,7 @@ func (d Decoder) DecodeAddRoleActions(_ context.Context, r *http.Request) (any, 
 		roleID:   chi.URLParam(r, "roleID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	return req, nil
 }
@@ -214,7 +214,7 @@ func (d Decoder) DecodeDeleteRoleActions(_ context.Context, r *http.Request) (an
 		roleID:   chi.URLParam(r, "roleID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	return req, nil
 }
@@ -238,7 +238,7 @@ func (d Decoder) DecodeAddRoleMembers(_ context.Context, r *http.Request) (any, 
 		roleID:   chi.URLParam(r, "roleID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	return req, nil
 }
@@ -272,7 +272,7 @@ func (d Decoder) DecodeDeleteRoleMembers(_ context.Context, r *http.Request) (an
 		roleID:   chi.URLParam(r, "roleID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(errors.ErrMalformedEntity, err))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	return req, nil
 }

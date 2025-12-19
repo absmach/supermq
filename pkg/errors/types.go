@@ -5,7 +5,7 @@ package errors
 
 var (
 	// ErrMalformedEntity indicates a malformed entity specification.
-	ErrMalformedEntity = New("malformed entity specification")
+	ErrMalformedEntity = NewRequestError("malformed entity specification")
 
 	// ErrUnsupportedContentType indicates invalid content type.
 	ErrUnsupportedContentType = New("invalid content type")

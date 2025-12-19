@@ -140,7 +140,7 @@ func decodeCreatePATRequest(_ context.Context, r *http.Request) (any, error) {
 	}
 	req := createPatReq{token: token}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(apiutil.ErrValidation, errors.Wrap(err, errors.ErrMalformedEntity))
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	return req, nil
 }
@@ -171,7 +171,7 @@ func decodeUpdatePATNameRequest(_ context.Context, r *http.Request) (any, error)
 		id:    chi.URLParam(r, "id"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	return req, nil
 }
@@ -190,7 +190,7 @@ func decodeUpdatePATDescriptionRequest(_ context.Context, r *http.Request) (any,
 		id:    chi.URLParam(r, "id"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	return req, nil
 }
@@ -262,7 +262,7 @@ func decodeResetPATSecretRequest(_ context.Context, r *http.Request) (any, error
 		id:    chi.URLParam(r, "id"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	return req, nil
 }
@@ -305,7 +305,7 @@ func decodeAddScopeRequest(_ context.Context, r *http.Request) (any, error) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 
 	return req, nil
@@ -348,7 +348,7 @@ func decodeRemoveScopeRequest(_ context.Context, r *http.Request) (any, error) {
 		id:    chi.URLParam(r, "id"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
+		return nil, errors.Wrap(apiutil.ErrMalformedRequestBody, err)
 	}
 	return req, nil
 }
