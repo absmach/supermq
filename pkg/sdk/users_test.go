@@ -763,7 +763,7 @@ func TestViewUser(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   svcerr.ErrNotFound,
 			response: sdk.User{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
 		},
 		{
 			desc:     "view user with empty id",
@@ -1400,7 +1400,7 @@ func TestResetPasswordRequest(t *testing.T) {
 			svcRes:   users.User{},
 			svcErr:   svcerr.ErrNotFound,
 			issueRes: &grpcTokenV1.Token{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
 		},
 		{
 			desc:     "reset password request with empty email",

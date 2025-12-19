@@ -711,7 +711,7 @@ func TestViewChannel(t *testing.T) {
 			svcRes:    channels.Channel{},
 			svcErr:    svcerr.ErrNotFound,
 			response:  sdk.Channel{},
-			err:       errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
 		},
 		{
 			desc:      "view channel with empty channel id",
@@ -889,7 +889,7 @@ func TestUpdateChannel(t *testing.T) {
 			svcRes:   channels.Channel{},
 			svcErr:   svcerr.ErrNotFound,
 			response: sdk.Channel{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
 		},
 		{
 			desc:     "update channel description with invalid channel id",
@@ -904,7 +904,7 @@ func TestUpdateChannel(t *testing.T) {
 			svcRes:   channels.Channel{},
 			svcErr:   svcerr.ErrNotFound,
 			response: sdk.Channel{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
 		},
 		{
 			desc:     "update channel metadata with invalid channel id",
@@ -923,7 +923,7 @@ func TestUpdateChannel(t *testing.T) {
 			svcRes:   channels.Channel{},
 			svcErr:   svcerr.ErrNotFound,
 			response: sdk.Channel{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
 		},
 		{
 			desc:     "update channel with invalid token",
@@ -1256,7 +1256,7 @@ func TestEnableChannel(t *testing.T) {
 			svcRes:    channels.Channel{},
 			svcErr:    svcerr.ErrNotFound,
 			response:  sdk.Channel{},
-			err:       errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
 		},
 		{
 			desc:      "enable channel with empty channel id",
@@ -1366,7 +1366,7 @@ func TestDisableChannel(t *testing.T) {
 			svcRes:    channels.Channel{},
 			svcErr:    svcerr.ErrNotFound,
 			response:  sdk.Channel{},
-			err:       errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
 		},
 		{
 			desc:      "disable channel with empty channel id",

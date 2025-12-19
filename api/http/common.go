@@ -223,5 +223,7 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 	case *errors.InternalError:
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	default:
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 }

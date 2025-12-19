@@ -672,7 +672,7 @@ func TestViewClient(t *testing.T) {
 			svcRes:    clients.Client{},
 			svcErr:    svcerr.ErrNotFound,
 			response:  sdk.Client{},
-			err:       errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
 		},
 		{
 			desc:      "view client with empty client id",

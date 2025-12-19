@@ -285,7 +285,7 @@ func TestAcceptInvitation(t *testing.T) {
 			token:    validToken,
 			domainID: wrongID,
 			svcErr:   svcerr.ErrNotFound,
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
 		},
 	}
 	for _, tc := range cases {
@@ -351,7 +351,7 @@ func TestRejectInvitation(t *testing.T) {
 			token:    validToken,
 			domainID: wrongID,
 			svcErr:   svcerr.ErrNotFound,
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
 		},
 	}
 	for _, tc := range cases {
@@ -430,7 +430,7 @@ func TestDeleteInvitation(t *testing.T) {
 			inviteeUserID: invitation.InviteeUserID,
 			domainID:      wrongID,
 			svcErr:        svcerr.ErrNotFound,
-			err:           errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
+			err:           errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
 		},
 	}
 	for _, tc := range cases {

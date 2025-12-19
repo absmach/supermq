@@ -617,7 +617,7 @@ func TestViewGroup(t *testing.T) {
 			svcRes:    groups.Group{},
 			svcErr:    svcerr.ErrNotFound,
 			response:  sdk.Group{},
-			err:       errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
+			err:       errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
 		},
 		{
 			desc:      "view group with service response that cannot be unmarshalled",
@@ -753,7 +753,7 @@ func TestUpdateGroup(t *testing.T) {
 			svcRes:   groups.Group{},
 			svcErr:   svcerr.ErrNotFound,
 			response: sdk.Group{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
 		},
 		{
 			desc:     "update group name with invalid token",
@@ -1066,7 +1066,7 @@ func TestEnableGroup(t *testing.T) {
 			svcRes:   groups.Group{},
 			svcErr:   svcerr.ErrNotFound,
 			response: sdk.Group{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
 		},
 		{
 			desc:            "enable group with invalid token",
@@ -1177,7 +1177,7 @@ func TestDisableGroup(t *testing.T) {
 			svcRes:   groups.Group{},
 			svcErr:   svcerr.ErrNotFound,
 			response: sdk.Group{},
-			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(svcerr.ErrNotFound, http.StatusNotFound),
 		},
 		{
 			desc:            "disable group with invalid token",
