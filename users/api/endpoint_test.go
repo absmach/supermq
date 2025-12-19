@@ -1678,7 +1678,7 @@ func TestPasswordResetRequest(t *testing.T) {
 			data:        fmt.Sprintf(`{"email": "%s", "host": "%s"}`, "invalid", testhost),
 			contentType: contentType,
 			referer:     testReferer,
-			status:      http.StatusBadRequest,
+			status:      http.StatusNotFound,
 			generateErr: svcerr.ErrNotFound,
 			err:         svcerr.ErrNotFound,
 		},

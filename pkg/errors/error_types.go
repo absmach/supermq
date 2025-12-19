@@ -45,7 +45,7 @@ func NewRequestErrorWithErr(message string, err error) NestError {
 	return &RequestError{
 		customError: customError{
 			msg: message,
-			err: err,
+			err: fmt.Errorf("%w: %w", errors.New(message), err),
 		},
 	}
 }
@@ -76,7 +76,7 @@ func NewAuthNErrorWithErr(message string, err error) NestError {
 	return &AuthNError{
 		customError: customError{
 			msg: message,
-			err: err,
+			err: fmt.Errorf("%w: %w", errors.New(message), err),
 		},
 	}
 }
@@ -114,7 +114,7 @@ func NewAuthZErrorWithErr(message string, err error) NestError {
 	return &AuthZError{
 		customError: customError{
 			msg: message,
-			err: cast(err),
+			err: fmt.Errorf("%w: %w", errors.New(message), err),
 		},
 	}
 }
@@ -138,8 +138,15 @@ func NewInternalErrorWithErr(err error) NestError {
 	return &InternalError{
 		customError: customError{
 			msg: "internal server error",
-			err: cast(err),
+			err: fmt.Errorf("%w: %w", errors.New("internal server error"), err),
 		},
+	}
+}
+
+func (e *InternalError) Embed(err error) error {
+	embedded := e.customError.Embed(err)
+	return &InternalError{
+		customError: *embedded.(*customError),
 	}
 }
 
@@ -162,7 +169,7 @@ func NewServiceErrorWithErr(message string, err error) NestError {
 	return &ServiceError{
 		customError: customError{
 			msg: message,
-			err: cast(err),
+			err: fmt.Errorf("%w: %w", errors.New(message), err),
 		},
 	}
 }
@@ -193,7 +200,7 @@ func NewMediaTypeErrorWithErr(message string, err error) NestError {
 	return &MediaTypeError{
 		customError: customError{
 			msg: message,
-			err: cast(err),
+			err: fmt.Errorf("%w: %w", errors.New(message), err),
 		},
 	}
 }
@@ -201,6 +208,37 @@ func NewMediaTypeErrorWithErr(message string, err error) NestError {
 func (e *MediaTypeError) Embed(err error) error {
 	embedded := e.customError.Embed(err)
 	return &MediaTypeError{
+		customError: *embedded.(*customError),
+	}
+}
+
+type NotFoundError struct {
+	customError
+}
+
+var _ NestError = (*NotFoundError)(nil)
+
+func NewNotFoundError(message string) NestError {
+	return &NotFoundError{
+		customError: customError{
+			msg: message,
+			err: errors.New(message),
+		},
+	}
+}
+
+func NewNotFoundErrorWithErr(message string, err error) NestError {
+	return &NotFoundError{
+		customError: customError{
+			msg: message,
+			err: fmt.Errorf("%w: %w", errors.New(message), err),
+		},
+	}
+}
+
+func (e *NotFoundError) Embed(err error) error {
+	embedded := e.customError.Embed(err)
+	return &NotFoundError{
 		customError: *embedded.(*customError),
 	}
 }

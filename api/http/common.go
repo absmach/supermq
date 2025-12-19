@@ -214,6 +214,12 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
+	case *errors.NotFoundError:
+		w.WriteHeader(http.StatusNotFound)
+		if err := json.NewEncoder(w).Encode(retErr); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
 	case *errors.InternalError:
 		w.WriteHeader(http.StatusInternalServerError)
 		return

@@ -78,7 +78,7 @@ func Contains(e1, e2 error) bool {
 		return Contains(ce.Err(), e2)
 	}
 
-	return errors.Is(e1, e2)
+	return errors.Is(e1, e2) || e1.Error() == e2.Error()
 }
 
 // Wrap returns an Error that wrap err with wrapper.
@@ -96,18 +96,6 @@ func Wrap(wrapper, err error) error {
 		msg: wrapper.Error(),
 		err: fmt.Errorf("%w: %w", wrapper, err),
 	}
-}
-
-// Unwrap returns the wrapper and the error by separating the Wrapper from the error.
-func Unwrap(err error) (error, error) {
-	if ce, ok := err.(Error); ok {
-		if ce.Err() == nil {
-			return nil, New(ce.Msg())
-		}
-		return New(ce.Msg()), ce.Err()
-	}
-
-	return nil, err
 }
 
 func cast(err error) Error {

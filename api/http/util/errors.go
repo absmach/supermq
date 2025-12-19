@@ -13,10 +13,10 @@ var (
 	ErrValidation = errors.NewRequestError("something went wrong with the request")
 
 	// ErrBearerToken indicates missing or invalid bearer user token.
-	ErrBearerToken = errors.New("missing or invalid bearer user token")
+	ErrBearerToken = errors.NewAuthNError("missing or invalid bearer user token")
 
 	// ErrBearerKey indicates missing or invalid bearer entity key.
-	ErrBearerKey = errors.New("missing or invalid bearer entity key")
+	ErrBearerKey = errors.NewAuthNError("missing or invalid bearer entity key")
 
 	// ErrMissingID indicates missing entity ID.
 	ErrMissingID = errors.NewRequestError("missing entity id")

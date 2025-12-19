@@ -253,7 +253,7 @@ func TestRetrieve(t *testing.T) {
 			desc:   "retrieve a non-existing key",
 			id:     "non-existing",
 			token:  token.AccessToken,
-			status: http.StatusBadRequest,
+			status: http.StatusNotFound,
 			err:    svcerr.ErrNotFound,
 		},
 		{

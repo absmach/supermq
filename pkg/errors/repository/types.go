@@ -11,7 +11,7 @@ var (
 	ErrMalformedEntity = errors.New("malformed entity specification")
 
 	// ErrNotFound indicates a non-existent entity request.
-	ErrNotFound = errors.NewRequestError("entity not found")
+	ErrNotFound = errors.NewNotFoundError("entity not found")
 
 	// ErrConflict indicates that entity already exists.
 	ErrConflict = errors.New("entity already exists")

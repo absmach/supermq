@@ -540,7 +540,7 @@ func TestRetrieveClientTelemetryEndpoint(t *testing.T) {
 			domainID: domanID,
 			clientID: "invalid",
 			url:      "/client/invalid/telemetry",
-			status:   http.StatusBadRequest,
+			status:   http.StatusNotFound,
 			svcErr:   svcerr.ErrNotFound,
 		},
 	}

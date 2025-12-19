@@ -52,7 +52,7 @@ var (
 	// ErrHashPassword indicates failure to hash password.
 	ErrHashPassword = errors.NewServiceError("failed to hash password")
 
-	// ErrStatusAlreadyAssigned indicated that the client or group has already been assigned the status.
+	// ErrStatusAlreadyAssigned indicates that the client or group has already been assigned the status.
 	ErrStatusAlreadyAssigned = errors.NewServiceError("status already assigned")
 
 	// ErrDeletePolicies indicates error in removing policies.
@@ -71,7 +71,7 @@ var (
 	ErrMalformedEntity = errors.New("malformed entity specification")
 
 	// ErrNotFound indicates a non-existent entity request.
-	ErrNotFound = errors.NewRequestError("entity not found")
+	ErrNotFound = errors.NewNotFoundError("entity not found")
 
 	// ErrConflict indicates that entity already exists.
 	ErrConflict = errors.NewRequestError("entity already exists")
@@ -110,7 +110,7 @@ var (
 	ErrRetainOneMember = errors.New("must retain at least one member")
 
 	// ErrUserVerificationExpired indicates user verification is expired.
-	ErrUserVerificationExpired = errors.New("verification expired, please generate New verification")
+	ErrUserVerificationExpired = errors.New("verification expired, please generate new verification")
 
 	// ErrRegisterUser indicates error in register a user.
 	ErrRegisterUser = errors.New("failed to register user")
