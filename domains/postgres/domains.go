@@ -660,26 +660,30 @@ func toDomain(d dbDomain) (domains.Domain, error) {
 }
 
 type dbDomainsPage struct {
-	Total    uint64         `db:"total"`
-	Limit    uint64         `db:"limit"`
-	Offset   uint64         `db:"offset"`
-	Order    string         `db:"order"`
-	Dir      string         `db:"dir"`
-	Name     string         `db:"name"`
-	RoleID   string         `db:"role_id"`
-	RoleName string         `db:"role_name"`
-	Actions  pq.StringArray `db:"actions"`
-	ID       string         `db:"id"`
-	IDs      []string       `db:"ids"`
-	Metadata []byte         `db:"metadata"`
-	Tag      string         `db:"tag"`
-	Status   domains.Status `db:"status"`
-	UserID   string         `db:"member_id"`
+	Total    uint64           `db:"total"`
+	Limit    uint64           `db:"limit"`
+	Offset   uint64           `db:"offset"`
+	Order    string           `db:"order"`
+	Dir      string           `db:"dir"`
+	Name     string           `db:"name"`
+	RoleID   string           `db:"role_id"`
+	RoleName string           `db:"role_name"`
+	Actions  pq.StringArray   `db:"actions"`
+	ID       string           `db:"id"`
+	IDs      []string         `db:"ids"`
+	Metadata []byte           `db:"metadata"`
+	Tags     pgtype.TextArray `db:"tags"`
+	Status   domains.Status   `db:"status"`
+	UserID   string           `db:"member_id"`
 }
 
 func toDBDomainsPage(pm domains.Page) (dbDomainsPage, error) {
 	_, data, err := postgres.CreateMetadataQuery("", pm.Metadata)
 	if err != nil {
+		return dbDomainsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+	var tags pgtype.TextArray
+	if err := tags.Set(pm.Tags.Elements); err != nil {
 		return dbDomainsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
 	return dbDomainsPage{
@@ -695,7 +699,7 @@ func toDBDomainsPage(pm domains.Page) (dbDomainsPage, error) {
 		ID:       pm.ID,
 		IDs:      pm.IDs,
 		Metadata: data,
-		Tag:      pm.Tag,
+		Tags:     tags,
 		Status:   pm.Status,
 		UserID:   pm.UserID,
 	}, nil
@@ -737,8 +741,13 @@ func buildPageQuery(pm domains.Page) (string, error) {
 		}
 	}
 
-	if pm.Tag != "" {
-		query = append(query, "EXISTS (SELECT 1 FROM unnest(tags) AS tag WHERE tag ILIKE '%' || :tag || '%')")
+	if len(pm.Tags.Elements) > 0 {
+		switch pm.Tags.Operator {
+		case domains.AndOp:
+			query = append(query, "tags @> :tags")
+		default: // OR
+			query = append(query, "tags && :tags")
+		}
 	}
 
 	mq, _, err := postgres.CreateMetadataQuery("", pm.Metadata)

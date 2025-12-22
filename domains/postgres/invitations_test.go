@@ -840,8 +840,8 @@ func saveDomain(t *testing.T, repo domains.Repository) domains.Domain {
 		},
 		CreatedBy: userID,
 		UpdatedBy: userID,
-		CreatedAt: time.Now().UTC().Truncate(time.Millisecond),
-		UpdatedAt: time.Now().UTC().Truncate(time.Millisecond),
+		CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
+		UpdatedAt: time.Now().UTC().Truncate(time.Microsecond),
 		Status:    domains.EnabledStatus,
 	}
 

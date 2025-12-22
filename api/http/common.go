@@ -37,6 +37,7 @@ const (
 	MetadataKey = "metadata"
 	NameKey     = "name"
 	TagKey      = "tag"
+	TagsKey     = "tags"
 	StatusKey   = "status"
 
 	ClientKey   = "client"

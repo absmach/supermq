@@ -1170,6 +1170,14 @@ func buildQuery(gm groups.PageMeta, ids ...string) string {
 	if gm.Status != groups.AllStatus {
 		queries = append(queries, "g.status = :status")
 	}
+	if len(gm.Tags.Elements) > 0 {
+		switch gm.Tags.Operator {
+		case groups.AndOp:
+			queries = append(queries, "tags @> :tags")
+		default: // OR
+			queries = append(queries, "tags && :tags")
+		}
+	}
 	if gm.DomainID != "" {
 		queries = append(queries, "g.domain_id = :domain_id")
 	}
@@ -1328,10 +1336,15 @@ func toDBGroupPageMeta(pm groups.PageMeta) (dbGroupPageMeta, error) {
 		}
 		data = b
 	}
+	var tags pgtype.TextArray
+	if err := tags.Set(pm.Tags.Elements); err != nil {
+		return dbGroupPageMeta{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
 	return dbGroupPageMeta{
 		ID:         pm.ID,
 		Name:       pm.Name,
 		Metadata:   data,
+		Tags:       tags,
 		Total:      pm.Total,
 		Offset:     pm.Offset,
 		Limit:      pm.Limit,
@@ -1345,22 +1358,23 @@ func toDBGroupPageMeta(pm groups.PageMeta) (dbGroupPageMeta, error) {
 }
 
 type dbGroupPageMeta struct {
-	ID         string         `db:"id"`
-	Name       string         `db:"name"`
-	ParentID   string         `db:"parent_id"`
-	DomainID   string         `db:"domain_id"`
-	Metadata   []byte         `db:"metadata"`
-	Path       string         `db:"path"`
-	Level      uint64         `db:"level"`
-	Total      uint64         `db:"total"`
-	Limit      uint64         `db:"limit"`
-	Offset     uint64         `db:"offset"`
-	Subject    string         `db:"subject"`
-	RoleName   string         `db:"role_name"`
-	RoleID     string         `db:"role_id"`
-	Actions    pq.StringArray `db:"actions"`
-	AccessType string         `db:"access_type"`
-	Status     groups.Status  `db:"status"`
+	ID         string           `db:"id"`
+	Name       string           `db:"name"`
+	ParentID   string           `db:"parent_id"`
+	DomainID   string           `db:"domain_id"`
+	Metadata   []byte           `db:"metadata"`
+	Path       string           `db:"path"`
+	Level      uint64           `db:"level"`
+	Total      uint64           `db:"total"`
+	Limit      uint64           `db:"limit"`
+	Offset     uint64           `db:"offset"`
+	Subject    string           `db:"subject"`
+	RoleName   string           `db:"role_name"`
+	RoleID     string           `db:"role_id"`
+	Actions    pq.StringArray   `db:"actions"`
+	AccessType string           `db:"access_type"`
+	Status     groups.Status    `db:"status"`
+	Tags       pgtype.TextArray `db:"tags"`
 }
 
 func (repo groupRepository) processRows(rows *sqlx.Rows) ([]groups.Group, error) {

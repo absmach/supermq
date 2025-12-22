@@ -485,7 +485,7 @@ func TestListClients(t *testing.T) {
 			pageMeta: sdk.PageMetadata{
 				Offset: 0,
 				Limit:  100,
-				Tag:    "tag1",
+				Tags:   sdk.TagsQuery{Elements: []string{"tag1"}, Operator: sdk.OrOp},
 			},
 			svcReq: clients.Page{
 				Actions: []string{},
@@ -493,7 +493,7 @@ func TestListClients(t *testing.T) {
 				Dir:     "desc",
 				Offset:  0,
 				Limit:   100,
-				Tag:     "tag1",
+				Tags:    clients.TagsQuery{Elements: []string{"tag1"}, Operator: clients.OrOp},
 			},
 			svcRes: clients.ClientsPage{
 				Page: clients.Page{
