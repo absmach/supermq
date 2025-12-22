@@ -43,12 +43,12 @@ func NormalizeUser(data []byte, provider string) (users.User, error) {
 	}
 
 	return users.User{
-		ID:             user.ID,
-		FirstName:      user.FirstName,
-		LastName:       user.LastName,
-		Email:          user.Email,
-		ProfilePicture: user.Picture,
-		Metadata:       users.Metadata{"oauth_provider": provider},
+		ID:              user.ID,
+		FirstName:       user.FirstName,
+		LastName:        user.LastName,
+		Email:           user.Email,
+		ProfilePicture:  user.Picture,
+		PrivateMetadata: users.Metadata{"oauth_provider": provider},
 	}, nil
 }
 

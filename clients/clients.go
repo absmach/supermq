@@ -153,18 +153,19 @@ type Cache interface {
 // Client Struct represents a client.
 
 type Client struct {
-	ID          string      `json:"id"`
-	Name        string      `json:"name,omitempty"`
-	Tags        []string    `json:"tags,omitempty"`
-	Domain      string      `json:"domain_id,omitempty"`
-	ParentGroup string      `json:"parent_group_id,omitempty"`
-	Credentials Credentials `json:"credentials,omitempty"`
-	Metadata    Metadata    `json:"metadata,omitempty"`
-	CreatedAt   time.Time   `json:"created_at,omitempty"`
-	UpdatedAt   time.Time   `json:"updated_at,omitempty"`
-	UpdatedBy   string      `json:"updated_by,omitempty"`
-	Status      Status      `json:"status,omitempty"` // 1 for enabled, 0 for disabled
-	Identity    string      `json:"identity,omitempty"`
+	ID              string      `json:"id"`
+	Name            string      `json:"name,omitempty"`
+	Tags            []string    `json:"tags,omitempty"`
+	Domain          string      `json:"domain_id,omitempty"`
+	ParentGroup     string      `json:"parent_group_id,omitempty"`
+	Credentials     Credentials `json:"credentials,omitempty"`
+	PublicMetadata  Metadata    `json:"public_metadata,omitempty"`
+	PrivateMetadata Metadata    `json:"private_metadata,omitempty"`
+	CreatedAt       time.Time   `json:"created_at,omitempty"`
+	UpdatedAt       time.Time   `json:"updated_at,omitempty"`
+	UpdatedBy       string      `json:"updated_by,omitempty"`
+	Status          Status      `json:"status,omitempty"` // 1 for enabled, 0 for disabled
+	Identity        string      `json:"identity,omitempty"`
 	// Extended
 	ParentGroupPath           string                    `json:"parent_group_path,omitempty"`
 	RoleID                    string                    `json:"role_id,omitempty"`

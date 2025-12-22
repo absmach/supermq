@@ -708,7 +708,7 @@ Available update options:
 			case len(tc.args) == 4: // Basic user update
 				sdkCall = sdkMock.On("UpdateUser", mock.Anything, mgsdk.User{
 					FirstName: "new name",
-					Metadata: mgsdk.Metadata{
+					PublicMetadata: mgsdk.Metadata{
 						"key": "value",
 					},
 				}, tc.args[3]).Return(tc.user, tc.sdkErr)

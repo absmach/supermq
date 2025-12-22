@@ -34,14 +34,15 @@ var (
 	validCMetadata = users.Metadata{"role": "user"}
 	userID         = "d8dd12ef-aa2a-43fe-8ef2-2e4fe514360f"
 	user           = users.User{
-		ID:          userID,
-		FirstName:   "firstname",
-		LastName:    "lastname",
-		Tags:        []string{"tag1", "tag2"},
-		Credentials: users.Credentials{Username: "username", Secret: secret},
-		Email:       "useremail@email.com",
-		Metadata:    validCMetadata,
-		Status:      users.EnabledStatus,
+		ID:              userID,
+		FirstName:       "firstname",
+		LastName:        "lastname",
+		Tags:            []string{"tag1", "tag2"},
+		Credentials:     users.Credentials{Username: "username", Secret: secret},
+		Email:           "useremail@email.com",
+		PublicMetadata:  validCMetadata,
+		PrivateMetadata: validCMetadata,
+		Status:          users.EnabledStatus,
 	}
 	basicUser = users.User{
 		Credentials: users.Credentials{
@@ -127,7 +128,10 @@ func TestRegister(t *testing.T) {
 				Credentials: users.Credentials{
 					Secret: secret,
 				},
-				Metadata: users.Metadata{
+				PublicMetadata: users.Metadata{
+					"name": "newuserwithallfields",
+				},
+				PrivateMetadata: users.Metadata{
 					"name": "newuserwithallfields",
 				},
 				Status: users.EnabledStatus,
@@ -518,7 +522,8 @@ func TestUpdateUser(t *testing.T) {
 	updateFirstName := "Updated user"
 	user1.FirstName = updateFirstName
 	updatedMetadata := users.Metadata{"role": "test"}
-	user2.Metadata = updatedMetadata
+	user2.PublicMetadata = updatedMetadata
+	user2.PrivateMetadata = updatedMetadata
 	adminID := testsutil.GenerateUUID(t)
 
 	cases := []struct {
@@ -547,10 +552,21 @@ func TestUpdateUser(t *testing.T) {
 			err:              nil,
 		},
 		{
-			desc:   "update metadata successfully as normal user",
+			desc:   "update public metadata successfully as normal user",
 			userID: user2.ID,
 			userReq: users.UserReq{
-				Metadata: &updatedMetadata,
+				PublicMetadata: &updatedMetadata,
+			},
+			session:        authn.Session{UserID: user2.ID},
+			updateResponse: user2,
+			token:          validToken,
+			err:            nil,
+		},
+		{
+			desc:   "update private metadata successfully as normal user",
+			userID: user2.ID,
+			userReq: users.UserReq{
+				PrivateMetadata: &updatedMetadata,
 			},
 			session:          authn.Session{UserID: user2.ID},
 			updateResponse:   user2,
@@ -584,10 +600,10 @@ func TestUpdateUser(t *testing.T) {
 			err:              nil,
 		},
 		{
-			desc:   "update user metadata as admin successfully",
+			desc:   "update user public metadata as admin successfully",
 			userID: user2.ID,
 			userReq: users.UserReq{
-				Metadata: &updatedMetadata,
+				PublicMetadata: &updatedMetadata,
 			},
 			session:          authn.Session{UserID: adminID, SuperAdmin: true},
 			updateResponse:   user2,
@@ -651,18 +667,18 @@ func TestUpdateUser(t *testing.T) {
 			desc:   "update user metadata with external auth provider should succeed",
 			userID: user2.ID,
 			userReq: users.UserReq{
-				Metadata: &updatedMetadata,
+				PublicMetadata: &updatedMetadata,
 			},
 			session: authn.Session{UserID: user2.ID},
 			retrieveByIDResp: users.User{
-				ID:           user2.ID,
-				AuthProvider: "google",
-				Metadata:     updatedMetadata,
+				ID:             user2.ID,
+				AuthProvider:   "google",
+				PublicMetadata: updatedMetadata,
 			},
 			updateResponse: users.User{
-				ID:           user2.ID,
-				AuthProvider: "google",
-				Metadata:     updatedMetadata,
+				ID:             user2.ID,
+				AuthProvider:   "google",
+				PublicMetadata: updatedMetadata,
 			},
 			token: validToken,
 			err:   nil,

@@ -29,24 +29,26 @@ import (
 )
 
 var (
-	secret         = "strongsecret"
-	validTMetadata = clients.Metadata{"role": "client"}
-	ID             = "6e5e10b3-d4df-4758-b426-4929d55ad740"
-	client         = clients.Client{
-		ID:          ID,
-		Name:        "clientname",
-		Tags:        []string{"tag1", "tag2"},
-		Credentials: clients.Credentials{Identity: "clientidentity", Secret: secret},
-		Metadata:    validTMetadata,
-		Status:      clients.EnabledStatus,
+	secret        = "strongsecret"
+	validMetadata = clients.Metadata{"role": "client"}
+	ID            = "6e5e10b3-d4df-4758-b426-4929d55ad740"
+	client        = clients.Client{
+		ID:              ID,
+		Name:            "clientname",
+		Tags:            []string{"tag1", "tag2"},
+		Credentials:     clients.Credentials{Identity: "clientidentity", Secret: secret},
+		PublicMetadata:  validMetadata,
+		PrivateMetadata: validMetadata,
+		Status:          clients.EnabledStatus,
 	}
 	clientWithRoles = clients.Client{
-		ID:          ID,
-		Name:        "clientname",
-		Tags:        []string{"tag1", "tag2"},
-		Credentials: clients.Credentials{Identity: "clientidentity", Secret: secret},
-		Metadata:    validTMetadata,
-		Status:      clients.EnabledStatus,
+		ID:              ID,
+		Name:            "clientname",
+		Tags:            []string{"tag1", "tag2"},
+		Credentials:     clients.Credentials{Identity: "clientidentity", Secret: secret},
+		PublicMetadata:  validMetadata,
+		PrivateMetadata: validMetadata,
+		Status:          clients.EnabledStatus,
 		Roles: []roles.MemberRoleActions{
 			{
 				RoleID:   "test_role_id",
@@ -187,26 +189,39 @@ func TestCreateClients(t *testing.T) {
 			err:   nil,
 		},
 		{
-			desc: "create a new enabled client with metadata",
+			desc: "create a new enabled client with public metadata",
 			client: clients.Client{
 				Credentials: clients.Credentials{
 					Identity: "newclientwithmetadata@example.com",
 					Secret:   secret,
 				},
-				Metadata: validTMetadata,
-				Status:   clients.EnabledStatus,
+				PublicMetadata: validMetadata,
+				Status:         clients.EnabledStatus,
 			},
 			token: validToken,
 			err:   nil,
 		},
 		{
-			desc: "create a new disabled client with metadata",
+			desc: "create a new enabled client with private metadata",
 			client: clients.Client{
 				Credentials: clients.Credentials{
 					Identity: "newclientwithmetadata@example.com",
 					Secret:   secret,
 				},
-				Metadata: validTMetadata,
+				PrivateMetadata: validMetadata,
+				Status:          clients.EnabledStatus,
+			},
+			token: validToken,
+			err:   nil,
+		},
+		{
+			desc: "create a new disabled client with public metadata",
+			client: clients.Client{
+				Credentials: clients.Credentials{
+					Identity: "newclientwithmetadata@example.com",
+					Secret:   secret,
+				},
+				PublicMetadata: validMetadata,
 			},
 			token: validToken,
 			err:   nil,
@@ -243,7 +258,10 @@ func TestCreateClients(t *testing.T) {
 					Identity: "newclientwithallfields@example.com",
 					Secret:   secret,
 				},
-				Metadata: clients.Metadata{
+				PublicMetadata: clients.Metadata{
+					"name": "newclientwithallfields",
+				},
+				PrivateMetadata: clients.Metadata{
 					"name": "newclientwithallfields",
 				},
 				Status: clients.EnabledStatus,
@@ -592,7 +610,8 @@ func TestUpdateClient(t *testing.T) {
 	client1 := client
 	client2 := client
 	client1.Name = "Updated client"
-	client2.Metadata = clients.Metadata{"role": "test"}
+	client2.PublicMetadata = clients.Metadata{"role": "test"}
+	client2.PrivateMetadata = clients.Metadata{"role": "test"}
 
 	cases := []struct {
 		desc           string

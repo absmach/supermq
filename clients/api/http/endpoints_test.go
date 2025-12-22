@@ -32,16 +32,17 @@ import (
 )
 
 var (
-	secret         = "strongsecret"
-	validCMetadata = clients.Metadata{"role": "client"}
-	ID             = testsutil.GenerateUUID(&testing.T{})
-	client         = clients.Client{
-		ID:          ID,
-		Name:        "clientname",
-		Tags:        []string{"tag1", "tag2"},
-		Credentials: clients.Credentials{Identity: "clientidentity", Secret: secret},
-		Metadata:    validCMetadata,
-		Status:      clients.EnabledStatus,
+	secret        = "strongsecret"
+	validMetadata = clients.Metadata{"role": "client"}
+	ID            = testsutil.GenerateUUID(&testing.T{})
+	client        = clients.Client{
+		ID:              ID,
+		Name:            "clientname",
+		Tags:            []string{"tag1", "tag2"},
+		Credentials:     clients.Credentials{Identity: "clientidentity", Secret: secret},
+		PublicMetadata:  validMetadata,
+		PrivateMetadata: validMetadata,
+		Status:          clients.EnabledStatus,
 	}
 	validToken   = "token"
 	inValidToken = "invalid"
@@ -170,7 +171,7 @@ func TestCreateClient(t *testing.T) {
 					Identity: "user@example.com",
 					Secret:   "12345678",
 				},
-				Metadata: map[string]any{
+				PublicMetadata: map[string]any{
 					"test": make(chan int),
 				},
 			},
@@ -260,8 +261,9 @@ func TestCreateClients(t *testing.T) {
 				Identity: fmt.Sprintf("%s@example.com", namesgen.Generate()),
 				Secret:   secret,
 			},
-			Metadata: clients.Metadata{},
-			Status:   clients.EnabledStatus,
+			PublicMetadata:  clients.Metadata{},
+			PrivateMetadata: clients.Metadata{},
+			Status:          clients.EnabledStatus,
 		}
 		items = append(items, client)
 	}
@@ -362,7 +364,7 @@ func TestCreateClients(t *testing.T) {
 						Identity: "user@example.com",
 						Secret:   "12345678",
 					},
-					Metadata: map[string]any{
+					PublicMetadata: map[string]any{
 						"test": make(chan int),
 					},
 				},
@@ -870,14 +872,14 @@ func TestUpdateClient(t *testing.T) {
 			domainID:    domainID,
 			id:          client.ID,
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
-			data:        fmt.Sprintf(`{"name":"%s","tags":["%s"],"metadata":%s}`, newName, newTag, toJSON(newMetadata)),
+			data:        fmt.Sprintf(`{"name":"%s","tags":["%s"],"public_metadata":%s}`, newName, newTag, toJSON(newMetadata)),
 			token:       validToken,
 			contentType: contentType,
 			clientResponse: clients.Client{
-				ID:       client.ID,
-				Name:     newName,
-				Tags:     []string{newTag},
-				Metadata: newMetadata,
+				ID:             client.ID,
+				Name:           newName,
+				Tags:           []string{newTag},
+				PublicMetadata: newMetadata,
 			},
 			status: http.StatusOK,
 
@@ -886,7 +888,7 @@ func TestUpdateClient(t *testing.T) {
 		{
 			desc:        "update client with invalid token",
 			id:          client.ID,
-			data:        fmt.Sprintf(`{"name":"%s","tags":["%s"],"metadata":%s}`, newName, newTag, toJSON(newMetadata)),
+			data:        fmt.Sprintf(`{"name":"%s","tags":["%s"],"public_metadata":%s}`, newName, newTag, toJSON(newMetadata)),
 			domainID:    domainID,
 			token:       inValidToken,
 			contentType: contentType,
@@ -897,7 +899,7 @@ func TestUpdateClient(t *testing.T) {
 		{
 			desc:        "update client with empty token",
 			id:          client.ID,
-			data:        fmt.Sprintf(`{"name":"%s","tags":["%s"],"metadata":%s}`, newName, newTag, toJSON(newMetadata)),
+			data:        fmt.Sprintf(`{"name":"%s","tags":["%s"],"public_metadata":%s}`, newName, newTag, toJSON(newMetadata)),
 			domainID:    domainID,
 			token:       "",
 			contentType: contentType,
@@ -907,7 +909,7 @@ func TestUpdateClient(t *testing.T) {
 		{
 			desc:        "update client with invalid contentype",
 			id:          client.ID,
-			data:        fmt.Sprintf(`{"name":"%s","tags":["%s"],"metadata":%s}`, newName, newTag, toJSON(newMetadata)),
+			data:        fmt.Sprintf(`{"name":"%s","tags":["%s"],"public_metadata":%s}`, newName, newTag, toJSON(newMetadata)),
 			domainID:    domainID,
 			token:       validToken,
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
@@ -929,7 +931,7 @@ func TestUpdateClient(t *testing.T) {
 		{
 			desc:        "update client with empty id",
 			id:          " ",
-			data:        fmt.Sprintf(`{"name":"%s","tags":["%s"],"metadata":%s}`, newName, newTag, toJSON(newMetadata)),
+			data:        fmt.Sprintf(`{"name":"%s","tags":["%s"],"public_metadata":%s}`, newName, newTag, toJSON(newMetadata)),
 			domainID:    domainID,
 			token:       validToken,
 			authnRes:    smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
@@ -941,7 +943,7 @@ func TestUpdateClient(t *testing.T) {
 			desc:           "update client with name that is too long",
 			id:             client.ID,
 			authnRes:       smqauthn.Session{DomainUserID: domainID + "_" + validID, UserID: validID, DomainID: domainID},
-			data:           fmt.Sprintf(`{"name":"%s","tags":["%s"],"metadata":%s}`, strings.Repeat("a", api.MaxNameSize+1), newTag, toJSON(newMetadata)),
+			data:           fmt.Sprintf(`{"name":"%s","tags":["%s"],"public_metadata":%s}`, strings.Repeat("a", api.MaxNameSize+1), newTag, toJSON(newMetadata)),
 			domainID:       domainID,
 			token:          validToken,
 			contentType:    contentType,

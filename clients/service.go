@@ -166,11 +166,12 @@ func (svc service) ListUserClients(ctx context.Context, session authn.Session, u
 
 func (svc service) Update(ctx context.Context, session authn.Session, cli Client) (Client, error) {
 	client := Client{
-		ID:        cli.ID,
-		Name:      cli.Name,
-		Metadata:  cli.Metadata,
-		UpdatedAt: time.Now().UTC(),
-		UpdatedBy: session.UserID,
+		ID:              cli.ID,
+		Name:            cli.Name,
+		PublicMetadata:  cli.PublicMetadata,
+		PrivateMetadata: cli.PrivateMetadata,
+		UpdatedAt:       time.Now().UTC(),
+		UpdatedBy:       session.UserID,
 	}
 	client, err := svc.repo.Update(ctx, client)
 	if err != nil {
