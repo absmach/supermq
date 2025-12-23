@@ -40,12 +40,13 @@ message PolicyReq {
 }
 
 message PATReq {
-  string user_id = 1;             // User id (PAT)
-  string pat_id = 2;              // Pat id
-  uint32 entity_type = 3;         // Entity type (PAT)
-  string optional_domain_id = 4;  // Optional domain id (PAT)
-  uint32 operation = 5;           // Operation (PAT)
-  string entity_id = 6;           // EntityID (PAT)
+  uint32 token_type = 1;          // Token type
+  string user_id = 2;             // User id
+  string pat_id = 3;              // Pat id
+  uint32 entity_type = 4;         // Entity type
+  string optional_domain_id = 5;  // Optional domain id
+  uint32 operation = 6;           // Operation
+  string entity_id = 7;           // EntityID
 }
 
 message AuthZReq {

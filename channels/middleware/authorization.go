@@ -79,20 +79,13 @@ func NewAuthorization(
 }
 
 func (am *authorizationMiddleware) CreateChannels(ctx context.Context, session authn.Session, chs ...channels.Channel) ([]channels.Channel, []roles.RoleProvision, error) {
-	req := smqauthz.PolicyReq{
-		Domain:           session.DomainID,
-		SubjectType:      policies.UserType,
-		Subject:          session.DomainUserID,
-		ObjectType:       policies.DomainType,
-		Object:           session.DomainID,
-		UserID:           session.UserID,
-		PatID:            session.PatID,
-		EntityType:       auth.ChannelsType,
-		OptionalDomainID: session.DomainID,
-		Operation:        auth.CreateOp,
-		EntityID:         auth.AnyIDs,
-	}
-	if err := am.authorize(ctx, session, policies.DomainType, domains.OpCreateDomainChannels, req); err != nil {
+	if err := am.authorize(ctx, session, policies.DomainType, domains.OpCreateDomainChannels, smqauthz.PolicyReq{
+		Domain:      session.DomainID,
+		SubjectType: policies.UserType,
+		Subject:     session.DomainUserID,
+		ObjectType:  policies.DomainType,
+		Object:      session.DomainID,
+	}); err != nil {
 		return []channels.Channel{}, []roles.RoleProvision{}, errors.Wrap(err, errDomainCreateChannels)
 	}
 
@@ -115,17 +108,11 @@ func (am *authorizationMiddleware) CreateChannels(ctx context.Context, session a
 
 func (am *authorizationMiddleware) ViewChannel(ctx context.Context, session authn.Session, id string, withRoles bool) (channels.Channel, error) {
 	if err := am.authorize(ctx, session, policies.ChannelType, channels.OpViewChannel, smqauthz.PolicyReq{
-		Domain:           session.DomainID,
-		SubjectType:      policies.UserType,
-		Subject:          session.DomainUserID,
-		ObjectType:       policies.ChannelType,
-		Object:           id,
-		UserID:           session.UserID,
-		PatID:            session.PatID,
-		EntityType:       auth.ChannelsType,
-		OptionalDomainID: session.DomainID,
-		Operation:        auth.ReadOp,
-		EntityID:         id,
+		Domain:      session.DomainID,
+		SubjectType: policies.UserType,
+		Subject:     session.DomainUserID,
+		ObjectType:  policies.ChannelType,
+		Object:      id,
 	}); err != nil {
 		return channels.Channel{}, errors.Wrap(err, errView)
 	}
@@ -134,7 +121,13 @@ func (am *authorizationMiddleware) ViewChannel(ctx context.Context, session auth
 }
 
 func (am *authorizationMiddleware) ListChannels(ctx context.Context, session authn.Session, pm channels.Page) (channels.ChannelsPage, error) {
-	if err := am.checkSuperAdmin(ctx, session); err == nil {
+	if err := am.authorize(ctx, session, policies.DomainType, domains.OpListDomainChannels, smqauthz.PolicyReq{
+		Domain:      session.DomainID,
+		SubjectType: policies.UserType,
+		Subject:     session.DomainUserID,
+		ObjectType:  policies.DomainType,
+		Object:      session.DomainID,
+	}); err == nil {
 		session.SuperAdmin = true
 	}
 
@@ -350,30 +343,33 @@ func (am *authorizationMiddleware) authorize(ctx context.Context, session authn.
 
 		switch op {
 		case channels.OpViewChannel:
-			req.Operation = auth.ReadOp
+			req.Operation = auth.ChannelViewOp
 		case channels.OpListUserChannels:
-			req.Operation = auth.ListOp
+			req.Operation = auth.ChannelListOp
 			req.EntityID = auth.AnyIDs
-		case channels.OpUpdateChannel,
-			channels.OpUpdateChannelTags,
-			channels.OpEnableChannel,
-			channels.OpDisableChannel,
-			channels.OpSetParentGroup:
-			req.Operation = auth.UpdateOp
-		case channels.OpDeleteChannel,
-			channels.OpRemoveParentGroup:
-			req.Operation = auth.DeleteOp
+		case channels.OpUpdateChannel:
+			req.Operation = auth.ChannelUpdateOp
+		case channels.OpUpdateChannelTags:
+			req.Operation = auth.ChannelUpdateTagsOp
+		case channels.OpEnableChannel:
+			req.Operation = auth.ChannelEnableOp
+		case channels.OpDisableChannel:
+			req.Operation = auth.ChannelDisableOp
+		case channels.OpSetParentGroup:
+			req.Operation = auth.ChannelSetParentGroupOp
+		case channels.OpDeleteChannel:
+			req.Operation = auth.ChannelDeleteOp
+		case channels.OpRemoveParentGroup:
+			req.Operation = auth.ChannelRemoveParentGroupOp
 		case channels.OpConnectClient:
-			req.Operation = auth.CreateOp
+			req.Operation = auth.ChannelConnectToClientOp
 		case channels.OpDisconnectClient:
-			req.Operation = auth.DeleteOp
-		case domains.OpCreateDomainChannels,
-			domains.OpListDomainChannels:
-			if op == domains.OpCreateDomainChannels {
-				req.Operation = auth.CreateOp
-			} else {
-				req.Operation = auth.ListOp
-			}
+			req.Operation = auth.ChannelDisconnectFromClientOp
+		case domains.OpCreateDomainChannels:
+			req.Operation = auth.ChannelCreateOp
+			req.EntityID = auth.AnyIDs
+		case domains.OpListDomainChannels:
+			req.Operation = auth.ChannelListOp
 			req.EntityID = auth.AnyIDs
 		}
 	}

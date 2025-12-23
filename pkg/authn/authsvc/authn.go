@@ -17,6 +17,8 @@ import (
 
 const patPrefix = "pat_"
 
+var errTokenTypeMismatch = errors.NewAuthNError("token type mismatch: token format does not match the service-returned token type")
+
 type authentication struct {
 	authSvcClient grpcAuthV1.AuthServiceClient
 }
@@ -46,9 +48,20 @@ func (a authentication) Authenticate(ctx context.Context, token string) (authn.S
 		return authn.Session{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
 
-	if strings.HasPrefix(token, patPrefix) {
-		return authn.Session{Type: authn.PersonalAccessToken, PatID: res.GetId(), UserID: res.GetUserId(), Role: authn.Role(res.GetUserRole())}, nil
+	isPAT := strings.HasPrefix(token, patPrefix)
+	tokenType := authn.TokenType(res.GetTokenType())
+
+	if isPAT && tokenType != authn.PersonalAccessToken {
+		return authn.Session{}, errTokenTypeMismatch
+	}
+	if !isPAT && tokenType == authn.PersonalAccessToken {
+		return authn.Session{}, errTokenTypeMismatch
 	}
 
-	return authn.Session{Type: authn.AccessToken, UserID: res.GetUserId(), Role: authn.Role(res.GetUserRole()), Verified: res.GetVerified()}, nil
+	switch tokenType {
+	case authn.PersonalAccessToken:
+		return authn.Session{Type: authn.PersonalAccessToken, PatID: res.GetId(), UserID: res.GetUserId(), Role: authn.Role(res.GetUserRole())}, nil
+	default:
+		return authn.Session{Type: authn.AccessToken, UserID: res.GetUserId(), Role: authn.Role(res.GetUserRole()), Verified: res.GetVerified()}, nil
+	}
 }

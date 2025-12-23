@@ -55,30 +55,3 @@ func (pc *PermissionConfig) GetEntityPermissions(entityType string) (map[string]
 
 	return operations, rolesOperations, nil
 }
-
-func BuildEntitiesPermissions(
-	config *PermissionConfig,
-	entityTypes []string,
-	operationDetailsFuncs map[string]func() map[Operation]OperationDetails,
-) (EntitiesPermission, EntitiesOperationDetails[Operation], error) {
-	entitiesPermission := make(EntitiesPermission)
-	entitiesOperationDetails := make(EntitiesOperationDetails[Operation])
-
-	for _, entityType := range entityTypes {
-		ops, _, err := config.GetEntityPermissions(entityType)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to get permissions for %s: %w", entityType, err)
-		}
-
-		entitiesPermission[entityType] = ops
-
-		detailsFunc, ok := operationDetailsFuncs[entityType]
-		if !ok {
-			return nil, nil, fmt.Errorf("operation details function not found for entity type %s", entityType)
-		}
-
-		entitiesOperationDetails[entityType] = detailsFunc()
-	}
-
-	return entitiesPermission, entitiesOperationDetails, nil
-}

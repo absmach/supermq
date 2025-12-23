@@ -399,29 +399,46 @@ func (am *authorizationMiddleware) authorize(ctx context.Context, session authn.
 
 		switch op {
 		case groups.OpViewGroup:
-			pr.Operation = auth.ReadOp
-		case groups.OpListUserGroups,
-			groups.OpRetrieveGroupHierarchy,
-			groups.OpListChildrenGroups,
-			domains.OpListDomainGroups:
-			pr.Operation = auth.ListOp
-			if op == domains.OpListDomainGroups {
-				pr.EntityID = auth.AnyIDs
-			}
-		case groups.OpUpdateGroup,
-			groups.OpUpdateGroupTags,
-			groups.OpEnableGroup,
-			groups.OpDisableGroup,
-			groups.OpAddParentGroup,
-			groups.OpAddChildrenGroups:
-			pr.Operation = auth.UpdateOp
-		case groups.OpDeleteGroup,
-			groups.OpRemoveParentGroup,
-			groups.OpRemoveChildrenGroups,
-			groups.OpRemoveAllChildrenGroups:
-			pr.Operation = auth.DeleteOp
+			pr.Operation = auth.GroupViewOp
+		case groups.OpListUserGroups:
+			pr.Operation = auth.GroupListOp
+		case groups.OpRetrieveGroupHierarchy:
+			pr.Operation = auth.GroupRetrieveHierarchyOp
+		case groups.OpListChildrenGroups:
+			pr.Operation = auth.GroupListChildrenGroupsOp
+		case domains.OpListDomainGroups:
+			pr.Operation = auth.GroupListOp
+			pr.EntityID = auth.AnyIDs
+		case groups.OpUpdateGroup:
+			pr.Operation = auth.GroupUpdateOp
+		case groups.OpUpdateGroupTags:
+			pr.Operation = auth.GroupUpdateTagsOp
+		case groups.OpEnableGroup:
+			pr.Operation = auth.GroupEnableOp
+		case groups.OpDisableGroup:
+			pr.Operation = auth.GroupDisableOp
+		case groups.OpAddParentGroup:
+			pr.Operation = auth.GroupAddParentGroupOp
+		case groups.OpAddChildrenGroups:
+			pr.Operation = auth.GroupAddChildrenGroupsOp
+		case groups.OpDeleteGroup:
+			pr.Operation = auth.GroupDeleteOp
+		case groups.OpRemoveParentGroup:
+			pr.Operation = auth.GroupRemoveParentGroupOp
+		case groups.OpRemoveChildrenGroups:
+			pr.Operation = auth.GroupRemoveChildrenGroupsOp
+		case groups.OpRemoveAllChildrenGroups:
+			pr.Operation = auth.GroupRemoveAllChildrenGroupsOp
+		case groups.OpGroupSetChildClient:
+			pr.Operation = auth.GroupSetChildClientOp
+		case groups.OpGroupRemoveChildClient:
+			pr.Operation = auth.GroupRemoveChildClientOp
+		case groups.OpGroupSetChildChannel:
+			pr.Operation = auth.GroupSetChildChannelOp
+		case groups.OpGroupRemoveChildChannel:
+			pr.Operation = auth.GroupRemoveChildChannelOp
 		case domains.OpCreateDomainGroups:
-			pr.Operation = auth.CreateOp
+			pr.Operation = auth.GroupCreateOp
 			pr.EntityID = auth.AnyIDs
 		}
 	}

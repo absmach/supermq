@@ -57,7 +57,7 @@ func (client authGrpcClient) Authenticate(ctx context.Context, token *grpcAuthV1
 		return &grpcAuthV1.AuthNRes{}, grpcapi.DecodeError(err)
 	}
 	ir := res.(authenticateRes)
-	return &grpcAuthV1.AuthNRes{Id: ir.id, UserId: ir.userID, UserRole: uint32(ir.userRole), Verified: ir.verified}, nil
+	return &grpcAuthV1.AuthNRes{Id: ir.id, UserId: ir.userID, UserRole: uint32(ir.userRole), Verified: ir.verified, TokenType: ir.tokenType}, nil
 }
 
 func encodeIdentifyRequest(_ context.Context, grpcReq any) (any, error) {
@@ -67,7 +67,7 @@ func encodeIdentifyRequest(_ context.Context, grpcReq any) (any, error) {
 
 func decodeIdentifyResponse(_ context.Context, grpcRes any) (any, error) {
 	res := grpcRes.(*grpcAuthV1.AuthNRes)
-	return authenticateRes{id: res.GetId(), userID: res.GetUserId(), userRole: auth.Role(res.UserRole), verified: res.GetVerified()}, nil
+	return authenticateRes{id: res.GetId(), userID: res.GetUserId(), userRole: auth.Role(res.UserRole), verified: res.GetVerified(), tokenType: res.GetTokenType()}, nil
 }
 
 func (client authGrpcClient) Authorize(ctx context.Context, req *grpcAuthV1.AuthZReq, _ ...grpc.CallOption) (r *grpcAuthV1.AuthZRes, err error) {
@@ -90,6 +90,7 @@ func (client authGrpcClient) Authorize(ctx context.Context, req *grpcAuthV1.Auth
 		}
 	} else if pat := req.GetPat(); pat != nil {
 		authReqData = authReq{
+			TokenType:        pat.GetTokenType(),
 			UserID:           pat.GetUserId(),
 			PatID:            pat.GetPatId(),
 			EntityType:       auth.EntityType(pat.GetEntityType()),
@@ -116,11 +117,11 @@ func decodeAuthorizeResponse(_ context.Context, grpcRes any) (any, error) {
 func encodeAuthorizeRequest(_ context.Context, grpcReq any) (any, error) {
 	req := grpcReq.(authReq)
 
-	// Check if this is a PAT request (has PatID) or policy request
 	if req.PatID != "" {
 		return &grpcAuthV1.AuthZReq{
 			AuthType: &grpcAuthV1.AuthZReq_Pat{
 				Pat: &grpcAuthV1.PATReq{
+					TokenType:        req.TokenType,
 					UserId:           req.UserID,
 					PatId:            req.PatID,
 					EntityType:       uint32(req.EntityType),
@@ -132,7 +133,6 @@ func encodeAuthorizeRequest(_ context.Context, grpcReq any) (any, error) {
 		}, nil
 	}
 
-	// Otherwise, it's a policy request
 	return &grpcAuthV1.AuthZReq{
 		AuthType: &grpcAuthV1.AuthZReq_Policy{
 			Policy: &grpcAuthV1.PolicyReq{

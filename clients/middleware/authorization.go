@@ -276,38 +276,48 @@ func (am *authorizationMiddleware) authorize(ctx context.Context, session authn.
 			req.EntityType = auth.ClientsType
 			switch op {
 			case clients.OpViewClient:
-				req.Operation = auth.ReadOp
+				req.Operation = auth.ClientViewOp
 			case clients.OpListUserClients:
-				req.Operation = auth.ListOp
+				req.Operation = auth.ClientListOp
 				req.EntityID = auth.AnyIDs
-			case clients.OpUpdateClient,
-				clients.OpUpdateClientTags,
-				clients.OpUpdateClientSecret,
-				clients.OpEnableClient,
-				clients.OpDisableClient,
-				clients.OpSetParentGroup:
-				req.Operation = auth.UpdateOp
-			case clients.OpDeleteClient,
-				clients.OpRemoveParentGroup:
-				req.Operation = auth.DeleteOp
+			case clients.OpUpdateClient:
+				req.Operation = auth.ClientUpdateOp
+			case clients.OpUpdateClientTags:
+				req.Operation = auth.ClientUpdateTagsOp
+			case clients.OpUpdateClientSecret:
+				req.Operation = auth.ClientUpdateSecretOp
+			case clients.OpEnableClient:
+				req.Operation = auth.ClientEnableOp
+			case clients.OpDisableClient:
+				req.Operation = auth.ClientDisableOp
+			case clients.OpSetParentGroup:
+				req.Operation = auth.ClientSetParentGroupOp
+			case clients.OpDeleteClient:
+				req.Operation = auth.ClientDeleteOp
+			case clients.OpRemoveParentGroup:
+				req.Operation = auth.ClientRemoveParentGroupOp
+			case clients.OpConnectToChannel:
+				req.Operation = auth.ClientConnectToChannelOp
+			case clients.OpDisconnectFromChannel:
+				req.Operation = auth.ClientDisconnectFromChannelOp
 			}
 		case policies.DomainType:
 			req.EntityType = auth.ClientsType
 			switch op {
 			case domains.OpCreateDomainClients:
-				req.Operation = auth.CreateOp
+				req.Operation = auth.ClientCreateOp
 				req.EntityID = auth.AnyIDs
 			case domains.OpListDomainClients:
-				req.Operation = auth.ListOp
+				req.Operation = auth.ClientListOp
 				req.EntityID = auth.AnyIDs
 			}
 		case policies.GroupType:
 			req.EntityType = auth.ClientsType
 			switch op {
 			case groups.OpGroupSetChildClient:
-				req.Operation = auth.UpdateOp
+				req.Operation = auth.ClientSetParentGroupOp
 			case groups.OpGroupRemoveChildClient:
-				req.Operation = auth.DeleteOp
+				req.Operation = auth.ClientRemoveParentGroupOp
 			}
 		}
 	}

@@ -18,86 +18,194 @@ const AnyIDs = "*"
 
 type Operation uint32
 
+// Clients operations.
 const (
-	CreateOp Operation = iota
-	ReadOp
-	ListOp
-	UpdateOp
-	DeleteOp
-	ShareOp
-	UnshareOp
-	PublishOp
-	SubscribeOp
+	ClientCreateOp Operation = iota + 100
+	ClientListOp
+	ClientViewOp
+	ClientUpdateOp
+	ClientUpdateTagsOp
+	ClientUpdateSecretOp
+	ClientEnableOp
+	ClientDisableOp
+	ClientDeleteOp
+	ClientSetParentGroupOp
+	ClientRemoveParentGroupOp
+	ClientConnectToChannelOp
+	ClientDisconnectFromChannelOp
 )
 
+// Channels operations.
 const (
-	createOpStr    = "create"
-	readOpStr      = "read"
-	listOpStr      = "list"
-	updateOpStr    = "update"
-	deleteOpStr    = "delete"
-	shareOpStr     = "share"
-	UnshareOpStr   = "unshare"
-	PublishOpStr   = "publish"
-	SubscribeOpStr = "subscribe"
+	ChannelCreateOp Operation = iota + 200
+	ChannelListOp
+	ChannelViewOp
+	ChannelUpdateOp
+	ChannelUpdateTagsOp
+	ChannelEnableOp
+	ChannelDisableOp
+	ChannelDeleteOp
+	ChannelSetParentGroupOp
+	ChannelRemoveParentGroupOp
+	ChannelConnectToClientOp
+	ChannelDisconnectFromClientOp
 )
+
+// Groups operations.
+const (
+	GroupCreateOp Operation = iota + 300
+	GroupListOp
+	GroupViewOp
+	GroupUpdateOp
+	GroupUpdateTagsOp
+	GroupEnableOp
+	GroupDisableOp
+	GroupDeleteOp
+	GroupRetrieveHierarchyOp
+	GroupAddParentGroupOp
+	GroupRemoveParentGroupOp
+	GroupAddChildrenGroupsOp
+	GroupRemoveChildrenGroupsOp
+	GroupRemoveAllChildrenGroupsOp
+	GroupListChildrenGroupsOp
+	GroupSetChildClientOp
+	GroupRemoveChildClientOp
+	GroupSetChildChannelOp
+	GroupRemoveChildChannelOp
+)
+
+// Dashboard operations.
+const (
+	DashboardShareOp Operation = iota + 400
+	DashboardUnshareOp
+)
+
+// Messages operations.
+const (
+	MessagePublishOp Operation = iota + 500
+	MessageSubscribeOp
+)
+
+// Role operations - common for clients, channels, and groups.
+const (
+	RoleAddOp Operation = iota + 600
+	RoleRemoveOp
+	RoleUpdateOp
+	RoleRetrieveOp
+	RoleRetrieveAllOp
+	RoleAddActionsOp
+	RoleListActionsOp
+	RoleCheckActionsExistsOp
+	RoleRemoveActionsOp
+	RoleRemoveAllActionsOp
+	RoleAddMembersOp
+	RoleListMembersOp
+	RoleCheckMembersExistsOp
+	RoleRemoveMembersOp
+	RoleRemoveAllMembersOp
+)
+
+// operationToString maps Operation values to their string representation.
+var operationToString = map[Operation]string{
+	// Client operations
+	ClientCreateOp:                "client_create",
+	ClientListOp:                  "client_list",
+	ClientViewOp:                  "client_view",
+	ClientUpdateOp:                "client_update",
+	ClientUpdateTagsOp:            "client_update_tags",
+	ClientUpdateSecretOp:          "client_update_secret",
+	ClientEnableOp:                "client_enable",
+	ClientDisableOp:               "client_disable",
+	ClientDeleteOp:                "client_delete",
+	ClientSetParentGroupOp:        "client_set_parent_group",
+	ClientRemoveParentGroupOp:     "client_remove_parent_group",
+	ClientConnectToChannelOp:      "client_connect_to_channel",
+	ClientDisconnectFromChannelOp: "client_disconnect_from_channel",
+	// Channel operations
+	ChannelCreateOp:               "channel_create",
+	ChannelListOp:                 "channel_list",
+	ChannelViewOp:                 "channel_view",
+	ChannelUpdateOp:               "channel_update",
+	ChannelUpdateTagsOp:           "channel_update_tags",
+	ChannelEnableOp:               "channel_enable",
+	ChannelDisableOp:              "channel_disable",
+	ChannelDeleteOp:               "channel_delete",
+	ChannelSetParentGroupOp:       "channel_set_parent_group",
+	ChannelRemoveParentGroupOp:    "channel_remove_parent_group",
+	ChannelConnectToClientOp:      "channel_connect_to_client",
+	ChannelDisconnectFromClientOp: "channel_disconnect_from_client",
+	// Group operations
+	GroupCreateOp:                  "group_create",
+	GroupListOp:                    "group_list",
+	GroupViewOp:                    "group_view",
+	GroupUpdateOp:                  "group_update",
+	GroupUpdateTagsOp:              "group_update_tags",
+	GroupEnableOp:                  "group_enable",
+	GroupDisableOp:                 "group_disable",
+	GroupDeleteOp:                  "group_delete",
+	GroupRetrieveHierarchyOp:       "group_retrieve_hierarchy",
+	GroupAddParentGroupOp:          "group_add_parent_group",
+	GroupRemoveParentGroupOp:       "group_remove_parent_group",
+	GroupAddChildrenGroupsOp:       "group_add_children_groups",
+	GroupRemoveChildrenGroupsOp:    "group_remove_children_groups",
+	GroupRemoveAllChildrenGroupsOp: "group_remove_all_children_groups",
+	GroupListChildrenGroupsOp:      "group_list_children_groups",
+	GroupSetChildClientOp:          "group_set_child_client",
+	GroupRemoveChildClientOp:       "group_remove_child_client",
+	GroupSetChildChannelOp:         "group_set_child_channel",
+	GroupRemoveChildChannelOp:      "group_remove_child_channel",
+	// Dashboard operations
+	DashboardShareOp:   "dashboard_share",
+	DashboardUnshareOp: "dashboard_unshare",
+	// Message operations
+	MessagePublishOp:   "message_publish",
+	MessageSubscribeOp: "message_subscribe",
+	// Role operations - common for clients, channels, and groups
+	RoleAddOp:                "role_add",
+	RoleRemoveOp:             "role_remove",
+	RoleUpdateOp:             "role_update",
+	RoleRetrieveOp:           "role_retrieve",
+	RoleRetrieveAllOp:        "role_retrieve_all",
+	RoleAddActionsOp:         "role_add_actions",
+	RoleListActionsOp:        "role_list_actions",
+	RoleCheckActionsExistsOp: "role_check_actions_exists",
+	RoleRemoveActionsOp:      "role_remove_actions",
+	RoleRemoveAllActionsOp:   "role_remove_all_actions",
+	RoleAddMembersOp:         "role_add_members",
+	RoleListMembersOp:        "role_list_members",
+	RoleCheckMembersExistsOp: "role_check_members_exists",
+	RoleRemoveMembersOp:      "role_remove_members",
+	RoleRemoveAllMembersOp:   "role_remove_all_members",
+}
+
+// stringToOperation is the reverse map, built from operationToString.
+var stringToOperation = func() map[string]Operation {
+	m := make(map[string]Operation)
+	for op, str := range operationToString {
+		m[str] = op
+	}
+	return m
+}()
 
 func (op Operation) String() string {
-	switch op {
-	case CreateOp:
-		return createOpStr
-	case ReadOp:
-		return readOpStr
-	case ListOp:
-		return listOpStr
-	case UpdateOp:
-		return updateOpStr
-	case DeleteOp:
-		return deleteOpStr
-	case ShareOp:
-		return shareOpStr
-	case UnshareOp:
-		return UnshareOpStr
-	case PublishOp:
-		return PublishOpStr
-	case SubscribeOp:
-		return SubscribeOpStr
-	default:
-		return fmt.Sprintf("unknown operation type %d", op)
+	if str, ok := operationToString[op]; ok {
+		return str
 	}
+	return fmt.Sprintf("unknown operation type %d", op)
 }
 
 func (op Operation) ValidString() (string, error) {
-	str := op.String()
-	if str == fmt.Sprintf("unknown operation type %d", op) {
-		return "", errors.New(str)
+	if str, ok := operationToString[op]; ok {
+		return str, nil
 	}
-	return str, nil
+	return "", fmt.Errorf("unknown operation type %d", op)
 }
 
 func ParseOperation(op string) (Operation, error) {
-	switch op {
-	case createOpStr:
-		return CreateOp, nil
-	case readOpStr:
-		return ReadOp, nil
-	case listOpStr:
-		return ListOp, nil
-	case updateOpStr:
-		return UpdateOp, nil
-	case deleteOpStr:
-		return DeleteOp, nil
-	case shareOpStr:
-		return ShareOp, nil
-	case UnshareOpStr:
-		return UnshareOp, nil
-	case PublishOpStr:
-		return PublishOp, nil
-	case SubscribeOpStr:
-		return SubscribeOp, nil
-	default:
-		return 0, fmt.Errorf("unknown operation type %s", op)
+	if operation, ok := stringToOperation[op]; ok {
+		return operation, nil
 	}
+	return 0, fmt.Errorf("unknown operation type %s", op)
 }
 
 func (op Operation) MarshalJSON() ([]byte, error) {
@@ -127,8 +235,6 @@ const (
 	GroupsType EntityType = iota
 	ChannelsType
 	ClientsType
-	DomainsType
-	UsersType
 	DashboardType
 	MessagesType
 )
@@ -137,8 +243,6 @@ const (
 	GroupsScopeStr   = "groups"
 	ChannelsScopeStr = "channels"
 	ClientsScopeStr  = "clients"
-	DomainsStr       = "domains"
-	UsersStr         = "users"
 	DashboardsStr    = "dashboards"
 	MessagesStr      = "messages"
 )
@@ -151,10 +255,6 @@ func (et EntityType) String() string {
 		return ChannelsScopeStr
 	case ClientsType:
 		return ClientsScopeStr
-	case DomainsType:
-		return DomainsStr
-	case UsersType:
-		return UsersStr
 	case DashboardType:
 		return DashboardsStr
 	case MessagesType:
@@ -180,12 +280,10 @@ func ParseEntityType(et string) (EntityType, error) {
 		return ChannelsType, nil
 	case ClientsScopeStr:
 		return ClientsType, nil
-	case DomainsStr:
-		return DomainsType, nil
-	case UsersStr:
-		return UsersType, nil
 	case DashboardsStr:
 		return DashboardType, nil
+	case MessagesStr:
+		return MessagesType, nil
 	default:
 		return 0, fmt.Errorf("unknown domain entity type %s", et)
 	}
@@ -212,25 +310,145 @@ func (et *EntityType) UnmarshalText(data []byte) (err error) {
 	return err
 }
 
+var ValidOperationsForEntity = map[EntityType][]Operation{
+	ClientsType: {
+		ClientCreateOp,
+		ClientListOp,
+		ClientViewOp,
+		ClientUpdateOp,
+		ClientUpdateTagsOp,
+		ClientUpdateSecretOp,
+		ClientEnableOp,
+		ClientDisableOp,
+		ClientDeleteOp,
+		ClientSetParentGroupOp,
+		ClientRemoveParentGroupOp,
+		ClientConnectToChannelOp,
+		ClientDisconnectFromChannelOp,
+		RoleAddOp,
+		RoleRemoveOp,
+		RoleUpdateOp,
+		RoleRetrieveOp,
+		RoleRetrieveAllOp,
+		RoleAddActionsOp,
+		RoleListActionsOp,
+		RoleCheckActionsExistsOp,
+		RoleRemoveActionsOp,
+		RoleRemoveAllActionsOp,
+		RoleAddMembersOp,
+		RoleListMembersOp,
+		RoleCheckMembersExistsOp,
+		RoleRemoveMembersOp,
+		RoleRemoveAllMembersOp,
+	},
+	ChannelsType: {
+		ChannelCreateOp,
+		ChannelListOp,
+		ChannelViewOp,
+		ChannelUpdateOp,
+		ChannelUpdateTagsOp,
+		ChannelEnableOp,
+		ChannelDisableOp,
+		ChannelDeleteOp,
+		ChannelSetParentGroupOp,
+		ChannelRemoveParentGroupOp,
+		ChannelConnectToClientOp,
+		ChannelDisconnectFromClientOp,
+		RoleAddOp,
+		RoleRemoveOp,
+		RoleUpdateOp,
+		RoleRetrieveOp,
+		RoleRetrieveAllOp,
+		RoleAddActionsOp,
+		RoleListActionsOp,
+		RoleCheckActionsExistsOp,
+		RoleRemoveActionsOp,
+		RoleRemoveAllActionsOp,
+		RoleAddMembersOp,
+		RoleListMembersOp,
+		RoleCheckMembersExistsOp,
+		RoleRemoveMembersOp,
+		RoleRemoveAllMembersOp,
+	},
+	GroupsType: {
+		GroupCreateOp,
+		GroupListOp,
+		GroupViewOp,
+		GroupUpdateOp,
+		GroupUpdateTagsOp,
+		GroupEnableOp,
+		GroupDisableOp,
+		GroupDeleteOp,
+		GroupRetrieveHierarchyOp,
+		GroupAddParentGroupOp,
+		GroupRemoveParentGroupOp,
+		GroupAddChildrenGroupsOp,
+		GroupRemoveChildrenGroupsOp,
+		GroupRemoveAllChildrenGroupsOp,
+		GroupListChildrenGroupsOp,
+		GroupSetChildClientOp,
+		GroupRemoveChildClientOp,
+		GroupSetChildChannelOp,
+		GroupRemoveChildChannelOp,
+		RoleAddOp,
+		RoleRemoveOp,
+		RoleUpdateOp,
+		RoleRetrieveOp,
+		RoleRetrieveAllOp,
+		RoleAddActionsOp,
+		RoleListActionsOp,
+		RoleCheckActionsExistsOp,
+		RoleRemoveActionsOp,
+		RoleRemoveAllActionsOp,
+		RoleAddMembersOp,
+		RoleListMembersOp,
+		RoleCheckMembersExistsOp,
+		RoleRemoveMembersOp,
+		RoleRemoveAllMembersOp,
+	},
+	DashboardType: {
+		DashboardShareOp,
+		DashboardUnshareOp,
+	},
+	MessagesType: {
+		MessagePublishOp,
+		MessageSubscribeOp,
+	},
+}
+
+// IsValidOperationForEntity checks if the given operation is valid for the entity type.
+func IsValidOperationForEntity(entityType EntityType, operation Operation) bool {
+	validOps, exists := ValidOperationsForEntity[entityType]
+	if !exists {
+		return false
+	}
+	for _, op := range validOps {
+		if op == operation {
+			return true
+		}
+	}
+	return false
+}
+
 // Example Scope as JSON
 //
 // [
 //     {
 //         "optional_domain_id": "domain_1",
 //         "entity_type": "groups",
-//         "operation": "create",
+//         "operation": "group_create",
 //         "entity_id": "*"
 //     },
 //     {
 //         "optional_domain_id": "domain_1",
 //         "entity_type": "channels",
-//         "operation": "delete",
+//         "operation": "channel_delete",
 //         "entity_id": "channel1"
 //     },
 //     {
 //         "optional_domain_id": "domain_1",
-//         "entity_type": "things",
-//         "operation": "update",
+//         "entity_type": "clients",
+//         "operation": "client_update",
 //         "entity_id": "*"
 //     }
 // ]
@@ -284,6 +502,10 @@ func (s *Scope) Validate() error {
 		if s.OptionalDomainID == "" {
 			return apiutil.ErrMissingDomainID
 		}
+	}
+
+	if !IsValidOperationForEntity(s.EntityType, s.Operation) {
+		return errors.Wrap(apiutil.ErrInvalidQueryParams, errors.New("operation not valid for entity type"))
 	}
 
 	return nil

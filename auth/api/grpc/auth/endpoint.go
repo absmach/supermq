@@ -23,7 +23,12 @@ func authenticateEndpoint(svc auth.Service) endpoint.Endpoint {
 			return authenticateRes{}, err
 		}
 
-		return authenticateRes{id: key.ID, userID: key.Subject, userRole: key.Role, verified: key.Verified}, nil
+		tokenType := auth.AccessTokenType
+		if key.Type == auth.PersonalAccessToken {
+			tokenType = auth.PersonalAccessTokenType
+		}
+
+		return authenticateRes{id: key.ID, userID: key.Subject, userRole: key.Role, verified: key.Verified, tokenType: tokenType}, nil
 	}
 }
 

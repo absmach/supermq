@@ -262,12 +262,13 @@ func (x *PolicyReq) GetObjectType() string {
 
 type PATReq struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
-	UserId           string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`                                 // User id (PAT)
-	PatId            string                 `protobuf:"bytes,2,opt,name=pat_id,json=patId,proto3" json:"pat_id,omitempty"`                                    // Pat id
-	EntityType       uint32                 `protobuf:"varint,3,opt,name=entity_type,json=entityType,proto3" json:"entity_type,omitempty"`                    // Entity type (PAT)
-	OptionalDomainId string                 `protobuf:"bytes,4,opt,name=optional_domain_id,json=optionalDomainId,proto3" json:"optional_domain_id,omitempty"` // Optional domain id (PAT)
-	Operation        uint32                 `protobuf:"varint,5,opt,name=operation,proto3" json:"operation,omitempty"`                                        // Operation (PAT)
-	EntityId         string                 `protobuf:"bytes,6,opt,name=entity_id,json=entityId,proto3" json:"entity_id,omitempty"`                           // EntityID (PAT)
+	TokenType        uint32                 `protobuf:"varint,1,opt,name=token_type,json=tokenType,proto3" json:"token_type,omitempty"`                       // Token type
+	UserId           string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`                                 // User id
+	PatId            string                 `protobuf:"bytes,3,opt,name=pat_id,json=patId,proto3" json:"pat_id,omitempty"`                                    // Pat id
+	EntityType       uint32                 `protobuf:"varint,4,opt,name=entity_type,json=entityType,proto3" json:"entity_type,omitempty"`                    // Entity type
+	OptionalDomainId string                 `protobuf:"bytes,5,opt,name=optional_domain_id,json=optionalDomainId,proto3" json:"optional_domain_id,omitempty"` // Optional domain id
+	Operation        uint32                 `protobuf:"varint,6,opt,name=operation,proto3" json:"operation,omitempty"`                                        // Operation
+	EntityId         string                 `protobuf:"bytes,7,opt,name=entity_id,json=entityId,proto3" json:"entity_id,omitempty"`                           // EntityID
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -300,6 +301,13 @@ func (x *PATReq) ProtoReflect() protoreflect.Message {
 // Deprecated: Use PATReq.ProtoReflect.Descriptor instead.
 func (*PATReq) Descriptor() ([]byte, []int) {
 	return file_auth_v1_auth_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *PATReq) GetTokenType() uint32 {
+	if x != nil {
+		return x.TokenType
+	}
+	return 0
 }
 
 func (x *PATReq) GetUserId() string {
@@ -507,15 +515,17 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"\x06object\x18\t \x01(\tR\x06object\x12\x1f\n" +
 	"\vobject_type\x18\n" +
 	" \x01(\tR\n" +
-	"objectType\"\xc2\x01\n" +
-	"\x06PATReq\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x15\n" +
-	"\x06pat_id\x18\x02 \x01(\tR\x05patId\x12\x1f\n" +
-	"\ventity_type\x18\x03 \x01(\rR\n" +
+	"objectType\"\xe1\x01\n" +
+	"\x06PATReq\x12\x1d\n" +
+	"\n" +
+	"token_type\x18\x01 \x01(\rR\ttokenType\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x15\n" +
+	"\x06pat_id\x18\x03 \x01(\tR\x05patId\x12\x1f\n" +
+	"\ventity_type\x18\x04 \x01(\rR\n" +
 	"entityType\x12,\n" +
-	"\x12optional_domain_id\x18\x04 \x01(\tR\x10optionalDomainId\x12\x1c\n" +
-	"\toperation\x18\x05 \x01(\rR\toperation\x12\x1b\n" +
-	"\tentity_id\x18\x06 \x01(\tR\bentityId\"j\n" +
+	"\x12optional_domain_id\x18\x05 \x01(\tR\x10optionalDomainId\x12\x1c\n" +
+	"\toperation\x18\x06 \x01(\rR\toperation\x12\x1b\n" +
+	"\tentity_id\x18\a \x01(\tR\bentityId\"j\n" +
 	"\bAuthZReq\x12,\n" +
 	"\x06policy\x18\x01 \x01(\v2\x12.auth.v1.PolicyReqH\x00R\x06policy\x12#\n" +
 	"\x03pat\x18\x02 \x01(\v2\x0f.auth.v1.PATReqH\x00R\x03patB\v\n" +
