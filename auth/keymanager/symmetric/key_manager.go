@@ -5,6 +5,7 @@ package symmetric
 
 import (
 	"github.com/absmach/supermq/auth"
+	smqjwt "github.com/absmach/supermq/auth/jwt"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
@@ -30,18 +31,54 @@ func NewKeyManager(algorithm string, secret []byte) (auth.KeyManager, error) {
 	}, nil
 }
 
-func (km *manager) SignJWT(token jwt.Token) ([]byte, error) {
-	return jwt.Sign(token, jwt.WithKey(km.algorithm, km.secret))
+func (km *manager) Sign(key auth.Key) (string, error) {
+	builder := jwt.NewBuilder()
+	builder.
+		Issuer(smqjwt.IssuerName).
+		IssuedAt(key.IssuedAt).
+		Claim(smqjwt.TokenType, key.Type).
+		Expiration(key.ExpiresAt).
+		Claim(smqjwt.RoleField, key.Role).
+		Claim(smqjwt.VerifiedField, key.Verified)
+
+	if key.Subject != "" {
+		builder.Subject(key.Subject)
+	}
+	if key.ID != "" {
+		builder.JwtID(key.ID)
+	}
+
+	tkn, err := builder.Build()
+	if err != nil {
+		return "", err
+	}
+
+	signedBytes, err := jwt.Sign(tkn, jwt.WithKey(km.algorithm, km.secret))
+	if err != nil {
+		return "", err
+	}
+
+	return string(signedBytes), nil
 }
 
-func (km *manager) ParseJWT(token string) (jwt.Token, error) {
-	return jwt.Parse(
-		[]byte(token),
+func (km *manager) Verify(tokenString string) (auth.Key, error) {
+	tkn, err := jwt.Parse(
+		[]byte(tokenString),
 		jwt.WithValidate(true),
 		jwt.WithKey(km.algorithm, km.secret),
 	)
+	if err != nil {
+		return auth.Key{}, err
+	}
+
+	// Validate issuer
+	if tkn.Issuer() != smqjwt.IssuerName {
+		return auth.Key{}, smqjwt.ErrInvalidIssuer
+	}
+
+	return smqjwt.ToKey(tkn)
 }
 
-func (km *manager) PublicJWKS() []auth.JWK {
-	return nil
+func (km *manager) PublicKeys() ([]auth.PublicKeyInfo, error) {
+	return nil, auth.ErrPublicKeysNotSupported
 }

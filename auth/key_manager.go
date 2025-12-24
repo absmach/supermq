@@ -5,40 +5,48 @@ package auth
 
 import (
 	"errors"
-
-	"github.com/lestrrat-go/jwx/v2/jwk"
-	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
 var (
-	ErrUnsupportedKeyAlgorithm = errors.New("unsupported key algorithm")
-	ErrInvalidSymmetricKey     = errors.New("invalid symmetric key")
+	ErrUnsupportedKeyAlgorithm  = errors.New("unsupported key algorithm")
+	ErrInvalidSymmetricKey      = errors.New("invalid symmetric key")
+	ErrPublicKeysNotSupported   = errors.New("public keys not supported for symmetric algorithm")
+	ErrInvalidKeyConfiguration  = errors.New("invalid key configuration")
 )
 
-// JWK represents a JSON Web Key.
-type JWK struct {
-	key jwk.Key
+// PublicKeyInfo represents a public key for external distribution via JWKS.
+// This follows RFC 7517 (JSON Web Key) specification.
+type PublicKeyInfo struct {
+	KeyID     string `json:"kid"`
+	KeyType   string `json:"kty"`
+	Algorithm string `json:"alg"`
+	Use       string `json:"use,omitempty"`
+
+	// EdDSA (Ed25519) fields
+	Curve string `json:"crv,omitempty"`
+	X     string `json:"x,omitempty"`
+
+	// Future: RSA fields (n, e), ECDSA fields (x, y, crv), etc.
 }
 
-// NewJWK creates a new JWK from a jwk.Key.
-func NewJWK(key jwk.Key) JWK {
-	return JWK{key: key}
-}
-
-// Key returns the underlying jwk.Key.
-func (j JWK) Key() jwk.Key {
-	return j.key
-}
-
-// KeyManager represents a manager for JWT keys.
+// KeyManager manages cryptographic keys for JWT operations.
+// Implementations handle both signing/verification and key distribution.
 type KeyManager interface {
-	SignJWT(token jwt.Token) ([]byte, error)
+	// Sign creates a signed JWT token string from the given key claims.
+	Sign(key Key) (signedToken string, err error)
 
-	ParseJWT(token string) (jwt.Token, error)
+	// Verify verifies and parses a JWT token string, returning the extracted claims.
+	Verify(tokenString string) (key Key, err error)
 
-	PublicJWKS() []JWK
+	// PublicKeys returns public keys for distribution via JWKS endpoint.
+	// Returns ErrPublicKeysNotSupported for symmetric key managers (HMAC).
+	PublicKeys() ([]PublicKeyInfo, error)
 }
 
+// IsSymmetricAlgorithm determines if the given algorithm is symmetric (HMAC-based).
+// Returns true for HMAC algorithms (HS256, HS384, HS512).
+// Returns false for asymmetric algorithms (EdDSA).
+// Returns error for unsupported algorithms.
 func IsSymmetricAlgorithm(alg string) (bool, error) {
 	switch alg {
 	case "HS256", "HS384", "HS512":

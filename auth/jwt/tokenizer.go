@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	// errInvalidIssuer is returned when the issuer is not supermq.auth.
-	errInvalidIssuer = errors.New("invalid token issuer value")
+	// ErrInvalidIssuer is returned when the issuer is not supermq.auth.
+	ErrInvalidIssuer = errors.New("invalid token issuer value")
 	// errInvalidType is returned when there is no type field.
 	errInvalidType = errors.New("invalid token type")
 	// errInvalidRole is returned when the role is invalid.
@@ -33,9 +33,13 @@ var (
 )
 
 const (
-	issuerName    = "supermq.auth"
-	tokenType     = "type"
+	// IssuerName is the expected issuer for SuperMQ JWT tokens.
+	IssuerName = "supermq.auth"
+	// TokenType is the JWT claim key for token type.
+	TokenType     = "type"
+	// RoleField is the JWT claim key for user role.
 	RoleField     = "role"
+	// VerifiedField is the JWT claim key for user verification status.
 	VerifiedField = "verified"
 	patPrefix     = "pat"
 )
@@ -54,29 +58,11 @@ func New(keyManager auth.KeyManager) auth.Tokenizer {
 }
 
 func (tok *tokenizer) Issue(key auth.Key) (string, error) {
-	builder := jwt.NewBuilder()
-	builder.
-		Issuer(issuerName).
-		IssuedAt(key.IssuedAt).
-		Claim(tokenType, key.Type).
-		Expiration(key.ExpiresAt)
-	builder.Claim(RoleField, key.Role)
-	builder.Claim(VerifiedField, key.Verified)
-	if key.Subject != "" {
-		builder.Subject(key.Subject)
-	}
-	if key.ID != "" {
-		builder.JwtID(key.ID)
-	}
-	tkn, err := builder.Build()
-	if err != nil {
-		return "", errors.Wrap(svcerr.ErrAuthentication, err)
-	}
-	signedTkn, err := tok.keyManager.SignJWT(tkn)
+	signedToken, err := tok.keyManager.Sign(key)
 	if err != nil {
 		return "", errors.Wrap(ErrSignJWT, err)
 	}
-	return string(signedTkn), nil
+	return signedToken, nil
 }
 
 func (tok *tokenizer) Parse(ctx context.Context, token string) (auth.Key, error) {
@@ -84,43 +70,25 @@ func (tok *tokenizer) Parse(ctx context.Context, token string) (auth.Key, error)
 		return auth.Key{Type: auth.PersonalAccessToken}, nil
 	}
 
-	tkn, err := tok.validateToken(token)
+	key, err := tok.keyManager.Verify(token)
 	if err != nil {
-		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
-	}
-
-	key, err := ToKey(tkn)
-	if err != nil {
+		// Check if it's an expiry error and wrap appropriately
+		if errors.Contains(err, errJWTExpiryKey) {
+			return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, auth.ErrExpiry)
+		}
 		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
 
 	return key, nil
 }
 
-func (tok *tokenizer) validateToken(token string) (jwt.Token, error) {
-	tkn, err := tok.keyManager.ParseJWT(token)
+func (tok *tokenizer) RetrieveJWKS() []auth.PublicKeyInfo {
+	keys, err := tok.keyManager.PublicKeys()
 	if err != nil {
-		if errors.Contains(err, errJWTExpiryKey) {
-			return nil, auth.ErrExpiry
-		}
-
-		return nil, err
-	}
-	validator := jwt.ValidatorFunc(func(_ context.Context, t jwt.Token) jwt.ValidationError {
-		if t.Issuer() != issuerName {
-			return jwt.NewValidationError(errInvalidIssuer)
-		}
+		// For symmetric keys, return empty list
 		return nil
-	})
-	if err := jwt.Validate(tkn, jwt.WithValidator(validator)); err != nil {
-		return nil, errors.Wrap(ErrValidateJWTToken, err)
 	}
-
-	return tkn, nil
-}
-
-func (tok *tokenizer) RetrieveJWKS() []auth.JWK {
-	return tok.keyManager.PublicJWKS()
+	return keys
 }
 
 func ToKey(tkn jwt.Token) (auth.Key, error) {
@@ -133,7 +101,7 @@ func ToKey(tkn jwt.Token) (auth.Key, error) {
 		return auth.Key{}, errors.Wrap(ErrJSONHandle, err)
 	}
 
-	tType, ok := tkn.Get(tokenType)
+	tType, ok := tkn.Get(TokenType)
 	if !ok {
 		return auth.Key{}, errInvalidType
 	}

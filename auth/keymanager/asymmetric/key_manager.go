@@ -6,12 +6,14 @@ package asymmetric
 import (
 	"crypto/ed25519"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/pem"
 	"errors"
 	"os"
 
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/auth"
+	smqjwt "github.com/absmach/supermq/auth/jwt"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jws"
@@ -53,29 +55,75 @@ func NewKeyManager(privateKeyPath string, idProvider supermq.IDProvider) (auth.K
 	}, nil
 }
 
-func (km *manager) SignJWT(token jwt.Token) ([]byte, error) {
-	return jwt.Sign(token, jwt.WithKey(jwa.EdDSA, km.privateKey))
+func (km *manager) Sign(key auth.Key) (string, error) {
+	builder := jwt.NewBuilder()
+	builder.
+		Issuer(smqjwt.IssuerName).
+		IssuedAt(key.IssuedAt).
+		Claim(smqjwt.TokenType, key.Type).
+		Expiration(key.ExpiresAt).
+		Claim(smqjwt.RoleField, key.Role).
+		Claim(smqjwt.VerifiedField, key.Verified)
+
+	if key.Subject != "" {
+		builder.Subject(key.Subject)
+	}
+	if key.ID != "" {
+		builder.JwtID(key.ID)
+	}
+
+	tkn, err := builder.Build()
+	if err != nil {
+		return "", err
+	}
+
+	signedBytes, err := jwt.Sign(tkn, jwt.WithKey(jwa.EdDSA, km.privateKey))
+	if err != nil {
+		return "", err
+	}
+
+	return string(signedBytes), nil
 }
 
-func (km *manager) ParseJWT(token string) (jwt.Token, error) {
+func (km *manager) Verify(tokenString string) (auth.Key, error) {
 	set := jwk.NewSet()
 	if err := set.AddKey(km.publicKey); err != nil {
-		return nil, err
+		return auth.Key{}, err
 	}
 
 	tkn, err := jwt.Parse(
-		[]byte(token),
+		[]byte(tokenString),
 		jwt.WithValidate(true),
 		jwt.WithKeySet(set, jws.WithInferAlgorithmFromKey(true)),
 	)
 	if err != nil {
-		return nil, err
+		return auth.Key{}, err
 	}
-	return tkn, nil
+
+	// Validate issuer
+	if tkn.Issuer() != smqjwt.IssuerName {
+		return auth.Key{}, smqjwt.ErrInvalidIssuer
+	}
+
+	return smqjwt.ToKey(tkn)
 }
 
-func (km *manager) PublicJWKS() []auth.JWK {
-	return []auth.JWK{auth.NewJWK(km.publicKey)}
+func (km *manager) PublicKeys() ([]auth.PublicKeyInfo, error) {
+	var rawKey ed25519.PublicKey
+	if err := km.publicKey.Raw(&rawKey); err != nil {
+		return nil, err
+	}
+
+	return []auth.PublicKeyInfo{
+		{
+			KeyID:     km.kid,
+			KeyType:   "OKP",
+			Algorithm: "EdDSA",
+			Use:       "sig",
+			Curve:     "Ed25519",
+			X:         base64.RawURLEncoding.EncodeToString(rawKey),
+		},
+	}, nil
 }
 
 func loadKeyPair(privateKeyPath string, kid string) (jwk.Key, jwk.Key, error) {

@@ -159,6 +159,13 @@ func main() {
 
 	idProvider := uuid.New()
 
+	// Validate key configuration before creating key manager
+	if err := validateKeyConfig(isSymmetric, cfg); err != nil {
+		logger.Error(fmt.Sprintf("invalid key configuration: %s", err.Error()))
+		exitCode = 1
+		return
+	}
+
 	var keyManager auth.KeyManager
 	switch {
 	case isSymmetric:
@@ -253,6 +260,36 @@ func initSchema(ctx context.Context, client *authzed.ClientWithExperimental, sch
 
 	if _, err = client.SchemaServiceClient.WriteSchema(ctx, &v1.WriteSchemaRequest{Schema: string(schemaContent)}); err != nil {
 		return fmt.Errorf("failed to create schema in spicedb : %w", err)
+	}
+
+	return nil
+}
+
+// validateKeyConfig validates key configuration based on the algorithm type.
+func validateKeyConfig(isSymmetric bool, cfg config) error {
+	if isSymmetric {
+		// Validate symmetric key configuration
+		if len(cfg.SecretKey) < 32 {
+			return fmt.Errorf("symmetric key must be at least 32 bytes, got %d bytes", len(cfg.SecretKey))
+		}
+		if cfg.SecretKey == "secret" {
+			return fmt.Errorf("default secret key is insecure - please set SMQ_AUTH_SECRET_KEY environment variable")
+		}
+	} else {
+		// Validate asymmetric key configuration
+		info, err := os.Stat(cfg.PrivateKeyPath)
+		if err != nil {
+			if os.IsNotExist(err) {
+				return fmt.Errorf("private key file not found: %s", cfg.PrivateKeyPath)
+			}
+			return fmt.Errorf("failed to access private key file: %w", err)
+		}
+
+		// Check file permissions (should be 0600 or more restrictive)
+		perm := info.Mode().Perm()
+		if perm&0077 != 0 {
+			return fmt.Errorf("private key file %s has insecure permissions %o (should be 0600 or more restrictive)", cfg.PrivateKeyPath, perm)
+		}
 	}
 
 	return nil

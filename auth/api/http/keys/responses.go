@@ -11,7 +11,6 @@ import (
 
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/auth"
-	"github.com/lestrrat-go/jwx/v2/jwk"
 )
 
 var (
@@ -76,20 +75,18 @@ func (res revokeKeyRes) Empty() bool {
 }
 
 type retrieveJWKSRes struct {
-	Keys                      []auth.JWK `json:"-"`
-	CacheMaxAge               int        `json:"-"`
-	CacheStaleWhileRevalidate int        `json:"-"`
+	Keys                      []auth.PublicKeyInfo `json:"-"`
+	CacheMaxAge               int                  `json:"-"`
+	CacheStaleWhileRevalidate int                  `json:"-"`
 }
 
 func (res retrieveJWKSRes) MarshalJSON() ([]byte, error) {
-	set := jwk.NewSet()
-	for _, k := range res.Keys {
-		if err := set.AddKey(k.Key()); err != nil {
-			return nil, err
-		}
+	// Convert PublicKeyInfo to JWK Set format
+	type jwksResponse struct {
+		Keys []auth.PublicKeyInfo `json:"keys"`
 	}
 
-	return json.Marshal(set)
+	return json.Marshal(jwksResponse{Keys: res.Keys})
 }
 
 func (res retrieveJWKSRes) Code() int {

@@ -84,8 +84,8 @@ type Authn interface {
 	// other reason, non-nil error value is returned in response.
 	Identify(ctx context.Context, token string) (Key, error)
 
-	// RetrieveJWKS retrieves a JWKs to validate issued tokens.
-	RetrieveJWKS() []JWK
+	// RetrieveJWKS retrieves public keys to validate issued tokens.
+	RetrieveJWKS() []PublicKeyInfo
 }
 
 // Service specifies an API that must be fulfilled by the domain service
@@ -201,7 +201,7 @@ func (svc service) Identify(ctx context.Context, token string) (Key, error) {
 	}
 }
 
-func (svc service) RetrieveJWKS() []JWK {
+func (svc service) RetrieveJWKS() []PublicKeyInfo {
 	return svc.tokenizer.RetrieveJWKS()
 }
 

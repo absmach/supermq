@@ -15,6 +15,6 @@ type Tokenizer interface {
 	// Parse extracts API Key data from string token.
 	Parse(ctx context.Context, token string) (key Key, err error)
 
-	// RetrieveJWKS returns the JSON Web Key Set.
-	RetrieveJWKS() []JWK
+	// RetrieveJWKS returns the public keys for JWT verification.
+	RetrieveJWKS() []PublicKeyInfo
 }
