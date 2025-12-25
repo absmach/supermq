@@ -43,8 +43,7 @@ func TestKeyRotation(t *testing.T) {
 
 	// Create metadata with overlapping keys
 	metadata := map[string]interface{}{
-		"active_key_id":      "key-active",
-		"grace_period_hours": 168, // 7 days
+		"active_key_id": "key-active",
 		"keys": []map[string]interface{}{
 			{
 				"id":         "key-active",
@@ -119,7 +118,7 @@ func TestKeyRotation(t *testing.T) {
 	_ = pub2
 }
 
-func TestExpiredKey(t *testing.T) {
+func TestRetiredKey(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Generate keys
@@ -131,15 +130,14 @@ func TestExpiredKey(t *testing.T) {
 
 	// Save keys
 	key1Path := filepath.Join(tmpDir, "key-active.pem")
-	key2Path := filepath.Join(tmpDir, "key-expired.pem")
+	key2Path := filepath.Join(tmpDir, "key-retired.pem")
 
 	saveKey(t, priv1, key1Path)
 	saveKey(t, priv2, key2Path)
 
-	// Create metadata with expired key
+	// Create metadata with retired key (expired retiring key)
 	metadata := map[string]interface{}{
-		"active_key_id":      "key-active",
-		"grace_period_hours": 168,
+		"active_key_id": "key-active",
 		"keys": []map[string]interface{}{
 			{
 				"id":         "key-active",
@@ -148,8 +146,8 @@ func TestExpiredKey(t *testing.T) {
 				"status":     "active",
 			},
 			{
-				"id":         "key-expired",
-				"file":       "key-expired.pem",
+				"id":         "key-retired",
+				"file":       "key-retired.pem",
 				"created_at": time.Now().Add(-20 * 24 * time.Hour).Format(time.RFC3339),
 				"status":     "retiring",
 				"expires_at": time.Now().Add(-1 * time.Hour).Format(time.RFC3339), // Expired 1 hour ago
@@ -167,11 +165,113 @@ func TestExpiredKey(t *testing.T) {
 	km, err := asymmetric.NewKeyManager(filepath.Join(tmpDir, "dummy.pem"), &mockIDProvider{id: "ignored"})
 	require.NoError(t, err)
 
-	// Public keys should only return active key (expired key filtered out)
+	// Public keys should only return active key (retired key filtered out)
 	publicKeys, err := km.PublicKeys()
 	require.NoError(t, err)
-	assert.Len(t, publicKeys, 1, "Should only return active key, not expired")
+	assert.Len(t, publicKeys, 1, "Should only return active key, not retired")
 	assert.Equal(t, "key-active", publicKeys[0].KeyID)
+}
+
+func TestExplicitRetiredStatus(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Generate keys
+	_, priv1, err := ed25519.GenerateKey(rand.Reader)
+	require.NoError(t, err)
+
+	_, priv2, err := ed25519.GenerateKey(rand.Reader)
+	require.NoError(t, err)
+
+	// Save keys
+	key1Path := filepath.Join(tmpDir, "key-active.pem")
+	key2Path := filepath.Join(tmpDir, "key-retired.pem")
+
+	saveKey(t, priv1, key1Path)
+	saveKey(t, priv2, key2Path)
+
+	// Create metadata with explicit retired status
+	metadata := map[string]interface{}{
+		"active_key_id": "key-active",
+		"keys": []map[string]interface{}{
+			{
+				"id":         "key-active",
+				"file":       "key-active.pem",
+				"created_at": time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
+				"status":     "active",
+			},
+			{
+				"id":         "key-retired",
+				"file":       "key-retired.pem",
+				"created_at": time.Now().Add(-30 * 24 * time.Hour).Format(time.RFC3339),
+				"status":     "retired",
+			},
+		},
+	}
+
+	metadataPath := filepath.Join(tmpDir, "keys.json")
+	data, err := json.MarshalIndent(metadata, "", "  ")
+	require.NoError(t, err)
+	err = os.WriteFile(metadataPath, data, 0600)
+	require.NoError(t, err)
+
+	// Create key manager
+	km, err := asymmetric.NewKeyManager(filepath.Join(tmpDir, "dummy.pem"), &mockIDProvider{id: "ignored"})
+	require.NoError(t, err)
+
+	// Public keys should only return active key (retired status keys filtered out)
+	publicKeys, err := km.PublicKeys()
+	require.NoError(t, err)
+	assert.Len(t, publicKeys, 1, "Should only return active key, keys with retired status filtered out")
+	assert.Equal(t, "key-active", publicKeys[0].KeyID)
+}
+
+func TestRetiringKeyWithoutExpiry(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Generate keys
+	_, priv1, err := ed25519.GenerateKey(rand.Reader)
+	require.NoError(t, err)
+
+	_, priv2, err := ed25519.GenerateKey(rand.Reader)
+	require.NoError(t, err)
+
+	// Save keys
+	key1Path := filepath.Join(tmpDir, "key-active.pem")
+	key2Path := filepath.Join(tmpDir, "key-retiring.pem")
+
+	saveKey(t, priv1, key1Path)
+	saveKey(t, priv2, key2Path)
+
+	// Create metadata with retiring key missing expires_at
+	metadata := map[string]interface{}{
+		"active_key_id": "key-active",
+		"keys": []map[string]interface{}{
+			{
+				"id":         "key-active",
+				"file":       "key-active.pem",
+				"created_at": time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
+				"status":     "active",
+			},
+			{
+				"id":         "key-retiring",
+				"file":       "key-retiring.pem",
+				"created_at": time.Now().Add(-8 * 24 * time.Hour).Format(time.RFC3339),
+				"status":     "retiring",
+				// Missing expires_at - should fail validation
+			},
+		},
+	}
+
+	metadataPath := filepath.Join(tmpDir, "keys.json")
+	data, err := json.MarshalIndent(metadata, "", "  ")
+	require.NoError(t, err)
+	err = os.WriteFile(metadataPath, data, 0600)
+	require.NoError(t, err)
+
+	// Create key manager - should fail because retiring key lacks expires_at
+	_, err = asymmetric.NewKeyManager(filepath.Join(tmpDir, "dummy.pem"), &mockIDProvider{id: "ignored"})
+	assert.Error(t, err, "Should fail when retiring key missing expires_at")
+	assert.Contains(t, err.Error(), "retiring keys must have expires_at set")
 }
 
 func TestBackwardCompatibility(t *testing.T) {

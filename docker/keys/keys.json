@@ -1,6 +1,5 @@
 {
   "active_key_id": "active",
-  "grace_period_hours": 168,
   "keys": [
     {
       "id": "active",

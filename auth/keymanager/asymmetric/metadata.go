@@ -13,16 +13,18 @@ import (
 
 const (
 	defaultMetadataFile = "keys.json"
-	defaultGracePeriod  = 168 * time.Hour // 7 days
 )
 
 var (
-	errNoActiveKey       = errors.New("no active key found in metadata")
-	errInvalidKeyStatus  = errors.New("invalid key status")
-	errNoActiveKeyLoaded = errors.New("active key not loaded successfully")
-	errLoadingMetadata   = errors.New("failed to load key metadata")
-	errParsingMetadata   = errors.New("failed to parse key metadata")
-	errNoMetadata        = errors.New("no metadata file in private key dir")
+	errNoActiveKey              = errors.New("no active key found in metadata")
+	errInvalidKeyStatus         = errors.New("invalid key status")
+	errNoActiveKeyLoaded        = errors.New("active key not loaded successfully")
+	errLoadingMetadata          = errors.New("failed to load key metadata")
+	errParsingMetadata          = errors.New("failed to parse key metadata")
+	errNoMetadata               = errors.New("no metadata file in private key dir")
+	errActiveKeyStatus          = errors.New("active_key_id must reference a key with 'active' status")
+	errActiveKeyExpired         = errors.New("active key must not be expired")
+	errRetiringKeyMissingExpiry = errors.New("retiring keys must have expires_at set")
 )
 
 // KeyStatus represents the lifecycle state of a key.
@@ -48,16 +50,12 @@ type KeyMetadataEntry struct {
 
 // KeysMetadata represents the complete key configuration.
 type KeysMetadata struct {
-	ActiveKeyID      string             `json:"active_key_id"`
-	GracePeriodHours int                `json:"grace_period_hours"`
-	Keys             []KeyMetadataEntry `json:"keys"`
+	ActiveKeyID string             `json:"active_key_id"`
+	Keys        []KeyMetadataEntry `json:"keys"`
 }
 
 // IsExpired checks if the key is beyond its expiration time.
 func (k *KeyMetadataEntry) IsExpired() bool {
-	if k.Status != KeyStatusRetiring {
-		return false
-	}
 	if k.ExpiresAt.IsZero() {
 		return false
 	}
@@ -101,11 +99,6 @@ func LoadKeysMetadata(keysDir string) (*KeysMetadata, error) {
 		return nil, err
 	}
 
-	// Set default grace period if not specified
-	if metadata.GracePeriodHours == 0 {
-		metadata.GracePeriodHours = int(defaultGracePeriod.Hours())
-	}
-
 	return &metadata, nil
 }
 
@@ -121,7 +114,10 @@ func (m *KeysMetadata) Validate() error {
 		if key.ID == m.ActiveKeyID {
 			activeKeyExists = true
 			if key.Status != KeyStatusActive {
-				return errors.New("active_key_id must reference a key with 'active' status")
+				return errActiveKeyStatus
+			}
+			if key.IsExpired() {
+				return errActiveKeyExpired
 			}
 		}
 
@@ -131,10 +127,15 @@ func (m *KeysMetadata) Validate() error {
 			key.Status != KeyStatusRetired {
 			return errInvalidKeyStatus
 		}
+
+		// Retiring keys must have expires_at set
+		if key.Status == KeyStatusRetiring && key.ExpiresAt.IsZero() {
+			return errRetiringKeyMissingExpiry
+		}
 	}
 
 	if !activeKeyExists {
-		return errors.New("active_key_id references non-existent key")
+		return errNoActiveKey
 	}
 
 	return nil
