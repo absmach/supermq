@@ -100,7 +100,6 @@ func (km *manager) Verify(tokenString string) (auth.Key, error) {
 		return auth.Key{}, err
 	}
 
-	// Validate issuer
 	if tkn.Issuer() != smqjwt.IssuerName {
 		return auth.Key{}, smqjwt.ErrInvalidIssuer
 	}

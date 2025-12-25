@@ -1029,19 +1029,19 @@ func (_c *Service_ResetPATSecret_Call) RunAndReturn(run func(ctx context.Context
 }
 
 // RetrieveJWKS provides a mock function for the type Service
-func (_mock *Service) RetrieveJWKS() []auth.JWK {
+func (_mock *Service) RetrieveJWKS() []auth.PublicKeyInfo {
 	ret := _mock.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for RetrieveJWKS")
 	}
 
-	var r0 []auth.JWK
-	if returnFunc, ok := ret.Get(0).(func() []auth.JWK); ok {
+	var r0 []auth.PublicKeyInfo
+	if returnFunc, ok := ret.Get(0).(func() []auth.PublicKeyInfo); ok {
 		r0 = returnFunc()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]auth.JWK)
+			r0 = ret.Get(0).([]auth.PublicKeyInfo)
 		}
 	}
 	return r0
@@ -1064,12 +1064,12 @@ func (_c *Service_RetrieveJWKS_Call) Run(run func()) *Service_RetrieveJWKS_Call 
 	return _c
 }
 
-func (_c *Service_RetrieveJWKS_Call) Return(jWKs []auth.JWK) *Service_RetrieveJWKS_Call {
-	_c.Call.Return(jWKs)
+func (_c *Service_RetrieveJWKS_Call) Return(publicKeyInfos []auth.PublicKeyInfo) *Service_RetrieveJWKS_Call {
+	_c.Call.Return(publicKeyInfos)
 	return _c
 }
 
-func (_c *Service_RetrieveJWKS_Call) RunAndReturn(run func() []auth.JWK) *Service_RetrieveJWKS_Call {
+func (_c *Service_RetrieveJWKS_Call) RunAndReturn(run func() []auth.PublicKeyInfo) *Service_RetrieveJWKS_Call {
 	_c.Call.Return(run)
 	return _c
 }

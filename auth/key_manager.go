@@ -8,10 +8,10 @@ import (
 )
 
 var (
-	ErrUnsupportedKeyAlgorithm  = errors.New("unsupported key algorithm")
-	ErrInvalidSymmetricKey      = errors.New("invalid symmetric key")
-	ErrPublicKeysNotSupported   = errors.New("public keys not supported for symmetric algorithm")
-	ErrInvalidKeyConfiguration  = errors.New("invalid key configuration")
+	ErrUnsupportedKeyAlgorithm = errors.New("unsupported key algorithm")
+	ErrInvalidSymmetricKey     = errors.New("invalid symmetric key")
+	ErrPublicKeysNotSupported  = errors.New("public keys not supported for symmetric algorithm")
+	ErrInvalidKeyConfiguration = errors.New("invalid key configuration")
 )
 
 // PublicKeyInfo represents a public key for external distribution via JWKS.
@@ -49,10 +49,10 @@ type KeyManager interface {
 // Returns error for unsupported algorithms.
 func IsSymmetricAlgorithm(alg string) (bool, error) {
 	switch alg {
-	case "HS256", "HS384", "HS512":
-		return true, nil
 	case "EdDSA":
 		return false, nil
+	case "HS256", "HS384", "HS512":
+		return true, nil
 	default:
 		return false, ErrUnsupportedKeyAlgorithm
 	}

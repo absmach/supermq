@@ -27,8 +27,13 @@ import (
 )
 
 const (
-	issuerName    = "supermq.auth"
-	cacheDuration = 5 * time.Minute
+	issuerName   = "supermq.auth"
+	acceptHeader = "application/json"
+
+	fetchKeyDeadline = 10 * time.Second
+	cacheDuration    = 5 * time.Minute
+
+	errorBodyBytes = 1024
 )
 
 var (
@@ -72,9 +77,7 @@ func NewAuthentication(ctx context.Context, jwksURL string, cfg grpcclient.Confi
 	}
 	authSvcClient := auth.NewAuthClient(client.Connection(), cfg.Timeout)
 
-	httpClient := &http.Client{
-		Timeout: 10 * time.Second,
-	}
+	httpClient := &http.Client{}
 
 	return authentication{
 		jwksURL:       jwksURL,
@@ -93,7 +96,6 @@ func (a authentication) Authenticate(ctx context.Context, token string) (authn.S
 		return authn.Session{Type: authn.PersonalAccessToken, PatID: res.GetId(), UserID: res.GetUserId(), Role: authn.Role(res.GetUserRole())}, nil
 	}
 
-	// Try with cached JWKS first
 	jwks, err := a.fetchJWKS(ctx, false)
 	if err != nil {
 		return authn.Session{}, errors.Wrap(svcerr.ErrAuthentication, err)
@@ -101,9 +103,9 @@ func (a authentication) Authenticate(ctx context.Context, token string) (authn.S
 
 	tkn, err := validateToken(token, jwks)
 	if err != nil {
-		// If signature verification failed, try with fresh JWKS (key rotation scenario)
+		// If signature verification failed, try force with refresh JWKS (key rotation scenario)
 		if isSignatureError(err) {
-			jwks, fetchErr := a.fetchJWKS(ctx, true) // force refresh
+			jwks, fetchErr := a.fetchJWKS(ctx, true)
 			if fetchErr == nil {
 				tkn, err = validateToken(token, jwks)
 			}
@@ -127,8 +129,6 @@ func (a authentication) Authenticate(ctx context.Context, token string) (authn.S
 	}, nil
 }
 
-// isSignatureError determines if an error is related to signature verification.
-// Returns false for expiry or issuer validation errors.
 func isSignatureError(err error) bool {
 	return !errors.Contains(err, errJWTExpiryKey) &&
 		!errors.Contains(err, errInvalidIssuer) &&
@@ -136,7 +136,6 @@ func isSignatureError(err error) bool {
 }
 
 func (a authentication) fetchJWKS(ctx context.Context, forceRefresh bool) (jwk.Set, error) {
-	// Return cached JWKS if not forcing refresh and cache is still valid
 	if !forceRefresh {
 		a.cache.mu.RLock()
 		if time.Since(a.cache.cachedAt) < cacheDuration && a.cache.jwks.Len() > 0 {
@@ -147,20 +146,19 @@ func (a authentication) fetchJWKS(ctx context.Context, forceRefresh bool) (jwk.S
 		a.cache.mu.RUnlock()
 	}
 
+	fetchCtx := ctx
+	if _, hasDeadline := ctx.Deadline(); !hasDeadline {
+		var cancel context.CancelFunc
+		fetchCtx, cancel = context.WithTimeout(ctx, fetchKeyDeadline)
+		defer cancel()
+	}
+
 	// Fetch fresh JWKS from auth service
-	req, err := http.NewRequestWithContext(ctx, "GET", a.jwksURL, nil)
+	req, err := http.NewRequestWithContext(fetchCtx, http.MethodGet, a.jwksURL, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Accept", "application/json")
-
-	// Use context deadline if shorter than default timeout
-	timeout := 10 * time.Second
-	if deadline, ok := ctx.Deadline(); ok {
-		if timeUntil := time.Until(deadline); timeUntil < timeout {
-			timeout = timeUntil
-		}
-	}
+	req.Header.Set("Accept", acceptHeader)
 
 	resp, err := a.httpClient.Do(req)
 	if err != nil {
@@ -170,8 +168,8 @@ func (a authentication) fetchJWKS(ctx context.Context, forceRefresh bool) (jwk.S
 
 	if resp.StatusCode != http.StatusOK {
 		// Read error body for better diagnostics
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
-		return nil, errors.New(fmt.Sprintf("%s: HTTP %d: %s", errFetchJWKS.Error(), resp.StatusCode, string(body)))
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, errorBodyBytes))
+		return nil, errors.Wrap(errFetchJWKS, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(body)))
 	}
 
 	data, err := io.ReadAll(resp.Body)
@@ -184,7 +182,6 @@ func (a authentication) fetchJWKS(ctx context.Context, forceRefresh bool) (jwk.S
 		return nil, errors.Wrap(errFetchJWKS, err)
 	}
 
-	// Update cache
 	a.cache.mu.Lock()
 	a.cache.jwks = set
 	a.cache.cachedAt = time.Now()
@@ -206,21 +203,11 @@ func validateToken(token string, jwks jwk.Set) (jwt.Token, error) {
 		return nil, err
 	}
 
-	// Validate issuer and algorithm
+	// Validate issuer
 	validator := jwt.ValidatorFunc(func(_ context.Context, t jwt.Token) jwt.ValidationError {
 		if t.Issuer() != issuerName {
 			return jwt.NewValidationError(errInvalidIssuer)
 		}
-
-		// Validate algorithm is EdDSA (the only asymmetric algorithm we support)
-		algHeader, ok := t.Get("alg")
-		if !ok {
-			return jwt.NewValidationError(errors.New("missing algorithm header"))
-		}
-		if algStr, ok := algHeader.(string); !ok || algStr != "EdDSA" {
-			return jwt.NewValidationError(errors.New("unsupported algorithm: only EdDSA is allowed"))
-		}
-
 		return nil
 	})
 	if err := jwt.Validate(tkn, jwt.WithValidator(validator)); err != nil {

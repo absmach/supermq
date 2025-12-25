@@ -4,8 +4,6 @@
 package keys_test
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -21,11 +19,8 @@ import (
 	"github.com/absmach/supermq/auth/mocks"
 	smqlog "github.com/absmach/supermq/logger"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
-	"github.com/lestrrat-go/jwx/v2/jwa"
-	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -323,17 +318,17 @@ func TestRetrieveJWKS(t *testing.T) {
 
 	cases := []struct {
 		desc   string
-		svcRes []auth.JWK
+		svcRes []auth.PublicKeyInfo
 		status int
 	}{
 		{
 			desc:   "retrieve JWKS with keys",
-			svcRes: []auth.JWK{newJWK(t), newJWK(t)},
+			svcRes: []auth.PublicKeyInfo{newPublicKeyInfo(), newPublicKeyInfo()},
 			status: http.StatusOK,
 		},
 		{
 			desc:   "retrieve empty JWKS",
-			svcRes: []auth.JWK{},
+			svcRes: []auth.PublicKeyInfo{},
 			status: http.StatusOK,
 		},
 	}
@@ -352,14 +347,13 @@ func TestRetrieveJWKS(t *testing.T) {
 	}
 }
 
-func newJWK(t *testing.T) auth.JWK {
-	pKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.Nil(t, err, fmt.Sprintf("generating rsa key expected to succeed: %s", err))
-	jwkKey, err := jwk.FromRaw(&pKey.PublicKey)
-	require.Nil(t, err, fmt.Sprintf("creating jwk from rsa public key expected to succeed: %s", err))
-	err = jwkKey.Set(jwk.KeyIDKey, "test-key-id")
-	require.Nil(t, err, fmt.Sprintf("setting jwk key id expected to succeed: %s", err))
-	err = jwkKey.Set(jwk.AlgorithmKey, jwa.RS256.String())
-	require.Nil(t, err, fmt.Sprintf("setting jwk algorithm expected to succeed: %s", err))
-	return auth.NewJWK(jwkKey)
+func newPublicKeyInfo() auth.PublicKeyInfo {
+	return auth.PublicKeyInfo{
+		KeyID:     "test-key-id",
+		KeyType:   "OKP",
+		Algorithm: "EdDSA",
+		Use:       "sig",
+		Curve:     "Ed25519",
+		X:         "base64url-encoded-public-key",
+	}
 }

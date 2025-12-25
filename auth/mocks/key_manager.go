@@ -10,7 +10,6 @@ package mocks
 
 import (
 	"github.com/absmach/supermq/auth"
-	"github.com/lestrrat-go/jwx/v2/jwt"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -41,46 +40,159 @@ func (_m *KeyManager) EXPECT() *KeyManager_Expecter {
 	return &KeyManager_Expecter{mock: &_m.Mock}
 }
 
-// ParseJWT provides a mock function for the type KeyManager
-func (_mock *KeyManager) ParseJWT(token string) (jwt.Token, error) {
-	ret := _mock.Called(token)
+// PublicKeys provides a mock function for the type KeyManager
+func (_mock *KeyManager) PublicKeys() ([]auth.PublicKeyInfo, error) {
+	ret := _mock.Called()
 
 	if len(ret) == 0 {
-		panic("no return value specified for ParseJWT")
+		panic("no return value specified for PublicKeys")
 	}
 
-	var r0 jwt.Token
+	var r0 []auth.PublicKeyInfo
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(string) (jwt.Token, error)); ok {
-		return returnFunc(token)
+	if returnFunc, ok := ret.Get(0).(func() ([]auth.PublicKeyInfo, error)); ok {
+		return returnFunc()
 	}
-	if returnFunc, ok := ret.Get(0).(func(string) jwt.Token); ok {
-		r0 = returnFunc(token)
+	if returnFunc, ok := ret.Get(0).(func() []auth.PublicKeyInfo); ok {
+		r0 = returnFunc()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(jwt.Token)
+			r0 = ret.Get(0).([]auth.PublicKeyInfo)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(string) error); ok {
-		r1 = returnFunc(token)
+	if returnFunc, ok := ret.Get(1).(func() error); ok {
+		r1 = returnFunc()
 	} else {
 		r1 = ret.Error(1)
 	}
 	return r0, r1
 }
 
-// KeyManager_ParseJWT_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ParseJWT'
-type KeyManager_ParseJWT_Call struct {
+// KeyManager_PublicKeys_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PublicKeys'
+type KeyManager_PublicKeys_Call struct {
 	*mock.Call
 }
 
-// ParseJWT is a helper method to define mock.On call
-//   - token string
-func (_e *KeyManager_Expecter) ParseJWT(token interface{}) *KeyManager_ParseJWT_Call {
-	return &KeyManager_ParseJWT_Call{Call: _e.mock.On("ParseJWT", token)}
+// PublicKeys is a helper method to define mock.On call
+func (_e *KeyManager_Expecter) PublicKeys() *KeyManager_PublicKeys_Call {
+	return &KeyManager_PublicKeys_Call{Call: _e.mock.On("PublicKeys")}
 }
 
-func (_c *KeyManager_ParseJWT_Call) Run(run func(token string)) *KeyManager_ParseJWT_Call {
+func (_c *KeyManager_PublicKeys_Call) Run(run func()) *KeyManager_PublicKeys_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *KeyManager_PublicKeys_Call) Return(publicKeyInfos []auth.PublicKeyInfo, err error) *KeyManager_PublicKeys_Call {
+	_c.Call.Return(publicKeyInfos, err)
+	return _c
+}
+
+func (_c *KeyManager_PublicKeys_Call) RunAndReturn(run func() ([]auth.PublicKeyInfo, error)) *KeyManager_PublicKeys_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Sign provides a mock function for the type KeyManager
+func (_mock *KeyManager) Sign(key auth.Key) (string, error) {
+	ret := _mock.Called(key)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Sign")
+	}
+
+	var r0 string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(auth.Key) (string, error)); ok {
+		return returnFunc(key)
+	}
+	if returnFunc, ok := ret.Get(0).(func(auth.Key) string); ok {
+		r0 = returnFunc(key)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	if returnFunc, ok := ret.Get(1).(func(auth.Key) error); ok {
+		r1 = returnFunc(key)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// KeyManager_Sign_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Sign'
+type KeyManager_Sign_Call struct {
+	*mock.Call
+}
+
+// Sign is a helper method to define mock.On call
+//   - key auth.Key
+func (_e *KeyManager_Expecter) Sign(key interface{}) *KeyManager_Sign_Call {
+	return &KeyManager_Sign_Call{Call: _e.mock.On("Sign", key)}
+}
+
+func (_c *KeyManager_Sign_Call) Run(run func(key auth.Key)) *KeyManager_Sign_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 auth.Key
+		if args[0] != nil {
+			arg0 = args[0].(auth.Key)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *KeyManager_Sign_Call) Return(signedToken string, err error) *KeyManager_Sign_Call {
+	_c.Call.Return(signedToken, err)
+	return _c
+}
+
+func (_c *KeyManager_Sign_Call) RunAndReturn(run func(key auth.Key) (string, error)) *KeyManager_Sign_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Verify provides a mock function for the type KeyManager
+func (_mock *KeyManager) Verify(tokenString string) (auth.Key, error) {
+	ret := _mock.Called(tokenString)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Verify")
+	}
+
+	var r0 auth.Key
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(string) (auth.Key, error)); ok {
+		return returnFunc(tokenString)
+	}
+	if returnFunc, ok := ret.Get(0).(func(string) auth.Key); ok {
+		r0 = returnFunc(tokenString)
+	} else {
+		r0 = ret.Get(0).(auth.Key)
+	}
+	if returnFunc, ok := ret.Get(1).(func(string) error); ok {
+		r1 = returnFunc(tokenString)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// KeyManager_Verify_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Verify'
+type KeyManager_Verify_Call struct {
+	*mock.Call
+}
+
+// Verify is a helper method to define mock.On call
+//   - tokenString string
+func (_e *KeyManager_Expecter) Verify(tokenString interface{}) *KeyManager_Verify_Call {
+	return &KeyManager_Verify_Call{Call: _e.mock.On("Verify", tokenString)}
+}
+
+func (_c *KeyManager_Verify_Call) Run(run func(tokenString string)) *KeyManager_Verify_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 string
 		if args[0] != nil {
@@ -93,120 +205,12 @@ func (_c *KeyManager_ParseJWT_Call) Run(run func(token string)) *KeyManager_Pars
 	return _c
 }
 
-func (_c *KeyManager_ParseJWT_Call) Return(token1 jwt.Token, err error) *KeyManager_ParseJWT_Call {
-	_c.Call.Return(token1, err)
+func (_c *KeyManager_Verify_Call) Return(key auth.Key, err error) *KeyManager_Verify_Call {
+	_c.Call.Return(key, err)
 	return _c
 }
 
-func (_c *KeyManager_ParseJWT_Call) RunAndReturn(run func(token string) (jwt.Token, error)) *KeyManager_ParseJWT_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// PublicJWKS provides a mock function for the type KeyManager
-func (_mock *KeyManager) PublicJWKS() []auth.JWK {
-	ret := _mock.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for PublicJWKS")
-	}
-
-	var r0 []auth.JWK
-	if returnFunc, ok := ret.Get(0).(func() []auth.JWK); ok {
-		r0 = returnFunc()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]auth.JWK)
-		}
-	}
-	return r0
-}
-
-// KeyManager_PublicJWKS_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PublicJWKS'
-type KeyManager_PublicJWKS_Call struct {
-	*mock.Call
-}
-
-// PublicJWKS is a helper method to define mock.On call
-func (_e *KeyManager_Expecter) PublicJWKS() *KeyManager_PublicJWKS_Call {
-	return &KeyManager_PublicJWKS_Call{Call: _e.mock.On("PublicJWKS")}
-}
-
-func (_c *KeyManager_PublicJWKS_Call) Run(run func()) *KeyManager_PublicJWKS_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *KeyManager_PublicJWKS_Call) Return(jWKs []auth.JWK) *KeyManager_PublicJWKS_Call {
-	_c.Call.Return(jWKs)
-	return _c
-}
-
-func (_c *KeyManager_PublicJWKS_Call) RunAndReturn(run func() []auth.JWK) *KeyManager_PublicJWKS_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// SignJWT provides a mock function for the type KeyManager
-func (_mock *KeyManager) SignJWT(token jwt.Token) ([]byte, error) {
-	ret := _mock.Called(token)
-
-	if len(ret) == 0 {
-		panic("no return value specified for SignJWT")
-	}
-
-	var r0 []byte
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(jwt.Token) ([]byte, error)); ok {
-		return returnFunc(token)
-	}
-	if returnFunc, ok := ret.Get(0).(func(jwt.Token) []byte); ok {
-		r0 = returnFunc(token)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]byte)
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func(jwt.Token) error); ok {
-		r1 = returnFunc(token)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// KeyManager_SignJWT_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SignJWT'
-type KeyManager_SignJWT_Call struct {
-	*mock.Call
-}
-
-// SignJWT is a helper method to define mock.On call
-//   - token jwt.Token
-func (_e *KeyManager_Expecter) SignJWT(token interface{}) *KeyManager_SignJWT_Call {
-	return &KeyManager_SignJWT_Call{Call: _e.mock.On("SignJWT", token)}
-}
-
-func (_c *KeyManager_SignJWT_Call) Run(run func(token jwt.Token)) *KeyManager_SignJWT_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 jwt.Token
-		if args[0] != nil {
-			arg0 = args[0].(jwt.Token)
-		}
-		run(
-			arg0,
-		)
-	})
-	return _c
-}
-
-func (_c *KeyManager_SignJWT_Call) Return(bytes []byte, err error) *KeyManager_SignJWT_Call {
-	_c.Call.Return(bytes, err)
-	return _c
-}
-
-func (_c *KeyManager_SignJWT_Call) RunAndReturn(run func(token jwt.Token) ([]byte, error)) *KeyManager_SignJWT_Call {
+func (_c *KeyManager_Verify_Call) RunAndReturn(run func(tokenString string) (auth.Key, error)) *KeyManager_Verify_Call {
 	_c.Call.Return(run)
 	return _c
 }

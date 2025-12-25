@@ -18,10 +18,8 @@ import (
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/lestrrat-go/jwx/v2/jwa"
-	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -124,8 +122,7 @@ func TestIssue(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			tc.managerReq = newToken(issuerName, tc.key)
-			kmCall := keyManager.On("SignJWT", tc.managerReq).Return(tc.managerResp, tc.managerErr)
+			kmCall := keyManager.On("Sign", tc.key).Return(string(tc.managerResp), tc.managerErr)
 			tkn, err := tokenizer.Issue(tc.key)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s, got %s", tc.desc, tc.err, err))
 			if err == nil {
@@ -140,7 +137,7 @@ func TestParse(t *testing.T) {
 	tokenizer := authjwt.New(keyManager)
 
 	validKey := key()
-	signedTkn, parsedTkn, err := signToken(issuerName, validKey, true)
+	signedTkn, _, err := signToken(issuerName, validKey, false)
 	require.Nil(t, err, fmt.Sprintf("issuing key expected to succeed: %s", err))
 
 	apiKey := key()
@@ -156,7 +153,7 @@ func TestParse(t *testing.T) {
 
 	emptySubjectKey := key()
 	emptySubjectKey.Subject = ""
-	signedEmptySubjectTkn, parsedEmptySubjectTkn, err := signToken(issuerName, emptySubjectKey, true)
+	signedEmptySubjectTkn, _, err := signToken(issuerName, emptySubjectKey, false)
 	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
 
 	emptyTypeKey := key()
@@ -167,14 +164,14 @@ func TestParse(t *testing.T) {
 	emptyKey := key()
 	emptyKey.Subject = ""
 
-	signedInValidTkn, parsedInvalidTkn, err := signToken("invalid.issuer", key(), true)
+	signedInValidTkn, _, err := signToken("invalid.issuer", key(), false)
 	require.Nil(t, err, fmt.Sprintf("issuing key expected to succeed: %s", err))
 
 	cases := []struct {
 		desc       string
 		key        auth.Key
 		token      string
-		managerRes jwt.Token
+		managerRes auth.Key
 		managerErr error
 		err        error
 	}{
@@ -182,7 +179,7 @@ func TestParse(t *testing.T) {
 			desc:       "parse valid key",
 			key:        validKey,
 			token:      signedTkn,
-			managerRes: parsedTkn,
+			managerRes: validKey,
 			err:        nil,
 		},
 		{
@@ -210,28 +207,28 @@ func TestParse(t *testing.T) {
 			desc:       "parse token with invalid issuer",
 			key:        auth.Key{},
 			token:      signedInValidTkn,
-			managerRes: parsedInvalidTkn,
+			managerErr: authjwt.ErrInvalidIssuer,
 			err:        svcerr.ErrAuthentication,
 		},
 		{
 			desc:       "parse token with empty subject",
 			key:        emptySubjectKey,
 			token:      signedEmptySubjectTkn,
-			managerRes: parsedEmptySubjectTkn,
+			managerRes: emptySubjectKey,
 			err:        nil,
 		},
 		{
 			desc:       "parse token with empty type",
-			key:        emptyTypeKey,
+			key:        auth.Key{},
 			token:      emptyTypeToken,
-			managerRes: newToken(issuerName, emptyKey),
+			managerErr: svcerr.ErrAuthentication,
 			err:        svcerr.ErrAuthentication,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			kmCall := keyManager.On("ParseJWT", tc.token).Return(tc.managerRes, tc.managerErr)
+			kmCall := keyManager.On("Verify", tc.token).Return(tc.managerRes, tc.managerErr)
 			key, err := tokenizer.Parse(context.Background(), tc.token)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s, got %s", tc.desc, tc.err, err))
 			if err == nil {
@@ -247,23 +244,23 @@ func TestRetrieveJWKS(t *testing.T) {
 
 	cases := []struct {
 		desc        string
-		keys        []auth.JWK
+		keys        []auth.PublicKeyInfo
 		retrieveErr error
 		err         error
 	}{
 		{
 			desc: "retrieve jwks with keys",
-			keys: []auth.JWK{newJWK(t), newJWK(t)},
+			keys: []auth.PublicKeyInfo{newPublicKeyInfo(), newPublicKeyInfo()},
 		},
 		{
 			desc: "retrieve empty jwks",
-			keys: []auth.JWK{},
+			keys: []auth.PublicKeyInfo{},
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			kmCall := keyManager.On("PublicJWKS", mock.Anything).Return(tc.keys, tc.retrieveErr)
+			kmCall := keyManager.On("PublicKeys").Return(tc.keys, tc.retrieveErr)
 			jwks := tokenizer.RetrieveJWKS()
 			assert.Equal(t, tc.keys, jwks, fmt.Sprintf("%s expected %v, got %v", tc.desc, tc.keys, jwks))
 			kmCall.Unset()
@@ -328,14 +325,13 @@ func signToken(issuerName string, key auth.Key, parseToken bool) (string, jwt.To
 	return string(sTkn), pTkn, nil
 }
 
-func newJWK(t *testing.T) auth.JWK {
-	pKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.Nil(t, err, fmt.Sprintf("generating rsa key expected to succeed: %s", err))
-	jwkKey, err := jwk.FromRaw(&pKey.PublicKey)
-	require.Nil(t, err, fmt.Sprintf("creating jwk from rsa public key expected to succeed: %s", err))
-	err = jwkKey.Set(jwk.KeyIDKey, "test-key-id")
-	require.Nil(t, err, fmt.Sprintf("setting jwk key id expected to succeed: %s", err))
-	err = jwkKey.Set(jwk.AlgorithmKey, jwa.RS256.String())
-	require.Nil(t, err, fmt.Sprintf("setting jwk algorithm expected to succeed: %s", err))
-	return auth.NewJWK(jwkKey)
+func newPublicKeyInfo() auth.PublicKeyInfo {
+	return auth.PublicKeyInfo{
+		KeyID:     "test-key-id",
+		KeyType:   "OKP",
+		Algorithm: "EdDSA",
+		Use:       "sig",
+		Curve:     "Ed25519",
+		X:         "base64url-encoded-public-key",
+	}
 }

@@ -169,19 +169,19 @@ func (_c *Tokenizer_Parse_Call) RunAndReturn(run func(ctx context.Context, token
 }
 
 // RetrieveJWKS provides a mock function for the type Tokenizer
-func (_mock *Tokenizer) RetrieveJWKS() []auth.JWK {
+func (_mock *Tokenizer) RetrieveJWKS() []auth.PublicKeyInfo {
 	ret := _mock.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for RetrieveJWKS")
 	}
 
-	var r0 []auth.JWK
-	if returnFunc, ok := ret.Get(0).(func() []auth.JWK); ok {
+	var r0 []auth.PublicKeyInfo
+	if returnFunc, ok := ret.Get(0).(func() []auth.PublicKeyInfo); ok {
 		r0 = returnFunc()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]auth.JWK)
+			r0 = ret.Get(0).([]auth.PublicKeyInfo)
 		}
 	}
 	return r0
@@ -204,12 +204,12 @@ func (_c *Tokenizer_RetrieveJWKS_Call) Run(run func()) *Tokenizer_RetrieveJWKS_C
 	return _c
 }
 
-func (_c *Tokenizer_RetrieveJWKS_Call) Return(jWKs []auth.JWK) *Tokenizer_RetrieveJWKS_Call {
-	_c.Call.Return(jWKs)
+func (_c *Tokenizer_RetrieveJWKS_Call) Return(publicKeyInfos []auth.PublicKeyInfo) *Tokenizer_RetrieveJWKS_Call {
+	_c.Call.Return(publicKeyInfos)
 	return _c
 }
 
-func (_c *Tokenizer_RetrieveJWKS_Call) RunAndReturn(run func() []auth.JWK) *Tokenizer_RetrieveJWKS_Call {
+func (_c *Tokenizer_RetrieveJWKS_Call) RunAndReturn(run func() []auth.PublicKeyInfo) *Tokenizer_RetrieveJWKS_Call {
 	_c.Call.Return(run)
 	return _c
 }
