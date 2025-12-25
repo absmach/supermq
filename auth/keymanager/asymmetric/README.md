@@ -9,6 +9,10 @@ EdDSA (Ed25519) key manager with support for zero-downtime key rotation.
 - **Zero-downtime rotation** - Active + retiring keys work simultaneously during grace period
 - **JWKS endpoint** - Publishes all valid public keys for token verification
 
+Key rotation is offloaded to the external service. **Key expiration is checked only on service startup**.
+If you want to invalidate or rotate keys, a manual update to keys directory and `keys.json` file and 
+by service restart are required. 
+
 ## How It Works
 
 ### Single-Key Mode
@@ -56,14 +60,14 @@ With a `keys.json` file in the same directory as the private key, the manager en
 
 ### Field Reference
 
-| Field               | Required     | Description                              |
-| ------------------- | ------------ | ---------------------------------------- |
-| `active_key_id`     | Yes          | ID of the active key used for signing    |
+| Field               | Required     | Description                               |
+| ------------------- | ------------ | ----------------------------------------- |
+| `active_key_id`     | Yes          | ID of the active key used for signing     |
 | `keys[].id`         | Yes          | Unique key identifier (used as JWT `kid`) |
 | `keys[].file`       | Yes          | Key filename relative to keys directory   |
-| `keys[].created_at` | Yes          | Key creation timestamp (RFC3339)         |
-| `keys[].status`     | Yes          | `active`, `retiring`, or `retired`       |
-| `keys[].expires_at` | For retiring | When retiring key expires (RFC3339)      |
+| `keys[].created_at` | Yes          | Key creation timestamp (RFC3339)          |
+| `keys[].status`     | Yes          | `active`, `retiring`, or `retired`        |
+| `keys[].expires_at` | For retiring | When retiring key expires (RFC3339)       |
 
 ### Validation Rules
 
