@@ -38,7 +38,9 @@ type keyPair struct {
 
 type manager struct {
 	activeKeyID string
-	keys        map[string]*keyPair
+	// Field keys is populated during initialization and never modified afterward,
+	// making it safe for concurrent reads from Sign(), Verify(), and PublicKeys().
+	keys map[string]*keyPair
 }
 
 var _ auth.KeyManager = (*manager)(nil)
