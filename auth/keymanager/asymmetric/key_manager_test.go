@@ -61,7 +61,7 @@ func TestNewKeyManager(t *testing.T) {
 		{
 			name: "valid PEM key",
 			setupKey: func() string {
-				err := os.WriteFile(keyPath, pem.EncodeToMemory(pemBlock), 0600)
+				err := os.WriteFile(keyPath, pem.EncodeToMemory(pemBlock), 0o600)
 				require.NoError(t, err)
 				return keyPath
 			},
@@ -71,7 +71,7 @@ func TestNewKeyManager(t *testing.T) {
 			name: "valid raw key",
 			setupKey: func() string {
 				rawKeyPath := filepath.Join(tmpDir, "raw_private.key")
-				err := os.WriteFile(rawKeyPath, privateKey, 0600)
+				err := os.WriteFile(rawKeyPath, privateKey, 0o600)
 				require.NoError(t, err)
 				return rawKeyPath
 			},
@@ -89,7 +89,7 @@ func TestNewKeyManager(t *testing.T) {
 			name: "invalid key size",
 			setupKey: func() string {
 				invalidPath := filepath.Join(tmpDir, "invalid.key")
-				err := os.WriteFile(invalidPath, []byte("invalid"), 0600)
+				err := os.WriteFile(invalidPath, []byte("invalid"), 0o600)
 				require.NoError(t, err)
 				return invalidPath
 			},
@@ -141,7 +141,7 @@ func TestSign(t *testing.T) {
 		Bytes: pkcs8Key,
 	}
 
-	err = os.WriteFile(keyPath, pem.EncodeToMemory(pemBlock), 0600)
+	err = os.WriteFile(keyPath, pem.EncodeToMemory(pemBlock), 0o600)
 	require.NoError(t, err)
 
 	km, err := asymmetric.NewKeyManager(keyPath, idProvider)
@@ -221,7 +221,7 @@ func TestVerify(t *testing.T) {
 		Bytes: pkcs8Key,
 	}
 
-	err = os.WriteFile(keyPath, pem.EncodeToMemory(pemBlock), 0600)
+	err = os.WriteFile(keyPath, pem.EncodeToMemory(pemBlock), 0o600)
 	require.NoError(t, err)
 
 	km, err := asymmetric.NewKeyManager(keyPath, idProvider)
@@ -238,21 +238,18 @@ func TestVerify(t *testing.T) {
 		Verified:  true,
 	}
 
-	// Sign a valid token
 	validToken, err := km.Sign(validKey)
-	require.NoError(t, err)
+	require.NoError(t, err, "Signing a valid token should succeed")
 
-	// Create an expired token
 	expiredKey := validKey
 	expiredKey.ExpiresAt = time.Now().Add(-1 * time.Hour).UTC()
 	expiredToken, err := km.Sign(expiredKey)
-	require.NoError(t, err)
+	require.NoError(t, err, "Creating an expired token should succeed")
 
 	// Create token with wrong issuer
 	wrongIssuerKey := validKey
 	wrongIssuerKey.Issuer = "wrong.issuer"
 
-	// For wrong issuer, we need to manually create the token
 	privateJwk, err := jwk.FromRaw(privateKey)
 	require.NoError(t, err)
 	require.NoError(t, privateJwk.Set(jwk.AlgorithmKey, jwa.EdDSA))
@@ -331,11 +328,9 @@ func TestPublicKeys(t *testing.T) {
 	kid := "test-key-id"
 	idProvider := &mockIDProvider{id: kid}
 
-	// Create temporary key file
 	tmpDir := t.TempDir()
 	keyPath := filepath.Join(tmpDir, "private.key")
 
-	// Generate and save Ed25519 key
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	require.NoError(t, err)
 
@@ -347,7 +342,7 @@ func TestPublicKeys(t *testing.T) {
 		Bytes: pkcs8Key,
 	}
 
-	err = os.WriteFile(keyPath, pem.EncodeToMemory(pemBlock), 0600)
+	err = os.WriteFile(keyPath, pem.EncodeToMemory(pemBlock), 0o600)
 	require.NoError(t, err)
 
 	km, err := asymmetric.NewKeyManager(keyPath, idProvider)
@@ -365,9 +360,8 @@ func TestPublicKeys(t *testing.T) {
 	assert.Equal(t, "Ed25519", key.Curve)
 	assert.NotEmpty(t, key.X)
 
-	// Verify the public key can be decoded
 	decoded, err := base64.RawURLEncoding.DecodeString(key.X)
-	assert.NoError(t, err)
+	assert.NoError(t, err, "The public key should be decoded")
 	assert.Equal(t, publicKey, ed25519.PublicKey(decoded))
 }
 
@@ -375,11 +369,9 @@ func TestSignAndVerifyRoundTrip(t *testing.T) {
 	kid := "test-key-id"
 	idProvider := &mockIDProvider{id: kid}
 
-	// Create temporary key file
 	tmpDir := t.TempDir()
 	keyPath := filepath.Join(tmpDir, "private.key")
 
-	// Generate and save Ed25519 key
 	_, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	require.NoError(t, err)
 
@@ -391,7 +383,7 @@ func TestSignAndVerifyRoundTrip(t *testing.T) {
 		Bytes: pkcs8Key,
 	}
 
-	err = os.WriteFile(keyPath, pem.EncodeToMemory(pemBlock), 0600)
+	err = os.WriteFile(keyPath, pem.EncodeToMemory(pemBlock), 0o600)
 	require.NoError(t, err)
 
 	km, err := asymmetric.NewKeyManager(keyPath, idProvider)
@@ -408,15 +400,12 @@ func TestSignAndVerifyRoundTrip(t *testing.T) {
 		Verified:  true,
 	}
 
-	// Sign
 	token, err := km.Sign(originalKey)
 	require.NoError(t, err)
 
-	// Verify
 	verifiedKey, err := km.Verify(token)
-	require.NoError(t, err)
+	require.NoError(t, err, "Verification of a valid key should succeed")
 
-	// Compare
 	assert.Equal(t, originalKey.ID, verifiedKey.ID)
 	assert.Equal(t, originalKey.Type, verifiedKey.Type)
 	assert.Equal(t, originalKey.Subject, verifiedKey.Subject)
@@ -426,7 +415,6 @@ func TestSignAndVerifyRoundTrip(t *testing.T) {
 	assert.WithinDuration(t, originalKey.ExpiresAt, verifiedKey.ExpiresAt, time.Second)
 }
 
-// Helper function to split JWT into parts
 func splitJWT(token string) []string {
 	parts := []string{}
 	start := 0

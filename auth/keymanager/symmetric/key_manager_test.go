@@ -159,17 +159,14 @@ func TestVerify(t *testing.T) {
 		Verified:  true,
 	}
 
-	// Sign a valid token
 	validToken, err := km.Sign(validKey)
-	require.NoError(t, err)
+	require.NoError(t, err, "Signing valid token should succeed")
 
-	// Create an expired token
 	expiredKey := validKey
 	expiredKey.ExpiresAt = time.Now().Add(-1 * time.Hour).UTC()
 	expiredToken, err := km.Sign(expiredKey)
 	require.NoError(t, err)
 
-	// Create token with wrong issuer using another key manager
 	wrongIssuerKey := validKey
 	wrongIssuerKey.Issuer = "wrong.issuer"
 
@@ -190,7 +187,6 @@ func TestVerify(t *testing.T) {
 	require.NoError(t, err)
 	wrongIssuerToken := string(wrongIssuerTokenBytes)
 
-	// Create token signed with different secret
 	wrongSecretKM, err := symmetric.NewKeyManager("HS256", []byte("different-secret-key-here"))
 	require.NoError(t, err)
 	wrongSecretToken, err := wrongSecretKM.Sign(validKey)
@@ -319,48 +315,41 @@ func TestDifferentAlgorithms(t *testing.T) {
 		Verified:  true,
 	}
 
-	// Sign with HS256
 	km256, err := symmetric.NewKeyManager("HS256", secret)
 	require.NoError(t, err)
 	token256, err := km256.Sign(key)
 	require.NoError(t, err)
 
-	// Sign with HS384
 	km384, err := symmetric.NewKeyManager("HS384", secret)
 	require.NoError(t, err)
 	token384, err := km384.Sign(key)
 	require.NoError(t, err)
 
-	// Sign with HS512
 	km512, err := symmetric.NewKeyManager("HS512", secret)
 	require.NoError(t, err)
 	token512, err := km512.Sign(key)
 	require.NoError(t, err)
 
-	// Each algorithm should produce different tokens
 	assert.NotEqual(t, token256, token384)
 	assert.NotEqual(t, token256, token512)
 	assert.NotEqual(t, token384, token512)
 
-	// Verify with correct key manager
 	_, err = km256.Verify(token256)
-	assert.NoError(t, err)
+	assert.NoError(t, err, "verification of km256 token should pass with km256 verifier")
 
 	_, err = km384.Verify(token384)
-	assert.NoError(t, err)
+	assert.NoError(t, err, "verification of km384 token should pass with km384 verifier")
 
 	_, err = km512.Verify(token512)
-	assert.NoError(t, err)
+	assert.NoError(t, err, "verification of km512 token should pass with km512 verifier")
 
-	// Cross-verification should fail (token signed with HS256, verified with HS384)
 	_, err = km384.Verify(token256)
-	assert.Error(t, err)
+	assert.Error(t, err, "Cross verification should fail")
 
 	_, err = km512.Verify(token256)
 	assert.Error(t, err)
 }
 
-// Helper function to split JWT into parts
 func splitJWT(token string) []string {
 	parts := []string{}
 	start := 0

@@ -25,61 +25,24 @@ const (
 	userID        = "user123"
 )
 
-func TestAuthenticate(t *testing.T) {
-	// Generate Ed25519 key pair
-	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
-	require.NoError(t, err)
-
-	kid := "test-key-id"
-
-	// Create JWK from keys
-	privateJwk, err := jwk.FromRaw(privateKey)
-	require.NoError(t, err)
-	require.NoError(t, privateJwk.Set(jwk.AlgorithmKey, jwa.EdDSA))
-	require.NoError(t, privateJwk.Set(jwk.KeyIDKey, kid))
-
-	publicJwk, err := jwk.FromRaw(publicKey)
-	require.NoError(t, err)
-	require.NoError(t, publicJwk.Set(jwk.AlgorithmKey, jwa.EdDSA))
-	require.NoError(t, publicJwk.Set(jwk.KeyIDKey, kid))
-
-	// Create JWKS set
-	jwksSet := jwk.NewSet()
-	require.NoError(t, jwksSet.AddKey(publicJwk))
-
-	// Note: We can't easily test the full authentication flow here because it requires
-	// a gRPC connection to the auth service. This would require more complex test setup.
-	// For now, we focus on testing the validateToken function indirectly through unit tests
-	// of the key manager implementations.
-	t.Skip("Full integration test requires gRPC server setup")
-
-	// Keep variables for potential future use
-	_ = privateJwk
-	_ = publicJwk
-	_ = jwksSet
-}
-
 func TestValidateToken(t *testing.T) {
-	// Generate Ed25519 key pair
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	require.NoError(t, err)
 
 	kid := "test-key-id"
 
-	// Create JWK from keys
 	privateJwk, err := jwk.FromRaw(privateKey)
-	require.NoError(t, err)
+	require.NoError(t, err, "Parsing JWKS private key should work")
 	require.NoError(t, privateJwk.Set(jwk.AlgorithmKey, jwa.EdDSA))
 	require.NoError(t, privateJwk.Set(jwk.KeyIDKey, kid))
 
 	publicJwk, err := jwk.FromRaw(publicKey)
-	require.NoError(t, err)
+	require.NoError(t, err, "Parsing JWKS public key should work")
 	require.NoError(t, publicJwk.Set(jwk.AlgorithmKey, jwa.EdDSA))
 	require.NoError(t, publicJwk.Set(jwk.KeyIDKey, kid))
 
-	// Create JWKS set
 	jwksSet := jwk.NewSet()
-	require.NoError(t, jwksSet.AddKey(publicJwk))
+	require.NoError(t, jwksSet.AddKey(publicJwk), "Creation of JWKS should succeed")
 
 	cases := []struct {
 		name      string
@@ -124,7 +87,6 @@ func TestValidateToken(t *testing.T) {
 			signedToken, err := jwt.Sign(token, jwt.WithKey(jwa.EdDSA, privateJwk))
 			require.NoError(t, err)
 
-			// Parse the token using the JWKS set
 			parsedToken, err := jwt.Parse(
 				signedToken,
 				jwt.WithValidate(true),
@@ -135,9 +97,7 @@ func TestValidateToken(t *testing.T) {
 				// For expired token, parsing will fail
 				// For invalid issuer, parsing succeeds but we need to check issuer
 				if tc.issuer != validIssuer && err == nil {
-					// Check issuer manually since our validateToken would do this
 					if parsedToken.Issuer() != validIssuer {
-						// This is expected - invalid issuer should be caught
 						assert.NotEqual(t, validIssuer, parsedToken.Issuer())
 					} else {
 						assert.Fail(t, "Expected invalid issuer error")
@@ -155,7 +115,6 @@ func TestValidateToken(t *testing.T) {
 }
 
 func TestMultiKeyJWKS(t *testing.T) {
-	// Generate two Ed25519 key pairs (simulating active + retiring keys)
 	pub1, priv1, err := ed25519.GenerateKey(rand.Reader)
 	require.NoError(t, err)
 
@@ -165,25 +124,23 @@ func TestMultiKeyJWKS(t *testing.T) {
 	activeKID := "key-active"
 	retiringKID := "key-retiring"
 
-	// Create JWK for active key
 	privateJwk1, err := jwk.FromRaw(priv1)
-	require.NoError(t, err)
+	require.NoError(t, err, "Parsing JWKS private key 1 should work")
 	require.NoError(t, privateJwk1.Set(jwk.AlgorithmKey, jwa.EdDSA))
 	require.NoError(t, privateJwk1.Set(jwk.KeyIDKey, activeKID))
 
 	publicJwk1, err := jwk.FromRaw(pub1)
-	require.NoError(t, err)
+	require.NoError(t, err, "Parsing JWKS public key 1 should work")
 	require.NoError(t, publicJwk1.Set(jwk.AlgorithmKey, jwa.EdDSA))
 	require.NoError(t, publicJwk1.Set(jwk.KeyIDKey, activeKID))
 
-	// Create JWK for retiring key
 	privateJwk2, err := jwk.FromRaw(priv2)
-	require.NoError(t, err)
+	require.NoError(t, err, "Parsing JWKS private key 2 should work")
 	require.NoError(t, privateJwk2.Set(jwk.AlgorithmKey, jwa.EdDSA))
 	require.NoError(t, privateJwk2.Set(jwk.KeyIDKey, retiringKID))
 
 	publicJwk2, err := jwk.FromRaw(pub2)
-	require.NoError(t, err)
+	require.NoError(t, err, "Parsing JWKS public key 2 should work")
 	require.NoError(t, publicJwk2.Set(jwk.AlgorithmKey, jwa.EdDSA))
 	require.NoError(t, publicJwk2.Set(jwk.KeyIDKey, retiringKID))
 
@@ -273,36 +230,33 @@ func TestMultiKeyJWKS(t *testing.T) {
 }
 
 func TestKeyIDMatching(t *testing.T) {
-	// Generate two Ed25519 key pairs
 	pub1, priv1, err := ed25519.GenerateKey(rand.Reader)
-	require.NoError(t, err)
+	require.NoError(t, err, "Generating key par 1 should succeed")
 
 	pub2, _, err := ed25519.GenerateKey(rand.Reader)
-	require.NoError(t, err)
+	require.NoError(t, err, "Generating key par 2 should succeed")
 
 	kid1 := "key-1"
 	kid2 := "key-2"
 
-	// Create JWKs
 	privateJwk1, err := jwk.FromRaw(priv1)
-	require.NoError(t, err)
+	require.NoError(t, err, "Parsing JWKS private key 1 should work")
 	require.NoError(t, privateJwk1.Set(jwk.AlgorithmKey, jwa.EdDSA))
 	require.NoError(t, privateJwk1.Set(jwk.KeyIDKey, kid1))
 
 	publicJwk1, err := jwk.FromRaw(pub1)
-	require.NoError(t, err)
+	require.NoError(t, err, "Parsing JWKS public key 1 should work")
 	require.NoError(t, publicJwk1.Set(jwk.AlgorithmKey, jwa.EdDSA))
 	require.NoError(t, publicJwk1.Set(jwk.KeyIDKey, kid1))
 
 	publicJwk2, err := jwk.FromRaw(pub2)
-	require.NoError(t, err)
+	require.NoError(t, err, "Parsing JWKS public key 2 should work")
 	require.NoError(t, publicJwk2.Set(jwk.AlgorithmKey, jwa.EdDSA))
 	require.NoError(t, publicJwk2.Set(jwk.KeyIDKey, kid2))
 
-	// Create JWKS with both public keys
 	jwksSet := jwk.NewSet()
-	require.NoError(t, jwksSet.AddKey(publicJwk1))
-	require.NoError(t, jwksSet.AddKey(publicJwk2))
+	require.NoError(t, jwksSet.AddKey(publicJwk1), "Adding public key 1 to JWKS set should succeed")
+	require.NoError(t, jwksSet.AddKey(publicJwk2), "Adding public key 2 to JWKS set should succeed")
 
 	// Create token signed with key-1
 	builder := jwt.NewBuilder()
@@ -317,7 +271,6 @@ func TestKeyIDMatching(t *testing.T) {
 	signedToken, err := jwt.Sign(token, jwt.WithKey(jwa.EdDSA, privateJwk1))
 	require.NoError(t, err)
 
-	// Verify the token - JWT library should automatically select key-1 based on kid header
 	parsedToken, err := jwt.Parse(
 		signedToken,
 		jwt.WithValidate(true),
@@ -328,7 +281,6 @@ func TestKeyIDMatching(t *testing.T) {
 	assert.NotNil(t, parsedToken)
 	assert.Equal(t, validIssuer, parsedToken.Issuer())
 
-	// Verify the JWT header contains the correct kid
 	headers, err := jws.Parse(signedToken)
 	require.NoError(t, err)
 	sigs := headers.Signatures()
@@ -339,31 +291,27 @@ func TestKeyIDMatching(t *testing.T) {
 }
 
 func TestUnknownKeyID(t *testing.T) {
-	// Generate key pair
 	pub1, _, err := ed25519.GenerateKey(rand.Reader)
-	require.NoError(t, err)
+	require.NoError(t, err, "Generating public key 1 should succeed")
 
 	_, priv2, err := ed25519.GenerateKey(rand.Reader)
-	require.NoError(t, err)
+	require.NoError(t, err, "Generating private key 2 should succeed")
 
 	kid1 := "known-key"
 	kid2 := "unknown-key"
 
-	// Create JWK for known key (only this one in JWKS)
 	publicJwk1, err := jwk.FromRaw(pub1)
-	require.NoError(t, err)
+	require.NoError(t, err, "Parsing JWKS public key 1 should work")
 	require.NoError(t, publicJwk1.Set(jwk.AlgorithmKey, jwa.EdDSA))
 	require.NoError(t, publicJwk1.Set(jwk.KeyIDKey, kid1))
 
-	// Create private JWK for unknown key (not in JWKS)
 	privateJwk2, err := jwk.FromRaw(priv2)
-	require.NoError(t, err)
+	require.NoError(t, err, "Parsing JWKS private key 2 should work")
 	require.NoError(t, privateJwk2.Set(jwk.AlgorithmKey, jwa.EdDSA))
 	require.NoError(t, privateJwk2.Set(jwk.KeyIDKey, kid2))
 
-	// JWKS only contains key-1
 	jwksSet := jwk.NewSet()
-	require.NoError(t, jwksSet.AddKey(publicJwk1))
+	require.NoError(t, jwksSet.AddKey(publicJwk1), "Adding public key 1 to set should succeed")
 
 	// Create token signed with unknown key-2
 	builder := jwt.NewBuilder()
@@ -378,7 +326,6 @@ func TestUnknownKeyID(t *testing.T) {
 	signedToken, err := jwt.Sign(token, jwt.WithKey(jwa.EdDSA, privateJwk2))
 	require.NoError(t, err)
 
-	// Attempt to verify - should fail because kid is not in JWKS
 	_, err = jwt.Parse(
 		signedToken,
 		jwt.WithValidate(true),
@@ -386,10 +333,4 @@ func TestUnknownKeyID(t *testing.T) {
 	)
 
 	assert.Error(t, err, "Should fail when token's kid is not in JWKS")
-}
-
-func TestJWKSCaching(t *testing.T) {
-	t.Skip("Requires full authentication setup with gRPC")
-	// This would test that multiple authentications within the cache duration
-	// only fetch JWKS once from the HTTP endpoint
 }
