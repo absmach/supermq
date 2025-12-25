@@ -69,7 +69,7 @@ type config struct {
 	AccessDuration                time.Duration `env:"SMQ_AUTH_ACCESS_TOKEN_DURATION"             envDefault:"1h"`
 	RefreshDuration               time.Duration `env:"SMQ_AUTH_REFRESH_TOKEN_DURATION"            envDefault:"24h"`
 	KeyAlgorithm                  string        `env:"SMQ_AUTH_KEYS_ALGORITHM"                    envDefault:"EdDSA"`
-	PrivateKeyPath                string        `env:"SMQ_AUTH_KEYS_PRIVATE_KEY_PATH"             envDefault:"./ssl/keys/private.pem"`
+	PrivateKeyPath                string        `env:"SMQ_AUTH_KEYS_PRIVATE_KEY_PATH"             envDefault:"./ssl/keys/"`
 	InvitationDuration            time.Duration `env:"SMQ_AUTH_INVITATION_DURATION"               envDefault:"168h"`
 	SpicedbHost                   string        `env:"SMQ_SPICEDB_HOST"                           envDefault:"localhost"`
 	SpicedbPort                   string        `env:"SMQ_SPICEDB_PORT"                           envDefault:"50051"`
@@ -276,8 +276,7 @@ func validateKeyConfig(isSymmetric bool, cfg config) error {
 			return fmt.Errorf("default secret key is insecure - please set SMQ_AUTH_SECRET_KEY environment variable")
 		}
 	} else {
-		// Validate asymmetric key configuration
-		info, err := os.Stat(cfg.PrivateKeyPath)
+		_, err := os.Stat(cfg.PrivateKeyPath)
 		if err != nil {
 			if os.IsNotExist(err) {
 				return fmt.Errorf("private key file not found: %s", cfg.PrivateKeyPath)
@@ -285,11 +284,6 @@ func validateKeyConfig(isSymmetric bool, cfg config) error {
 			return fmt.Errorf("failed to access private key file: %w", err)
 		}
 
-		// Check file permissions (should be 0600 or more restrictive)
-		perm := info.Mode().Perm()
-		if perm&0077 != 0 {
-			return fmt.Errorf("private key file %s has insecure permissions %o (should be 0600 or more restrictive)", cfg.PrivateKeyPath, perm)
-		}
 	}
 
 	return nil

@@ -1,0 +1,19 @@
+{
+  "active_key_id": "active",
+  "grace_period_hours": 168,
+  "keys": [
+    {
+      "id": "active",
+      "file": "active.key",
+      "created_at": "2025-12-25T00:00:00Z",
+      "status": "active"
+    },
+    {
+      "id": "retiring",
+      "file": "retiring.key",
+      "created_at": "2024-12-18T00:00:00Z",
+      "status": "retiring",
+      "expires_at": "2026-01-01T00:00:00Z"
+    }
+  ]
+}
