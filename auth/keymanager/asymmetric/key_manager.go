@@ -46,7 +46,6 @@ var _ auth.KeyManager = (*manager)(nil)
 func NewKeyManager(privateKeyPath string, idProvider supermq.IDProvider) (auth.KeyManager, error) {
 	keyDir := filepath.Dir(privateKeyPath)
 	metadata, err := LoadKeysMetadata(keyDir)
-
 	if err == errNoMetadata {
 		return newSingleKeyManager(privateKeyPath, idProvider)
 	}
@@ -63,7 +62,6 @@ func newSingleKeyManager(privateKeyPath string, idProvider supermq.IDProvider) (
 	if err != nil {
 		return nil, errors.Join(errGeneratingKID, err)
 	}
-
 	privateJwk, publicJwk, err := loadKeyPair(privateKeyPath, kid)
 	if err != nil {
 		return nil, err

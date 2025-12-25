@@ -154,7 +154,7 @@ services:
       - supermq-pat-db-volume:/supermq-data
       # Auth private key file
       - type: bind
-        source: ${SMQ_AUTH_KEYS_PRIVATE_KEY_PATH:-ssl/keys/}
+        source: ${SMQ_AUTH_KEYS_PRIVATE_KEY_PATH}
         target: /keys
         read_only: true
       # Auth gRPC mTLS server certificates

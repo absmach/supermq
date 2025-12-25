@@ -11,7 +11,6 @@ var (
 	ErrUnsupportedKeyAlgorithm = errors.New("unsupported key algorithm")
 	ErrInvalidSymmetricKey     = errors.New("invalid symmetric key")
 	ErrPublicKeysNotSupported  = errors.New("public keys not supported for symmetric algorithm")
-	ErrInvalidKeyConfiguration = errors.New("invalid key configuration")
 )
 
 // PublicKeyInfo represents a public key for external distribution via JWKS.
