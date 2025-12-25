@@ -9,15 +9,20 @@ EdDSA (Ed25519) key manager with support for zero-downtime key rotation.
 - **Zero-downtime rotation** - Active + retiring keys work simultaneously during grace period
 - **JWKS endpoint** - Publishes all valid public keys for token verification
 
+## How It Works
+
+Keys are located in directory set via `SMQ_AUTH_KEYS_PRIVATE_KEY_PATH`. In this directory `keys.json` is used to
+set up the multiple key environment. Check Metadata file section for more details.
+
 Key rotation is offloaded to the external service. **Key expiration is checked only on service startup**.
 If you want to invalidate or rotate keys, a manual update to keys directory and `keys.json` file and 
-by service restart are required. 
-
-## How It Works
+service restart are required. This is acceptable because the grace period for retiring keys is typically days/weeks.
+The window between _key expires_ and _service restarts_ is probably acceptable for most use cases.
 
 ### Single-Key Mode
 
-Without a `keys.json` file, the manager operates in single-key mode using only the private key file specified in the configuration directory.
+Without a `keys.json` file, the manager operates in single-key mode using only the private key file
+specified in the configuration directory.
 
 ### Multi-Key Mode
 
@@ -107,4 +112,5 @@ expires_at = rotation_time + grace_period
 
 ## Migration
 
-To enable rotation on an existing single-key deployment, create `keys.json` with your current key marked as `active`. The manager automatically switches to multi-key mode when the metadata file is present.
+To enable rotation on an existing single-key deployment, create `keys.json` with your current key marked as `active`.
+The manager automatically switches to multi-key mode when the metadata file is present.
