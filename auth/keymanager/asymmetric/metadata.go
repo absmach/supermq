@@ -33,8 +33,10 @@ type KeyStatus string
 const (
 	// KeyStatusActive indicates the key is currently used for signing and verification.
 	KeyStatusActive KeyStatus = "active"
+
 	// KeyStatusRetiring indicates the key is only used for verification (within grace period).
 	KeyStatusRetiring KeyStatus = "retiring"
+
 	// KeyStatusRetired indicates the key is no longer valid (beyond grace period).
 	KeyStatusRetired KeyStatus = "retired"
 )
@@ -94,7 +96,6 @@ func LoadKeysMetadata(keysDir string) (*KeysMetadata, error) {
 		return nil, errors.Join(errParsingMetadata, err)
 	}
 
-	// Validate metadata
 	if err := metadata.Validate(); err != nil {
 		return nil, err
 	}
@@ -108,7 +109,6 @@ func (m *KeysMetadata) Validate() error {
 		return errNoActiveKey
 	}
 
-	// Check that active key exists
 	activeKeyExists := false
 	for _, key := range m.Keys {
 		if key.ID == m.ActiveKeyID {
@@ -121,14 +121,12 @@ func (m *KeysMetadata) Validate() error {
 			}
 		}
 
-		// Validate key status
 		if key.Status != KeyStatusActive &&
 			key.Status != KeyStatusRetiring &&
 			key.Status != KeyStatusRetired {
 			return errInvalidKeyStatus
 		}
 
-		// Retiring keys must have expires_at set
 		if key.Status == KeyStatusRetiring && key.ExpiresAt.IsZero() {
 			return errRetiringKeyMissingExpiry
 		}
