@@ -16,30 +16,33 @@ import (
 var (
 	// ErrInvalidIssuer is returned when the issuer is not supermq.auth.
 	ErrInvalidIssuer = errors.New("invalid token issuer value")
+
 	// errInvalidType is returned when there is no type field.
 	errInvalidType = errors.New("invalid token type")
+
 	// errInvalidRole is returned when the role is invalid.
 	errInvalidRole = errors.New("invalid role")
+
 	// errInvalidVerified is returned when the verified is invalid.
 	errInvalidVerified = errors.New("invalid verified")
+
 	// errJWTExpiryKey is used to check if the token is expired.
 	errJWTExpiryKey = errors.New(`"exp" not satisfied`)
+
 	// ErrSignJWT indicates an error in signing jwt token.
 	ErrSignJWT = errors.New("failed to sign jwt token")
+
 	// ErrValidateJWTToken indicates a failure to validate JWT token.
 	ErrValidateJWTToken = errors.New("failed to validate jwt token")
+
 	// ErrJSONHandle indicates an error in handling JSON.
 	ErrJSONHandle = errors.New("failed to perform operation JSON")
 )
 
 const (
-	// IssuerName is the expected issuer for SuperMQ JWT tokens.
-	IssuerName = "supermq.auth"
-	// TokenType is the JWT claim key for token type.
+	IssuerName    = "supermq.auth"
 	TokenType     = "type"
-	// RoleField is the JWT claim key for user role.
 	RoleField     = "role"
-	// VerifiedField is the JWT claim key for user verification status.
 	VerifiedField = "verified"
 	patPrefix     = "pat"
 )
@@ -72,7 +75,6 @@ func (tok *tokenizer) Parse(ctx context.Context, token string) (auth.Key, error)
 
 	key, err := tok.keyManager.Verify(token)
 	if err != nil {
-		// Check if it's an expiry error and wrap appropriately
 		if errors.Contains(err, errJWTExpiryKey) {
 			return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, auth.ErrExpiry)
 		}
@@ -85,7 +87,6 @@ func (tok *tokenizer) Parse(ctx context.Context, token string) (auth.Key, error)
 func (tok *tokenizer) RetrieveJWKS() []auth.PublicKeyInfo {
 	keys, err := tok.keyManager.PublicKeys()
 	if err != nil {
-		// For symmetric keys, return empty list
 		return nil
 	}
 	return keys

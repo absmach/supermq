@@ -52,6 +52,7 @@ km, err := asymmetric.NewKeyManager("/path/to/keys/private.key", idProvider)
 - Used for **verification** of existing tokens
 - Only one key can be active at a time
 - Must be referenced by `active_key_id` in metadata
+- **MAKE SURE ACTIVE KEY IS NOT EXPIRED**
 
 ### Retiring
 - **NOT** used for signing new tokens
@@ -59,7 +60,7 @@ km, err := asymmetric.NewKeyManager("/path/to/keys/private.key", idProvider)
 - Valid until `expires_at` timestamp (grace period)
 - Allows seamless rotation without invalidating existing tokens
 
-### Expired
+### Retired
 - No longer used for signing or verification
 - Automatically filtered from JWKS endpoint
 - Can be safely deleted from disk
@@ -72,7 +73,7 @@ Start with a single active key:
 
 ```bash
 # Generate Ed25519 key pair
-openssl genpkey -algorithm ED25519 -out private.key
+openssl genpkey -algorithm Ed25519 -out private.key
 ```
 
 **Directory:**
@@ -125,7 +126,7 @@ openssl genpkey -algorithm ED25519 -out private-new.key
 
 Restart the auth service. The key manager will:
 - Load both keys from metadata
-- Sign new tokens with `key-2024-12-25` (active)
+- Sign new tokens with `active` (active)
 - Verify tokens with both keys (active + retiring)
 - Publish both keys in JWKS endpoint
 
@@ -334,7 +335,7 @@ You can now follow the standard rotation process to add new keys.
 **Cause:** Unknown status value in metadata.
 
 **Solutions:**
-- Use only: `active`, `retiring`, or `expired`
+- Use only: `active`, `retiring`, or `retired`
 - Check for typos in status field
 
 ### Tokens signed with old key fail verification

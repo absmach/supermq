@@ -27,6 +27,7 @@ var (
 	errParsingPrivateKey = errors.New("failed to parse private key")
 	errInvalidKeyType    = errors.New("private key is not ED25519")
 	errGeneratingKID     = errors.New("failed to generate key ID")
+	errNoValidPublicKeys = errors.New("no valid public keys available")
 )
 
 type keyPair struct {
@@ -37,7 +38,7 @@ type keyPair struct {
 
 type manager struct {
 	activeKeyID string
-	keys        map[string]*keyPair // Map of key ID to key pair
+	keys        map[string]*keyPair
 }
 
 var _ auth.KeyManager = (*manager)(nil)
@@ -85,13 +86,11 @@ func newSingleKeyManager(privateKeyPath string, idProvider supermq.IDProvider) (
 func newMultiKeyManager(keyDir string, metadata *KeysMetadata) (*manager, error) {
 	keys := make(map[string]*keyPair)
 
-	// Load all valid keys
 	for _, keyMeta := range metadata.GetValidKeys() {
 		keyPath := filepath.Join(keyDir, keyMeta.File)
 
 		privateJwk, publicJwk, err := loadKeyPair(keyPath, keyMeta.ID)
 		if err != nil {
-			// Log warning but continue - allows partial key loading
 			continue
 		}
 
@@ -102,9 +101,8 @@ func newMultiKeyManager(keyDir string, metadata *KeysMetadata) (*manager, error)
 		}
 	}
 
-	// Verify active key was loaded
 	if _, ok := keys[metadata.ActiveKeyID]; !ok {
-		return nil, errors.New("active key not loaded successfully")
+		return nil, errNoActiveKeyLoaded
 	}
 
 	return &manager{
@@ -114,10 +112,9 @@ func newMultiKeyManager(keyDir string, metadata *KeysMetadata) (*manager, error)
 }
 
 func (km *manager) Sign(key auth.Key) (string, error) {
-	// Get the active key for signing
 	activeKey, ok := km.keys[km.activeKeyID]
 	if !ok {
-		return "", errors.New("active key not found")
+		return "", errNoActiveKeyLoaded
 	}
 
 	builder := jwt.NewBuilder()
@@ -141,7 +138,6 @@ func (km *manager) Sign(key auth.Key) (string, error) {
 		return "", err
 	}
 
-	// Sign with the active private key
 	signedBytes, err := jwt.Sign(tkn, jwt.WithKey(jwa.EdDSA, activeKey.privateKey))
 	if err != nil {
 		return "", err
@@ -151,7 +147,6 @@ func (km *manager) Sign(key auth.Key) (string, error) {
 }
 
 func (km *manager) Verify(tokenString string) (auth.Key, error) {
-	// Create a JWKS set with all valid public keys (active + retiring)
 	set := jwk.NewSet()
 	for _, kp := range km.keys {
 		if err := set.AddKey(kp.publicKey); err != nil {
@@ -159,7 +154,6 @@ func (km *manager) Verify(tokenString string) (auth.Key, error) {
 		}
 	}
 
-	// Try to parse and verify with any of the valid keys
 	tkn, err := jwt.Parse(
 		[]byte(tokenString),
 		jwt.WithValidate(true),
@@ -169,7 +163,6 @@ func (km *manager) Verify(tokenString string) (auth.Key, error) {
 		return auth.Key{}, err
 	}
 
-	// Validate issuer
 	if tkn.Issuer() != smqjwt.IssuerName {
 		return auth.Key{}, smqjwt.ErrInvalidIssuer
 	}
@@ -178,13 +171,10 @@ func (km *manager) Verify(tokenString string) (auth.Key, error) {
 }
 
 func (km *manager) PublicKeys() ([]auth.PublicKeyInfo, error) {
-	// Return all valid public keys (active + retiring)
 	publicKeys := make([]auth.PublicKeyInfo, 0, len(km.keys))
-
 	for _, kp := range km.keys {
 		var rawKey ed25519.PublicKey
 		if err := kp.publicKey.Raw(&rawKey); err != nil {
-			// Skip keys that can't be converted, but continue with others
 			continue
 		}
 
@@ -199,7 +189,7 @@ func (km *manager) PublicKeys() ([]auth.PublicKeyInfo, error) {
 	}
 
 	if len(publicKeys) == 0 {
-		return nil, errors.New("no valid public keys available")
+		return nil, errNoValidPublicKeys
 	}
 
 	return publicKeys, nil

@@ -14,16 +14,15 @@ import (
 const (
 	defaultMetadataFile = "keys.json"
 	defaultGracePeriod  = 168 * time.Hour // 7 days
-	defaultKeyDir       = "."
 )
 
 var (
-	errNoActiveKey      = errors.New("no active key found in metadata")
-	errInvalidKeyStatus = errors.New("invalid key status")
-	errKeyFileNotFound  = errors.New("key file not found")
-	errLoadingMetadata  = errors.New("failed to load key metadata")
-	errParsingMetadata  = errors.New("failed to parse key metadata")
-	errNoMetadata       = errors.New("no metadata file in private key dir")
+	errNoActiveKey       = errors.New("no active key found in metadata")
+	errInvalidKeyStatus  = errors.New("invalid key status")
+	errNoActiveKeyLoaded = errors.New("active key not loaded successfully")
+	errLoadingMetadata   = errors.New("failed to load key metadata")
+	errParsingMetadata   = errors.New("failed to parse key metadata")
+	errNoMetadata        = errors.New("no metadata file in private key dir")
 )
 
 // KeyStatus represents the lifecycle state of a key.
@@ -34,8 +33,8 @@ const (
 	KeyStatusActive KeyStatus = "active"
 	// KeyStatusRetiring indicates the key is only used for verification (within grace period).
 	KeyStatusRetiring KeyStatus = "retiring"
-	// KeyStatusExpired indicates the key is no longer valid (beyond grace period).
-	KeyStatusExpired KeyStatus = "expired"
+	// KeyStatusRetired indicates the key is no longer valid (beyond grace period).
+	KeyStatusRetired KeyStatus = "retired"
 )
 
 // KeyMetadataEntry represents a single key's metadata.
@@ -67,12 +66,13 @@ func (k *KeyMetadataEntry) IsExpired() bool {
 
 // IsValid checks if the key is active or retiring (not expired).
 func (k *KeyMetadataEntry) IsValid() bool {
+	if k.IsExpired() {
+		return false
+	}
 	switch k.Status {
-	case KeyStatusActive:
+	case KeyStatusActive, KeyStatusRetiring:
 		return true
-	case KeyStatusRetiring:
-		return !k.IsExpired()
-	case KeyStatusExpired:
+	case KeyStatusRetired:
 		return false
 	default:
 		return false
@@ -128,7 +128,7 @@ func (m *KeysMetadata) Validate() error {
 		// Validate key status
 		if key.Status != KeyStatusActive &&
 			key.Status != KeyStatusRetiring &&
-			key.Status != KeyStatusExpired {
+			key.Status != KeyStatusRetired {
 			return errInvalidKeyStatus
 		}
 	}
@@ -159,9 +159,4 @@ func (m *KeysMetadata) GetValidKeys() []KeyMetadataEntry {
 		}
 	}
 	return validKeys
-}
-
-// GracePeriod returns the grace period as a duration.
-func (m *KeysMetadata) GracePeriod() time.Duration {
-	return time.Duration(m.GracePeriodHours) * time.Hour
 }
