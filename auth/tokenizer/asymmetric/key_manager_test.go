@@ -190,7 +190,6 @@ func TestSign(t *testing.T) {
 			assert.NoError(t, err)
 			assert.NotEmpty(t, token)
 
-			// Verify the token is valid JWT format (3 parts separated by dots)
 			parts := splitJWT(token)
 			assert.Equal(t, 3, len(parts), "JWT should have 3 parts")
 		})
@@ -240,7 +239,6 @@ func TestVerify(t *testing.T) {
 	expiredToken, err := km.Issue(expiredKey)
 	require.NoError(t, err, "Creating an expired token should succeed")
 
-	// Create token with wrong issuer
 	wrongIssuerKey := validKey
 	wrongIssuerKey.Issuer = "wrong.issuer"
 
