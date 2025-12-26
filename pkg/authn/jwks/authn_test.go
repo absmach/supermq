@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/auth"
-	smqjwt "github.com/absmach/supermq/auth/jwt"
+	smqjwt "github.com/absmach/supermq/auth/tokenizer/util"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jws"

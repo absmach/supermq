@@ -22,10 +22,10 @@ import (
 	httpapi "github.com/absmach/supermq/auth/api/http"
 	"github.com/absmach/supermq/auth/cache"
 	"github.com/absmach/supermq/auth/hasher"
-	"github.com/absmach/supermq/auth/keymanager/asymmetric"
-	"github.com/absmach/supermq/auth/keymanager/symmetric"
 	"github.com/absmach/supermq/auth/middleware"
 	apostgres "github.com/absmach/supermq/auth/postgres"
+	"github.com/absmach/supermq/auth/tokenizer/asymmetric"
+	"github.com/absmach/supermq/auth/tokenizer/symmetric"
 	redisclient "github.com/absmach/supermq/internal/clients/redis"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/jaeger"
@@ -167,14 +167,14 @@ func main() {
 	var keyManager auth.Tokenizer
 	switch {
 	case isSymmetric:
-		keyManager, err = symmetric.NewKeyManager(cfg.KeyAlgorithm, []byte(cfg.SecretKey))
+		keyManager, err = symmetric.NewTokenizer(cfg.KeyAlgorithm, []byte(cfg.SecretKey))
 		if err != nil {
 			logger.Error(fmt.Sprintf("failed to create symmetric key manager: %s", err.Error()))
 			exitCode = 1
 			return
 		}
 	default:
-		keyManager, err = asymmetric.NewKeyManager(cfg.PrivateKeyDir, idProvider)
+		keyManager, err = asymmetric.NewTokenizer(cfg.PrivateKeyDir, idProvider)
 		if err != nil {
 			logger.Error(fmt.Sprintf("failed to create asymmetric key manager: %s", err.Error()))
 			exitCode = 1

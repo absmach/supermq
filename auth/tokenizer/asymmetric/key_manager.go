@@ -14,7 +14,7 @@ import (
 
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/auth"
-	smqjwt "github.com/absmach/supermq/auth/jwt"
+	smqjwt "github.com/absmach/supermq/auth/tokenizer/util"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwk"
@@ -48,7 +48,7 @@ type manager struct {
 
 var _ auth.Tokenizer = (*manager)(nil)
 
-func NewKeyManager(privateKeyDir string, idProvider supermq.IDProvider) (auth.Tokenizer, error) {
+func NewTokenizer(privateKeyDir string, idProvider supermq.IDProvider) (auth.Tokenizer, error) {
 	keyDir := filepath.Dir(privateKeyDir)
 	metadata, err := LoadKeysMetadata(keyDir)
 	if err == errNoMetadata {

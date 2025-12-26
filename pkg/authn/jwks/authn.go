@@ -15,7 +15,7 @@ import (
 	grpcAuthV1 "github.com/absmach/supermq/api/grpc/auth/v1"
 	smqauth "github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/auth/api/grpc/auth"
-	smqjwt "github.com/absmach/supermq/auth/jwt"
+	smqjwt "github.com/absmach/supermq/auth/tokenizer/util"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"

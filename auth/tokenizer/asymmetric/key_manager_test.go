@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/auth"
-	"github.com/absmach/supermq/auth/keymanager/asymmetric"
+	"github.com/absmach/supermq/auth/tokenizer/asymmetric"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
@@ -103,7 +103,7 @@ func TestNewKeyManager(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			path := tc.setupKey()
 
-			km, err := asymmetric.NewKeyManager(path, idProvider)
+			km, err := asymmetric.NewTokenizer(path, idProvider)
 
 			if tc.expectErr {
 				assert.Error(t, err)
@@ -145,7 +145,7 @@ func TestSign(t *testing.T) {
 	err = os.WriteFile(keyPath, pem.EncodeToMemory(pemBlock), 0o600)
 	require.NoError(t, err)
 
-	km, err := asymmetric.NewKeyManager(keyPath, idProvider)
+	km, err := asymmetric.NewTokenizer(keyPath, idProvider)
 	require.NoError(t, err)
 
 	cases := []struct {
@@ -225,7 +225,7 @@ func TestVerify(t *testing.T) {
 	err = os.WriteFile(keyPath, pem.EncodeToMemory(pemBlock), 0o600)
 	require.NoError(t, err)
 
-	km, err := asymmetric.NewKeyManager(keyPath, idProvider)
+	km, err := asymmetric.NewTokenizer(keyPath, idProvider)
 	require.NoError(t, err)
 
 	validKey := auth.Key{
@@ -346,7 +346,7 @@ func TestPublicKeys(t *testing.T) {
 	err = os.WriteFile(keyPath, pem.EncodeToMemory(pemBlock), 0o600)
 	require.NoError(t, err)
 
-	km, err := asymmetric.NewKeyManager(keyPath, idProvider)
+	km, err := asymmetric.NewTokenizer(keyPath, idProvider)
 	require.NoError(t, err)
 
 	keys, err := km.RetrieveJWKS()
@@ -387,7 +387,7 @@ func TestSignAndVerifyRoundTrip(t *testing.T) {
 	err = os.WriteFile(keyPath, pem.EncodeToMemory(pemBlock), 0o600)
 	require.NoError(t, err)
 
-	km, err := asymmetric.NewKeyManager(keyPath, idProvider)
+	km, err := asymmetric.NewTokenizer(keyPath, idProvider)
 	require.NoError(t, err)
 
 	originalKey := auth.Key{

@@ -16,8 +16,8 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/auth"
-	smqjwt "github.com/absmach/supermq/auth/jwt"
-	"github.com/absmach/supermq/auth/keymanager/asymmetric"
+	"github.com/absmach/supermq/auth/tokenizer/asymmetric"
+	smqjwt "github.com/absmach/supermq/auth/tokenizer/util"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
@@ -68,7 +68,7 @@ func TestKeyRotation(t *testing.T) {
 	err = os.WriteFile(metadataPath, data, 0o600)
 	require.NoError(t, err)
 
-	km, err := asymmetric.NewKeyManager(filepath.Join(tmpDir, "dummy.pem"), &mockIDProvider{id: "ignored"})
+	km, err := asymmetric.NewTokenizer(filepath.Join(tmpDir, "dummy.pem"), &mockIDProvider{id: "ignored"})
 	require.NoError(t, err)
 
 	testKey := auth.Key{
@@ -150,7 +150,7 @@ func TestRetiredKey(t *testing.T) {
 	err = os.WriteFile(metadataPath, data, 0o600)
 	require.NoError(t, err)
 
-	km, err := asymmetric.NewKeyManager(filepath.Join(tmpDir, "dummy.pem"), &mockIDProvider{id: "ignored"})
+	km, err := asymmetric.NewTokenizer(filepath.Join(tmpDir, "dummy.pem"), &mockIDProvider{id: "ignored"})
 	require.NoError(t, err)
 
 	publicKeys, err := km.RetrieveJWKS()
@@ -198,7 +198,7 @@ func TestExplicitRetiredStatus(t *testing.T) {
 	err = os.WriteFile(metadataPath, data, 0o600)
 	require.NoError(t, err)
 
-	km, err := asymmetric.NewKeyManager(filepath.Join(tmpDir, "dummy.pem"), &mockIDProvider{id: "ignored"})
+	km, err := asymmetric.NewTokenizer(filepath.Join(tmpDir, "dummy.pem"), &mockIDProvider{id: "ignored"})
 	require.NoError(t, err)
 
 	publicKeys, err := km.RetrieveJWKS()
@@ -251,7 +251,7 @@ func TestRetiringKeyWithoutExpiry(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create key manager - should fail because retiring key lacks expires_at
-	_, err = asymmetric.NewKeyManager(filepath.Join(tmpDir, "dummy.pem"), &mockIDProvider{id: "ignored"})
+	_, err = asymmetric.NewTokenizer(filepath.Join(tmpDir, "dummy.pem"), &mockIDProvider{id: "ignored"})
 	assert.Error(t, err, "Should fail when retiring key missing expires_at")
 	assert.Contains(t, err.Error(), "retiring keys must have expires_at set")
 }
@@ -267,7 +267,7 @@ func TestSingleKeyCompatibility(t *testing.T) {
 	saveKey(t, privateKey, keyPath)
 
 	// Create without keys.json (should fall back to single key mode)
-	km, err := asymmetric.NewKeyManager(keyPath, &mockIDProvider{id: "test-kid"})
+	km, err := asymmetric.NewTokenizer(keyPath, &mockIDProvider{id: "test-kid"})
 	require.NoError(t, err)
 
 	testKey := auth.Key{

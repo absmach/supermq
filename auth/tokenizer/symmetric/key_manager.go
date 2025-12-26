@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"github.com/absmach/supermq/auth"
-	smqjwt "github.com/absmach/supermq/auth/jwt"
+	smqjwt "github.com/absmach/supermq/auth/tokenizer/util"
 	"github.com/absmach/supermq/pkg/errors"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/lestrrat-go/jwx/v2/jwa"
@@ -18,9 +18,7 @@ const (
 	patPrefix = "pat"
 )
 
-var (
-	errJWTExpiryKey = errors.New(`"exp" not satisfied`)
-)
+var errJWTExpiryKey = errors.New(`"exp" not satisfied`)
 
 type manager struct {
 	algorithm jwa.KeyAlgorithm
@@ -29,7 +27,7 @@ type manager struct {
 
 var _ auth.Tokenizer = (*manager)(nil)
 
-func NewKeyManager(algorithm string, secret []byte) (auth.Tokenizer, error) {
+func NewTokenizer(algorithm string, secret []byte) (auth.Tokenizer, error) {
 	alg := jwa.KeyAlgorithmFrom(algorithm)
 	if _, ok := alg.(jwa.InvalidKeyAlgorithm); ok {
 		return nil, auth.ErrUnsupportedKeyAlgorithm
