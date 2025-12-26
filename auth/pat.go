@@ -186,6 +186,8 @@ func ParseEntityType(et string) (EntityType, error) {
 		return UsersType, nil
 	case DashboardsStr:
 		return DashboardType, nil
+	case MessagesStr:
+		return MessagesType, nil
 	default:
 		return 0, fmt.Errorf("unknown domain entity type %s", et)
 	}

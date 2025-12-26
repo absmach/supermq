@@ -12,6 +12,7 @@ import (
 
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/pkg/errors"
+	repoerr "github.com/absmach/supermq/pkg/errors/repository"
 	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/absmach/supermq/pkg/policies"
 	"github.com/google/uuid"
@@ -807,6 +808,9 @@ func (svc service) authnAuthzUserPAT(ctx context.Context, token, patID string) (
 
 	_, err = svc.pats.Retrieve(ctx, key.Subject, patID)
 	if err != nil {
+		if errors.Contains(err, repoerr.ErrNotFound) {
+			return Key{}, svcerr.ErrNotFound
+		}
 		return Key{}, errors.Wrap(svcerr.ErrAuthorization, err)
 	}
 
