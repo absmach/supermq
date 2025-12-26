@@ -88,3 +88,23 @@ func ToKey(tkn jwt.Token) (auth.Key, error) {
 
 	return key, nil
 }
+
+func BuildToken(key auth.Key) (jwt.Token, error) {
+	builder := jwt.NewBuilder()
+	builder.
+		Issuer(IssuerName).
+		IssuedAt(key.IssuedAt).
+		Claim(TokenType, key.Type).
+		Expiration(key.ExpiresAt).
+		Claim(RoleField, key.Role).
+		Claim(VerifiedField, key.Verified)
+
+	if key.Subject != "" {
+		builder.Subject(key.Subject)
+	}
+	if key.ID != "" {
+		builder.JwtID(key.ID)
+	}
+
+	return builder.Build()
+}

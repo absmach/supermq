@@ -27,12 +27,13 @@ import (
 const patPrefix = "pat"
 
 var (
-	errLoadingPrivateKey = errors.New("failed to load private key")
-	errInvalidKeySize    = errors.New("invalid ED25519 key size")
-	errParsingPrivateKey = errors.New("failed to parse private key")
-	errInvalidKeyType    = errors.New("private key is not ED25519")
-	errNoValidPublicKeys = errors.New("no valid public keys available")
-	errNoActiveKey       = errors.New("active key not loaded")
+	errLoadingPrivateKey      = errors.New("failed to load private key")
+	errDuplicateRetiringKeyID = errors.New("retiring key ID matches active key ID")
+	errInvalidKeySize         = errors.New("invalid ED25519 key size")
+	errParsingPrivateKey      = errors.New("failed to parse private key")
+	errInvalidKeyType         = errors.New("private key is not ED25519")
+	errNoValidPublicKeys      = errors.New("no valid public keys available")
+	errNoActiveKey            = errors.New("active key not loaded")
 )
 
 type keyPair struct {
@@ -73,6 +74,9 @@ func NewTokenizer(activeKeyPath, retiringKeyPath string, idProvider supermq.IDPr
 
 	if retiringKeyPath != "" {
 		retiringKID := keyIDFromPath(retiringKeyPath)
+		if retiringKID == activeKID {
+			return nil, errDuplicateRetiringKeyID
+		}
 
 		retiringPrivateJwk, retiringPublicJwk, err := loadKeyPair(retiringKeyPath, retiringKID)
 		if err != nil {
@@ -96,27 +100,10 @@ func (km *tokenizer) Issue(key auth.Key) (string, error) {
 		return "", errNoActiveKey
 	}
 
-	builder := jwt.NewBuilder()
-	builder.
-		Issuer(smqjwt.IssuerName).
-		IssuedAt(key.IssuedAt).
-		Claim(smqjwt.TokenType, key.Type).
-		Expiration(key.ExpiresAt).
-		Claim(smqjwt.RoleField, key.Role).
-		Claim(smqjwt.VerifiedField, key.Verified)
-
-	if key.Subject != "" {
-		builder.Subject(key.Subject)
-	}
-	if key.ID != "" {
-		builder.JwtID(key.ID)
-	}
-
-	tkn, err := builder.Build()
+	tkn, err := smqjwt.BuildToken(key)
 	if err != nil {
 		return "", err
 	}
-
 	headers := jws.NewHeaders()
 	if err := headers.Set(jwk.KeyIDKey, km.activeKey.id); err != nil {
 		return "", err

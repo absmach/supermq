@@ -42,23 +42,7 @@ func NewTokenizer(algorithm string, secret []byte) (auth.Tokenizer, error) {
 }
 
 func (km *tokenizer) Issue(key auth.Key) (string, error) {
-	builder := jwt.NewBuilder()
-	builder.
-		Issuer(smqjwt.IssuerName).
-		IssuedAt(key.IssuedAt).
-		Claim(smqjwt.TokenType, key.Type).
-		Expiration(key.ExpiresAt).
-		Claim(smqjwt.RoleField, key.Role).
-		Claim(smqjwt.VerifiedField, key.Verified)
-
-	if key.Subject != "" {
-		builder.Subject(key.Subject)
-	}
-	if key.ID != "" {
-		builder.JwtID(key.ID)
-	}
-
-	tkn, err := builder.Build()
+	tkn, err := smqjwt.BuildToken(key)
 	if err != nil {
 		return "", err
 	}
@@ -88,7 +72,6 @@ func (km *tokenizer) Parse(ctx context.Context, tokenString string) (auth.Key, e
 		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
 
-	// Validate issuer
 	if tkn.Issuer() != smqjwt.IssuerName {
 		return auth.Key{}, smqjwt.ErrInvalidIssuer
 	}
