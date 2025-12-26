@@ -69,7 +69,7 @@ type config struct {
 	AccessDuration                time.Duration `env:"SMQ_AUTH_ACCESS_TOKEN_DURATION"             envDefault:"1h"`
 	RefreshDuration               time.Duration `env:"SMQ_AUTH_REFRESH_TOKEN_DURATION"            envDefault:"24h"`
 	KeyAlgorithm                  string        `env:"SMQ_AUTH_KEYS_ALGORITHM"                    envDefault:"EdDSA"`
-	PrivateKeyPath                string        `env:"SMQ_AUTH_KEYS_PRIVATE_KEY_PATH"             envDefault:"./keys/"`
+	PrivateKeyPath                string        `env:"SMQ_AUTH_KEYS_PRIVATE_KEY_DIR"              envDefault:"./keys/"`
 	InvitationDuration            time.Duration `env:"SMQ_AUTH_INVITATION_DURATION"               envDefault:"168h"`
 	SpicedbHost                   string        `env:"SMQ_SPICEDB_HOST"                           envDefault:"localhost"`
 	SpicedbPort                   string        `env:"SMQ_SPICEDB_PORT"                           envDefault:"50051"`

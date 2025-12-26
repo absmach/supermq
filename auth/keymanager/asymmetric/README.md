@@ -11,7 +11,7 @@ EdDSA (Ed25519) key manager with support for zero-downtime key rotation.
 
 ## How It Works
 
-Keys are located in directory set via `SMQ_AUTH_KEYS_PRIVATE_KEY_PATH`. In this directory `keys.json` is used to
+Keys are located in directory set via `SMQ_AUTH_KEYS_PRIVATE_KEY_DIR`. In this directory `keys.json` is used to
 set up the multiple key environment. Check Metadata file section for more details.
 
 Key rotation is offloaded to the external service. **Key expiration is checked only on service startup**.
