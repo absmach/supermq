@@ -45,11 +45,11 @@ type manager struct {
 
 var _ auth.KeyManager = (*manager)(nil)
 
-func NewKeyManager(privateKeyPath string, idProvider supermq.IDProvider) (auth.KeyManager, error) {
-	keyDir := filepath.Dir(privateKeyPath)
+func NewKeyManager(privateKeyDir string, idProvider supermq.IDProvider) (auth.KeyManager, error) {
+	keyDir := filepath.Dir(privateKeyDir)
 	metadata, err := LoadKeysMetadata(keyDir)
 	if err == errNoMetadata {
-		return newSingleKeyManager(privateKeyPath, idProvider)
+		return newSingleKeyManager(privateKeyDir, idProvider)
 	}
 	if err != nil {
 		return nil, err

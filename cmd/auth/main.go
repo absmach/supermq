@@ -69,7 +69,7 @@ type config struct {
 	AccessDuration                time.Duration `env:"SMQ_AUTH_ACCESS_TOKEN_DURATION"             envDefault:"1h"`
 	RefreshDuration               time.Duration `env:"SMQ_AUTH_REFRESH_TOKEN_DURATION"            envDefault:"24h"`
 	KeyAlgorithm                  string        `env:"SMQ_AUTH_KEYS_ALGORITHM"                    envDefault:"EdDSA"`
-	PrivateKeyPath                string        `env:"SMQ_AUTH_KEYS_PRIVATE_KEY_DIR"              envDefault:"./keys/"`
+	PrivateKeyDir                 string        `env:"SMQ_AUTH_KEYS_PRIVATE_KEY_DIR"              envDefault:"./keys/"`
 	InvitationDuration            time.Duration `env:"SMQ_AUTH_INVITATION_DURATION"               envDefault:"168h"`
 	SpicedbHost                   string        `env:"SMQ_SPICEDB_HOST"                           envDefault:"localhost"`
 	SpicedbPort                   string        `env:"SMQ_SPICEDB_PORT"                           envDefault:"50051"`
@@ -159,7 +159,6 @@ func main() {
 
 	idProvider := uuid.New()
 
-	// Validate key configuration before creating key manager
 	if err := validateKeyConfig(isSymmetric, cfg); err != nil {
 		logger.Error(fmt.Sprintf("invalid key configuration: %s", err.Error()))
 		exitCode = 1
@@ -176,7 +175,7 @@ func main() {
 			return
 		}
 	default:
-		keyManager, err = asymmetric.NewKeyManager(cfg.PrivateKeyPath, idProvider)
+		keyManager, err = asymmetric.NewKeyManager(cfg.PrivateKeyDir, idProvider)
 		if err != nil {
 			logger.Error(fmt.Sprintf("failed to create asymmetric key manager: %s", err.Error()))
 			exitCode = 1
@@ -265,25 +264,19 @@ func initSchema(ctx context.Context, client *authzed.ClientWithExperimental, sch
 	return nil
 }
 
-// validateKeyConfig validates key configuration based on the algorithm type.
 func validateKeyConfig(isSymmetric bool, cfg config) error {
 	if isSymmetric {
-		// Validate symmetric key configuration
-		if len(cfg.SecretKey) < 32 {
-			return fmt.Errorf("symmetric key must be at least 32 bytes, got %d bytes", len(cfg.SecretKey))
-		}
 		if cfg.SecretKey == "secret" {
 			return fmt.Errorf("default secret key is insecure - please set SMQ_AUTH_SECRET_KEY environment variable")
 		}
-	} else {
-		_, err := os.Stat(cfg.PrivateKeyPath)
-		if err != nil {
-			if os.IsNotExist(err) {
-				return fmt.Errorf("private key file not found: %s", cfg.PrivateKeyPath)
-			}
-			return fmt.Errorf("failed to access private key file: %w", err)
+		return nil
+	}
+	_, err := os.Stat(cfg.PrivateKeyDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("private key file not found: %s", cfg.PrivateKeyDir)
 		}
-
+		return fmt.Errorf("failed to access private key file: %w", err)
 	}
 
 	return nil

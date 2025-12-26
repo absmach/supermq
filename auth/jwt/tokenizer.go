@@ -14,20 +14,8 @@ import (
 )
 
 var (
-	// ErrInvalidIssuer is returned when the issuer is not supermq.auth.
+	// ErrINvalidIssuer represents an invalid token issuer value.
 	ErrInvalidIssuer = errors.New("invalid token issuer value")
-
-	// errInvalidType is returned when there is no type field.
-	errInvalidType = errors.New("invalid token type")
-
-	// errInvalidRole is returned when the role is invalid.
-	errInvalidRole = errors.New("invalid role")
-
-	// errInvalidVerified is returned when the verified is invalid.
-	errInvalidVerified = errors.New("invalid verified")
-
-	// errJWTExpiryKey is used to check if the token is expired.
-	errJWTExpiryKey = errors.New(`"exp" not satisfied`)
 
 	// ErrSignJWT indicates an error in signing jwt token.
 	ErrSignJWT = errors.New("failed to sign jwt token")
@@ -37,6 +25,11 @@ var (
 
 	// ErrJSONHandle indicates an error in handling JSON.
 	ErrJSONHandle = errors.New("failed to perform operation JSON")
+
+	errInvalidType     = errors.New("invalid token type")
+	errInvalidRole     = errors.New("invalid role")
+	errInvalidVerified = errors.New("invalid verified")
+	errJWTExpiryKey    = errors.New(`"exp" not satisfied`)
 )
 
 const (

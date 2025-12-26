@@ -136,8 +136,7 @@ type Service interface {
 // ChannelRepository specifies a channel persistence API.
 type Repository interface {
 	// Save persists multiple channels. Channels are saved using a transaction. If one channel
-	// fails then none will be saved. Successful operation is indicated by non-nil
-	// error response.
+	// fails then none will be saved. Successful operation is indicated by non-nil error response.
 	Save(ctx context.Context, chs ...Channel) ([]Channel, error)
 
 	// Update performs an update to the existing channel.

@@ -81,7 +81,6 @@ type retrieveJWKSRes struct {
 }
 
 func (res retrieveJWKSRes) MarshalJSON() ([]byte, error) {
-	// Convert PublicKeyInfo to JWK Set format
 	type jwksResponse struct {
 		Keys []auth.PublicKeyInfo `json:"keys"`
 	}
