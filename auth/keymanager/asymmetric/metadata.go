@@ -5,10 +5,11 @@ package asymmetric
 
 import (
 	"encoding/json"
-	"errors"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/absmach/supermq/pkg/errors"
 )
 
 const (
@@ -88,12 +89,12 @@ func LoadKeysMetadata(keysDir string) (*KeysMetadata, error) {
 	}
 	data, err := os.ReadFile(metadataPath)
 	if err != nil {
-		return nil, errors.Join(errLoadingMetadata, err)
+		return nil, errors.Wrap(errLoadingMetadata, err)
 	}
 
 	var metadata KeysMetadata
 	if err := json.Unmarshal(data, &metadata); err != nil {
-		return nil, errors.Join(errParsingMetadata, err)
+		return nil, errors.Wrap(errParsingMetadata, err)
 	}
 
 	if err := metadata.Validate(); err != nil {

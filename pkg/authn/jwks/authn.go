@@ -156,7 +156,7 @@ func (a authentication) fetchJWKS(ctx context.Context, forceRefresh bool) (jwk.S
 	// Fetch fresh JWKS from auth service
 	req, err := http.NewRequestWithContext(fetchCtx, http.MethodGet, a.jwksURL, nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(errFetchJWKS, err)
 	}
 	req.Header.Set("Accept", acceptHeader)
 

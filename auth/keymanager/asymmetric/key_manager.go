@@ -8,13 +8,13 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
-	"errors"
 	"os"
 	"path/filepath"
 
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/auth"
 	smqjwt "github.com/absmach/supermq/auth/jwt"
+	"github.com/absmach/supermq/pkg/errors"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jws"
@@ -62,7 +62,7 @@ func NewKeyManager(privateKeyPath string, idProvider supermq.IDProvider) (auth.K
 func newSingleKeyManager(privateKeyPath string, idProvider supermq.IDProvider) (*manager, error) {
 	kid, err := idProvider.ID()
 	if err != nil {
-		return nil, errors.Join(errGeneratingKID, err)
+		return nil, errors.Wrap(errGeneratingKID, err)
 	}
 	privateJwk, publicJwk, err := loadKeyPair(privateKeyPath, kid)
 	if err != nil {
@@ -198,7 +198,7 @@ func (km *manager) PublicKeys() ([]auth.PublicKeyInfo, error) {
 func loadKeyPair(privateKeyPath string, kid string) (jwk.Key, jwk.Key, error) {
 	privateKeyBytes, err := os.ReadFile(privateKeyPath)
 	if err != nil {
-		return nil, nil, errors.Join(errLoadingPrivateKey, err)
+		return nil, nil, errors.Wrap(errLoadingPrivateKey, err)
 	}
 
 	var privateKey ed25519.PrivateKey
@@ -207,7 +207,7 @@ func loadKeyPair(privateKeyPath string, kid string) (jwk.Key, jwk.Key, error) {
 	case block != nil:
 		parsedKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 		if err != nil {
-			return nil, nil, errors.Join(errParsingPrivateKey, err)
+			return nil, nil, errors.Wrap(errParsingPrivateKey, err)
 		}
 		var ok bool
 		privateKey, ok = parsedKey.(ed25519.PrivateKey)
