@@ -35,18 +35,14 @@ Events store: This is used by SuperMQ services to store events for distributed p
 
 ## Supported Combinations
 
-This is the same as MESSAGE_BROKER. This can either be `NATS` or `RabbitMQ` or `Redis`.  If Redis is used as an events store, then RabbitMQ or NATS is used as a message broker.
+This is the same as MESSAGE_BROKER. This can either be `NATS` or `RabbitMQ`.  If Redis is used as an events store, then RabbitMQ or NATS is used as a message broker.
 
 The current deployment strategy for SuperMQ in `docker/docker-compose.yaml` is to use RabbitMQ as a MQTT_BROKER and NATS as a MESSAGE_BROKER and EVENTS_STORE.
 
 Depending on the desired setup, the following broker configurations are valid:
 
-- `MQTT_BROKER: RabbitMQ`, `MESSAGE_BROKER: NATS`, `EVENTS_STORE: NATS`
-- `MQTT_BROKER: RabbitMQ`, `MESSAGE_BROKER: NATS`, `EVENTS_STORE: Redis`
 - `MQTT_BROKER: RabbitMQ`, `MESSAGE_BROKER: RabbitMQ`, `EVENTS_STORE: RabbitMQ`
 - `MQTT_BROKER: RabbitMQ`, `MESSAGE_BROKER: RabbitMQ`, `EVENTS_STORE: Redis`
-- `MQTT_BROKER: NATS`, `MESSAGE_BROKER: RabbitMQ`, `EVENTS_STORE: RabbitMQ`
-- `MQTT_BROKER: NATS`, `MESSAGE_BROKER: RabbitMQ`, `EVENTS_STORE: Redis`
 - `MQTT_BROKER: NATS`, `MESSAGE_BROKER: NATS`, `EVENTS_STORE: NATS`
 - `MQTT_BROKER: NATS`, `MESSAGE_BROKER: NATS`, `EVENTS_STORE: Redis`
 

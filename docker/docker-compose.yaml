@@ -1213,7 +1213,6 @@ services:
     container_name: supermq-mqtt
     depends_on:
       - clients
-      - rabbitmq
       - nats
     restart: on-failure
     environment:
@@ -1651,27 +1650,6 @@ services:
         bind:
           create_host_path: true
 
-  rabbitmq:
-    image: docker.io/rabbitmq:4.1.4-management-alpine
-    container_name: supermq-rabbitmq
-    restart: on-failure
-    environment:
-      RABBITMQ_ERLANG_COOKIE: ${SMQ_RABBITMQ_COOKIE}
-      RABBITMQ_DEFAULT_USER: ${SMQ_RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASS: ${SMQ_RABBITMQ_PASS}
-      RABBITMQ_DEFAULT_VHOST: ${SMQ_RABBITMQ_VHOST}
-      RABBITMQ_CONFIG_FILES: /etc/rabbitmq/conf.d/
-    ports:
-      - ${SMQ_RABBITMQ_PORT}:${SMQ_RABBITMQ_PORT}
-      - ${SMQ_RABBITMQ_HTTP_PORT}:${SMQ_RABBITMQ_HTTP_PORT}
-      - ${SMQ_RABBITMQ_WS_PORT}:${SMQ_RABBITMQ_WS_PORT}
-    volumes:
-      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
-      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/conf.d/10-defaults.conf
-      - supermq-mqtt-broker-volume:/var/lib/rabbitmq
-    networks:
-      - supermq-base-net
-
   nats:
     image: docker.io/nats:2.12.0-alpine3.22
     container_name: supermq-nats
@@ -1681,6 +1659,8 @@ services:
       - SMQ_NATS_PORT=${SMQ_NATS_PORT}
       - SMQ_NATS_HTTP_PORT=${SMQ_NATS_HTTP_PORT}
       - SMQ_NATS_JETSTREAM_KEY=${SMQ_NATS_JETSTREAM_KEY}
+      - SMQ_NATS_MQTT_PORT=${SMQ_NATS_MQTT_PORT}
+      - SMQ_NATS_MQTT_WS_PORT=${SMQ_NATS_MQTT_WS_PORT}
     ports:
       - ${SMQ_NATS_PORT}:${SMQ_NATS_PORT}
       - ${SMQ_NATS_HTTP_PORT}:${SMQ_NATS_HTTP_PORT}

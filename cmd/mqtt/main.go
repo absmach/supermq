@@ -26,7 +26,6 @@ import (
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/mqtt"
 	"github.com/absmach/supermq/mqtt/events"
-	mqtttracing "github.com/absmach/supermq/mqtt/tracing"
 	domainsAuthz "github.com/absmach/supermq/pkg/domains/grpcclient"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/absmach/supermq/pkg/grpcclient"
@@ -36,7 +35,6 @@ import (
 	brokerstracing "github.com/absmach/supermq/pkg/messaging/brokers/tracing"
 	msgevents "github.com/absmach/supermq/pkg/messaging/events"
 	"github.com/absmach/supermq/pkg/messaging/handler"
-	mqttpub "github.com/absmach/supermq/pkg/messaging/mqtt"
 	"github.com/absmach/supermq/pkg/server"
 	"github.com/absmach/supermq/pkg/uuid"
 	"github.com/caarlos0/env/v11"
@@ -135,31 +133,6 @@ func main() {
 	}()
 	tracer := tp.Tracer(svcName)
 
-	bsub, err := brokers.NewPubSub(ctx, cfg.BrokerURL, logger)
-	if err != nil {
-		logger.Error(fmt.Sprintf("failed to connect to message broker: %s", err))
-		exitCode = 1
-		return
-	}
-	defer bsub.Close()
-	bsub = brokerstracing.NewPubSub(serverConfig, tracer, bsub)
-
-	mpub, err := mqttpub.NewPublisher(fmt.Sprintf("mqtt://%s:%s", cfg.MQTTTargetHost, cfg.MQTTTargetPort), cfg.MQTTTargetUsername, cfg.MQTTTargetPassword, cfg.MQTTQoS, cfg.MQTTForwarderTimeout)
-	if err != nil {
-		logger.Error(fmt.Sprintf("failed to create MQTT publisher: %s", err))
-		exitCode = 1
-		return
-	}
-	defer mpub.Close()
-
-	fwd := mqtt.NewForwarder(brokers.SubjectAllMessages, logger)
-	fwd = mqtttracing.New(serverConfig, tracer, fwd, brokers.SubjectAllMessages)
-	if err := fwd.Forward(ctx, svcName, bsub, mpub); err != nil {
-		logger.Error(fmt.Sprintf("failed to forward message broker messages: %s", err))
-		exitCode = 1
-		return
-	}
-
 	np, err := brokers.NewPublisher(ctx, cfg.BrokerURL)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to connect to message broker: %s", err))
@@ -251,9 +224,7 @@ func main() {
 		go chc.CallHome(ctx)
 	}
 
-	beforeHandler := beforeHandler{
-		resolver: messaging.NewTopicResolver(channelsClient, domainsClient),
-	}
+	beforeHandler := mqtt.NewBeforeHandler(messaging.NewTopicResolver(channelsClient, domainsClient), parser, logger)
 
 	afterHandler := afterHandler{
 		username: cfg.MQTTTargetUsername,
@@ -381,45 +352,6 @@ func (ah afterHandler) Intercept(ctx context.Context, pkt packets.ControlPacket,
 		}
 
 		return connectPkt, nil
-	}
-
-	return pkt, nil
-}
-
-type beforeHandler struct {
-	resolver messaging.TopicResolver
-}
-
-// This interceptor is used to replace domain and channel routes with relevant domain and channel IDs in the message topic.
-func (bh beforeHandler) Intercept(ctx context.Context, pkt packets.ControlPacket, dir session.Direction) (packets.ControlPacket, error) {
-	switch pt := pkt.(type) {
-	case *packets.SubscribePacket:
-		for i, topic := range pt.Topics {
-			ft, err := bh.resolver.ResolveTopic(ctx, topic)
-			if err != nil {
-				return nil, err
-			}
-			pt.Topics[i] = ft
-		}
-
-		return pt, nil
-	case *packets.UnsubscribePacket:
-		for i, topic := range pt.Topics {
-			ft, err := bh.resolver.ResolveTopic(ctx, topic)
-			if err != nil {
-				return nil, err
-			}
-			pt.Topics[i] = ft
-		}
-		return pt, nil
-	case *packets.PublishPacket:
-		ft, err := bh.resolver.ResolveTopic(ctx, pt.TopicName)
-		if err != nil {
-			return nil, err
-		}
-		pt.TopicName = ft
-
-		return pt, nil
 	}
 
 	return pkt, nil
