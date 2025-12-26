@@ -20,12 +20,12 @@ const (
 
 var errJWTExpiryKey = errors.New(`"exp" not satisfied`)
 
-type manager struct {
+type tokenizer struct {
 	algorithm jwa.KeyAlgorithm
 	secret    []byte
 }
 
-var _ auth.Tokenizer = (*manager)(nil)
+var _ auth.Tokenizer = (*tokenizer)(nil)
 
 func NewTokenizer(algorithm string, secret []byte) (auth.Tokenizer, error) {
 	alg := jwa.KeyAlgorithmFrom(algorithm)
@@ -35,13 +35,13 @@ func NewTokenizer(algorithm string, secret []byte) (auth.Tokenizer, error) {
 	if len(secret) == 0 {
 		return nil, auth.ErrInvalidSymmetricKey
 	}
-	return &manager{
+	return &tokenizer{
 		secret:    secret,
 		algorithm: alg,
 	}, nil
 }
 
-func (km *manager) Issue(key auth.Key) (string, error) {
+func (km *tokenizer) Issue(key auth.Key) (string, error) {
 	builder := jwt.NewBuilder()
 	builder.
 		Issuer(smqjwt.IssuerName).
@@ -71,7 +71,7 @@ func (km *manager) Issue(key auth.Key) (string, error) {
 	return string(signedBytes), nil
 }
 
-func (km *manager) Parse(ctx context.Context, tokenString string) (auth.Key, error) {
+func (km *tokenizer) Parse(ctx context.Context, tokenString string) (auth.Key, error) {
 	if len(tokenString) >= 3 && tokenString[:3] == patPrefix {
 		return auth.Key{Type: auth.PersonalAccessToken}, nil
 	}
@@ -96,6 +96,6 @@ func (km *manager) Parse(ctx context.Context, tokenString string) (auth.Key, err
 	return smqjwt.ToKey(tkn)
 }
 
-func (km *manager) RetrieveJWKS() ([]auth.PublicKeyInfo, error) {
+func (km *tokenizer) RetrieveJWKS() ([]auth.PublicKeyInfo, error) {
 	return nil, auth.ErrPublicKeysNotSupported
 }

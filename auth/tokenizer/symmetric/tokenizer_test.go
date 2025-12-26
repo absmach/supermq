@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewKeyManager(t *testing.T) {
+func TestNewTokenizer(t *testing.T) {
 	cases := []struct {
 		name        string
 		algorithm   string

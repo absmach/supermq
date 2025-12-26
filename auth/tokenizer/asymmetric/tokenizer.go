@@ -41,12 +41,12 @@ type keyPair struct {
 	publicKey  jwk.Key
 }
 
-type manager struct {
+type tokenizer struct {
 	activeKey   *keyPair
 	retiringKey *keyPair // Optional, for key rotation grace period
 }
 
-var _ auth.Tokenizer = (*manager)(nil)
+var _ auth.Tokenizer = (*tokenizer)(nil)
 
 // NewTokenizer creates a new asymmetric tokenizer with active and optionally retiring keys.
 // activeKeyPath is required. retiringKeyPath is optional (can be empty string).
@@ -61,7 +61,7 @@ func NewTokenizer(activeKeyPath, retiringKeyPath string, idProvider supermq.IDPr
 		return nil, err
 	}
 
-	mgr := &manager{
+	mgr := &tokenizer{
 		activeKey: &keyPair{
 			id:         activeKID,
 			privateKey: activePrivateJwk,
@@ -95,7 +95,7 @@ func keyIDFromPath(path string) string {
 	return strings.TrimSuffix(base, ext)
 }
 
-func (km *manager) Issue(key auth.Key) (string, error) {
+func (km *tokenizer) Issue(key auth.Key) (string, error) {
 	if km.activeKey == nil {
 		return "", errNoActiveKey
 	}
@@ -129,7 +129,7 @@ func (km *manager) Issue(key auth.Key) (string, error) {
 	return string(signedBytes), nil
 }
 
-func (km *manager) Parse(ctx context.Context, tokenString string) (auth.Key, error) {
+func (km *tokenizer) Parse(ctx context.Context, tokenString string) (auth.Key, error) {
 	if len(tokenString) >= 3 && tokenString[:3] == patPrefix {
 		return auth.Key{Type: auth.PersonalAccessToken}, nil
 	}
@@ -160,7 +160,7 @@ func (km *manager) Parse(ctx context.Context, tokenString string) (auth.Key, err
 	return smqjwt.ToKey(tkn)
 }
 
-func (km *manager) RetrieveJWKS() ([]auth.PublicKeyInfo, error) {
+func (km *tokenizer) RetrieveJWKS() ([]auth.PublicKeyInfo, error) {
 	publicKeys := make([]auth.PublicKeyInfo, 0, 2)
 
 	if km.activeKey != nil {
