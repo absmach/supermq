@@ -159,23 +159,23 @@ func main() {
 
 	idProvider := uuid.New()
 
-	if err := validateKeyConfig(isSymmetric, cfg); err != nil {
+	if err := validateKeyConfig(isSymmetric, cfg, logger); err != nil {
 		logger.Error(fmt.Sprintf("invalid key configuration: %s", err.Error()))
 		exitCode = 1
 		return
 	}
 
-	var keyManager auth.Tokenizer
+	var tokenizer auth.Tokenizer
 	switch {
 	case isSymmetric:
-		keyManager, err = symmetric.NewTokenizer(cfg.KeyAlgorithm, []byte(cfg.SecretKey))
+		tokenizer, err = symmetric.NewTokenizer(cfg.KeyAlgorithm, []byte(cfg.SecretKey))
 		if err != nil {
 			logger.Error(fmt.Sprintf("failed to create symmetric key manager: %s", err.Error()))
 			exitCode = 1
 			return
 		}
 	default:
-		keyManager, err = asymmetric.NewTokenizer(cfg.ActiveKeyPath, cfg.RetiringKeyPath, idProvider, logger)
+		tokenizer, err = asymmetric.NewTokenizer(cfg.ActiveKeyPath, cfg.RetiringKeyPath, idProvider, logger)
 		if err != nil {
 			logger.Error(fmt.Sprintf("failed to create asymmetric key manager: %s", err.Error()))
 			exitCode = 1
@@ -183,7 +183,7 @@ func main() {
 		}
 	}
 
-	svc, err := newService(db, tracer, cfg, dbConfig, logger, spicedbclient, cacheclient, cfg.CacheKeyDuration, keyManager, idProvider)
+	svc, err := newService(db, tracer, cfg, dbConfig, logger, spicedbclient, cacheclient, cfg.CacheKeyDuration, tokenizer, idProvider)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create service : %s\n", err.Error()))
 		exitCode = 1
@@ -264,7 +264,7 @@ func initSchema(ctx context.Context, client *authzed.ClientWithExperimental, sch
 	return nil
 }
 
-func validateKeyConfig(isSymmetric bool, cfg config) error {
+func validateKeyConfig(isSymmetric bool, cfg config, l *slog.Logger) error {
 	if isSymmetric {
 		if cfg.SecretKey == "secret" {
 			return fmt.Errorf("default secret key is insecure - please set SMQ_AUTH_SECRET_KEY environment variable")
@@ -284,7 +284,7 @@ func validateKeyConfig(isSymmetric bool, cfg config) error {
 	// Retiring key is optional - only validate if path is provided
 	if cfg.RetiringKeyPath != "" {
 		if _, err := os.Stat(cfg.RetiringKeyPath); err != nil {
-			return fmt.Errorf("retiring key path provided but file not accessible: %w", err)
+			l.Warn("retiring key path provided but file not accessible", slog.Any("error", err))
 		}
 	}
 
