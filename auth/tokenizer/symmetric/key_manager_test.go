@@ -282,15 +282,12 @@ func TestSignAndVerifyRoundTrip(t *testing.T) {
 				Verified:  true,
 			}
 
-			// Sign
 			token, err := km.Issue(originalKey)
 			require.NoError(t, err)
 
-			// Verify
 			verifiedKey, err := km.Parse(context.Background(), token)
 			require.NoError(t, err)
 
-			// Compare
 			assert.Equal(t, originalKey.ID, verifiedKey.ID)
 			assert.Equal(t, originalKey.Type, verifiedKey.Type)
 			assert.Equal(t, originalKey.Subject, verifiedKey.Subject)

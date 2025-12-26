@@ -40,15 +40,12 @@ func newTestLogger() *slog.Logger {
 func TestNewKeyManager(t *testing.T) {
 	idProvider := &mockIDProvider{id: "unused"}
 
-	// Create a temporary key file
 	tmpDir := t.TempDir()
 	keyPath := filepath.Join(tmpDir, "private.key")
 
-	// Generate Ed25519 key pair
-	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	_, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	require.NoError(t, err)
 
-	// Encode private key in PKCS8 format
 	pkcs8Key, err := x509.MarshalPKCS8PrivateKey(privateKey)
 	require.NoError(t, err)
 
@@ -121,19 +118,14 @@ func TestNewKeyManager(t *testing.T) {
 			}
 		})
 	}
-
-	// Keep the public key for verification tests
-	_ = publicKey
 }
 
 func TestSign(t *testing.T) {
 	idProvider := &mockIDProvider{id: "unused"}
 
-	// Create temporary key file
 	tmpDir := t.TempDir()
 	keyPath := filepath.Join(tmpDir, "private.key")
 
-	// Generate and save Ed25519 key
 	_, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	require.NoError(t, err)
 
@@ -208,14 +200,11 @@ func TestSign(t *testing.T) {
 func TestVerify(t *testing.T) {
 	idProvider := &mockIDProvider{id: "unused"}
 
-	// Create temporary key file
 	tmpDir := t.TempDir()
 	keyPath := filepath.Join(tmpDir, "private.key")
-	// Key ID will be derived from filename: "private"
 	kid := "private"
 
-	// Generate and save Ed25519 key
-	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	_, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	require.NoError(t, err)
 
 	pkcs8Key, err := x509.MarshalPKCS8PrivateKey(privateKey)
@@ -325,8 +314,6 @@ func TestVerify(t *testing.T) {
 			}
 		})
 	}
-
-	_ = publicKey
 }
 
 func TestPublicKeys(t *testing.T) {
@@ -334,7 +321,6 @@ func TestPublicKeys(t *testing.T) {
 
 	tmpDir := t.TempDir()
 	keyPath := filepath.Join(tmpDir, "private.key")
-	// Key ID will be derived from filename: "private"
 	kid := "private"
 
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)

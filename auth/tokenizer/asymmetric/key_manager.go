@@ -54,8 +54,6 @@ var _ auth.Tokenizer = (*manager)(nil)
 // but the tokenizer is still created with just the active key.
 // Key IDs are derived from filenames to ensure consistency across multiple service instances.
 func NewTokenizer(activeKeyPath, retiringKeyPath string, idProvider supermq.IDProvider, logger *slog.Logger) (auth.Tokenizer, error) {
-	// Load active key (required)
-	// Derive key ID from filename for consistency across scaled instances
 	activeKID := keyIDFromPath(activeKeyPath)
 
 	activePrivateJwk, activePublicJwk, err := loadKeyPair(activeKeyPath, activeKID)
@@ -71,7 +69,6 @@ func NewTokenizer(activeKeyPath, retiringKeyPath string, idProvider supermq.IDPr
 		},
 	}
 
-	// Load retiring key (optional)
 	if retiringKeyPath != "" {
 		retiringKID := keyIDFromPath(retiringKeyPath)
 
@@ -92,12 +89,6 @@ func NewTokenizer(activeKeyPath, retiringKeyPath string, idProvider supermq.IDPr
 	return mgr, nil
 }
 
-// keyIDFromPath derives a deterministic key ID from the file path.
-// This ensures all service instances use the same key ID for the same key file.
-// Examples:
-//   - "active.key" -> "active"
-//   - "./keys/active.key" -> "active"
-//   - "/var/keys/my-key-2025.pem" -> "my-key-2025"
 func keyIDFromPath(path string) string {
 	base := filepath.Base(path)
 	ext := filepath.Ext(base)
@@ -143,7 +134,6 @@ func (km *manager) Parse(ctx context.Context, tokenString string) (auth.Key, err
 		return auth.Key{Type: auth.PersonalAccessToken}, nil
 	}
 
-	// Build key set with active and retiring keys
 	set := jwk.NewSet()
 	if err := set.AddKey(km.activeKey.publicKey); err != nil {
 		return auth.Key{}, err
@@ -173,14 +163,12 @@ func (km *manager) Parse(ctx context.Context, tokenString string) (auth.Key, err
 func (km *manager) RetrieveJWKS() ([]auth.PublicKeyInfo, error) {
 	publicKeys := make([]auth.PublicKeyInfo, 0, 2)
 
-	// Add active key
 	if km.activeKey != nil {
 		if pkInfo := extractPublicKeyInfo(km.activeKey); pkInfo != nil {
 			publicKeys = append(publicKeys, *pkInfo)
 		}
 	}
 
-	// Add retiring key if present
 	if km.retiringKey != nil {
 		if pkInfo := extractPublicKeyInfo(km.retiringKey); pkInfo != nil {
 			publicKeys = append(publicKeys, *pkInfo)
