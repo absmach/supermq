@@ -121,7 +121,12 @@ func (km *tokenizer) Issue(key auth.Key) (string, error) {
 		return "", err
 	}
 
-	signedBytes, err := jwt.Sign(tkn, jwt.WithKey(jwa.EdDSA, km.activeKey.privateKey))
+	headers := jws.NewHeaders()
+	if err := headers.Set(jwk.KeyIDKey, km.activeKey.id); err != nil {
+		return "", err
+	}
+
+	signedBytes, err := jwt.Sign(tkn, jwt.WithKey(jwa.EdDSA, km.activeKey.privateKey, jws.WithProtectedHeaders(headers)))
 	if err != nil {
 		return "", err
 	}
