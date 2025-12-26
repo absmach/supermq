@@ -41,6 +41,8 @@ type keyPair struct {
 	publicKey  jwk.Key
 }
 
+// Tokenizer is safe for concurrent use. Keys are set during construction
+// and never modified afterward.
 type tokenizer struct {
 	activeKey   *keyPair
 	retiringKey *keyPair // Optional, for key rotation grace period
@@ -87,12 +89,6 @@ func NewTokenizer(activeKeyPath, retiringKeyPath string, idProvider supermq.IDPr
 	}
 
 	return mgr, nil
-}
-
-func keyIDFromPath(path string) string {
-	base := filepath.Base(path)
-	ext := filepath.Ext(base)
-	return strings.TrimSuffix(base, ext)
 }
 
 func (km *tokenizer) Issue(key auth.Key) (string, error) {
@@ -254,4 +250,10 @@ func loadKeyPair(privateKeyPath string, kid string) (jwk.Key, jwk.Key, error) {
 	}
 
 	return privateJwk, publicJwk, nil
+}
+
+func keyIDFromPath(path string) string {
+	base := filepath.Base(path)
+	ext := filepath.Ext(base)
+	return strings.TrimSuffix(base, ext)
 }
