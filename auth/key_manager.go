@@ -4,6 +4,7 @@
 package auth
 
 import (
+	"context"
 	"errors"
 )
 
@@ -28,18 +29,20 @@ type PublicKeyInfo struct {
 	// Future: RSA fields (n, e), ECDSA fields (x, y, crv), etc.
 }
 
-// KeyManager manages cryptographic keys for JWT operations.
-// Implementations handle both signing/verification and key distribution.
-type KeyManager interface {
-	// Sign creates a signed JWT token string from the given key claims.
-	Sign(key Key) (signedToken string, err error)
+// Tokenizer handles token creation and verification for authentication.
+// Implementations manage underlying cryptographic operations and key distribution.
+type Tokenizer interface {
+	// Issue creates a signed token string from the given key claims.
+	Issue(key Key) (token string, err error)
 
-	// Verify verifies and parses a JWT token string, returning the extracted claims.
-	Verify(tokenString string) (key Key, err error)
+	// Parse verifies and parses a token string (JWT or PAT), returning the extracted claims.
+	// For PAT tokens (prefix "pat"), returns a Key with Type set to PersonalAccessToken.
+	// For JWT tokens, performs cryptographic verification and returns the parsed claims.
+	Parse(ctx context.Context, token string) (key Key, err error)
 
-	// PublicKeys returns public keys for distribution via JWKS endpoint.
-	// Returns ErrPublicKeysNotSupported for symmetric key managers (HMAC).
-	PublicKeys() ([]PublicKeyInfo, error)
+	// RetrieveJWKS returns public keys for distribution via JWKS endpoint.
+	// Returns ErrPublicKeysNotSupported for symmetric tokenizers (HMAC).
+	RetrieveJWKS() ([]PublicKeyInfo, error)
 }
 
 // IsSymmetricAlgorithm determines if the given algorithm is symmetric (HMAC-based).

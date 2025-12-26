@@ -4,6 +4,7 @@
 package asymmetric_test
 
 import (
+	"context"
 	"crypto/ed25519"
 	"crypto/rand"
 	"crypto/x509"
@@ -190,7 +191,7 @@ func TestSign(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			token, err := km.Sign(tc.key)
+			token, err := km.Issue(tc.key)
 			assert.NoError(t, err)
 			assert.NotEmpty(t, token)
 
@@ -238,12 +239,12 @@ func TestVerify(t *testing.T) {
 		Verified:  true,
 	}
 
-	validToken, err := km.Sign(validKey)
+	validToken, err := km.Issue(validKey)
 	require.NoError(t, err, "Signing a valid token should succeed")
 
 	expiredKey := validKey
 	expiredKey.ExpiresAt = time.Now().Add(-1 * time.Hour).UTC()
-	expiredToken, err := km.Sign(expiredKey)
+	expiredToken, err := km.Issue(expiredKey)
 	require.NoError(t, err, "Creating an expired token should succeed")
 
 	// Create token with wrong issuer
@@ -305,7 +306,7 @@ func TestVerify(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			key, err := km.Verify(tc.token)
+			key, err := km.Parse(context.Background(), tc.token)
 
 			if tc.expectErr {
 				assert.Error(t, err)
@@ -348,7 +349,7 @@ func TestPublicKeys(t *testing.T) {
 	km, err := asymmetric.NewKeyManager(keyPath, idProvider)
 	require.NoError(t, err)
 
-	keys, err := km.PublicKeys()
+	keys, err := km.RetrieveJWKS()
 	assert.NoError(t, err)
 	assert.Len(t, keys, 1)
 
@@ -400,10 +401,10 @@ func TestSignAndVerifyRoundTrip(t *testing.T) {
 		Verified:  true,
 	}
 
-	token, err := km.Sign(originalKey)
+	token, err := km.Issue(originalKey)
 	require.NoError(t, err)
 
-	verifiedKey, err := km.Verify(token)
+	verifiedKey, err := km.Parse(context.Background(), token)
 	require.NoError(t, err, "Verification of a valid key should succeed")
 
 	assert.Equal(t, originalKey.ID, verifiedKey.ID)

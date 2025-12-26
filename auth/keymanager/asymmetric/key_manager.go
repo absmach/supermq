@@ -4,6 +4,7 @@
 package asymmetric
 
 import (
+	"context"
 	"crypto/ed25519"
 	"crypto/x509"
 	"encoding/base64"
@@ -20,6 +21,8 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jws"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
+
+const patPrefix = "pat"
 
 var (
 	errLoadingPrivateKey = errors.New("failed to load private key")
@@ -43,9 +46,9 @@ type manager struct {
 	keys map[string]*keyPair
 }
 
-var _ auth.KeyManager = (*manager)(nil)
+var _ auth.Tokenizer = (*manager)(nil)
 
-func NewKeyManager(privateKeyDir string, idProvider supermq.IDProvider) (auth.KeyManager, error) {
+func NewKeyManager(privateKeyDir string, idProvider supermq.IDProvider) (auth.Tokenizer, error) {
 	keyDir := filepath.Dir(privateKeyDir)
 	metadata, err := LoadKeysMetadata(keyDir)
 	if err == errNoMetadata {
@@ -111,7 +114,7 @@ func newMultiKeyManager(keyDir string, metadata *KeysMetadata) (*manager, error)
 	}, nil
 }
 
-func (km *manager) Sign(key auth.Key) (string, error) {
+func (km *manager) Issue(key auth.Key) (string, error) {
 	activeKey, ok := km.keys[km.activeKeyID]
 	if !ok {
 		return "", errNoActiveKeyLoaded
@@ -146,7 +149,11 @@ func (km *manager) Sign(key auth.Key) (string, error) {
 	return string(signedBytes), nil
 }
 
-func (km *manager) Verify(tokenString string) (auth.Key, error) {
+func (km *manager) Parse(ctx context.Context, tokenString string) (auth.Key, error) {
+	if len(tokenString) >= 3 && tokenString[:3] == patPrefix {
+		return auth.Key{Type: auth.PersonalAccessToken}, nil
+	}
+
 	set := jwk.NewSet()
 	for _, kp := range km.keys {
 		if err := set.AddKey(kp.publicKey); err != nil {
@@ -170,7 +177,7 @@ func (km *manager) Verify(tokenString string) (auth.Key, error) {
 	return smqjwt.ToKey(tkn)
 }
 
-func (km *manager) PublicKeys() ([]auth.PublicKeyInfo, error) {
+func (km *manager) RetrieveJWKS() ([]auth.PublicKeyInfo, error) {
 	publicKeys := make([]auth.PublicKeyInfo, 0, len(km.keys))
 	for _, kp := range km.keys {
 		var rawKey ed25519.PublicKey

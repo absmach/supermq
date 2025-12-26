@@ -4,6 +4,7 @@
 package asymmetric_test
 
 import (
+	"context"
 	"crypto/ed25519"
 	"crypto/rand"
 	"crypto/x509"
@@ -80,22 +81,22 @@ func TestKeyRotation(t *testing.T) {
 		Verified:  true,
 	}
 
-	token, err := km.Sign(testKey)
+	token, err := km.Issue(testKey)
 	require.NoError(t, err)
 	assert.NotEmpty(t, token, "Sign with active key should succeed")
 
-	verified, err := km.Verify(token)
+	verified, err := km.Parse(context.Background(), token)
 	require.NoError(t, err)
 	assert.Equal(t, testKey.Subject, verified.Subject, "Verify with active key (the key used for signing)")
 
 	// Create a token with the retiring key
 	oldToken := createTokenWithKey(t, priv2, "key-retiring", testKey)
 
-	verifiedOld, err := km.Verify(oldToken)
+	verifiedOld, err := km.Parse(context.Background(), oldToken)
 	require.NoError(t, err, "Token signed with retiring key should still be valid during grace period")
 	assert.Equal(t, testKey.Subject, verifiedOld.Subject)
 
-	publicKeys, err := km.PublicKeys()
+	publicKeys, err := km.RetrieveJWKS()
 	require.NoError(t, err)
 	assert.Len(t, publicKeys, 2, "Should return both active and retiring keys")
 
@@ -152,7 +153,7 @@ func TestRetiredKey(t *testing.T) {
 	km, err := asymmetric.NewKeyManager(filepath.Join(tmpDir, "dummy.pem"), &mockIDProvider{id: "ignored"})
 	require.NoError(t, err)
 
-	publicKeys, err := km.PublicKeys()
+	publicKeys, err := km.RetrieveJWKS()
 	require.NoError(t, err)
 	assert.Len(t, publicKeys, 1, "Public keys should only return active key (retired key filtered out)")
 	assert.Equal(t, "key-active", publicKeys[0].KeyID)
@@ -200,7 +201,7 @@ func TestExplicitRetiredStatus(t *testing.T) {
 	km, err := asymmetric.NewKeyManager(filepath.Join(tmpDir, "dummy.pem"), &mockIDProvider{id: "ignored"})
 	require.NoError(t, err)
 
-	publicKeys, err := km.PublicKeys()
+	publicKeys, err := km.RetrieveJWKS()
 	require.NoError(t, err)
 	assert.Len(t, publicKeys, 1, "Public keys should only return active key (retired status keys filtered out)")
 	assert.Equal(t, "key-active", publicKeys[0].KeyID)
@@ -278,13 +279,13 @@ func TestSingleKeyCompatibility(t *testing.T) {
 		ExpiresAt: time.Now().Add(1 * time.Hour).UTC(),
 	}
 
-	token, err := km.Sign(testKey)
+	token, err := km.Issue(testKey)
 	require.NoError(t, err)
 
-	_, err = km.Verify(token)
+	_, err = km.Parse(context.Background(), token)
 	require.NoError(t, err)
 
-	publicKeys, err := km.PublicKeys()
+	publicKeys, err := km.RetrieveJWKS()
 	require.NoError(t, err)
 	assert.Len(t, publicKeys, 1)
 }

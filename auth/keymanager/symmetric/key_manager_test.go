@@ -4,6 +4,7 @@
 package symmetric_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -131,7 +132,7 @@ func TestSign(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			token, err := km.Sign(tc.key)
+			token, err := km.Issue(tc.key)
 			assert.NoError(t, err)
 			assert.NotEmpty(t, token)
 
@@ -159,12 +160,12 @@ func TestVerify(t *testing.T) {
 		Verified:  true,
 	}
 
-	validToken, err := km.Sign(validKey)
+	validToken, err := km.Issue(validKey)
 	require.NoError(t, err, "Signing valid token should succeed")
 
 	expiredKey := validKey
 	expiredKey.ExpiresAt = time.Now().Add(-1 * time.Hour).UTC()
-	expiredToken, err := km.Sign(expiredKey)
+	expiredToken, err := km.Issue(expiredKey)
 	require.NoError(t, err)
 
 	wrongIssuerKey := validKey
@@ -189,7 +190,7 @@ func TestVerify(t *testing.T) {
 
 	wrongSecretKM, err := symmetric.NewKeyManager("HS256", []byte("different-secret-key-here"))
 	require.NoError(t, err)
-	wrongSecretToken, err := wrongSecretKM.Sign(validKey)
+	wrongSecretToken, err := wrongSecretKM.Issue(validKey)
 	require.NoError(t, err)
 
 	cases := []struct {
@@ -231,7 +232,7 @@ func TestVerify(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			key, err := km.Verify(tc.token)
+			key, err := km.Parse(context.Background(), tc.token)
 
 			if tc.expectErr {
 				assert.Error(t, err)
@@ -254,7 +255,7 @@ func TestPublicKeys(t *testing.T) {
 	km, err := symmetric.NewKeyManager("HS256", secret)
 	require.NoError(t, err)
 
-	keys, err := km.PublicKeys()
+	keys, err := km.RetrieveJWKS()
 	assert.Error(t, err)
 	assert.Equal(t, auth.ErrPublicKeysNotSupported, err)
 	assert.Nil(t, keys)
@@ -282,11 +283,11 @@ func TestSignAndVerifyRoundTrip(t *testing.T) {
 			}
 
 			// Sign
-			token, err := km.Sign(originalKey)
+			token, err := km.Issue(originalKey)
 			require.NoError(t, err)
 
 			// Verify
-			verifiedKey, err := km.Verify(token)
+			verifiedKey, err := km.Parse(context.Background(), token)
 			require.NoError(t, err)
 
 			// Compare
@@ -317,36 +318,36 @@ func TestDifferentAlgorithms(t *testing.T) {
 
 	km256, err := symmetric.NewKeyManager("HS256", secret)
 	require.NoError(t, err)
-	token256, err := km256.Sign(key)
+	token256, err := km256.Issue(key)
 	require.NoError(t, err)
 
 	km384, err := symmetric.NewKeyManager("HS384", secret)
 	require.NoError(t, err)
-	token384, err := km384.Sign(key)
+	token384, err := km384.Issue(key)
 	require.NoError(t, err)
 
 	km512, err := symmetric.NewKeyManager("HS512", secret)
 	require.NoError(t, err)
-	token512, err := km512.Sign(key)
+	token512, err := km512.Issue(key)
 	require.NoError(t, err)
 
 	assert.NotEqual(t, token256, token384)
 	assert.NotEqual(t, token256, token512)
 	assert.NotEqual(t, token384, token512)
 
-	_, err = km256.Verify(token256)
+	_, err = km256.Parse(context.Background(), token256)
 	assert.NoError(t, err, "verification of km256 token should pass with km256 verifier")
 
-	_, err = km384.Verify(token384)
+	_, err = km384.Parse(context.Background(), token384)
 	assert.NoError(t, err, "verification of km384 token should pass with km384 verifier")
 
-	_, err = km512.Verify(token512)
+	_, err = km512.Parse(context.Background(), token512)
 	assert.NoError(t, err, "verification of km512 token should pass with km512 verifier")
 
-	_, err = km384.Verify(token256)
+	_, err = km384.Parse(context.Background(), token256)
 	assert.Error(t, err, "Cross verification should fail")
 
-	_, err = km512.Verify(token256)
+	_, err = km512.Parse(context.Background(), token256)
 	assert.Error(t, err)
 }
 

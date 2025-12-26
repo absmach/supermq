@@ -4,10 +4,22 @@
 package symmetric
 
 import (
+	"context"
+
 	"github.com/absmach/supermq/auth"
 	smqjwt "github.com/absmach/supermq/auth/jwt"
+	"github.com/absmach/supermq/pkg/errors"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
+)
+
+const (
+	patPrefix = "pat"
+)
+
+var (
+	errJWTExpiryKey = errors.New(`"exp" not satisfied`)
 )
 
 type manager struct {
@@ -15,9 +27,9 @@ type manager struct {
 	secret    []byte
 }
 
-var _ auth.KeyManager = (*manager)(nil)
+var _ auth.Tokenizer = (*manager)(nil)
 
-func NewKeyManager(algorithm string, secret []byte) (auth.KeyManager, error) {
+func NewKeyManager(algorithm string, secret []byte) (auth.Tokenizer, error) {
 	alg := jwa.KeyAlgorithmFrom(algorithm)
 	if _, ok := alg.(jwa.InvalidKeyAlgorithm); ok {
 		return nil, auth.ErrUnsupportedKeyAlgorithm
@@ -31,7 +43,7 @@ func NewKeyManager(algorithm string, secret []byte) (auth.KeyManager, error) {
 	}, nil
 }
 
-func (km *manager) Sign(key auth.Key) (string, error) {
+func (km *manager) Issue(key auth.Key) (string, error) {
 	builder := jwt.NewBuilder()
 	builder.
 		Issuer(smqjwt.IssuerName).
@@ -61,14 +73,21 @@ func (km *manager) Sign(key auth.Key) (string, error) {
 	return string(signedBytes), nil
 }
 
-func (km *manager) Verify(tokenString string) (auth.Key, error) {
+func (km *manager) Parse(ctx context.Context, tokenString string) (auth.Key, error) {
+	if len(tokenString) >= 3 && tokenString[:3] == patPrefix {
+		return auth.Key{Type: auth.PersonalAccessToken}, nil
+	}
+
 	tkn, err := jwt.Parse(
 		[]byte(tokenString),
 		jwt.WithValidate(true),
 		jwt.WithKey(km.algorithm, km.secret),
 	)
 	if err != nil {
-		return auth.Key{}, err
+		if errors.Contains(err, errJWTExpiryKey) {
+			return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, auth.ErrExpiry)
+		}
+		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
 
 	// Validate issuer
@@ -79,6 +98,6 @@ func (km *manager) Verify(tokenString string) (auth.Key, error) {
 	return smqjwt.ToKey(tkn)
 }
 
-func (km *manager) PublicKeys() ([]auth.PublicKeyInfo, error) {
+func (km *manager) RetrieveJWKS() ([]auth.PublicKeyInfo, error) {
 	return nil, auth.ErrPublicKeysNotSupported
 }

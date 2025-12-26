@@ -202,7 +202,11 @@ func (svc service) Identify(ctx context.Context, token string) (Key, error) {
 }
 
 func (svc service) RetrieveJWKS() []PublicKeyInfo {
-	return svc.tokenizer.RetrieveJWKS()
+	keys, err := svc.tokenizer.RetrieveJWKS()
+	if err != nil {
+		return nil
+	}
+	return keys
 }
 
 func (svc service) Authorize(ctx context.Context, pr policies.Policy) error {

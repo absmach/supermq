@@ -4,24 +4,16 @@
 package jwt
 
 import (
-	"context"
 	"encoding/json"
 
 	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/pkg/errors"
-	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
 var (
-	// ErrINvalidIssuer represents an invalid token issuer value.
+	// ErrInvalidIssuer represents an invalid token issuer value.
 	ErrInvalidIssuer = errors.New("invalid token issuer value")
-
-	// ErrSignJWT indicates an error in signing jwt token.
-	ErrSignJWT = errors.New("failed to sign jwt token")
-
-	// ErrValidateJWTToken indicates a failure to validate JWT token.
-	ErrValidateJWTToken = errors.New("failed to validate jwt token")
 
 	// ErrJSONHandle indicates an error in handling JSON.
 	ErrJSONHandle = errors.New("failed to perform operation JSON")
@@ -29,7 +21,6 @@ var (
 	errInvalidType     = errors.New("invalid token type")
 	errInvalidRole     = errors.New("invalid role")
 	errInvalidVerified = errors.New("invalid verified")
-	errJWTExpiryKey    = errors.New(`"exp" not satisfied`)
 )
 
 const (
@@ -37,54 +28,9 @@ const (
 	TokenType     = "type"
 	RoleField     = "role"
 	VerifiedField = "verified"
-	patPrefix     = "pat"
 )
 
-type tokenizer struct {
-	keyManager auth.KeyManager
-}
-
-var _ auth.Tokenizer = (*tokenizer)(nil)
-
-// New instantiates an implementation of Tokenizer service.
-func New(keyManager auth.KeyManager) auth.Tokenizer {
-	return &tokenizer{
-		keyManager: keyManager,
-	}
-}
-
-func (tok *tokenizer) Issue(key auth.Key) (string, error) {
-	signedToken, err := tok.keyManager.Sign(key)
-	if err != nil {
-		return "", errors.Wrap(ErrSignJWT, err)
-	}
-	return signedToken, nil
-}
-
-func (tok *tokenizer) Parse(ctx context.Context, token string) (auth.Key, error) {
-	if len(token) >= 3 && token[:3] == patPrefix {
-		return auth.Key{Type: auth.PersonalAccessToken}, nil
-	}
-
-	key, err := tok.keyManager.Verify(token)
-	if err != nil {
-		if errors.Contains(err, errJWTExpiryKey) {
-			return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, auth.ErrExpiry)
-		}
-		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
-	}
-
-	return key, nil
-}
-
-func (tok *tokenizer) RetrieveJWKS() []auth.PublicKeyInfo {
-	keys, err := tok.keyManager.PublicKeys()
-	if err != nil {
-		return nil
-	}
-	return keys
-}
-
+// ToKey converts a JWT token to an auth.Key by extracting claims.
 func ToKey(tkn jwt.Token) (auth.Key, error) {
 	data, err := json.Marshal(tkn.PrivateClaims())
 	if err != nil {
