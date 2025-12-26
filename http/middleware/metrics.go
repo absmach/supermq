@@ -9,21 +9,21 @@ import (
 	"context"
 	"time"
 
+	smqhttp "github.com/absmach/supermq/http"
 	"github.com/absmach/supermq/pkg/messaging"
-	"github.com/absmach/supermq/ws"
 	"github.com/go-kit/kit/metrics"
 )
 
-var _ ws.Service = (*metricsMiddleware)(nil)
+var _ smqhttp.Service = (*metricsMiddleware)(nil)
 
 type metricsMiddleware struct {
 	counter metrics.Counter
 	latency metrics.Histogram
-	svc     ws.Service
+	svc     smqhttp.Service
 }
 
 // NewMetrics instruments adapter by tracking request count and latency.
-func NewMetrics(svc ws.Service, counter metrics.Counter, latency metrics.Histogram) ws.Service {
+func NewMetrics(svc smqhttp.Service, counter metrics.Counter, latency metrics.Histogram) smqhttp.Service {
 	return &metricsMiddleware{
 		counter: counter,
 		latency: latency,
@@ -32,7 +32,7 @@ func NewMetrics(svc ws.Service, counter metrics.Counter, latency metrics.Histogr
 }
 
 // Subscribe instruments Subscribe method with metrics.
-func (mm *metricsMiddleware) Subscribe(ctx context.Context, sessionID, username, password, domainID, chanID, subtopic string, topicType messaging.TopicType, c *ws.Client) error {
+func (mm *metricsMiddleware) Subscribe(ctx context.Context, sessionID, username, password, domainID, chanID, subtopic string, topicType messaging.TopicType, c *smqhttp.Client) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "subscribe").Add(1)
 		mm.latency.With("method", "subscribe").Observe(time.Since(begin).Seconds())

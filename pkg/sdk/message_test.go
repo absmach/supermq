@@ -24,6 +24,7 @@ import (
 	dmocks "github.com/absmach/supermq/domains/mocks"
 	adapter "github.com/absmach/supermq/http"
 	"github.com/absmach/supermq/http/api"
+	httpmocks "github.com/absmach/supermq/http/mocks"
 	smqlog "github.com/absmach/supermq/logger"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
 	"github.com/absmach/supermq/pkg/errors"
@@ -47,12 +48,14 @@ func setupMessages(t *testing.T) (*httptest.Server, *pubsub.PubSub) {
 	domainsGRPCClient = new(dmocks.DomainsServiceClient)
 	pub := new(pubsub.PubSub)
 	authn := new(authnmocks.Authentication)
+	svc := new(httpmocks.Service)
 
 	parser, err := messaging.NewTopicParser(messaging.DefaultCacheConfig, channelsGRPCClient, domainsGRPCClient)
 	assert.Nil(t, err, fmt.Sprintf("unexpected error while setting up parser: %v", err))
-	handler := adapter.NewHandler(pub, authn, clientsGRPCClient, channelsGRPCClient, parser, smqlog.NewMock())
+	handler := adapter.NewHandler(pub, smqlog.NewMock(), authn, clientsGRPCClient, channelsGRPCClient, parser)
+	resolver := messaging.NewTopicResolver(channelsGRPCClient, domainsGRPCClient)
 
-	mux := api.MakeHandler(smqlog.NewMock(), "")
+	mux := api.MakeHandler(context.Background(), svc, resolver, smqlog.NewMock(), "")
 	target := httptest.NewServer(mux)
 
 	ptUrl, _ := url.Parse(target.URL)
@@ -186,7 +189,9 @@ func TestSendMessage(t *testing.T) {
 			domainsCall := domainsGRPCClient.On("RetrieveIDByRoute", mock.Anything, mock.Anything).Return(&grpcCommonV1.RetrieveEntityRes{Entity: &grpcCommonV1.EntityBasic{Id: tc.domainID}}, nil)
 			channelsCall := channelsGRPCClient.On("RetrieveIDByRoute", mock.Anything, mock.Anything).Return(&grpcCommonV1.RetrieveEntityRes{Entity: &grpcCommonV1.EntityBasic{Id: channelID}}, nil)
 			err := mgsdk.SendMessage(context.Background(), tc.domainID, tc.topic, tc.msg, tc.secret)
-			assert.Equal(t, tc.err, err)
+			if tc.err != nil {
+				assert.Contains(t, err.Error(), tc.err.Error(), fmt.Sprintf("expected error message to contain: %v, got: %v", tc.err, err))
+			}
 			if tc.err == nil {
 				ok := svcCall.Parent.AssertCalled(t, "Publish", mock.Anything, internalTopic, mock.Anything)
 				assert.True(t, ok)

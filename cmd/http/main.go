@@ -25,6 +25,7 @@ import (
 	"github.com/absmach/supermq/auth"
 	adapter "github.com/absmach/supermq/http"
 	httpapi "github.com/absmach/supermq/http/api"
+	"github.com/absmach/supermq/http/middleware"
 	smqlog "github.com/absmach/supermq/logger"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authsvcAuthn "github.com/absmach/supermq/pkg/authn/authsvc"
@@ -209,31 +210,34 @@ func main() {
 	}()
 	tracer := tp.Tracer(svcName)
 
-	pub, err := brokers.NewPublisher(ctx, cfg.BrokerURL)
+	nps, err := brokers.NewPubSub(ctx, cfg.BrokerURL, logger)
 	if err != nil {
-		logger.Error(fmt.Sprintf("failed to connect to message broker: %s", err))
+		logger.Error(fmt.Sprintf("Failed to connect to message broker: %s", err))
 		exitCode = 1
 		return
 	}
-	defer pub.Close()
-	pub = brokerstracing.NewPublisher(httpServerConfig, tracer, pub)
+	defer nps.Close()
+	nps = brokerstracing.NewPubSub(httpServerConfig, tracer, nps)
 
-	pub, err = msgevents.NewPublisherMiddleware(ctx, pub, cfg.ESURL)
+	nps, err = msgevents.NewPubSubMiddleware(ctx, nps, cfg.ESURL)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create event store middleware: %s", err))
 		exitCode = 1
 		return
 	}
 
-	svc, err := newService(pub, authn, cacheConfig, clientsClient, channelsClient, domainsClient, logger, tracer)
+	resolver := messaging.NewTopicResolver(channelsClient, domainsClient)
+	handler, err := newHandler(nps, authn, cacheConfig, clientsClient, channelsClient, domainsClient, logger, tracer)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create service: %s", err))
 		exitCode = 1
 		return
 	}
+	svc := newService(clientsClient, channelsClient, authn, nps, logger, tracer)
+
 	targetServerCfg := server.Config{Port: targetHTTPPort}
 
-	hs := httpserver.NewServer(ctx, cancel, svcName, targetServerCfg, httpapi.MakeHandler(logger, cfg.InstanceID), logger)
+	hs := httpserver.NewServer(ctx, cancel, svcName, targetServerCfg, httpapi.MakeHandler(ctx, svc, resolver, logger, cfg.InstanceID), logger)
 
 	if cfg.SendTelemetry {
 		chc := chclient.New(svcName, supermq.Version, logger, cancel)
@@ -245,7 +249,7 @@ func main() {
 	})
 
 	g.Go(func() error {
-		return proxyHTTP(ctx, httpServerConfig, logger, svc)
+		return proxyHTTP(ctx, httpServerConfig, logger, handler)
 	})
 
 	g.Go(func() error {
@@ -257,17 +261,27 @@ func main() {
 	}
 }
 
-func newService(pub messaging.Publisher, authn smqauthn.Authentication, cacheCfg messaging.CacheConfig, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, domains grpcDomainsV1.DomainsServiceClient, logger *slog.Logger, tracer trace.Tracer) (session.Handler, error) {
+func newHandler(pubsub messaging.PubSub, authn smqauthn.Authentication, cacheCfg messaging.CacheConfig, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, domains grpcDomainsV1.DomainsServiceClient, logger *slog.Logger, tracer trace.Tracer) (session.Handler, error) {
 	parser, err := messaging.NewTopicParser(cacheCfg, channels, domains)
 	if err != nil {
 		return nil, err
 	}
-	svc := adapter.NewHandler(pub, authn, clients, channels, parser, logger)
-	svc = handler.NewTracing(tracer, svc)
-	svc = handler.NewLogging(svc, logger)
+	h := adapter.NewHandler(pubsub, logger, authn, clients, channels, parser)
+	h = handler.NewTracing(tracer, h)
+	h = handler.NewLogging(h, logger)
+	counter, latency := prometheus.MakeMetrics(svcName, "handler")
+	h = handler.NewMetrics(h, counter, latency)
+
+	return h, nil
+}
+
+func newService(clientsClient grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, authn smqauthn.Authentication, nps messaging.PubSub, logger *slog.Logger, tracer trace.Tracer) adapter.Service {
+	svc := adapter.NewService(clientsClient, channels, authn, nps)
+	svc = middleware.NewTracing(tracer, svc)
+	svc = middleware.NewLogging(svc, logger)
 	counter, latency := prometheus.MakeMetrics(svcName, "api")
-	svc = handler.NewMetrics(svc, counter, latency)
-	return svc, nil
+	svc = middleware.NewMetrics(svc, counter, latency)
+	return svc
 }
 
 func proxyHTTP(ctx context.Context, cfg server.Config, logger *slog.Logger, sessionHandler session.Handler) error {

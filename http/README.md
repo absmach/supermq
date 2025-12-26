@@ -1,6 +1,6 @@
 # HTTP Adapter
 
-The HTTP Adapter exposes HTTP endpoints for publishing messages into SuperMQ channels. It authenticates clients via tokens or Basic auth, resolves domains/channels over gRPC, and forwards payloads to the message broker.
+The HTTP Adapter exposes HTTP endpoints for publishing messages and WebSocket capabilities for publishing and subscribing to messages from SuperMQ channels. It authenticates clients via tokens or Basic auth, resolves domains/channels over gRPC, and forwards payloads to the message broker.
 
 For more on SuperMQ, see the [official documentation][doc].
 
@@ -8,44 +8,44 @@ For more on SuperMQ, see the [official documentation][doc].
 
 Environment variables (unset values fall back to defaults):
 
-| Variable                               | Description                                                                                | Default                               |
-| -------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------- |
-| `SMQ_HTTP_ADAPTER_LOG_LEVEL`           | Log level (debug, info, warn, error)                                                       | debug                                  |
-| `SMQ_HTTP_ADAPTER_HOST`                | HTTP Adapter host                                                                          | http-adapter                          |
-| `SMQ_HTTP_ADAPTER_PORT`                | HTTP Adapter port                                                                          | 8008                                   |
-| `SMQ_HTTP_ADAPTER_SERVER_CERT`         | Path to PEM-encoded server certificate (enables TLS)                                       | ""                                     |
-| `SMQ_HTTP_ADAPTER_SERVER_KEY`          | Path to PEM-encoded server key                                                             | ""                                     |
-| `SMQ_HTTP_ADAPTER_SERVER_CA_CERTS`     | Trusted CA bundle for HTTPS server                                                         | ""                                     |
-| `SMQ_HTTP_ADAPTER_CLIENT_CA_CERTS`     | Client CA bundle to require mTLS on HTTPS server                                           | ""                                     |
-| `SMQ_HTTP_ADAPTER_CACHE_NUM_COUNTERS`  | Cache counters for topic parsing                                                           | 200000                                 |
-| `SMQ_HTTP_ADAPTER_CACHE_MAX_COST`      | Maximum cache size (bytes)                                                                 | 1048576                                |
-| `SMQ_HTTP_ADAPTER_CACHE_BUFFER_ITEMS`  | Cache buffer items                                                                         | 64                                     |
-| `SMQ_MESSAGE_BROKER_URL`               | Message broker URL (publishing target)                                                     | nats://nats:4222                       |
-| `SMQ_ES_URL`                           | Event store URL (publishing middleware)                                                    | nats://nats:4222                       |
-| `SMQ_JAEGER_URL`                       | Jaeger tracing endpoint                                                                    | <http://jaeger:4318/v1/traces>         |
-| `SMQ_JAEGER_TRACE_RATIO`               | Trace sampling ratio                                                                       | 1.0                                    |
-| `SMQ_SEND_TELEMETRY`                   | Send telemetry to SuperMQ call-home server                                                 | true                                   |
-| `SMQ_HTTP_ADAPTER_INSTANCE_ID`         | Service instance ID (auto-generated when empty)                                            | ""                                     |
-| `SMQ_CLIENTS_GRPC_URL`                 | Clients service gRPC URL                                                                   | clients:7006                           |
-| `SMQ_CLIENTS_GRPC_TIMEOUT`             | Clients gRPC request timeout                                                               | 300s                                   |
-| `SMQ_CLIENTS_GRPC_CLIENT_CERT`         | Clients gRPC client certificate                                                            | ""                                     |
-| `SMQ_CLIENTS_GRPC_CLIENT_KEY`          | Clients gRPC client key                                                                    | ""                                     |
-| `SMQ_CLIENTS_GRPC_SERVER_CA_CERTS`     | Clients gRPC trusted CA bundle                                                             | ""                                     |
-| `SMQ_CHANNELS_GRPC_URL`                | Channels service gRPC URL                                                                  | channels:7005                          |
-| `SMQ_CHANNELS_GRPC_TIMEOUT`            | Channels gRPC request timeout                                                              | 300s                                   |
-| `SMQ_CHANNELS_GRPC_CLIENT_CERT`        | Channels gRPC client certificate                                                           | ""                                     |
-| `SMQ_CHANNELS_GRPC_CLIENT_KEY`         | Channels gRPC client key                                                                   | ""                                     |
-| `SMQ_CHANNELS_GRPC_SERVER_CA_CERTS`    | Channels gRPC trusted CA bundle                                                            | ""                                     |
-| `SMQ_DOMAINS_GRPC_URL`                 | Domains service gRPC URL                                                                   | domains:7003                           |
-| `SMQ_DOMAINS_GRPC_TIMEOUT`             | Domains gRPC request timeout                                                               | 300s                                   |
-| `SMQ_DOMAINS_GRPC_CLIENT_CERT`         | Domains gRPC client certificate                                                            | ""                                     |
-| `SMQ_DOMAINS_GRPC_CLIENT_KEY`          | Domains gRPC client key                                                                    | ""                                     |
-| `SMQ_DOMAINS_GRPC_SERVER_CA_CERTS`     | Domains gRPC trusted CA bundle                                                             | ""                                     |
-| `SMQ_AUTH_GRPC_URL`                    | Auth service gRPC URL                                                                      | auth:7001                              |
-| `SMQ_AUTH_GRPC_TIMEOUT`                | Auth service gRPC request timeout                                                          | 300s                                   |
-| `SMQ_AUTH_GRPC_CLIENT_CERT`            | Auth gRPC client certificate                                                               | ""                                     |
-| `SMQ_AUTH_GRPC_CLIENT_KEY`             | Auth gRPC client key                                                                       | ""                                     |
-| `SMQ_AUTH_GRPC_SERVER_CA_CERTS`        | Auth gRPC trusted CA bundle                                                                | ""                                     |
+| Variable                              | Description                                          | Default                        |
+| ------------------------------------- | ---------------------------------------------------- | ------------------------------ |
+| `SMQ_HTTP_ADAPTER_LOG_LEVEL`          | Log level (debug, info, warn, error)                 | debug                          |
+| `SMQ_HTTP_ADAPTER_HOST`               | HTTP Adapter host                                    | http-adapter                   |
+| `SMQ_HTTP_ADAPTER_PORT`               | HTTP Adapter port                                    | 8008                           |
+| `SMQ_HTTP_ADAPTER_SERVER_CERT`        | Path to PEM-encoded server certificate (enables TLS) | ""                             |
+| `SMQ_HTTP_ADAPTER_SERVER_KEY`         | Path to PEM-encoded server key                       | ""                             |
+| `SMQ_HTTP_ADAPTER_SERVER_CA_CERTS`    | Trusted CA bundle for HTTPS server                   | ""                             |
+| `SMQ_HTTP_ADAPTER_CLIENT_CA_CERTS`    | Client CA bundle to require mTLS on HTTPS server     | ""                             |
+| `SMQ_HTTP_ADAPTER_CACHE_NUM_COUNTERS` | Cache counters for topic parsing                     | 200000                         |
+| `SMQ_HTTP_ADAPTER_CACHE_MAX_COST`     | Maximum cache size (bytes)                           | 1048576                        |
+| `SMQ_HTTP_ADAPTER_CACHE_BUFFER_ITEMS` | Cache buffer items                                   | 64                             |
+| `SMQ_MESSAGE_BROKER_URL`              | Message broker URL (publishing target)               | nats://nats:4222               |
+| `SMQ_ES_URL`                          | Event store URL (publishing middleware)              | nats://nats:4222               |
+| `SMQ_JAEGER_URL`                      | Jaeger tracing endpoint                              | <http://jaeger:4318/v1/traces> |
+| `SMQ_JAEGER_TRACE_RATIO`              | Trace sampling ratio                                 | 1.0                            |
+| `SMQ_SEND_TELEMETRY`                  | Send telemetry to SuperMQ call-home server           | true                           |
+| `SMQ_HTTP_ADAPTER_INSTANCE_ID`        | Service instance ID (auto-generated when empty)      | ""                             |
+| `SMQ_CLIENTS_GRPC_URL`                | Clients service gRPC URL                             | clients:7006                   |
+| `SMQ_CLIENTS_GRPC_TIMEOUT`            | Clients gRPC request timeout                         | 300s                           |
+| `SMQ_CLIENTS_GRPC_CLIENT_CERT`        | Clients gRPC client certificate                      | ""                             |
+| `SMQ_CLIENTS_GRPC_CLIENT_KEY`         | Clients gRPC client key                              | ""                             |
+| `SMQ_CLIENTS_GRPC_SERVER_CA_CERTS`    | Clients gRPC trusted CA bundle                       | ""                             |
+| `SMQ_CHANNELS_GRPC_URL`               | Channels service gRPC URL                            | channels:7005                  |
+| `SMQ_CHANNELS_GRPC_TIMEOUT`           | Channels gRPC request timeout                        | 300s                           |
+| `SMQ_CHANNELS_GRPC_CLIENT_CERT`       | Channels gRPC client certificate                     | ""                             |
+| `SMQ_CHANNELS_GRPC_CLIENT_KEY`        | Channels gRPC client key                             | ""                             |
+| `SMQ_CHANNELS_GRPC_SERVER_CA_CERTS`   | Channels gRPC trusted CA bundle                      | ""                             |
+| `SMQ_DOMAINS_GRPC_URL`                | Domains service gRPC URL                             | domains:7003                   |
+| `SMQ_DOMAINS_GRPC_TIMEOUT`            | Domains gRPC request timeout                         | 300s                           |
+| `SMQ_DOMAINS_GRPC_CLIENT_CERT`        | Domains gRPC client certificate                      | ""                             |
+| `SMQ_DOMAINS_GRPC_CLIENT_KEY`         | Domains gRPC client key                              | ""                             |
+| `SMQ_DOMAINS_GRPC_SERVER_CA_CERTS`    | Domains gRPC trusted CA bundle                       | ""                             |
+| `SMQ_AUTH_GRPC_URL`                   | Auth service gRPC URL                                | auth:7001                      |
+| `SMQ_AUTH_GRPC_TIMEOUT`               | Auth service gRPC request timeout                    | 300s                           |
+| `SMQ_AUTH_GRPC_CLIENT_CERT`           | Auth gRPC client certificate                         | ""                             |
+| `SMQ_AUTH_GRPC_CLIENT_KEY`            | Auth gRPC client key                                 | ""                             |
+| `SMQ_AUTH_GRPC_SERVER_CA_CERTS`       | Auth gRPC trusted CA bundle                          | ""                             |
 
 ## Deployment
 

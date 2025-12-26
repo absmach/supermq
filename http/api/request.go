@@ -24,6 +24,14 @@ func (req publishReq) validate() error {
 	return nil
 }
 
+type connReq struct {
+	username  string
+	password  string
+	channelID string
+	domainID  string
+	subtopic  string
+}
+
 type healthCheckReq struct {
 	domain string
 	token  string

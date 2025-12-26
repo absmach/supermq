@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package ws_test
+package http_test
 
 import (
 	"context"
@@ -16,6 +16,7 @@ import (
 	apiutil "github.com/absmach/supermq/api/http/util"
 	chmocks "github.com/absmach/supermq/channels/mocks"
 	climocks "github.com/absmach/supermq/clients/mocks"
+	smqhttp "github.com/absmach/supermq/http"
 	"github.com/absmach/supermq/internal/testsutil"
 	smqauthn "github.com/absmach/supermq/pkg/authn"
 	authnmocks "github.com/absmach/supermq/pkg/authn/mocks"
@@ -25,7 +26,6 @@ import (
 	"github.com/absmach/supermq/pkg/messaging"
 	"github.com/absmach/supermq/pkg/messaging/mocks"
 	"github.com/absmach/supermq/pkg/policies"
-	"github.com/absmach/supermq/ws"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -59,19 +59,19 @@ var (
 	invalidEncodedCreds = base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", invalidID, invalidKey)))
 )
 
-func newService() (ws.Service, *mocks.PubSub, *climocks.ClientsServiceClient, *chmocks.ChannelsServiceClient, *authnmocks.Authentication) {
+func newService() (smqhttp.Service, *mocks.PubSub, *climocks.ClientsServiceClient, *chmocks.ChannelsServiceClient, *authnmocks.Authentication) {
 	pubsub := new(mocks.PubSub)
 	clients := new(climocks.ClientsServiceClient)
 	channels := new(chmocks.ChannelsServiceClient)
 	authn := new(authnmocks.Authentication)
 
-	return ws.New(clients, channels, authn, pubsub), pubsub, clients, channels, authn
+	return smqhttp.NewService(clients, channels, authn, pubsub), pubsub, clients, channels, authn
 }
 
 func TestSubscribe(t *testing.T) {
 	svc, pubsub, clients, channels, auth := newService()
 
-	c := ws.NewClient(slog.Default(), nil, sessionID)
+	c := smqhttp.NewClient(slog.Default(), nil, sessionID)
 
 	cases := []struct {
 		desc       string
@@ -149,11 +149,11 @@ func TestSubscribe(t *testing.T) {
 			clientID:   clientID,
 			subtopic:   subTopic,
 			topicType:  messaging.MessageType,
-			subErr:     ws.ErrFailedSubscription,
+			subErr:     smqhttp.ErrFailedSubscription,
 			authNToken: smqauthn.AuthPack(smqauthn.DomainAuth, domainID, clientKey),
 			authNRes:   &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
 			authZRes:   &grpcChannelsV1.AuthzRes{Authorized: true},
-			err:        ws.ErrFailedSubscription,
+			err:        smqhttp.ErrFailedSubscription,
 		},
 		{
 			desc:       "subscribe to channel with invalid clientKey",

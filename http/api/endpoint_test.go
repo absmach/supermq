@@ -4,6 +4,7 @@
 package api_test
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net"
@@ -35,13 +36,26 @@ import (
 	"github.com/absmach/supermq/pkg/messaging"
 	pubsub "github.com/absmach/supermq/pkg/messaging/mocks"
 	"github.com/absmach/supermq/pkg/policies"
+	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 const (
 	instanceID   = "5de9b29a-feb9-11ed-be56-0242ac120002"
 	invalidValue = "invalid"
+	clientKey    = "c02ff576-ccd5-40f6-ba5f-c85377aad529"
+	wsProtocol   = "ws"
+	invalidKey   = "invalid-key"
+	validToken   = "valid-token"
+	invalidToken = "invalid-token"
+	ctSenmlJSON  = "application/senml+json"
+	ctSenmlCBOR  = "application/senml+cbor"
+	ctJSON       = "application/json"
+	msgJSON      = `{"field1":"val1","field2":"val2"}`
+	msgCBOR      = `81A3616E6763757272656E746174206176FB3FF999999999999A`
+	msg          = `[{"n":"current","t":-1,"v":1.6}]`
 )
 
 var (
@@ -51,18 +65,22 @@ var (
 	userID   = testsutil.GenerateUUID(&testing.T{})
 )
 
-func newService(authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, domains grpcDomainsV1.DomainsServiceClient) (session.Handler, *pubsub.PubSub, error) {
+func newService(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, authn smqauthn.Authentication, pubsub *pubsub.PubSub) server.Service {
+	return server.NewService(clients, channels, authn, pubsub)
+}
+
+func newHandler(authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, domains grpcDomainsV1.DomainsServiceClient) (session.Handler, *pubsub.PubSub, error) {
 	pub := new(pubsub.PubSub)
 	parser, err := messaging.NewTopicParser(messaging.DefaultCacheConfig, channels, domains)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return server.NewHandler(pub, authn, clients, channels, parser, smqlog.NewMock()), pub, nil
+	return server.NewHandler(pub, smqlog.NewMock(), authn, clients, channels, parser), pub, nil
 }
 
-func newTargetHTTPServer() *httptest.Server {
-	mux := api.MakeHandler(smqlog.NewMock(), instanceID)
+func newTargetHTTPServer(resolver messaging.TopicResolver, svc server.Service) *httptest.Server {
+	mux := api.MakeHandler(context.Background(), svc, resolver, smqlog.NewMock(), instanceID)
 	return httptest.NewServer(mux)
 }
 
@@ -123,23 +141,14 @@ func TestPublish(t *testing.T) {
 	authn := new(authnMocks.Authentication)
 	channels := new(chmocks.ChannelsServiceClient)
 	domains := new(dmocks.DomainsServiceClient)
-	ctSenmlJSON := "application/senml+json"
-	ctSenmlCBOR := "application/senml+cbor"
-	ctJSON := "application/json"
-	clientKey := "client_key"
-	invalidKey := invalidValue
-	validToken := "token"
-	invalidToken := "invalid_token"
-	msg := `[{"n":"current","t":-1,"v":1.6}]`
-	msgJSON := `{"field1":"val1","field2":"val2"}`
-	msgCBOR := `81A3616E6763757272656E746174206176FB3FF999999999999A`
-	svc, pub, err := newService(authn, clients, channels, domains)
-	assert.Nil(t, err, fmt.Sprintf("failed to create service with err: %v", err))
-	target := newTargetHTTPServer()
+	resolver := messaging.NewTopicResolver(channels, domains)
+	handler, pubsub, err := newHandler(authn, clients, channels, domains)
+	assert.Nil(t, err, fmt.Sprintf("failed to create handler with err: %v", err))
+	svc := newService(clients, channels, authn, pubsub)
+	target := newTargetHTTPServer(resolver, svc)
 	defer target.Close()
-	ts, err := newProxyHTPPServer(svc, target)
-	assert.Nil(t, err, fmt.Sprintf("failed to create proxy server with err: %v", err))
-
+	ts, err := newProxyHTPPServer(handler, target)
+	require.Nil(t, err)
 	defer ts.Close()
 
 	cases := []struct {
@@ -323,7 +332,7 @@ func TestPublish(t *testing.T) {
 				ClientType: tc.clientType,
 				Type:       uint32(connections.Publish),
 			}).Return(tc.authzRes, tc.authzErr)
-			svcCall := pub.On("Publish", mock.Anything, messaging.EncodeTopicSuffix(tc.domainID, tc.chanID, ""), mock.Anything).Return(nil)
+			svcCall := pubsub.On("Publish", mock.Anything, messaging.EncodeTopicSuffix(tc.domainID, tc.chanID, ""), mock.Anything).Return(nil)
 			req := testRequest{
 				client:      ts.Client(),
 				method:      http.MethodPost,
@@ -346,123 +355,175 @@ func TestPublish(t *testing.T) {
 	}
 }
 
-func TestHealthCheck(t *testing.T) {
+func TestHandshake(t *testing.T) {
 	clients := new(climocks.ClientsServiceClient)
-	authn := new(authnMocks.Authentication)
 	channels := new(chmocks.ChannelsServiceClient)
+	authn := new(authnMocks.Authentication)
 	domains := new(dmocks.DomainsServiceClient)
-	clientKey := "client_key"
-	invalidKey := invalidValue
-	validToken := "token"
-	invalidToken := "invalid_token"
-	svc, _, err := newService(authn, clients, channels, domains)
-	assert.Nil(t, err, fmt.Sprintf("failed to create service with err: %v", err))
-	target := newTargetHTTPServer()
+	resolver := messaging.NewTopicResolver(channels, domains)
+	handler, pubsub, err := newHandler(authn, clients, channels, domains)
+	assert.Nil(t, err, fmt.Sprintf("failed to create handler with err: %v", err))
+	svc := newService(clients, channels, authn, pubsub)
+	target := newTargetHTTPServer(resolver, svc)
 	defer target.Close()
-	ts, err := newProxyHTPPServer(svc, target)
-	assert.Nil(t, err, fmt.Sprintf("failed to create proxy server with err: %v", err))
-
+	ts, err := newProxyHTPPServer(handler, target)
+	require.Nil(t, err)
 	defer ts.Close()
+	msg := []byte(`[{"n":"current","t":-1,"v":1.6}]`)
+	pubsub.On("Subscribe", mock.Anything, mock.Anything).Return(nil)
+	pubsub.On("Unsubscribe", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	pubsub.On("Publish", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	clients.On("Authenticate", mock.Anything, mock.Anything).Return(&grpcClientsV1.AuthnRes{Authenticated: true}, nil)
+	clients.On("Authenticate", mock.Anything, mock.Anything).Return(&grpcClientsV1.AuthnRes{Authenticated: false}, nil)
+	authn.On("Authenticate", mock.Anything, mock.Anything).Return(smqauthn.Session{}, nil)
+	channels.On("Authorize", mock.Anything, mock.Anything, mock.Anything).Return(&grpcChannelsV1.AuthzRes{Authorized: true}, nil)
 
 	cases := []struct {
-		desc        string
-		domainID    string
-		clientID    string
-		clientType  string
-		key         string
-		status      int
-		basicAuth   bool
-		bearerToken bool
-		authnErr    error
-		authnRes    *grpcClientsV1.AuthnRes
-		authnRes1   smqauthn.Session
+		desc      string
+		domainID  string
+		chanID    string
+		subtopic  string
+		header    bool
+		clientKey string
+		status    int
+		err       error
+		msg       []byte
 	}{
 		{
-			desc:     "health check successfully",
-			domainID: domainID,
-			key:      clientKey,
-			status:   http.StatusOK,
-			authnRes: &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
-		},
-		{
-			desc:      "health check with basic auth",
+			desc:      "connect and send message",
 			domainID:  domainID,
-			key:       clientKey,
-			basicAuth: true,
-			status:    http.StatusOK,
-			authnRes:  &grpcClientsV1.AuthnRes{Id: clientID, Authenticated: true},
+			chanID:    chanID,
+			subtopic:  "",
+			header:    true,
+			clientKey: clientKey,
+			status:    http.StatusSwitchingProtocols,
+			msg:       msg,
 		},
 		{
-			desc:     "health check with invalid key",
-			domainID: domainID,
-			key:      invalidKey,
-			status:   http.StatusUnauthorized,
-			authnRes: &grpcClientsV1.AuthnRes{Authenticated: false},
-		},
-		{
-			desc:      "health check with invalid basic auth",
+			desc:      "connect and send message with clientKey as query parameter",
 			domainID:  domainID,
-			key:       invalidKey,
-			basicAuth: true,
+			chanID:    chanID,
+			subtopic:  "",
+			header:    false,
+			clientKey: clientKey,
+			status:    http.StatusSwitchingProtocols,
+			msg:       msg,
+		},
+		{
+			desc:      "connect and send message that cannot be published",
+			domainID:  domainID,
+			chanID:    chanID,
+			subtopic:  "",
+			header:    true,
+			clientKey: clientKey,
+			status:    http.StatusSwitchingProtocols,
+			msg:       []byte{},
+		},
+		{
+			desc:      "connect and send message to subtopic",
+			domainID:  domainID,
+			chanID:    chanID,
+			subtopic:  "subtopic",
+			header:    true,
+			clientKey: clientKey,
+			status:    http.StatusSwitchingProtocols,
+			msg:       msg,
+		},
+		{
+			desc:      "connect and send message to nested subtopic",
+			domainID:  domainID,
+			chanID:    chanID,
+			subtopic:  "subtopic/nested",
+			header:    true,
+			clientKey: clientKey,
+			status:    http.StatusSwitchingProtocols,
+			msg:       msg,
+		},
+		{
+			desc:      "connect and send message to all subtopics",
+			domainID:  domainID,
+			chanID:    chanID,
+			subtopic:  ">",
+			header:    true,
+			clientKey: clientKey,
+			status:    http.StatusSwitchingProtocols,
+			msg:       msg,
+		},
+		{
+			desc:      "connect to empty channel",
+			domainID:  domainID,
+			chanID:    "",
+			subtopic:  "",
+			header:    true,
+			clientKey: clientKey,
 			status:    http.StatusUnauthorized,
-			authnRes:  &grpcClientsV1.AuthnRes{Authenticated: false},
+			msg:       []byte{},
 		},
 		{
-			desc:        "health check with valid bearer token",
-			domainID:    domainID,
-			key:         validToken,
-			bearerToken: true,
-			status:      http.StatusOK,
-			authnRes1:   smqauthn.Session{UserID: userID},
+			desc:      "connect with empty clientKey",
+			domainID:  domainID,
+			chanID:    chanID,
+			subtopic:  "",
+			header:    true,
+			clientKey: "",
+			status:    http.StatusBadRequest,
+			msg:       []byte{},
 		},
 		{
-			desc:        "health check with invalid bearer token",
-			domainID:    domainID,
-			key:         invalidToken,
-			bearerToken: true,
-			status:      http.StatusUnauthorized,
-			authnRes1:   smqauthn.Session{},
-			authnErr:    svcerr.ErrAuthentication,
-		},
-		{
-			desc:     "health check with empty key",
-			domainID: domainID,
-			key:      "",
-			status:   http.StatusBadRequest,
-		},
-		{
-			desc:     "health check with empty domain ID",
-			domainID: "",
-			key:      clientKey,
-			status:   http.StatusBadRequest,
-		},
-		{
-			desc:     "health check with invalid domain ID",
-			domainID: invalidValue,
-			key:      clientKey,
-			status:   http.StatusUnauthorized,
-			authnRes: &grpcClientsV1.AuthnRes{},
+			desc:      "connect and send message to subtopic with invalid name",
+			domainID:  domainID,
+			chanID:    chanID,
+			subtopic:  "sub/a*b/topic",
+			header:    true,
+			clientKey: clientKey,
+			status:    http.StatusUnauthorized,
+			msg:       msg,
 		},
 	}
+
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			clientsCall := clients.On("Authenticate", mock.Anything, &grpcClientsV1.AuthnReq{Token: smqauthn.AuthPack(smqauthn.DomainAuth, tc.domainID, tc.key)}).Return(tc.authnRes, tc.authnErr)
-			authCall := authn.On("Authenticate", mock.Anything, tc.key).Return(tc.authnRes1, tc.authnErr)
-			domainsCall := domains.On("RetrieveIDByRoute", mock.Anything, mock.Anything).Return(&grpcCommonV1.RetrieveEntityRes{Entity: &grpcCommonV1.EntityBasic{Id: tc.domainID}}, nil)
-			req := testRequest{
-				client:      ts.Client(),
-				method:      http.MethodPost,
-				url:         fmt.Sprintf("%s/hc/%s", ts.URL, tc.domainID),
-				token:       tc.key,
-				basicAuth:   tc.basicAuth,
-				bearerToken: tc.bearerToken,
+			conn, res, err := handshake(ts.URL, tc.domainID, tc.chanID, tc.subtopic, tc.clientKey, tc.header)
+			assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code '%d' got '%d'\n", tc.desc, tc.status, res.StatusCode))
+			if tc.status == http.StatusSwitchingProtocols {
+				assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error %s\n", tc.desc, err))
+				err = conn.WriteMessage(websocket.TextMessage, tc.msg)
+				assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error %s\n", tc.desc, err))
 			}
-			res, err := req.make()
-			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-			assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-			clientsCall.Unset()
-			authCall.Unset()
-			domainsCall.Unset()
 		})
 	}
+}
+
+func makeURL(tsURL, domainID, chanID, subtopic, clientKey string, header bool) (string, error) {
+	u, _ := url.Parse(tsURL)
+	u.Scheme = wsProtocol
+
+	if chanID == "0" || chanID == "" {
+		if header {
+			return fmt.Sprintf("%s/m/%s/c/%s", u, domainID, chanID), fmt.Errorf("invalid channel id")
+		}
+		return fmt.Sprintf("%s/m/%s/c/%s?authorization=%s", u, domainID, chanID, clientKey), fmt.Errorf("invalid channel id")
+	}
+
+	subtopicPart := ""
+	if subtopic != "" {
+		subtopicPart = fmt.Sprintf("/%s", subtopic)
+	}
+	if header {
+		return fmt.Sprintf("%s/m/%s/c/%s%s", u, domainID, chanID, subtopicPart), nil
+	}
+
+	return fmt.Sprintf("%s/m/%s/c/%s%s?authorization=%s", u, domainID, chanID, subtopicPart, clientKey), nil
+}
+
+func handshake(tsURL, domainID, chanID, subtopic, clientKey string, addHeader bool) (*websocket.Conn, *http.Response, error) {
+	header := http.Header{}
+	if addHeader {
+		header.Add("Authorization", clientKey)
+	}
+
+	turl, _ := makeURL(tsURL, domainID, chanID, subtopic, clientKey, addHeader)
+	conn, res, errRet := websocket.DefaultDialer.Dial(turl, header)
+
+	return conn, res, errRet
 }

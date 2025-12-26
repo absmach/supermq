@@ -8,25 +8,25 @@ import (
 	"log/slog"
 	"time"
 
+	smqhttp "github.com/absmach/supermq/http"
 	"github.com/absmach/supermq/pkg/messaging"
-	"github.com/absmach/supermq/ws"
 )
 
-var _ ws.Service = (*loggingMiddleware)(nil)
+var _ smqhttp.Service = (*loggingMiddleware)(nil)
 
 type loggingMiddleware struct {
 	logger *slog.Logger
-	svc    ws.Service
+	svc    smqhttp.Service
 }
 
 // NewLogging adds logging facilities to the websocket service.
-func NewLogging(svc ws.Service, logger *slog.Logger) ws.Service {
+func NewLogging(svc smqhttp.Service, logger *slog.Logger) smqhttp.Service {
 	return &loggingMiddleware{logger, svc}
 }
 
 // Subscribe logs the subscribe request. It logs the channel and subtopic(if present) and the time it took to complete the request.
 // If the request fails, it logs the error.
-func (lm *loggingMiddleware) Subscribe(ctx context.Context, sessionID, username, password, domainID, chanID, subtopic string, topicType messaging.TopicType, c *ws.Client) (err error) {
+func (lm *loggingMiddleware) Subscribe(ctx context.Context, sessionID, username, password, domainID, chanID, subtopic string, topicType messaging.TopicType, c *smqhttp.Client) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),

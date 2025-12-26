@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package ws
+package http
 
 import (
 	"context"
@@ -47,8 +47,8 @@ type adapterService struct {
 	pubsub   messaging.PubSub
 }
 
-// New instantiates the WS adapter implementation.
-func New(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, authn smqauthn.Authentication, pubsub messaging.PubSub) Service {
+// NewService instantiates the HTTP adapter implementation.
+func NewService(clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, authn smqauthn.Authentication, pubsub messaging.PubSub) Service {
 	return &adapterService{
 		clients:  clients,
 		channels: channels,

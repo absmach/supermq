@@ -31,65 +31,116 @@ const protocol = "http"
 
 // Log message formats.
 const (
-	publishedInfoFmt = "published with client_type %s client_id %s to the topic %s"
-	failedAuthnFmt   = "failed to authenticate client_type %s for topic %s with error %s"
+	LogInfoSubscribed   = "subscribed with client_id %s to topics %s"
+	LogInfoConnected    = "connected with client_id %s"
+	LogInfoDisconnected = "disconnected client_id %s and username %s"
+	LogInfoPublished    = "published with client_id %s to the topic %s"
 )
 
 // Error wrappers for MQTT errors.
 var (
 	errClientNotInitialized     = errors.New("client is not initialized")
+	errMissingTopicPub          = errors.New("failed to publish due to missing topic")
+	errMissingTopicSub          = errors.New("failed to subscribe due to missing topic")
 	errFailedPublish            = errors.New("failed to publish")
 	errFailedPublishToMsgBroker = errors.New("failed to publish to supermq message broker")
-	errMalformedTopic           = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("malformed topic"))
-	errMissingTopicPub          = mgate.NewHTTPProxyError(http.StatusBadRequest, errors.New("failed to publish due to missing topic"))
 	errInvalidAuthFormat        = errors.New("invalid basic auth format")
 	errInvalidClientType        = errors.New("invalid client type")
 )
 
 // Event implements events.Event interface.
 type handler struct {
-	publisher messaging.Publisher
-	clients   grpcClientsV1.ClientsServiceClient
-	channels  grpcChannelsV1.ChannelsServiceClient
-	parser    messaging.TopicParser
-	authn     smqauthn.Authentication
-	logger    *slog.Logger
+	pubsub   messaging.PubSub
+	clients  grpcClientsV1.ClientsServiceClient
+	channels grpcChannelsV1.ChannelsServiceClient
+	authn    smqauthn.Authentication
+	logger   *slog.Logger
+	parser   messaging.TopicParser
 }
 
 // NewHandler creates new Handler entity.
-func NewHandler(publisher messaging.Publisher, authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, parser messaging.TopicParser, logger *slog.Logger) session.Handler {
+func NewHandler(pubsub messaging.PubSub, logger *slog.Logger, authn smqauthn.Authentication, clients grpcClientsV1.ClientsServiceClient, channels grpcChannelsV1.ChannelsServiceClient, parser messaging.TopicParser) session.Handler {
 	return &handler{
-		publisher: publisher,
-		authn:     authn,
-		clients:   clients,
-		channels:  channels,
-		parser:    parser,
-		logger:    logger,
+		logger:   logger,
+		pubsub:   pubsub,
+		authn:    authn,
+		clients:  clients,
+		channels: channels,
+		parser:   parser,
 	}
 }
 
 // AuthConnect is called on device connection,
-// prior forwarding to the HTTP server.
+// prior forwarding to the http server.
 func (h *handler) AuthConnect(ctx context.Context) error {
 	s, ok := session.FromContext(ctx)
 	if !ok {
 		return errClientNotInitialized
 	}
 
-	if string(s.Password) == "" {
+	var tok string
+	switch {
+	case string(s.Password) == "":
 		return mgate.NewHTTPProxyError(http.StatusBadRequest, errors.Wrap(apiutil.ErrValidation, apiutil.ErrBearerKey))
+	case strings.HasPrefix(string(s.Password), apiutil.ClientPrefix):
+		tok = strings.TrimPrefix(string(s.Password), apiutil.ClientPrefix)
+	default:
+		tok = string(s.Password)
+	}
+
+	h.logger.Info(fmt.Sprintf(LogInfoConnected, tok))
+	return nil
+}
+
+// AuthPublish is called on device publish,
+// prior forwarding to the http server.
+func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byte) error {
+	if topic == nil {
+		return errMissingTopicPub
+	}
+	s, ok := session.FromContext(ctx)
+	if !ok {
+		return errClientNotInitialized
+	}
+
+	domainID, channelID, _, topicType, err := h.parser.ParsePublishTopic(ctx, *topic, true)
+	if err != nil {
+		return mgate.NewHTTPProxyError(http.StatusBadRequest, errors.Wrap(errFailedPublish, err))
+	}
+
+	clientID, err := h.authAccess(ctx, s.Username, string(s.Password), domainID, channelID, connections.Publish, topicType)
+	if err != nil {
+		fmt.Println("AuthPublish authAccess error:", err)
+		return err
+	}
+
+	if s.Username == "" {
+		s.Username = clientID
 	}
 
 	return nil
 }
 
-// AuthPublish is not used in HTTP service.
-func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byte) error {
-	return nil
-}
-
-// AuthSubscribe is not used in HTTP service.
+// AuthSubscribe is called on device publish,
+// prior forwarding to the MQTT broker.
 func (h *handler) AuthSubscribe(ctx context.Context, topics *[]string) error {
+	s, ok := session.FromContext(ctx)
+	if !ok {
+		return errClientNotInitialized
+	}
+	if topics == nil || *topics == nil {
+		return errMissingTopicSub
+	}
+
+	for _, topic := range *topics {
+		domainID, channelID, _, topicType, err := h.parser.ParseSubscribeTopic(ctx, topic, true)
+		if err != nil {
+			return err
+		}
+		if _, err := h.authAccess(ctx, s.Username, string(s.Password), domainID, channelID, connections.Subscribe, topicType); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -100,54 +151,19 @@ func (h *handler) Connect(ctx context.Context) error {
 
 // Publish - after client successfully published.
 func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) error {
-	if topic == nil {
-		return errMissingTopicPub
-	}
-	topic = &strings.Split(*topic, "?")[0]
 	s, ok := session.FromContext(ctx)
 	if !ok {
-		return errors.Wrap(errFailedPublish, errClientNotInitialized)
+		return errClientNotInitialized
+	}
+
+	if len(*payload) == 0 {
+		h.logger.Warn("Empty payload, not publishing to broker", slog.String("client_id", s.Username))
+		return nil
 	}
 
 	domainID, channelID, subtopic, topicType, err := h.parser.ParsePublishTopic(ctx, *topic, true)
 	if err != nil {
-		return errors.Wrap(errMalformedTopic, err)
-	}
-
-	var token, clientType string
-	pass := string(s.Password)
-	switch {
-	case s.Username != "" && pass != "":
-		token = smqauthn.AuthPack(smqauthn.BasicAuth, s.Username, pass)
-		clientType = policies.ClientType
-	case strings.HasPrefix(pass, apiutil.BasicAuthPrefix):
-		username, password, err := decodeAuth(strings.TrimPrefix(pass, apiutil.BasicAuthPrefix))
-		if err != nil {
-			h.logger.Warn(fmt.Sprintf(failedAuthnFmt, policies.ClientType, *topic, err))
-			return mgate.NewHTTPProxyError(http.StatusUnauthorized, err)
-		}
-		token = smqauthn.AuthPack(smqauthn.BasicAuth, username, password)
-		clientType = policies.ClientType
-	case strings.HasPrefix(pass, apiutil.ClientPrefix):
-		token = smqauthn.AuthPack(smqauthn.DomainAuth, domainID, strings.TrimPrefix(pass, apiutil.ClientPrefix))
-		clientType = policies.ClientType
-	case strings.HasPrefix(pass, apiutil.BearerPrefix):
-		token = strings.TrimPrefix(pass, apiutil.BearerPrefix)
-		clientType = policies.UserType
-	default:
-		return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
-	}
-
-	id, err := h.authenticate(ctx, clientType, token)
-	if err != nil {
-		h.logger.Warn(fmt.Sprintf(failedAuthnFmt, clientType, *topic, err))
-		return mgate.NewHTTPProxyError(http.StatusUnauthorized, err)
-	}
-
-	// Health topics are not published to message broker.
-	if topicType == messaging.HealthType {
-		h.logger.Info(fmt.Sprintf(publishedInfoFmt, clientType, id, *topic))
-		return nil
+		return errors.Wrap(errFailedPublish, err)
 	}
 
 	msg := messaging.Message{
@@ -155,48 +171,91 @@ func (h *handler) Publish(ctx context.Context, topic *string, payload *[]byte) e
 		Domain:    domainID,
 		Channel:   channelID,
 		Subtopic:  subtopic,
-		Publisher: id,
 		Payload:   *payload,
+		Publisher: s.Username,
 		Created:   time.Now().UnixNano(),
 	}
 
-	ar := &grpcChannelsV1.AuthzReq{
-		DomainId:   domainID,
-		ClientId:   id,
-		ClientType: clientType,
-		ChannelId:  msg.Channel,
-		Type:       uint32(connections.Publish),
-	}
-	res, err := h.channels.Authorize(ctx, ar)
-	if err != nil {
-		return mgate.NewHTTPProxyError(http.StatusUnauthorized, err)
-	}
-	if !res.GetAuthorized() {
-		return mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthorization)
+	// Health check topic messages do not get published to message broker.
+	if topicType == messaging.MessageType {
+		if err := h.pubsub.Publish(ctx, messaging.EncodeMessageTopic(&msg), &msg); err != nil {
+			return mgate.NewHTTPProxyError(http.StatusInternalServerError, errors.Wrap(errFailedPublishToMsgBroker, err))
+		}
 	}
 
-	if err := h.publisher.Publish(ctx, messaging.EncodeMessageTopic(&msg), &msg); err != nil {
-		return errors.Wrap(errFailedPublishToMsgBroker, err)
-	}
-
-	h.logger.Info(fmt.Sprintf(publishedInfoFmt, clientType, id, *topic))
+	h.logger.Info(fmt.Sprintf(LogInfoPublished, s.ID, *topic))
 
 	return nil
 }
 
-// Subscribe - not used for HTTP.
+// Subscribe - after client successfully subscribed.
 func (h *handler) Subscribe(ctx context.Context, topics *[]string) error {
+	s, ok := session.FromContext(ctx)
+	if !ok {
+		return errClientNotInitialized
+	}
+	h.logger.Info(fmt.Sprintf(LogInfoSubscribed, s.ID, strings.Join(*topics, ",")))
 	return nil
 }
 
-// Unsubscribe - not used for HTTP.
+// Unsubscribe - after client unsubscribed.
 func (h *handler) Unsubscribe(ctx context.Context, topics *[]string) error {
 	return nil
 }
 
-// Disconnect - not used for HTTP.
+// Disconnect - connection with broker or client lost.
 func (h *handler) Disconnect(ctx context.Context) error {
 	return nil
+}
+
+func (h *handler) authAccess(ctx context.Context, username, password, domainID, chanID string, msgType connections.ConnType, topicType messaging.TopicType) (string, error) {
+	var token, clientType string
+	var err error
+	switch {
+	case strings.HasPrefix(password, apiutil.BearerPrefix):
+		token = strings.TrimPrefix(password, apiutil.BearerPrefix)
+		clientType = policies.UserType
+	case username != "" && password != "":
+		token = smqauthn.AuthPack(smqauthn.BasicAuth, username, password)
+		clientType = policies.ClientType
+	case strings.HasPrefix(password, apiutil.BasicAuthPrefix):
+		username, password, err := decodeAuth(strings.TrimPrefix(password, apiutil.BasicAuthPrefix))
+		if err != nil {
+			return "", errors.Wrap(svcerr.ErrAuthentication, err)
+		}
+		token = smqauthn.AuthPack(smqauthn.BasicAuth, username, password)
+		clientType = policies.ClientType
+	default:
+		token = smqauthn.AuthPack(smqauthn.DomainAuth, domainID, strings.TrimPrefix(password, apiutil.ClientPrefix))
+		clientType = policies.ClientType
+	}
+
+	id, err := h.authenticate(ctx, clientType, token)
+	if err != nil {
+		return "", mgate.NewHTTPProxyError(http.StatusUnauthorized, errors.Wrap(svcerr.ErrAuthentication, err))
+	}
+
+	// Health check topics do not require channel authorization.
+	if topicType == messaging.HealthType {
+		return id, nil
+	}
+
+	ar := &grpcChannelsV1.AuthzReq{
+		Type:       uint32(msgType),
+		ClientId:   id,
+		ClientType: clientType,
+		ChannelId:  chanID,
+		DomainId:   domainID,
+	}
+	res, err := h.channels.Authorize(ctx, ar)
+	if err != nil {
+		return "", mgate.NewHTTPProxyError(http.StatusUnauthorized, errors.Wrap(svcerr.ErrAuthentication, err))
+	}
+	if !res.GetAuthorized() {
+		return "", mgate.NewHTTPProxyError(http.StatusUnauthorized, svcerr.ErrAuthentication)
+	}
+
+	return id, nil
 }
 
 func (h *handler) authenticate(ctx context.Context, authType, token string) (string, error) {
@@ -210,7 +269,7 @@ func (h *handler) authenticate(ctx context.Context, authType, token string) (str
 	case policies.ClientType:
 		authnRes, err := h.clients.Authenticate(ctx, &grpcClientsV1.AuthnReq{Token: token})
 		if err != nil {
-			return "", errors.Wrap(svcerr.ErrAuthentication, err)
+			return "", err
 		}
 		if !authnRes.Authenticated {
 			return "", svcerr.ErrAuthentication

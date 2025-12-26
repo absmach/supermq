@@ -6,12 +6,12 @@ package middleware
 import (
 	"context"
 
+	smqhttp "github.com/absmach/supermq/http"
 	"github.com/absmach/supermq/pkg/messaging"
-	"github.com/absmach/supermq/ws"
 	"go.opentelemetry.io/otel/trace"
 )
 
-var _ ws.Service = (*tracingMiddleware)(nil)
+var _ smqhttp.Service = (*tracingMiddleware)(nil)
 
 const (
 	subscribeOP   = "subscribe_op"
@@ -20,19 +20,19 @@ const (
 
 type tracingMiddleware struct {
 	tracer trace.Tracer
-	svc    ws.Service
+	svc    smqhttp.Service
 }
 
 // NewTracing returns a new websocket service with tracing capabilities.
-func NewTracing(tracer trace.Tracer, svc ws.Service) ws.Service {
+func NewTracing(tracer trace.Tracer, svc smqhttp.Service) smqhttp.Service {
 	return &tracingMiddleware{
 		tracer: tracer,
 		svc:    svc,
 	}
 }
 
-// Subscribe traces the "Subscribe" operation of the wrapped ws.Service.
-func (tm *tracingMiddleware) Subscribe(ctx context.Context, sessionID, username, password, domainID, chanID, subtopic string, topicType messaging.TopicType, client *ws.Client) error {
+// Subscribe traces the "Subscribe" operation of the wrapped smqhttp.Service.
+func (tm *tracingMiddleware) Subscribe(ctx context.Context, sessionID, username, password, domainID, chanID, subtopic string, topicType messaging.TopicType, client *smqhttp.Client) error {
 	ctx, span := tm.tracer.Start(ctx, subscribeOP)
 	defer span.End()
 
