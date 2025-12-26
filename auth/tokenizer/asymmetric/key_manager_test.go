@@ -10,6 +10,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"testing"
@@ -32,9 +33,12 @@ func (m *mockIDProvider) ID() (string, error) {
 	return m.id, nil
 }
 
+func newTestLogger() *slog.Logger {
+	return slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
+}
+
 func TestNewKeyManager(t *testing.T) {
-	kid := "test-key-id"
-	idProvider := &mockIDProvider{id: kid}
+	idProvider := &mockIDProvider{id: "unused"}
 
 	// Create a temporary key file
 	tmpDir := t.TempDir()
@@ -103,7 +107,7 @@ func TestNewKeyManager(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			path := tc.setupKey()
 
-			km, err := asymmetric.NewTokenizer(path, idProvider)
+			km, err := asymmetric.NewTokenizer(path, "", idProvider, newTestLogger())
 
 			if tc.expectErr {
 				assert.Error(t, err)
@@ -123,8 +127,7 @@ func TestNewKeyManager(t *testing.T) {
 }
 
 func TestSign(t *testing.T) {
-	kid := "test-key-id"
-	idProvider := &mockIDProvider{id: kid}
+	idProvider := &mockIDProvider{id: "unused"}
 
 	// Create temporary key file
 	tmpDir := t.TempDir()
@@ -145,7 +148,7 @@ func TestSign(t *testing.T) {
 	err = os.WriteFile(keyPath, pem.EncodeToMemory(pemBlock), 0o600)
 	require.NoError(t, err)
 
-	km, err := asymmetric.NewTokenizer(keyPath, idProvider)
+	km, err := asymmetric.NewTokenizer(keyPath, "", idProvider, newTestLogger())
 	require.NoError(t, err)
 
 	cases := []struct {
@@ -203,12 +206,13 @@ func TestSign(t *testing.T) {
 }
 
 func TestVerify(t *testing.T) {
-	kid := "test-key-id"
-	idProvider := &mockIDProvider{id: kid}
+	idProvider := &mockIDProvider{id: "unused"}
 
 	// Create temporary key file
 	tmpDir := t.TempDir()
 	keyPath := filepath.Join(tmpDir, "private.key")
+	// Key ID will be derived from filename: "private"
+	kid := "private"
 
 	// Generate and save Ed25519 key
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
@@ -225,7 +229,7 @@ func TestVerify(t *testing.T) {
 	err = os.WriteFile(keyPath, pem.EncodeToMemory(pemBlock), 0o600)
 	require.NoError(t, err)
 
-	km, err := asymmetric.NewTokenizer(keyPath, idProvider)
+	km, err := asymmetric.NewTokenizer(keyPath, "", idProvider, newTestLogger())
 	require.NoError(t, err)
 
 	validKey := auth.Key{
@@ -326,11 +330,12 @@ func TestVerify(t *testing.T) {
 }
 
 func TestPublicKeys(t *testing.T) {
-	kid := "test-key-id"
-	idProvider := &mockIDProvider{id: kid}
+	idProvider := &mockIDProvider{id: "unused"}
 
 	tmpDir := t.TempDir()
 	keyPath := filepath.Join(tmpDir, "private.key")
+	// Key ID will be derived from filename: "private"
+	kid := "private"
 
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	require.NoError(t, err)
@@ -346,7 +351,7 @@ func TestPublicKeys(t *testing.T) {
 	err = os.WriteFile(keyPath, pem.EncodeToMemory(pemBlock), 0o600)
 	require.NoError(t, err)
 
-	km, err := asymmetric.NewTokenizer(keyPath, idProvider)
+	km, err := asymmetric.NewTokenizer(keyPath, "", idProvider, newTestLogger())
 	require.NoError(t, err)
 
 	keys, err := km.RetrieveJWKS()
@@ -367,8 +372,7 @@ func TestPublicKeys(t *testing.T) {
 }
 
 func TestSignAndVerifyRoundTrip(t *testing.T) {
-	kid := "test-key-id"
-	idProvider := &mockIDProvider{id: kid}
+	idProvider := &mockIDProvider{id: "unused"}
 
 	tmpDir := t.TempDir()
 	keyPath := filepath.Join(tmpDir, "private.key")
@@ -387,7 +391,7 @@ func TestSignAndVerifyRoundTrip(t *testing.T) {
 	err = os.WriteFile(keyPath, pem.EncodeToMemory(pemBlock), 0o600)
 	require.NoError(t, err)
 
-	km, err := asymmetric.NewTokenizer(keyPath, idProvider)
+	km, err := asymmetric.NewTokenizer(keyPath, "", idProvider, newTestLogger())
 	require.NoError(t, err)
 
 	originalKey := auth.Key{

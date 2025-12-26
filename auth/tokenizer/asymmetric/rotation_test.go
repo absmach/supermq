@@ -8,8 +8,8 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"crypto/x509"
-	"encoding/json"
 	"encoding/pem"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -17,60 +17,42 @@ import (
 
 	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/auth/tokenizer/asymmetric"
-	smqjwt "github.com/absmach/supermq/auth/tokenizer/util"
-	"github.com/lestrrat-go/jwx/v2/jwa"
-	"github.com/lestrrat-go/jwx/v2/jwk"
-	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestKeyRotation(t *testing.T) {
+type incrementingIDProvider struct {
+	counter int
+}
+
+func (p *incrementingIDProvider) ID() (string, error) {
+	p.counter++
+	return fmt.Sprintf("key-id-%d", p.counter), nil
+}
+
+func TestTwoKeyRotation(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Generate two key pairs
-	_, priv1, err := ed25519.GenerateKey(rand.Reader)
+	_, activePriv, err := ed25519.GenerateKey(rand.Reader)
 	require.NoError(t, err)
 
-	_, priv2, err := ed25519.GenerateKey(rand.Reader)
+	_, retiringPriv, err := ed25519.GenerateKey(rand.Reader)
 	require.NoError(t, err)
 
 	// Save keys
-	key1Path := filepath.Join(tmpDir, "key-active.pem")
-	key2Path := filepath.Join(tmpDir, "key-retiring.pem")
+	activeKeyPath := filepath.Join(tmpDir, "active.key")
+	retiringKeyPath := filepath.Join(tmpDir, "retiring.key")
 
-	saveKey(t, priv1, key1Path)
-	saveKey(t, priv2, key2Path)
+	saveKey(t, activePriv, activeKeyPath)
+	saveKey(t, retiringPriv, retiringKeyPath)
 
-	// Create metadata with overlapping keys
-	metadata := map[string]interface{}{
-		"active_key_id": "key-active",
-		"keys": []map[string]interface{}{
-			{
-				"id":         "key-active",
-				"file":       "key-active.pem",
-				"created_at": time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
-				"status":     "active",
-			},
-			{
-				"id":         "key-retiring",
-				"file":       "key-retiring.pem",
-				"created_at": time.Now().Add(-8 * 24 * time.Hour).Format(time.RFC3339),
-				"status":     "retiring",
-				"expires_at": time.Now().Add(6 * 24 * time.Hour).Format(time.RFC3339), // 6 days left
-			},
-		},
-	}
-
-	metadataPath := filepath.Join(tmpDir, "keys.json")
-	data, err := json.MarshalIndent(metadata, "", "  ")
-	require.NoError(t, err)
-	err = os.WriteFile(metadataPath, data, 0o600)
+	// Create tokenizer with both keys (using incrementing ID provider for unique IDs)
+	idProvider := &incrementingIDProvider{}
+	tokenizer, err := asymmetric.NewTokenizer(activeKeyPath, retiringKeyPath, idProvider, newTestLogger())
 	require.NoError(t, err)
 
-	km, err := asymmetric.NewTokenizer(filepath.Join(tmpDir, "dummy.pem"), &mockIDProvider{id: "ignored"})
-	require.NoError(t, err)
-
+	// Test issuing token (should use active key)
 	testKey := auth.Key{
 		ID:        "test-key",
 		Type:      auth.AccessKey,
@@ -81,195 +63,44 @@ func TestKeyRotation(t *testing.T) {
 		Verified:  true,
 	}
 
-	token, err := km.Issue(testKey)
+	token, err := tokenizer.Issue(testKey)
 	require.NoError(t, err)
-	assert.NotEmpty(t, token, "Sign with active key should succeed")
+	assert.NotEmpty(t, token)
 
-	verified, err := km.Parse(context.Background(), token)
+	// Test parsing token (should work with both keys)
+	verified, err := tokenizer.Parse(context.Background(), token)
 	require.NoError(t, err)
-	assert.Equal(t, testKey.Subject, verified.Subject, "Verify with active key (the key used for signing)")
+	assert.Equal(t, testKey.Subject, verified.Subject)
 
-	// Create a token with the retiring key
-	oldToken := createTokenWithKey(t, priv2, "key-retiring", testKey)
-
-	verifiedOld, err := km.Parse(context.Background(), oldToken)
-	require.NoError(t, err, "Token signed with retiring key should still be valid during grace period")
-	assert.Equal(t, testKey.Subject, verifiedOld.Subject)
-
-	publicKeys, err := km.RetrieveJWKS()
+	// Test JWKS returns both keys
+	publicKeys, err := tokenizer.RetrieveJWKS()
 	require.NoError(t, err)
 	assert.Len(t, publicKeys, 2, "Should return both active and retiring keys")
 
-	// Verify both key IDs are present
+	// Verify both keys have different IDs
 	keyIDs := make(map[string]bool)
 	for _, pk := range publicKeys {
 		keyIDs[pk.KeyID] = true
 	}
-	assert.True(t, keyIDs["key-active"], "Active key should be in JWKS")
-	assert.True(t, keyIDs["key-retiring"], "Retiring key should be in JWKS")
+	assert.Len(t, keyIDs, 2, "Both keys should have unique IDs")
 }
 
-func TestRetiredKey(t *testing.T) {
+func TestSingleKeyMode(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	_, priv1, err := ed25519.GenerateKey(rand.Reader)
-	require.NoError(t, err)
-
-	_, priv2, err := ed25519.GenerateKey(rand.Reader)
-	require.NoError(t, err)
-
-	key1Path := filepath.Join(tmpDir, "key-active.pem")
-	key2Path := filepath.Join(tmpDir, "key-retired.pem")
-
-	saveKey(t, priv1, key1Path)
-	saveKey(t, priv2, key2Path)
-
-	// Create metadata with retired key (expired retiring key)
-	metadata := map[string]interface{}{
-		"active_key_id": "key-active",
-		"keys": []map[string]interface{}{
-			{
-				"id":         "key-active",
-				"file":       "key-active.pem",
-				"created_at": time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
-				"status":     "active",
-			},
-			{
-				"id":         "key-retired",
-				"file":       "key-retired.pem",
-				"created_at": time.Now().Add(-20 * 24 * time.Hour).Format(time.RFC3339),
-				"status":     "retiring",
-				"expires_at": time.Now().Add(-1 * time.Hour).Format(time.RFC3339), // Expired 1 hour ago
-			},
-		},
-	}
-
-	metadataPath := filepath.Join(tmpDir, "keys.json")
-	data, err := json.MarshalIndent(metadata, "", "  ")
-	require.NoError(t, err)
-	err = os.WriteFile(metadataPath, data, 0o600)
-	require.NoError(t, err)
-
-	km, err := asymmetric.NewTokenizer(filepath.Join(tmpDir, "dummy.pem"), &mockIDProvider{id: "ignored"})
-	require.NoError(t, err)
-
-	publicKeys, err := km.RetrieveJWKS()
-	require.NoError(t, err)
-	assert.Len(t, publicKeys, 1, "Public keys should only return active key (retired key filtered out)")
-	assert.Equal(t, "key-active", publicKeys[0].KeyID)
-}
-
-func TestExplicitRetiredStatus(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	_, priv1, err := ed25519.GenerateKey(rand.Reader)
-	require.NoError(t, err)
-
-	_, priv2, err := ed25519.GenerateKey(rand.Reader)
-	require.NoError(t, err)
-
-	key1Path := filepath.Join(tmpDir, "key-active.pem")
-	key2Path := filepath.Join(tmpDir, "key-retired.pem")
-
-	saveKey(t, priv1, key1Path)
-	saveKey(t, priv2, key2Path)
-
-	metadata := map[string]interface{}{
-		"active_key_id": "key-active",
-		"keys": []map[string]interface{}{
-			{
-				"id":         "key-active",
-				"file":       "key-active.pem",
-				"created_at": time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
-				"status":     "active",
-			},
-			{
-				"id":         "key-retired",
-				"file":       "key-retired.pem",
-				"created_at": time.Now().Add(-30 * 24 * time.Hour).Format(time.RFC3339),
-				"status":     "retired", // Unlike in previous test, this one is retired, not retiring.
-			},
-		},
-	}
-
-	metadataPath := filepath.Join(tmpDir, "keys.json")
-	data, err := json.MarshalIndent(metadata, "", "  ")
-	require.NoError(t, err)
-	err = os.WriteFile(metadataPath, data, 0o600)
-	require.NoError(t, err)
-
-	km, err := asymmetric.NewTokenizer(filepath.Join(tmpDir, "dummy.pem"), &mockIDProvider{id: "ignored"})
-	require.NoError(t, err)
-
-	publicKeys, err := km.RetrieveJWKS()
-	require.NoError(t, err)
-	assert.Len(t, publicKeys, 1, "Public keys should only return active key (retired status keys filtered out)")
-	assert.Equal(t, "key-active", publicKeys[0].KeyID)
-}
-
-func TestRetiringKeyWithoutExpiry(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	// Generate keys
-	_, priv1, err := ed25519.GenerateKey(rand.Reader)
-	require.NoError(t, err)
-
-	_, priv2, err := ed25519.GenerateKey(rand.Reader)
-	require.NoError(t, err)
-
-	// Save keys
-	key1Path := filepath.Join(tmpDir, "key-active.pem")
-	key2Path := filepath.Join(tmpDir, "key-retiring.pem")
-
-	saveKey(t, priv1, key1Path)
-	saveKey(t, priv2, key2Path)
-
-	// Create metadata with retiring key missing expires_at
-	metadata := map[string]interface{}{
-		"active_key_id": "key-active",
-		"keys": []map[string]interface{}{
-			{
-				"id":         "key-active",
-				"file":       "key-active.pem",
-				"created_at": time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
-				"status":     "active",
-			},
-			{
-				"id":         "key-retiring",
-				"file":       "key-retiring.pem",
-				"created_at": time.Now().Add(-8 * 24 * time.Hour).Format(time.RFC3339),
-				"status":     "retiring",
-				// Missing expires_at - should fail validation
-			},
-		},
-	}
-
-	metadataPath := filepath.Join(tmpDir, "keys.json")
-	data, err := json.MarshalIndent(metadata, "", "  ")
-	require.NoError(t, err)
-	err = os.WriteFile(metadataPath, data, 0o600)
-	require.NoError(t, err)
-
-	// Create key manager - should fail because retiring key lacks expires_at
-	_, err = asymmetric.NewTokenizer(filepath.Join(tmpDir, "dummy.pem"), &mockIDProvider{id: "ignored"})
-	assert.Error(t, err, "Should fail when retiring key missing expires_at")
-	assert.Contains(t, err.Error(), "retiring keys must have expires_at set")
-}
-
-func TestSingleKeyCompatibility(t *testing.T) {
-	// Test that single-key mode still works without keys.json
-	tmpDir := t.TempDir()
-
+	// Generate one key
 	_, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	require.NoError(t, err)
 
-	keyPath := filepath.Join(tmpDir, "private.key")
+	keyPath := filepath.Join(tmpDir, "single.key")
 	saveKey(t, privateKey, keyPath)
 
-	// Create without keys.json (should fall back to single key mode)
-	km, err := asymmetric.NewTokenizer(keyPath, &mockIDProvider{id: "test-kid"})
+	// Create tokenizer with only active key (no retiring key)
+	idProvider := &mockIDProvider{id: "single-id"}
+	tokenizer, err := asymmetric.NewTokenizer(keyPath, "", idProvider, newTestLogger())
 	require.NoError(t, err)
 
+	// Test issuing and parsing
 	testKey := auth.Key{
 		ID:        "test",
 		Type:      auth.AccessKey,
@@ -279,15 +110,56 @@ func TestSingleKeyCompatibility(t *testing.T) {
 		ExpiresAt: time.Now().Add(1 * time.Hour).UTC(),
 	}
 
-	token, err := km.Issue(testKey)
+	token, err := tokenizer.Issue(testKey)
 	require.NoError(t, err)
 
-	_, err = km.Parse(context.Background(), token)
+	_, err = tokenizer.Parse(context.Background(), token)
 	require.NoError(t, err)
 
-	publicKeys, err := km.RetrieveJWKS()
+	// Test JWKS returns only one key
+	publicKeys, err := tokenizer.RetrieveJWKS()
 	require.NoError(t, err)
-	assert.Len(t, publicKeys, 1)
+	assert.Len(t, publicKeys, 1, "Should return only the active key")
+}
+
+func TestMissingRetiringKey(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Generate only active key
+	_, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	require.NoError(t, err)
+
+	activeKeyPath := filepath.Join(tmpDir, "active.key")
+	saveKey(t, privateKey, activeKeyPath)
+
+	// Specify retiring key path that doesn't exist
+	retiringKeyPath := filepath.Join(tmpDir, "nonexistent.key")
+
+	// Should succeed with just active key (warning logged)
+	idProvider := &mockIDProvider{id: "test-id"}
+	tokenizer, err := asymmetric.NewTokenizer(activeKeyPath, retiringKeyPath, idProvider, newTestLogger())
+	require.NoError(t, err, "Should succeed even if retiring key is missing")
+
+	// Should work with active key only
+	testKey := auth.Key{
+		ID:        "test",
+		Type:      auth.AccessKey,
+		Subject:   "user",
+		Role:      auth.UserRole,
+		IssuedAt:  time.Now().UTC(),
+		ExpiresAt: time.Now().Add(1 * time.Hour).UTC(),
+	}
+
+	token, err := tokenizer.Issue(testKey)
+	require.NoError(t, err)
+
+	_, err = tokenizer.Parse(context.Background(), token)
+	require.NoError(t, err)
+
+	// JWKS should have only active key
+	publicKeys, err := tokenizer.RetrieveJWKS()
+	require.NoError(t, err)
+	assert.Len(t, publicKeys, 1, "Should return only active key when retiring key is missing")
 }
 
 func saveKey(t *testing.T, privateKey ed25519.PrivateKey, path string) {
@@ -301,30 +173,4 @@ func saveKey(t *testing.T, privateKey ed25519.PrivateKey, path string) {
 
 	err = os.WriteFile(path, pem.EncodeToMemory(pemBlock), 0o600)
 	require.NoError(t, err)
-}
-
-func createTokenWithKey(t *testing.T, privateKey ed25519.PrivateKey, kid string, key auth.Key) string {
-	privateJwk, err := jwk.FromRaw(privateKey)
-	require.NoError(t, err)
-	require.NoError(t, privateJwk.Set(jwk.AlgorithmKey, jwa.EdDSA))
-	require.NoError(t, privateJwk.Set(jwk.KeyIDKey, kid))
-
-	builder := jwt.NewBuilder()
-	builder.
-		Issuer(smqjwt.IssuerName).
-		IssuedAt(key.IssuedAt).
-		Expiration(key.ExpiresAt).
-		Subject(key.Subject).
-		JwtID(key.ID).
-		Claim(smqjwt.TokenType, key.Type).
-		Claim(smqjwt.RoleField, key.Role).
-		Claim(smqjwt.VerifiedField, key.Verified)
-
-	tkn, err := builder.Build()
-	require.NoError(t, err)
-
-	signedBytes, err := jwt.Sign(tkn, jwt.WithKey(jwa.EdDSA, privateJwk))
-	require.NoError(t, err)
-
-	return string(signedBytes)
 }

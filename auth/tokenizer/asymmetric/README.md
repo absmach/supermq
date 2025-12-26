@@ -1,116 +1,164 @@
-# Asymmetric Key Manager
+# Asymmetric Tokenizer
 
-EdDSA (Ed25519) key manager with support for zero-downtime key rotation.
+EdDSA (Ed25519) tokenizer with support for zero-downtime key rotation.
 
 ## Features
 
-- **Single-key mode** - Simple setup with one private key (default)
-- **Multi-key mode** - Multiple keys with overlapping validity for rotation
-- **Zero-downtime rotation** - Active + retiring keys work simultaneously during grace period
+- **Single-key mode** - Simple setup with one active key
+- **Two-key mode** - Active + retiring keys for _zero-downtime rotation_
 - **JWKS endpoint** - Publishes all valid public keys for token verification
-
-## How It Works
-
-Keys are located in directory set via `SMQ_AUTH_KEYS_PRIVATE_KEY_DIR`. In this directory `keys.json` is used to
-set up the multiple key environment. Check Metadata file section for more details.
-
-Key rotation is offloaded to the external service. **Key expiration is checked only on service startup**.
-If you want to invalidate or rotate keys, a manual update to keys directory and `keys.json` file and 
-service restart are required. This is acceptable because the grace period for retiring keys is typically days/weeks.
-The window between _key expires_ and _service restarts_ is probably acceptable for most use cases.
-
-### Single-Key Mode
-
-Without a `keys.json` file, the manager operates in single-key mode using only the private key file
-specified in the configuration directory.
-
-### Multi-Key Mode
-
-With a `keys.json` file in the same directory as the private key, the manager enables key rotation:
-
-1. **Active key** - Used for signing new tokens and verification
-2. **Retiring keys** - Used only for verification during grace period
-3. **Retired keys** - Expired retiring keys, filtered from JWKS
-
-### Key Lifecycle
-
-**Active** → Sign new tokens + verify existing tokens
-**Retiring** → Verify only (grace period active)
-**Retired** → No longer used (grace period expired)
 
 ## Configuration
 
-### Metadata File: `keys.json`
+The tokenizer uses environment variables to specify key file paths:
 
-```json
-{
-  "active_key_id": "key-2025-12-25",
-  "keys": [
-    {
-      "id": "key-2025-12-25",
-      "file": "private-new.key",
-      "created_at": "2024-12-25T00:00:00Z",
-      "status": "active"
-    },
-    {
-      "id": "key-2024-12-25",
-      "file": "private.key",
-      "created_at": "2024-12-25T00:00:00Z",
-      "status": "retiring",
-      "expires_at": "2026-06-01T00:00:00Z"
-    }
-  ]
-}
+| Environment Variable              | Required | Description                                      |
+| --------------------------------- | -------- | ------------------------------------------------ |
+| `SMQ_AUTH_KEYS_ACTIVE_KEY_PATH`   | Yes      | Path to active private key file                  |
+| `SMQ_AUTH_KEYS_RETIRING_KEY_PATH` | No       | Path to retiring private key file (for rotation) |
+
+Please note that key names are used as **key IDs (kid)**.
+
+### Single-Key Mode
+
+Set only the active key path:
+
+```bash
+export SMQ_AUTH_KEYS_ACTIVE_KEY_PATH="./keys/private.key"
 ```
 
-### Field Reference
+The tokenizer will:
+- Issue new tokens signed with the active key
+- Verify tokens using the active key
+- Return one public key in JWKS endpoint
 
-| Field               | Required     | Description                               |
-| ------------------- | ------------ | ----------------------------------------- |
-| `active_key_id`     | Yes          | ID of the active key used for signing     |
-| `keys[].id`         | Yes          | Unique key identifier (used as JWT `kid`) |
-| `keys[].file`       | Yes          | Key filename relative to keys directory   |
-| `keys[].created_at` | Yes          | Key creation timestamp (RFC3339)          |
-| `keys[].status`     | Yes          | `active`, `retiring`, or `retired`        |
-| `keys[].expires_at` | For retiring | When retiring key expires (RFC3339)       |
+### Two-Key Mode (Key Rotation)
 
-### Validation Rules
+Set both active and retiring key paths:
 
-- Only one key can be active
-- Active key must not be expired
-- Retiring keys must have `expires_at` set
-- Active keys should not have `expires_at` set
-- All key files must exist and be readable
+```bash
+export SMQ_AUTH_KEYS_ACTIVE_KEY_PATH="./keys/active.key"
+export SMQ_AUTH_KEYS_RETIRING_KEY_PATH="./keys/retiring.key"
+```
+
+The tokenizer will:
+- Issue new tokens signed with the active key
+- Verify tokens using both active and retiring keys
+- Return both public keys in JWKS endpoint
 
 ## Key Rotation Process
 
-1. **Generate new key** - Create new Ed25519 private key
-2. **Update metadata** - Set old key to `retiring` with `expires_at = now + grace_period`, set new key as `active`
-3. **Restart service** - Both keys are loaded, new key signs, both verify
-4. **Wait for grace period** - Old tokens remain valid
-5. **Clean up** - Remove expired retiring key from metadata and delete file
+Zero-downtime key rotation in 3 simple steps:
 
-### Grace Period Recommendation
+### 1. Generate New Key
 
-When setting `expires_at` for retiring keys, calculate as:
-
-```
-expires_at = rotation_time + grace_period
+```bash
+openssl genpkey -algorithm Ed25519 -out keys/new.key
 ```
 
-**Recommended grace period:** 168 hours (7 days)
+### 2. Update Environment & Restart
+
+Move the current active key to retiring position and set the new key as active:
+
+```bash
+# Before rotation
+SMQ_AUTH_KEYS_ACTIVE_KEY_PATH="./keys/current.key"
+SMQ_AUTH_KEYS_RETIRING_KEY_PATH=""  # No retiring key
+
+# During rotation (both keys active for grace period)
+SMQ_AUTH_KEYS_ACTIVE_KEY_PATH="./keys/new.key"
+SMQ_AUTH_KEYS_RETIRING_KEY_PATH="./keys/current.key"
+
+# After rotation (restart service with new config)
+docker-compose restart auth
+```
+
+During the grace period, tokens signed with either key remain valid.
+
+### 3. Clean Up After Grace Period
+
+After the grace period expires (typically 7-30 days), remove the retiring key:
+
+```bash
+# Remove retiring key configuration
+SMQ_AUTH_KEYS_ACTIVE_KEY_PATH="./keys/new.key"
+SMQ_AUTH_KEYS_RETIRING_KEY_PATH=""  # Remove retiring key
+
+# Restart service
+docker-compose restart auth
+
+# Delete old key file
+rm keys/current.key
+```
+
+## Grace Period Recommendations
+
+**Recommended:** 168 hours (7 days)
 **Minimum:** 24 hours
 **Maximum:** 720 hours (30 days)
 
-## Security
+The grace period should be longer than your longest-lived access token duration.
+
+## Security Best Practices
 
 - Store private keys with `0600` permissions
-- Use cryptographically secure key generation (`openssl genpkey -algorithm Ed25519`)
-- Rotate keys every 90 days (30 days for high-security environments)
-- Never commit keys to version control - the existing keys are only for the demonstration of the JWKS feature in the platform
-- Consider using secrets management in production
+- Use cryptographically secure key generation:
+  ```bash
+  openssl genpkey -algorithm Ed25519 -out private.key
+  chmod 600 private.key
+  ```
+- Rotate keys regularly:
+  - Standard environments: every 90 days
+  - High-security environments: every 30 days
+- Never commit keys to version control
+- Use secrets management in production (HashiCorp Vault, AWS Secrets Manager, etc.)
 
-## Migration
+## Example: Complete Rotation
 
-To enable rotation on an existing single-key deployment, create `keys.json` with your current key marked as `active`.
-The manager automatically switches to multi-key mode when the metadata file is present.
+```bash
+# Day 0: Normal operation
+export SMQ_AUTH_KEYS_ACTIVE_KEY_PATH="./keys/key-2024.pem"
+export SMQ_AUTH_KEYS_RETIRING_KEY_PATH=""
+
+# Day 1: Start rotation - generate new key
+openssl genpkey -algorithm Ed25519 -out ./keys/key-2025.pem
+chmod 600 ./keys/key-2025.pem
+
+# Day 1: Update config and restart
+export SMQ_AUTH_KEYS_ACTIVE_KEY_PATH="./keys/key-2025.pem"
+export SMQ_AUTH_KEYS_RETIRING_KEY_PATH="./keys/key-2024.pem"
+docker-compose restart auth
+
+# Day 8: Grace period expired - remove old key
+export SMQ_AUTH_KEYS_RETIRING_KEY_PATH=""
+docker-compose restart auth
+rm ./keys/key-2024.pem
+```
+
+## Troubleshooting
+
+### Active key not found
+
+```
+Error: active key file not found: ./keys/active.key
+```
+
+**Solution:** Ensure the file exists and path is correct. Verify `SMQ_AUTH_KEYS_ACTIVE_KEY_PATH` environment variable.
+
+### Retiring key warning
+
+If the retiring key path is set but the file is missing or invalid, the tokenizer logs a warning but continues with only the active key:
+
+```
+WARN: failed to load retiring key, continuing without it
+```
+
+This is by design - a missing retiring key won't prevent startup.
+
+### Invalid key format
+
+```
+Error: failed to parse private key
+```
+
+**Solution:** Ensure you're using Ed25519 keys in PEM format (PKCS8).

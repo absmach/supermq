@@ -9,8 +9,10 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
+	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/auth"
@@ -29,8 +31,8 @@ var (
 	errInvalidKeySize    = errors.New("invalid ED25519 key size")
 	errParsingPrivateKey = errors.New("failed to parse private key")
 	errInvalidKeyType    = errors.New("private key is not ED25519")
-	errGeneratingKID     = errors.New("failed to generate key ID")
 	errNoValidPublicKeys = errors.New("no valid public keys available")
+	errNoActiveKey       = errors.New("active key not loaded")
 )
 
 type keyPair struct {
@@ -40,84 +42,71 @@ type keyPair struct {
 }
 
 type manager struct {
-	activeKeyID string
-	// Field keys is populated during initialization and never modified afterward,
-	// making it safe for concurrent reads from Sign(), Verify(), and PublicKeys().
-	keys map[string]*keyPair
+	activeKey   *keyPair
+	retiringKey *keyPair // Optional, for key rotation grace period
 }
 
 var _ auth.Tokenizer = (*manager)(nil)
 
-func NewTokenizer(privateKeyDir string, idProvider supermq.IDProvider) (auth.Tokenizer, error) {
-	keyDir := filepath.Dir(privateKeyDir)
-	metadata, err := LoadKeysMetadata(keyDir)
-	if err == errNoMetadata {
-		return newSingleKeyManager(privateKeyDir, idProvider)
-	}
+// NewTokenizer creates a new asymmetric tokenizer with active and optionally retiring keys.
+// activeKeyPath is required. retiringKeyPath is optional (can be empty string).
+// If retiringKeyPath is provided but the file doesn't exist or is invalid, a warning is logged
+// but the tokenizer is still created with just the active key.
+// Key IDs are derived from filenames to ensure consistency across multiple service instances.
+func NewTokenizer(activeKeyPath, retiringKeyPath string, idProvider supermq.IDProvider, logger *slog.Logger) (auth.Tokenizer, error) {
+	// Load active key (required)
+	// Derive key ID from filename for consistency across scaled instances
+	activeKID := keyIDFromPath(activeKeyPath)
+
+	activePrivateJwk, activePublicJwk, err := loadKeyPair(activeKeyPath, activeKID)
 	if err != nil {
 		return nil, err
 	}
 
-	return newMultiKeyManager(keyDir, metadata)
-}
-
-// newSingleKeyManager creates a manager with a single key (backward compatibility).
-func newSingleKeyManager(privateKeyPath string, idProvider supermq.IDProvider) (*manager, error) {
-	kid, err := idProvider.ID()
-	if err != nil {
-		return nil, errors.Wrap(errGeneratingKID, err)
-	}
-	privateJwk, publicJwk, err := loadKeyPair(privateKeyPath, kid)
-	if err != nil {
-		return nil, err
+	mgr := &manager{
+		activeKey: &keyPair{
+			id:         activeKID,
+			privateKey: activePrivateJwk,
+			publicKey:  activePublicJwk,
+		},
 	}
 
-	keys := make(map[string]*keyPair)
-	keys[kid] = &keyPair{
-		id:         kid,
-		privateKey: privateJwk,
-		publicKey:  publicJwk,
-	}
+	// Load retiring key (optional)
+	if retiringKeyPath != "" {
+		retiringKID := keyIDFromPath(retiringKeyPath)
 
-	return &manager{
-		activeKeyID: kid,
-		keys:        keys,
-	}, nil
-}
-
-// newMultiKeyManager creates a manager with multiple keys from metadata.
-func newMultiKeyManager(keyDir string, metadata *KeysMetadata) (*manager, error) {
-	keys := make(map[string]*keyPair)
-
-	for _, keyMeta := range metadata.GetValidKeys() {
-		keyPath := filepath.Join(keyDir, keyMeta.File)
-
-		privateJwk, publicJwk, err := loadKeyPair(keyPath, keyMeta.ID)
+		retiringPrivateJwk, retiringPublicJwk, err := loadKeyPair(retiringKeyPath, retiringKID)
 		if err != nil {
-			continue
+			logger.Warn("failed to load retiring key, continuing without it", slog.Any("error", err))
+			return mgr, nil
 		}
 
-		keys[keyMeta.ID] = &keyPair{
-			id:         keyMeta.ID,
-			privateKey: privateJwk,
-			publicKey:  publicJwk,
+		mgr.retiringKey = &keyPair{
+			id:         retiringKID,
+			privateKey: retiringPrivateJwk,
+			publicKey:  retiringPublicJwk,
 		}
+		logger.Info("loaded retiring key for rotation grace period", slog.String("key_id", retiringKID))
 	}
 
-	if _, ok := keys[metadata.ActiveKeyID]; !ok {
-		return nil, errNoActiveKeyLoaded
-	}
+	return mgr, nil
+}
 
-	return &manager{
-		activeKeyID: metadata.ActiveKeyID,
-		keys:        keys,
-	}, nil
+// keyIDFromPath derives a deterministic key ID from the file path.
+// This ensures all service instances use the same key ID for the same key file.
+// Examples:
+//   - "active.key" -> "active"
+//   - "./keys/active.key" -> "active"
+//   - "/var/keys/my-key-2025.pem" -> "my-key-2025"
+func keyIDFromPath(path string) string {
+	base := filepath.Base(path)
+	ext := filepath.Ext(base)
+	return strings.TrimSuffix(base, ext)
 }
 
 func (km *manager) Issue(key auth.Key) (string, error) {
-	activeKey, ok := km.keys[km.activeKeyID]
-	if !ok {
-		return "", errNoActiveKeyLoaded
+	if km.activeKey == nil {
+		return "", errNoActiveKey
 	}
 
 	builder := jwt.NewBuilder()
@@ -141,7 +130,7 @@ func (km *manager) Issue(key auth.Key) (string, error) {
 		return "", err
 	}
 
-	signedBytes, err := jwt.Sign(tkn, jwt.WithKey(jwa.EdDSA, activeKey.privateKey))
+	signedBytes, err := jwt.Sign(tkn, jwt.WithKey(jwa.EdDSA, km.activeKey.privateKey))
 	if err != nil {
 		return "", err
 	}
@@ -154,9 +143,13 @@ func (km *manager) Parse(ctx context.Context, tokenString string) (auth.Key, err
 		return auth.Key{Type: auth.PersonalAccessToken}, nil
 	}
 
+	// Build key set with active and retiring keys
 	set := jwk.NewSet()
-	for _, kp := range km.keys {
-		if err := set.AddKey(kp.publicKey); err != nil {
+	if err := set.AddKey(km.activeKey.publicKey); err != nil {
+		return auth.Key{}, err
+	}
+	if km.retiringKey != nil {
+		if err := set.AddKey(km.retiringKey.publicKey); err != nil {
 			return auth.Key{}, err
 		}
 	}
@@ -178,21 +171,20 @@ func (km *manager) Parse(ctx context.Context, tokenString string) (auth.Key, err
 }
 
 func (km *manager) RetrieveJWKS() ([]auth.PublicKeyInfo, error) {
-	publicKeys := make([]auth.PublicKeyInfo, 0, len(km.keys))
-	for _, kp := range km.keys {
-		var rawKey ed25519.PublicKey
-		if err := kp.publicKey.Raw(&rawKey); err != nil {
-			continue
-		}
+	publicKeys := make([]auth.PublicKeyInfo, 0, 2)
 
-		publicKeys = append(publicKeys, auth.PublicKeyInfo{
-			KeyID:     kp.id,
-			KeyType:   "OKP",
-			Algorithm: "EdDSA",
-			Use:       "sig",
-			Curve:     "Ed25519",
-			X:         base64.RawURLEncoding.EncodeToString(rawKey),
-		})
+	// Add active key
+	if km.activeKey != nil {
+		if pkInfo := extractPublicKeyInfo(km.activeKey); pkInfo != nil {
+			publicKeys = append(publicKeys, *pkInfo)
+		}
+	}
+
+	// Add retiring key if present
+	if km.retiringKey != nil {
+		if pkInfo := extractPublicKeyInfo(km.retiringKey); pkInfo != nil {
+			publicKeys = append(publicKeys, *pkInfo)
+		}
 	}
 
 	if len(publicKeys) == 0 {
@@ -200,6 +192,22 @@ func (km *manager) RetrieveJWKS() ([]auth.PublicKeyInfo, error) {
 	}
 
 	return publicKeys, nil
+}
+
+func extractPublicKeyInfo(kp *keyPair) *auth.PublicKeyInfo {
+	var rawKey ed25519.PublicKey
+	if err := kp.publicKey.Raw(&rawKey); err != nil {
+		return nil
+	}
+
+	return &auth.PublicKeyInfo{
+		KeyID:     kp.id,
+		KeyType:   "OKP",
+		Algorithm: "EdDSA",
+		Use:       "sig",
+		Curve:     "Ed25519",
+		X:         base64.RawURLEncoding.EncodeToString(rawKey),
+	}
 }
 
 func loadKeyPair(privateKeyPath string, kid string) (jwk.Key, jwk.Key, error) {

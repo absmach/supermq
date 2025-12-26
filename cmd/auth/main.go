@@ -68,7 +68,8 @@ type config struct {
 	AccessDuration                time.Duration `env:"SMQ_AUTH_ACCESS_TOKEN_DURATION"             envDefault:"1h"`
 	RefreshDuration               time.Duration `env:"SMQ_AUTH_REFRESH_TOKEN_DURATION"            envDefault:"24h"`
 	KeyAlgorithm                  string        `env:"SMQ_AUTH_KEYS_ALGORITHM"                    envDefault:"EdDSA"`
-	PrivateKeyDir                 string        `env:"SMQ_AUTH_KEYS_PRIVATE_KEY_DIR"              envDefault:"./keys/"`
+	ActiveKeyPath                 string        `env:"SMQ_AUTH_KEYS_ACTIVE_KEY_PATH"              envDefault:"./keys/active.key"`
+	RetiringKeyPath               string        `env:"SMQ_AUTH_KEYS_RETIRING_KEY_PATH"            envDefault:""`
 	InvitationDuration            time.Duration `env:"SMQ_AUTH_INVITATION_DURATION"               envDefault:"168h"`
 	SpicedbHost                   string        `env:"SMQ_SPICEDB_HOST"                           envDefault:"localhost"`
 	SpicedbPort                   string        `env:"SMQ_SPICEDB_PORT"                           envDefault:"50051"`
@@ -174,7 +175,7 @@ func main() {
 			return
 		}
 	default:
-		keyManager, err = asymmetric.NewTokenizer(cfg.PrivateKeyDir, idProvider)
+		keyManager, err = asymmetric.NewTokenizer(cfg.ActiveKeyPath, cfg.RetiringKeyPath, idProvider, logger)
 		if err != nil {
 			logger.Error(fmt.Sprintf("failed to create asymmetric key manager: %s", err.Error()))
 			exitCode = 1
@@ -270,12 +271,21 @@ func validateKeyConfig(isSymmetric bool, cfg config) error {
 		}
 		return nil
 	}
-	_, err := os.Stat(cfg.PrivateKeyDir)
+
+	// Validate active key path
+	_, err := os.Stat(cfg.ActiveKeyPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("private key file not found: %s", cfg.PrivateKeyDir)
+			return fmt.Errorf("active key file not found: %s - please set SMQ_AUTH_KEYS_ACTIVE_KEY_PATH", cfg.ActiveKeyPath)
 		}
-		return fmt.Errorf("failed to access private key file: %w", err)
+		return fmt.Errorf("failed to access active key file: %w", err)
+	}
+
+	// Retiring key is optional - only validate if path is provided
+	if cfg.RetiringKeyPath != "" {
+		if _, err := os.Stat(cfg.RetiringKeyPath); err != nil {
+			return fmt.Errorf("retiring key path provided but file not accessible: %w", err)
+		}
 	}
 
 	return nil
