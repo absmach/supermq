@@ -26,11 +26,16 @@ func (e *customError) Embed(err error) error {
 	}
 }
 
+type nestableError interface {
+	NestError
+	isNestable()
+}
+
 type RequestError struct {
 	customError
 }
 
-var _ NestError = (*RequestError)(nil)
+var _ nestableError = (*RequestError)(nil)
 
 func NewRequestError(message string) NestError {
 	return &RequestError{
@@ -57,11 +62,13 @@ func (e *RequestError) Embed(err error) error {
 	}
 }
 
+func (*RequestError) isNestable() {}
+
 type AuthNError struct {
 	customError
 }
 
-var _ NestError = (*AuthNError)(nil)
+var _ nestableError = (*AuthNError)(nil)
 
 func NewAuthNError(message string) NestError {
 	return &AuthNError{
@@ -88,7 +95,9 @@ func (e *AuthNError) Embed(err error) error {
 	}
 }
 
-var _ NestError = (*AuthZError)(nil)
+func (*AuthNError) isNestable() {}
+
+var _ nestableError = (*AuthZError)(nil)
 
 type AuthZError struct {
 	customError
@@ -119,11 +128,13 @@ func NewAuthZErrorWithErr(message string, err error) NestError {
 	}
 }
 
+func (*AuthZError) isNestable() {}
+
 type InternalError struct {
 	customError
 }
 
-var _ NestError = (*InternalError)(nil)
+var _ nestableError = (*InternalError)(nil)
 
 func NewInternalError() error {
 	return &InternalError{
@@ -150,11 +161,13 @@ func (e *InternalError) Embed(err error) error {
 	}
 }
 
+func (*InternalError) isNestable() {}
+
 type ServiceError struct {
 	customError
 }
 
-var _ NestError = (*ServiceError)(nil)
+var _ nestableError = (*ServiceError)(nil)
 
 func NewServiceError(message string) NestError {
 	return &ServiceError{
@@ -181,11 +194,13 @@ func (e *ServiceError) Embed(err error) error {
 	}
 }
 
+func (*ServiceError) isNestable() {}
+
 type MediaTypeError struct {
 	customError
 }
 
-var _ NestError = (*MediaTypeError)(nil)
+var _ nestableError = (*MediaTypeError)(nil)
 
 func NewMediaTypeError(message string) NestError {
 	return &MediaTypeError{
@@ -212,11 +227,13 @@ func (e *MediaTypeError) Embed(err error) error {
 	}
 }
 
+func (*MediaTypeError) isNestable() {}
+
 type NotFoundError struct {
 	customError
 }
 
-var _ NestError = (*NotFoundError)(nil)
+var _ nestableError = (*NotFoundError)(nil)
 
 func NewNotFoundError(message string) NestError {
 	return &NotFoundError{
@@ -242,3 +259,5 @@ func (e *NotFoundError) Embed(err error) error {
 		customError: *embedded.(*customError),
 	}
 }
+
+func (*NotFoundError) isNestable() {}

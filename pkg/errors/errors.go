@@ -86,10 +86,10 @@ func Wrap(wrapper, err error) error {
 	if wrapper == nil || err == nil {
 		return wrapper
 	}
-	if ne, ok := err.(NestError); ok {
+	if ne, ok := err.(nestableError); ok {
 		return ne.Embed(wrapper)
 	}
-	if ce, ok := wrapper.(NestError); ok {
+	if ce, ok := wrapper.(nestableError); ok {
 		return ce.Embed(err)
 	}
 	return &customError{
