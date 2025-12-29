@@ -126,19 +126,19 @@ func TestContains(t *testing.T) {
 			desc:      "res of errors.Wrap(err2, errors.Wrap(err1, err0)) contains err1",
 			container: errors.Wrap(err2, errors.Wrap(err1, err0)),
 			contained: err1,
-			contains:  false,
+			contains:  true,
 		},
 		{
 			desc:      fmt.Sprintf("level %d wrapped error contains err0", level),
 			container: wrap(level),
 			contained: err0,
-			contains:  false,
+			contains:  true,
 		},
 		{
 			desc:      "superset wrapper error contains subset wrapper error",
 			container: wrap(level),
 			contained: wrap(level / 2),
-			contains:  false,
+			contains:  true,
 		},
 		{
 			desc:      "native error contains error",
@@ -193,14 +193,14 @@ func TestWrap(t *testing.T) {
 			wrapper:   err2,
 			wrapped:   errors.Wrap(err1, err0),
 			contained: err0,
-			contains:  false,
+			contains:  true,
 		},
 		{
 			desc:      "err2 wraps err1 wraps err0 and contains err1",
 			wrapper:   err2,
 			wrapped:   errors.Wrap(err1, err0),
 			contained: err1,
-			contains:  false,
+			contains:  true,
 		},
 		{
 			desc:      "nil wraps nil",
@@ -256,14 +256,14 @@ func TestWrap(t *testing.T) {
 			wrapper:   err0,
 			wrapped:   errors.Wrap(err1, nat),
 			contained: nat,
-			contains:  false,
+			contains:  true,
 		},
 		{
 			desc:      "native error wraps err1 wraps err0",
 			wrapper:   nat,
 			wrapped:   errors.Wrap(err1, err0),
 			contained: err0,
-			contains:  false,
+			contains:  true,
 		},
 	}
 
@@ -287,7 +287,7 @@ func TestUnwrap(t *testing.T) {
 			desc:    "err 1 wraped err 2",
 			err:     errors.Wrap(err1, err2),
 			wrapper: err1,
-			wrapped: fmt.Errorf("%w: %w", err1, err2),
+			wrapped: err2,
 		},
 		{
 			desc:    "nil wraps nil",
@@ -334,10 +334,10 @@ func wrap(level int) error {
 }
 
 // message generates error message of wrap() generated wrapper error.
-// The error message format is "outermost: ... : innermost" due to fmt.Errorf wrapping.
+// The error message reflects the innermost wrapped error because Wrap uses cast.
 func message(level int) string {
-	if level == 0 {
+	if level <= 0 {
 		return "0"
 	}
-	return strconv.Itoa(level) + ": " + message(level-1)
+	return message(level - 1)
 }
