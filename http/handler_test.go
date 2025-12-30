@@ -267,7 +267,7 @@ func TestPublish(t *testing.T) {
 			err:        errMalformedTopic,
 		},
 		{
-			desc:     "publish with malformwd subtopic",
+			desc:     "publish with malformed subtopic",
 			topic:    &malformedSubtopics,
 			status:   http.StatusBadRequest,
 			password: clientKey,
@@ -411,7 +411,7 @@ func TestPublish(t *testing.T) {
 			authNErr:   nil,
 			authZRes:   &grpcChannelsV1.AuthzRes{Authorized: true},
 			authZErr:   nil,
-			publishErr: errors.New("failed to publish"),
+			publishErr: errFailedPublishToMsgBroker,
 			err:        errFailedPublishToMsgBroker,
 		},
 		{
@@ -453,7 +453,7 @@ func TestPublish(t *testing.T) {
 				assert.Equal(t, tc.status, hpe.StatusCode())
 			}
 			if tc.err != nil {
-				assert.Contains(t, err.Error(), tc.err.Error(), fmt.Sprintf("expected error containing: %v, got: %v", tc.err, err))
+				assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error containing: %v, got: %v", tc.err, err))
 			}
 			authCall.Unset()
 			repoCall.Unset()
