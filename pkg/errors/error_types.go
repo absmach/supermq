@@ -3,10 +3,7 @@
 
 package errors
 
-import (
-	"errors"
-	"fmt"
-)
+const internalServiceError = "internal server error"
 
 type NestError interface {
 	Error
@@ -22,7 +19,7 @@ func (e *customError) Embed(err error) error {
 
 	return &customError{
 		msg: e.msg,
-		err: Wrap(e.err, err),
+		err: Wrap(err, e.err),
 	}
 }
 
@@ -39,19 +36,13 @@ var _ nestableError = (*RequestError)(nil)
 
 func NewRequestError(message string) NestError {
 	return &RequestError{
-		customError: customError{
-			msg: message,
-			err: errors.New(message),
-		},
+		customError: newCustomError(message),
 	}
 }
 
 func NewRequestErrorWithErr(message string, err error) NestError {
 	return &RequestError{
-		customError: customError{
-			msg: message,
-			err: fmt.Errorf("%w: %w", errors.New(message), err),
-		},
+		customError: newCustomErrorWithError(message, err),
 	}
 }
 
@@ -72,19 +63,13 @@ var _ nestableError = (*AuthNError)(nil)
 
 func NewAuthNError(message string) NestError {
 	return &AuthNError{
-		customError: customError{
-			msg: message,
-			err: errors.New(message),
-		},
+		customError: newCustomError(message),
 	}
 }
 
 func NewAuthNErrorWithErr(message string, err error) NestError {
 	return &AuthNError{
-		customError: customError{
-			msg: message,
-			err: fmt.Errorf("%w: %w", errors.New(message), err),
-		},
+		customError: newCustomErrorWithError(message, err),
 	}
 }
 
@@ -112,19 +97,13 @@ func (e *AuthZError) Embed(err error) error {
 
 func NewAuthZError(message string) NestError {
 	return &AuthZError{
-		customError: customError{
-			msg: message,
-			err: errors.New(message),
-		},
+		customError: newCustomError(message),
 	}
 }
 
 func NewAuthZErrorWithErr(message string, err error) NestError {
 	return &AuthZError{
-		customError: customError{
-			msg: message,
-			err: fmt.Errorf("%w: %w", errors.New(message), err),
-		},
+		customError: newCustomErrorWithError(message, err),
 	}
 }
 
@@ -138,19 +117,13 @@ var _ nestableError = (*InternalError)(nil)
 
 func NewInternalError() error {
 	return &InternalError{
-		customError: customError{
-			msg: "internal server error",
-			err: errors.New("internal server error"),
-		},
+		customError: newCustomError(internalServiceError),
 	}
 }
 
 func NewInternalErrorWithErr(err error) NestError {
 	return &InternalError{
-		customError: customError{
-			msg: "internal server error",
-			err: fmt.Errorf("%w: %w", errors.New("internal server error"), err),
-		},
+		customError: newCustomErrorWithError(internalServiceError, err),
 	}
 }
 
@@ -171,19 +144,13 @@ var _ nestableError = (*ServiceError)(nil)
 
 func NewServiceError(message string) NestError {
 	return &ServiceError{
-		customError: customError{
-			msg: message,
-			err: errors.New(message),
-		},
+		customError: newCustomError(message),
 	}
 }
 
 func NewServiceErrorWithErr(message string, err error) NestError {
 	return &ServiceError{
-		customError: customError{
-			msg: message,
-			err: fmt.Errorf("%w: %w", errors.New(message), err),
-		},
+		customError: newCustomErrorWithError(message, err),
 	}
 }
 
@@ -204,19 +171,13 @@ var _ nestableError = (*MediaTypeError)(nil)
 
 func NewMediaTypeError(message string) NestError {
 	return &MediaTypeError{
-		customError: customError{
-			msg: message,
-			err: errors.New(message),
-		},
+		customError: newCustomError(message),
 	}
 }
 
 func NewMediaTypeErrorWithErr(message string, err error) NestError {
 	return &MediaTypeError{
-		customError: customError{
-			msg: message,
-			err: fmt.Errorf("%w: %w", errors.New(message), err),
-		},
+		customError: newCustomErrorWithError(message, err),
 	}
 }
 
@@ -237,19 +198,13 @@ var _ nestableError = (*NotFoundError)(nil)
 
 func NewNotFoundError(message string) NestError {
 	return &NotFoundError{
-		customError: customError{
-			msg: message,
-			err: errors.New(message),
-		},
+		customError: newCustomError(message),
 	}
 }
 
 func NewNotFoundErrorWithErr(message string, err error) NestError {
 	return &NotFoundError{
-		customError: customError{
-			msg: message,
-			err: fmt.Errorf("%w: %w", errors.New(message), err),
-		},
+		customError: newCustomErrorWithError(message, err),
 	}
 }
 
