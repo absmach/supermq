@@ -694,7 +694,7 @@ func TestPublish(t *testing.T) {
 			session: &sessionClient,
 			topic:   wrongCharSubtopics,
 			payload: payload,
-			err:     messaging.ErrMalformedTopic,
+			err:     messaging.ErrMalformedSubtopic,
 		},
 		{
 			desc:    "publish with subtopic",
@@ -731,7 +731,7 @@ func TestPublish(t *testing.T) {
 		repoCall := publisher.On("Publish", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 		err := handler.Publish(ctx, &tc.topic, &tc.payload)
 		if tc.err != nil {
-			assert.Contains(t, err.Error(), tc.err.Error(), fmt.Sprintf("expected error message to contain: %v, got: %v", tc.err, err))
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected error message to contain: %v, got: %v", tc.err, err))
 		}
 		repoCall.Unset()
 	}
