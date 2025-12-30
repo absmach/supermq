@@ -80,7 +80,6 @@ func TestError(t *testing.T) {
 }
 
 func TestContains(t *testing.T) {
-
 	internalErr1 := errors.New("some internal error 1")
 	internalErr2 := errors.New("some internal error 2")
 	internalErr3 := errors.New("some internal error 3")
