@@ -18,6 +18,7 @@ import (
 
 	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/auth/tokenizer/asymmetric"
+	smqerrors "github.com/absmach/supermq/pkg/errors"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
@@ -58,7 +59,7 @@ func TestNewKeyManager(t *testing.T) {
 		name        string
 		setupKey    func() string
 		expectErr   bool
-		errContains string
+		expectedErr error
 	}{
 		{
 			name: "valid PEM key",
@@ -85,7 +86,7 @@ func TestNewKeyManager(t *testing.T) {
 				return filepath.Join(tmpDir, "nonexistent.key")
 			},
 			expectErr:   true,
-			errContains: "failed to load private key",
+			expectedErr: smqerrors.New("failed to load private key"),
 		},
 		{
 			name: "invalid key size",
@@ -96,7 +97,7 @@ func TestNewKeyManager(t *testing.T) {
 				return invalidPath
 			},
 			expectErr:   true,
-			errContains: "invalid ED25519 key size",
+			expectedErr: smqerrors.New("invalid ED25519 key size"),
 		},
 	}
 
@@ -108,8 +109,8 @@ func TestNewKeyManager(t *testing.T) {
 
 			if tc.expectErr {
 				assert.Error(t, err)
-				if tc.errContains != "" {
-					assert.Contains(t, err.Error(), tc.errContains)
+				if tc.expectedErr != nil {
+					assert.True(t, smqerrors.Contains(err, tc.expectedErr))
 				}
 				assert.Nil(t, km)
 			} else {
