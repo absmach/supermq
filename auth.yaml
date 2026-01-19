@@ -81,6 +81,8 @@ paths:
           description: Missing or invalid access token provided.
         "404":
           description: A non-existent entity request.
+        "422":
+          description: Service can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
 
@@ -100,6 +102,8 @@ paths:
           description: Missing or invalid access token provided.
         "404":
           description: A non-existent entity request.
+        "422":
+          description: Service can't process request.
         "500":
           $ref: "#/components/responses/ServiceError"
 
@@ -124,7 +128,7 @@ paths:
           description: Missing or invalid content type.
         "500":
           $ref: "#/components/responses/ServiceError"
-    
+
     get:
       operationId: listPATs
       tags:
@@ -144,7 +148,7 @@ paths:
           description: Missing or invalid access token provided.
         "500":
           $ref: "#/components/responses/ServiceError"
-    
+
     delete:
       operationId: clearAllPATs
       tags:
@@ -159,7 +163,7 @@ paths:
           description: Missing or invalid access token provided.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
+
   /pats/{patID}:
     get:
       operationId: retrievePAT
@@ -181,7 +185,7 @@ paths:
           description: PAT not found.
         "500":
           $ref: "#/components/responses/ServiceError"
-    
+
     delete:
       operationId: deletePAT
       tags:
@@ -200,7 +204,7 @@ paths:
           description: PAT not found.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
+
   /pats/{patID}/name:
     patch:
       operationId: updatePATName
@@ -226,7 +230,7 @@ paths:
           description: Missing or invalid content type.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
+
   /pats/{patID}/description:
     patch:
       operationId: updatePATDescription
@@ -252,7 +256,7 @@ paths:
           description: Missing or invalid content type.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
+
   /pats/{patID}/secret/reset:
     patch:
       operationId: resetPATSecret
@@ -278,7 +282,7 @@ paths:
           description: Missing or invalid content type.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
+
   /pats/{patID}/secret/revoke:
     patch:
       operationId: revokePATSecret
@@ -298,7 +302,7 @@ paths:
           description: PAT not found.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
+
   /pats/{patID}/scope:
     get:
       operationId: listScopes
@@ -322,7 +326,7 @@ paths:
           description: PAT not found.
         "500":
           $ref: "#/components/responses/ServiceError"
-    
+
     delete:
       operationId: clearAllScopes
       tags:
@@ -341,7 +345,7 @@ paths:
           description: PAT not found.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
+
   /pats/{patID}/scope/add:
     patch:
       operationId: addScope
@@ -369,7 +373,7 @@ paths:
           description: Database cannot process the request.
         "500":
           $ref: "#/components/responses/ServiceError"
-  
+
   /pats/{patID}/scope/remove:
     patch:
       operationId: removeScope
@@ -395,7 +399,6 @@ paths:
           description: Missing or invalid content type.
         "500":
           $ref: "#/components/responses/ServiceError"
-
 
   /health:
     get:
@@ -465,7 +468,7 @@ components:
           format: date-time
           example: "2019-11-26T13:31:52Z"
           description: Time when the PAT was revoked
-    
+
     PATsPage:
       type: object
       properties:
@@ -486,20 +489,10 @@ components:
           items:
             $ref: "#/components/schemas/PAT"
           description: List of Personal Access Tokens
-    
+
     Scope:
       type: object
       properties:
-        id:
-          type: string
-          format: uuid
-          example: "c5747f2f-2a7c-4fe1-b41a-51a5ae290945"
-          description: Scope unique identifier
-        pat_id:
-          type: string
-          format: uuid
-          example: "9118de62-c680-46b7-ad0a-21748a52833a"
-          description: PAT ID this scope belongs to
         optional_domain_id:
           type: string
           format: uuid
@@ -507,7 +500,8 @@ components:
           description: Optional domain ID for the scope
         entity_type:
           type: string
-          enum: [groups, channels, clients, domains, users, dashboards, messages]
+          enum:
+            [groups, channels, clients, domains, users, dashboards, messages]
           example: "groups"
           description: Type of entity the scope applies to
         entity_id:
@@ -516,10 +510,21 @@ components:
           description: ID of the entity the scope applies to. '*' means all entities of the specified type.
         operation:
           type: string
-          enum: [create, read, list, update, delete, share, unshare, publish, subscribe]
+          enum:
+            [
+              create,
+              read,
+              list,
+              update,
+              delete,
+              share,
+              unshare,
+              publish,
+              subscribe,
+            ]
           example: "read"
           description: Operation allowed by this scope
-    
+
     ScopesPage:
       type: object
       properties:
@@ -679,9 +684,11 @@ components:
             type: object
             required:
               - name
+              - duration
             properties:
               name:
                 type: string
+                minLength: 1
                 example: "My PAT"
                 description: Name of the Personal Access Token
               description:
@@ -690,9 +697,10 @@ components:
                 description: Description of the Personal Access Token
               duration:
                 type: string
+                pattern: "^[0-9]+(ns|us|µs|ms|s|m|h|d|w|y)$"
                 example: "30d"
                 description: Duration for which the PAT is valid. Format is a duration string (e.g. "30d", "24h", "1y").
-    
+
     UpdatePATNameRequest:
       description: JSON-formatted document describing PAT name update request.
       required: true
@@ -707,7 +715,7 @@ components:
                 type: string
                 example: "New PAT Name"
                 description: New name for the Personal Access Token
-    
+
     UpdatePATDescriptionRequest:
       description: JSON-formatted document describing PAT description update request.
       required: true
@@ -722,7 +730,7 @@ components:
                 type: string
                 example: "New PAT Description"
                 description: New description for the Personal Access Token
-    
+
     ResetPATSecretRequest:
       description: JSON-formatted document describing PAT secret reset request.
       required: true
@@ -730,12 +738,15 @@ components:
         application/json:
           schema:
             type: object
+            required:
+              - duration
             properties:
               duration:
                 type: string
+                pattern: "^[0-9]+(ns|us|µs|ms|s|m|h|d|w|y)$"
                 example: "30d"
                 description: Duration for which the new PAT secret is valid. Format is a duration string (e.g. "30d", "24h", "1y").
-    
+
     AddScopeRequest:
       description: JSON-formatted document describing add scope request.
       required: true
@@ -751,7 +762,7 @@ components:
                 items:
                   $ref: "#/components/schemas/Scope"
                 description: List of scopes to add
-    
+
     RemoveScopeRequest:
       description: JSON-formatted document describing remove scope request.
       required: true
@@ -793,14 +804,14 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/PAT"
-    
+
     PATsPageRes:
       description: Page of Personal Access Tokens.
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/PATsPage"
-    
+
     ScopesPageRes:
       description: Page of scopes.
       content:

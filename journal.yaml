@@ -75,7 +75,7 @@ paths:
         This includes connection status, messages sent/received, and other metrics.
       parameters:
         - $ref: "#/components/parameters/domain_id"
-        - $ref: '#/components/parameters/client_id'
+        - $ref: "#/components/parameters/client_id"
       security:
         - bearerAuth: []
       responses:
@@ -319,7 +319,7 @@ components:
         default: 0
         minimum: 0
       required: false
-      example: "0"
+      example: 0
 
     limit:
       name: limit
@@ -328,10 +328,10 @@ components:
       schema:
         type: integer
         default: 10
-        maximum: 10
+        maximum: 100
         minimum: 1
       required: false
-      example: "10"
+      example: 10
 
     operation:
       name: operation
@@ -365,7 +365,7 @@ components:
       description: Start date in unix time.
       in: query
       schema:
-        type: string
+        type: integer
         format: int64
       required: false
       example: 1966777289
@@ -375,7 +375,7 @@ components:
       description: End date in unix time.
       in: query
       schema:
-        type: string
+        type: integer
         format: int64
       required: false
       example: 1966777289

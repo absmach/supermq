@@ -96,12 +96,12 @@ paths:
         - $ref: "#/components/parameters/GroupName"
         - $ref: "#/components/parameters/RootGroup"
         - $ref: "#/components/parameters/Status"
-        - $ref: "#/components/parameters/ID" 
+        - $ref: "#/components/parameters/ID"
         - $ref: "./schemas/roles.yaml#/components/parameters/ActionsQuery"
         - $ref: "./schemas/roles.yaml#/components/parameters/RoleIDQuery"
         - $ref: "./schemas/roles.yaml#/components/parameters/RoleNameQuery"
         - $ref: "#/components/parameters/AccessType"
-        - $ref: "#/components/parameters/OnlyTotal" 
+        - $ref: "#/components/parameters/OnlyTotal"
       responses:
         "200":
           $ref: "#/components/responses/GroupPageRes"
@@ -362,6 +362,11 @@ paths:
       responses:
         "200":
           description: Parent group set.
+          content:
+            application/json:
+              schema:
+                type: object
+          links: {}
         "400":
           description: Failed due to malformed group's ID.
         "401":
@@ -392,6 +397,11 @@ paths:
       responses:
         "200":
           description: Parent group removed.
+          content:
+            application/json:
+              schema:
+                type: object
+          links: {}
         "400":
           description: Failed due to malformed group's ID.
         "401":
@@ -1513,7 +1523,6 @@ components:
       in: query
       schema:
         type: string
-        minimum: 0
       required: false
 
     Limit:
@@ -1526,7 +1535,7 @@ components:
         maximum: 100
         minimum: 1
       required: false
-      example: "100"
+      example: 100
 
     Offset:
       name: offset
@@ -1537,9 +1546,9 @@ components:
         default: 0
         minimum: 0
       required: false
-      example: "0"
-    
-    Order: 
+      example: 0
+
+    Order:
       name: order
       description: Field by which to order the results
       in: query
@@ -1547,8 +1556,8 @@ components:
         type: string
       required: false
       example: created_at
-    
-    DirectionOrder: 
+
+    DirectionOrder:
       name: order
       description: Direction of ordering the results.
       in: query
@@ -1560,7 +1569,7 @@ components:
       required: false
       example: desc
 
-    ID: 
+    ID:
       name: id
       description: List groups with the given ID.
       in: query
@@ -1569,7 +1578,7 @@ components:
         format: uuid
       required: false
       example: bb7edb32-2eac-4aad-aebe-ed96fe073879
-    
+
     AccessType:
       name: access_type
       description: Type of access the user has on the group.
@@ -1583,8 +1592,8 @@ components:
           - indirect_group
       required: false
       example: direct
-    
-    OnlyTotal: 
+
+    OnlyTotal:
       name: only_total
       description: If true, the response will contain only the total number of groups that match the query parameters.
       in: query
@@ -1592,7 +1601,7 @@ components:
         type: boolean
         default: false
       required: false
-    
+
     User:
       name: user
       description: If provided lists groups associated with a user with the provided ID. Only available for admin users.
@@ -1663,10 +1672,10 @@ components:
           operationId: getGroup
           parameters:
             groupID: $response.body#/id
-        get_children:
-          operationId: listChildrenGroups
-          parameters:
-            groupID: $response.body#/id
+        # get_children:
+        #   operationId: listChildrenGroups
+        #   parameters:
+        #     groupID: $response.body#/id
         update:
           operationId: updateGroup
           parameters:
@@ -1710,6 +1719,7 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/GroupsPage"
+      links: {}
 
     GroupsHierarchyPageRes:
       description: Group hierarchy retrieved.
@@ -1717,6 +1727,7 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/GroupsHierarchyPage"
+      links: {}
 
     MembersPageRes:
       description: Group members retrieved.
@@ -1724,6 +1735,7 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/MembersPage"
+      links: {}
 
     HealthRes:
       description: Service Health Check.

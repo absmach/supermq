@@ -116,7 +116,7 @@ paths:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "#/components/responses/UserRes"
+          $ref: "#/components/responses/UserProfileRes"
         "400":
           description: Failed due to malformed query parameters.
         "401":
@@ -461,7 +461,7 @@ paths:
         - bearerAuth: []
       responses:
         "200":
-          $ref: "#/components/responses/UserRes"
+          $ref: "#/components/responses/UserProfileRes"
         "400":
           description: Failed due to malformed JSON.
         "401":
@@ -569,7 +569,7 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/IssueTokenReq"
       responses:
-        "200":
+        "201":
           $ref: "#/components/responses/TokenRes"
         "400":
           description: Failed due to malformed JSON.
@@ -706,7 +706,7 @@ components:
               type: string
               format: password
               example: password
-              minimum: 8
+              minLength: 8
               description: Free-form account secret used for acquiring auth token(s).
           required:
             - username
@@ -830,7 +830,7 @@ components:
             secret:
               type: string
               example: password
-              minimum: 8
+              minLength: 8
               description: User secret password.
         metadata:
           type: object
@@ -895,10 +895,6 @@ components:
           type: object
           example: { "role": "general" }
           description: Arbitrary, object-encoded user's data.
-      required:
-        - first_name
-        - last_name
-        - metadata
 
     UserTags:
       type: object
@@ -908,7 +904,6 @@ components:
           example: ["yello", "orange"]
           description: User tags.
           minItems: 0
-          uniqueItems: true
           items:
             type: string
 
@@ -938,12 +933,12 @@ components:
         old_secret:
           type: string
           example: oldpassword
-          minimum: 8
+          minLength: 8
           description: Old user secret password.
         new_secret:
           type: string
           example: newpassword
-          minimum: 8
+          minLength: 8
           description: New user secret password.
       required:
         - old_secret
@@ -1029,7 +1024,7 @@ components:
         password:
           type: string
           example: password
-          minimum: 8
+          minLength: 8
           description: User secret password.
       required:
         - username
@@ -1278,7 +1273,7 @@ components:
         maximum: 100
         minimum: 1
       required: false
-      example: "100"
+      example: 100
 
     Offset:
       name: offset
@@ -1289,7 +1284,7 @@ components:
         default: 0
         minimum: 0
       required: false
-      example: "0"
+      example: 0
 
     Order:
       name: order
@@ -1444,13 +1439,13 @@ components:
                 format: password
                 description: New password.
                 example: "12345678"
-                minimum: 8
+                minLength: 8
               confirm_password:
                 type: string
                 format: password
                 description: New confirmation password.
                 example: "12345678"
-                minimum: 8
+                minLength: 8
               token:
                 type: string
                 format: jwt
@@ -1467,11 +1462,11 @@ components:
               password:
                 type: string
                 format: password
-                minimum: 8
+                minLength: 8
                 description: New password.
               old_password:
                 type: string
-                minimum: 8
+                minLength: 8
                 format: password
                 description: Old password.
 
@@ -1528,6 +1523,13 @@ components:
 
     UserRes:
       description: Data retrieved.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/User"
+
+    UserProfileRes:
+      description: Data retrieved for current user profile.
       content:
         application/json:
           schema:

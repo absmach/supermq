@@ -656,9 +656,7 @@ components:
           example: 10
           description: Maximum number of items to return in one page.
       required:
-        - channels
         - total
-        - offset
 
     ChannelUpdate:
       type: object
@@ -705,7 +703,10 @@ components:
           type: array
           description: Connection types.
           items:
-            example: publish
+            type: string
+            enum:
+              - publish
+              - subscribe
 
     ChannelConnectionReqSchema:
       type: object
@@ -719,7 +720,10 @@ components:
           type: array
           description: Connection types.
           items:
-            example: publish
+            type: string
+            enum:
+              - publish
+              - subscribe
 
     Error:
       type: object
@@ -831,7 +835,6 @@ components:
       in: query
       schema:
         type: string
-        minimum: 0
       required: false
 
     Limit:
@@ -844,7 +847,7 @@ components:
         maximum: 100
         minimum: 1
       required: false
-      example: "100"
+      example: 100
 
     Offset:
       name: offset
@@ -855,8 +858,8 @@ components:
         default: 0
         minimum: 0
       required: false
-      example: "0"
-    
+      example: 0
+
     Order:
       name: order
       description: Field by which to order the results
