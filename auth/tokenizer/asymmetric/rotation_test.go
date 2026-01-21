@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/auth"
+	"github.com/absmach/supermq/auth/mocks"
 	"github.com/absmach/supermq/auth/tokenizer/asymmetric"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -46,7 +47,8 @@ func TestTwoKeyRotation(t *testing.T) {
 	saveKey(t, retiringPriv, retiringKeyPath)
 
 	idProvider := &incrementingIDProvider{}
-	tokenizer, err := asymmetric.NewTokenizer(activeKeyPath, retiringKeyPath, idProvider, newTestLogger())
+	cache := new(mocks.TokensCache)
+	tokenizer, err := asymmetric.NewTokenizer(activeKeyPath, retiringKeyPath, idProvider, cache, newTestLogger())
 	require.NoError(t, err)
 
 	testKey := auth.Key{
@@ -59,7 +61,7 @@ func TestTwoKeyRotation(t *testing.T) {
 		Verified:  true,
 	}
 
-	token, err := tokenizer.Issue(testKey)
+	token, err := tokenizer.Issue(context.Background(), testKey)
 	require.NoError(t, err)
 	assert.NotEmpty(t, token)
 
@@ -88,7 +90,8 @@ func TestSingleKeyMode(t *testing.T) {
 	saveKey(t, privateKey, keyPath)
 
 	idProvider := &mockIDProvider{id: "single-id"}
-	tokenizer, err := asymmetric.NewTokenizer(keyPath, "", idProvider, newTestLogger())
+	cache := new(mocks.TokensCache)
+	tokenizer, err := asymmetric.NewTokenizer(keyPath, "", idProvider, cache, newTestLogger())
 	require.NoError(t, err)
 
 	testKey := auth.Key{
@@ -100,7 +103,7 @@ func TestSingleKeyMode(t *testing.T) {
 		ExpiresAt: time.Now().Add(1 * time.Hour).UTC(),
 	}
 
-	token, err := tokenizer.Issue(testKey)
+	token, err := tokenizer.Issue(context.Background(), testKey)
 	require.NoError(t, err)
 
 	_, err = tokenizer.Parse(context.Background(), token)
@@ -123,7 +126,8 @@ func TestMissingRetiringKey(t *testing.T) {
 	retiringKeyPath := filepath.Join(tmpDir, "nonexistent.key")
 
 	idProvider := &mockIDProvider{id: "test-id"}
-	tokenizer, err := asymmetric.NewTokenizer(activeKeyPath, retiringKeyPath, idProvider, newTestLogger())
+	cache := new(mocks.TokensCache)
+	tokenizer, err := asymmetric.NewTokenizer(activeKeyPath, retiringKeyPath, idProvider, cache, newTestLogger())
 	require.NoError(t, err, "Should succeed even if retiring key is missing")
 
 	testKey := auth.Key{
@@ -135,7 +139,7 @@ func TestMissingRetiringKey(t *testing.T) {
 		ExpiresAt: time.Now().Add(1 * time.Hour).UTC(),
 	}
 
-	token, err := tokenizer.Issue(testKey)
+	token, err := tokenizer.Issue(context.Background(), testKey)
 	require.NoError(t, err)
 
 	_, err = tokenizer.Parse(context.Background(), token)

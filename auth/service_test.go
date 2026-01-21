@@ -54,18 +54,20 @@ var (
 )
 
 var (
-	krepo      *mocks.KeyRepository
-	pService   *policymocks.Service
-	pEvaluator *policymocks.Evaluator
-	patsrepo   *mocks.PATSRepository
-	cache      *mocks.Cache
-	hasher     *mocks.Hasher
-	tokenizer  *mocks.Tokenizer
+	krepo       *mocks.KeyRepository
+	pService    *policymocks.Service
+	pEvaluator  *policymocks.Evaluator
+	patsrepo    *mocks.PATSRepository
+	cache       *mocks.Cache
+	tokensCache *mocks.TokensCache
+	hasher      *mocks.Hasher
+	tokenizer   *mocks.Tokenizer
 )
 
 func newService(t *testing.T) (auth.Service, string) {
 	krepo = new(mocks.KeyRepository)
 	cache = new(mocks.Cache)
+	tokensCache = new(mocks.TokensCache)
 	pService = new(policymocks.Service)
 	pEvaluator = new(policymocks.Evaluator)
 	patsrepo = new(mocks.PATSRepository)
@@ -76,7 +78,7 @@ func newService(t *testing.T) (auth.Service, string) {
 	token, _, err := signToken(t, issuerName, accessKey, false)
 	assert.Nil(t, err, fmt.Sprintf("Issuing access key expected to succeed: %s", err))
 
-	return auth.New(krepo, patsrepo, cache, hasher, idProvider, tokenizer, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration), token
+	return auth.New(krepo, patsrepo, cache, tokensCache, hasher, idProvider, tokenizer, pEvaluator, pService, loginDuration, refreshDuration, invalidDuration), token
 }
 
 func TestIssue(t *testing.T) {
@@ -133,7 +135,7 @@ func TestIssue(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			tokenizerCall := tokenizer.On("Issue", mock.Anything).Return(tc.token, tc.tokenizerErr)
+			tokenizerCall := tokenizer.On("Issue", mock.Anything, mock.Anything).Return(tc.token, tc.tokenizerErr)
 			policyCall := pEvaluator.On("CheckPolicy", mock.Anything, policies.Policy{
 				Subject:     tc.key.Subject,
 				SubjectType: policies.UserType,
@@ -172,7 +174,7 @@ func TestIssue(t *testing.T) {
 	}
 	for _, tc := range cases2 {
 		t.Run(tc.desc, func(t *testing.T) {
-			tokenizerCall := tokenizer.On("Issue", mock.Anything).Return(tc.token, tc.tokenizerErr)
+			tokenizerCall := tokenizer.On("Issue", mock.Anything, mock.Anything).Return(tc.token, tc.tokenizerErr)
 			repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, tc.saveErr)
 			policyCall := pEvaluator.On("CheckPolicy", mock.Anything, policies.Policy{
 				Subject:     tc.key.Subject,
@@ -265,7 +267,7 @@ func TestIssue(t *testing.T) {
 	}
 	for _, tc := range cases3 {
 		t.Run(tc.desc, func(t *testing.T) {
-			tokenizerCall := tokenizer.On("Issue", mock.Anything).Return(tc.token, tc.issueErr)
+			tokenizerCall := tokenizer.On("Issue", mock.Anything, mock.Anything).Return(tc.token, tc.issueErr)
 			tokenizerCall1 := tokenizer.On("Parse", mock.Anything, tc.token).Return(tc.parseRes, tc.parseErr)
 			repoCall := krepo.On("Save", mock.Anything, mock.Anything).Return(mock.Anything, tc.saveErr)
 			policyCall := pEvaluator.On("CheckPolicy", mock.Anything, policies.Policy{
@@ -346,8 +348,9 @@ func TestIssue(t *testing.T) {
 	}
 	for _, tc := range cases4 {
 		t.Run(tc.desc, func(t *testing.T) {
-			tokenizerCall := tokenizer.On("Issue", mock.Anything).Return(tc.token, tc.issueErr)
+			tokenizerCall := tokenizer.On("Issue", mock.Anything, mock.Anything).Return(tc.token, tc.issueErr)
 			tokenizerCall1 := tokenizer.On("Parse", mock.Anything, tc.token).Return(tc.parseRes, tc.parseErr)
+			tokenizerCall2 := tokenizer.On("Revoke", mock.Anything, tc.token).Return(tc.parseErr)
 			policyCall := pEvaluator.On("CheckPolicy", mock.Anything, policies.Policy{
 				Subject:     tc.key.Subject,
 				SubjectType: policies.UserType,
@@ -359,6 +362,7 @@ func TestIssue(t *testing.T) {
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 			tokenizerCall.Unset()
 			tokenizerCall1.Unset()
+			tokenizerCall2.Unset()
 			policyCall.Unset()
 		})
 	}

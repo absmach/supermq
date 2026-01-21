@@ -72,6 +72,9 @@ type Authn interface {
 	// Issue issues a new Key, returning its token value alongside.
 	Issue(ctx context.Context, token string, key Key) (Token, error)
 
+	// RevokeToken revokes the refresh token by its ID.
+	RevokeToken(ctx context.Context, tokenID string) error
+
 	// Revoke removes the Key with the provided id that is
 	// issued by the user identified by the provided key.
 	Revoke(ctx context.Context, token, id string) error
@@ -87,6 +90,9 @@ type Authn interface {
 
 	// RetrieveJWKS retrieves public keys to validate issued tokens.
 	RetrieveJWKS() []PublicKeyInfo
+
+	// ListUserRefreshTokens lists all active refresh token sessions for a user.
+	ListUserRefreshTokens(ctx context.Context, userID string) ([]TokenInfo, error)
 }
 
 // Service specifies an API that must be fulfilled by the domain service
@@ -105,6 +111,7 @@ type service struct {
 	keys               KeyRepository
 	pats               PATSRepository
 	cache              Cache
+	tokensCache        TokensCache
 	hasher             Hasher
 	idProvider         supermq.IDProvider
 	evaluator          policies.Evaluator
@@ -116,12 +123,13 @@ type service struct {
 }
 
 // New instantiates the auth service implementation.
-func New(keys KeyRepository, pats PATSRepository, cache Cache, hasher Hasher, idp supermq.IDProvider, tokenizer Tokenizer, policyEvaluator policies.Evaluator, policyService policies.Service, loginDuration, refreshDuration, invitationDuration time.Duration) Service {
+func New(keys KeyRepository, pats PATSRepository, cache Cache, tokensCache TokensCache, hasher Hasher, idp supermq.IDProvider, tokenizer Tokenizer, policyEvaluator policies.Evaluator, policyService policies.Service, loginDuration, refreshDuration, invitationDuration time.Duration) Service {
 	return &service{
 		tokenizer:          tokenizer,
 		keys:               keys,
 		pats:               pats,
 		cache:              cache,
+		tokensCache:        tokensCache,
 		hasher:             hasher,
 		idProvider:         idp,
 		evaluator:          policyEvaluator,
@@ -146,6 +154,10 @@ func (svc service) Issue(ctx context.Context, token string, key Key) (Token, err
 	default:
 		return svc.accessKey(ctx, key)
 	}
+}
+
+func (svc service) RevokeToken(ctx context.Context, tokenID string) error {
+	return svc.tokensCache.RemoveActive(ctx, tokenID)
 }
 
 func (svc service) Revoke(ctx context.Context, token, id string) error {
@@ -208,6 +220,10 @@ func (svc service) RetrieveJWKS() []PublicKeyInfo {
 		return nil
 	}
 	return keys
+}
+
+func (svc service) ListUserRefreshTokens(ctx context.Context, userID string) ([]TokenInfo, error) {
+	return svc.tokensCache.ListUserTokens(ctx, userID)
 }
 
 func (svc service) Authorize(ctx context.Context, pr policies.Policy) error {
@@ -287,7 +303,7 @@ func (svc service) tmpKey(ctx context.Context, duration time.Duration, key Key) 
 	if err := svc.checkUserRole(ctx, key); err != nil {
 		return Token{}, errors.Wrap(errIssueTmp, err)
 	}
-	value, err := svc.tokenizer.Issue(key)
+	value, err := svc.tokenizer.Issue(ctx, key)
 	if err != nil {
 		return Token{}, errors.Wrap(errIssueTmp, err)
 	}
@@ -304,14 +320,19 @@ func (svc service) accessKey(ctx context.Context, key Key) (Token, error) {
 		return Token{}, errors.Wrap(errIssueUser, err)
 	}
 
-	access, err := svc.tokenizer.Issue(key)
+	access, err := svc.tokenizer.Issue(ctx, key)
 	if err != nil {
 		return Token{}, errors.Wrap(errIssueTmp, err)
 	}
 
 	key.ExpiresAt = time.Now().UTC().Add(svc.refreshDuration)
 	key.Type = RefreshKey
-	refresh, err := svc.tokenizer.Issue(key)
+	id, err := svc.idProvider.ID()
+	if err != nil {
+		return Token{}, errors.Wrap(errIssueTmp, err)
+	}
+	key.ID = id
+	refresh, err := svc.tokenizer.Issue(ctx, key)
 	if err != nil {
 		return Token{}, errors.Wrap(errIssueTmp, err)
 	}
@@ -328,7 +349,7 @@ func (svc service) invitationKey(ctx context.Context, key Key) (Token, error) {
 		return Token{}, errors.Wrap(errIssueTmp, err)
 	}
 
-	access, err := svc.tokenizer.Issue(key)
+	access, err := svc.tokenizer.Issue(ctx, key)
 	if err != nil {
 		return Token{}, errors.Wrap(errIssueTmp, err)
 	}
@@ -354,14 +375,14 @@ func (svc service) refreshKey(ctx context.Context, token string, key Key) (Token
 	key.Role = k.Role
 
 	key.ExpiresAt = time.Now().UTC().Add(svc.loginDuration)
-	access, err := svc.tokenizer.Issue(key)
+	access, err := svc.tokenizer.Issue(ctx, key)
 	if err != nil {
 		return Token{}, errors.Wrap(errIssueTmp, err)
 	}
 
-	key.ExpiresAt = time.Now().UTC().Add(svc.refreshDuration)
+	key.ExpiresAt = k.ExpiresAt
 	key.Type = RefreshKey
-	refresh, err := svc.tokenizer.Issue(key)
+	refresh, err := svc.tokenizer.Issue(ctx, key)
 	if err != nil {
 		return Token{}, errors.Wrap(errIssueTmp, err)
 	}
@@ -437,7 +458,7 @@ func (svc service) userKey(ctx context.Context, token string, key Key) (Token, e
 		return Token{}, errors.Wrap(errIssueUser, err)
 	}
 
-	tkn, err := svc.tokenizer.Issue(key)
+	tkn, err := svc.tokenizer.Issue(ctx, key)
 	if err != nil {
 		return Token{}, errors.Wrap(errIssueUser, err)
 	}

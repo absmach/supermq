@@ -110,7 +110,6 @@ func (h *handler) AuthPublish(ctx context.Context, topic *string, payload *[]byt
 
 	clientID, err := h.authAccess(ctx, s.Username, string(s.Password), domainID, channelID, connections.Publish, topicType)
 	if err != nil {
-		fmt.Println("AuthPublish authAccess error:", err)
 		return err
 	}
 

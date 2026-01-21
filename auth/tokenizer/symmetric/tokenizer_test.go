@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/auth"
+	"github.com/absmach/supermq/auth/mocks"
 	"github.com/absmach/supermq/auth/tokenizer/symmetric"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestNewTokenizer(t *testing.T) {
+	cache := new(mocks.TokensCache)
 	cases := []struct {
 		name        string
 		algorithm   string
@@ -67,7 +69,7 @@ func TestNewTokenizer(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			km, err := symmetric.NewTokenizer(tc.algorithm, tc.secret)
+			km, err := symmetric.NewTokenizer(tc.algorithm, tc.secret, cache)
 
 			if tc.expectErr {
 				assert.Error(t, err)
@@ -85,8 +87,9 @@ func TestNewTokenizer(t *testing.T) {
 
 func TestSign(t *testing.T) {
 	secret := []byte("my-super-secret-key-for-testing")
+	cache := new(mocks.TokensCache)
 
-	km, err := symmetric.NewTokenizer("HS256", secret)
+	km, err := symmetric.NewTokenizer("HS256", secret, cache)
 	require.NoError(t, err)
 
 	cases := []struct {
@@ -132,7 +135,7 @@ func TestSign(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			token, err := km.Issue(tc.key)
+			token, err := km.Issue(context.Background(), tc.key)
 			assert.NoError(t, err)
 			assert.NotEmpty(t, token)
 
@@ -145,8 +148,9 @@ func TestSign(t *testing.T) {
 
 func TestVerify(t *testing.T) {
 	secret := []byte("my-super-secret-key-for-testing")
+	cache := new(mocks.TokensCache)
 
-	km, err := symmetric.NewTokenizer("HS256", secret)
+	km, err := symmetric.NewTokenizer("HS256", secret, cache)
 	require.NoError(t, err)
 
 	validKey := auth.Key{
@@ -160,12 +164,12 @@ func TestVerify(t *testing.T) {
 		Verified:  true,
 	}
 
-	validToken, err := km.Issue(validKey)
+	validToken, err := km.Issue(context.Background(), validKey)
 	require.NoError(t, err, "Signing valid token should succeed")
 
 	expiredKey := validKey
 	expiredKey.ExpiresAt = time.Now().Add(-1 * time.Hour).UTC()
-	expiredToken, err := km.Issue(expiredKey)
+	expiredToken, err := km.Issue(context.Background(), expiredKey)
 	require.NoError(t, err)
 
 	wrongIssuerKey := validKey
@@ -188,9 +192,9 @@ func TestVerify(t *testing.T) {
 	require.NoError(t, err)
 	wrongIssuerToken := string(wrongIssuerTokenBytes)
 
-	wrongSecretKM, err := symmetric.NewTokenizer("HS256", []byte("different-secret-key-here"))
+	wrongSecretKM, err := symmetric.NewTokenizer("HS256", []byte("different-secret-key-here"), cache)
 	require.NoError(t, err)
-	wrongSecretToken, err := wrongSecretKM.Issue(validKey)
+	wrongSecretToken, err := wrongSecretKM.Issue(context.Background(), validKey)
 	require.NoError(t, err)
 
 	cases := []struct {
@@ -251,8 +255,9 @@ func TestVerify(t *testing.T) {
 
 func TestPublicKeys(t *testing.T) {
 	secret := []byte("my-super-secret-key-for-testing")
+	cache := new(mocks.TokensCache)
 
-	km, err := symmetric.NewTokenizer("HS256", secret)
+	km, err := symmetric.NewTokenizer("HS256", secret, cache)
 	require.NoError(t, err)
 
 	keys, err := km.RetrieveJWKS()
@@ -263,12 +268,13 @@ func TestPublicKeys(t *testing.T) {
 
 func TestSignAndVerifyRoundTrip(t *testing.T) {
 	algorithms := []string{"HS256", "HS384", "HS512"}
+	cache := new(mocks.TokensCache)
 
 	for _, alg := range algorithms {
 		t.Run(alg, func(t *testing.T) {
 			secret := []byte("my-super-secret-key-for-testing-" + alg)
 
-			km, err := symmetric.NewTokenizer(alg, secret)
+			km, err := symmetric.NewTokenizer(alg, secret, cache)
 			require.NoError(t, err)
 
 			originalKey := auth.Key{
@@ -282,7 +288,7 @@ func TestSignAndVerifyRoundTrip(t *testing.T) {
 				Verified:  true,
 			}
 
-			token, err := km.Issue(originalKey)
+			token, err := km.Issue(context.Background(), originalKey)
 			require.NoError(t, err)
 
 			verifiedKey, err := km.Parse(context.Background(), token)
@@ -301,6 +307,7 @@ func TestSignAndVerifyRoundTrip(t *testing.T) {
 
 func TestDifferentAlgorithms(t *testing.T) {
 	secret := []byte("my-super-secret-key-for-testing-algorithms")
+	cache := new(mocks.TokensCache)
 
 	key := auth.Key{
 		ID:        "key-id",
@@ -313,19 +320,19 @@ func TestDifferentAlgorithms(t *testing.T) {
 		Verified:  true,
 	}
 
-	km256, err := symmetric.NewTokenizer("HS256", secret)
+	km256, err := symmetric.NewTokenizer("HS256", secret, cache)
 	require.NoError(t, err)
-	token256, err := km256.Issue(key)
-	require.NoError(t, err)
-
-	km384, err := symmetric.NewTokenizer("HS384", secret)
-	require.NoError(t, err)
-	token384, err := km384.Issue(key)
+	token256, err := km256.Issue(context.Background(), key)
 	require.NoError(t, err)
 
-	km512, err := symmetric.NewTokenizer("HS512", secret)
+	km384, err := symmetric.NewTokenizer("HS384", secret, cache)
 	require.NoError(t, err)
-	token512, err := km512.Issue(key)
+	token384, err := km384.Issue(context.Background(), key)
+	require.NoError(t, err)
+
+	km512, err := symmetric.NewTokenizer("HS512", secret, cache)
+	require.NoError(t, err)
+	token512, err := km512.Issue(context.Background(), key)
 	require.NoError(t, err)
 
 	assert.NotEqual(t, token256, token384)

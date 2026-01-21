@@ -13,18 +13,18 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/absmach/supermq"
 	"github.com/absmach/supermq/auth"
 	smqjwt "github.com/absmach/supermq/auth/tokenizer/util"
 	"github.com/absmach/supermq/pkg/errors"
+	svcerr "github.com/absmach/supermq/pkg/errors/service"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jws"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
-
-const patPrefix = "pat"
 
 var (
 	errLoadingPrivateKey      = errors.New("failed to load private key")
@@ -47,6 +47,7 @@ type keyPair struct {
 type tokenizer struct {
 	activeKey   *keyPair
 	retiringKey *keyPair // Optional, for key rotation grace period
+	cache       auth.TokensCache
 }
 
 var _ auth.Tokenizer = (*tokenizer)(nil)
@@ -56,7 +57,7 @@ var _ auth.Tokenizer = (*tokenizer)(nil)
 // If retiringKeyPath is provided but the file doesn't exist or is invalid, a warning is logged
 // but the tokenizer is still created with just the active key.
 // Key IDs are derived from filenames to ensure consistency across multiple service instances.
-func NewTokenizer(activeKeyPath, retiringKeyPath string, idProvider supermq.IDProvider, logger *slog.Logger) (auth.Tokenizer, error) {
+func NewTokenizer(activeKeyPath, retiringKeyPath string, idProvider supermq.IDProvider, cache auth.TokensCache, logger *slog.Logger) (auth.Tokenizer, error) {
 	activeKID := keyIDFromPath(activeKeyPath)
 
 	activePrivateJwk, activePublicJwk, err := loadKeyPair(activeKeyPath, activeKID)
@@ -70,6 +71,7 @@ func NewTokenizer(activeKeyPath, retiringKeyPath string, idProvider supermq.IDPr
 			privateKey: activePrivateJwk,
 			publicKey:  activePublicJwk,
 		},
+		cache: cache,
 	}
 
 	if retiringKeyPath != "" {
@@ -95,8 +97,8 @@ func NewTokenizer(activeKeyPath, retiringKeyPath string, idProvider supermq.IDPr
 	return mgr, nil
 }
 
-func (km *tokenizer) Issue(key auth.Key) (string, error) {
-	if km.activeKey == nil {
+func (tok *tokenizer) Issue(ctx context.Context, key auth.Key) (string, error) {
+	if tok.activeKey == nil {
 		return "", errNoActiveKey
 	}
 
@@ -105,29 +107,93 @@ func (km *tokenizer) Issue(key auth.Key) (string, error) {
 		return "", err
 	}
 	headers := jws.NewHeaders()
-	if err := headers.Set(jwk.KeyIDKey, km.activeKey.id); err != nil {
+	if err := headers.Set(jwk.KeyIDKey, tok.activeKey.id); err != nil {
 		return "", err
 	}
 
-	signedBytes, err := jwt.Sign(tkn, jwt.WithKey(jwa.EdDSA, km.activeKey.privateKey, jws.WithProtectedHeaders(headers)))
+	signedBytes, err := jwt.Sign(tkn, jwt.WithKey(jwa.EdDSA, tok.activeKey.privateKey, jws.WithProtectedHeaders(headers)))
 	if err != nil {
 		return "", err
+	}
+
+	if key.Type == auth.RefreshKey && key.ID != "" && key.Subject != "" {
+		ttl := time.Until(key.ExpiresAt)
+		if ttl > 0 {
+			if err := tok.cache.SaveActive(ctx, key.Subject, key.ID, key.Description, ttl); err != nil {
+				return "", err
+			}
+		}
 	}
 
 	return string(signedBytes), nil
 }
 
-func (km *tokenizer) Parse(ctx context.Context, tokenString string) (auth.Key, error) {
-	if len(tokenString) >= 3 && tokenString[:3] == patPrefix {
+func (tok *tokenizer) Parse(ctx context.Context, tokenString string) (auth.Key, error) {
+	key, err := tok.parseToken(tokenString)
+	if err != nil {
+		return auth.Key{}, err
+	}
+	if key.Type == auth.RefreshKey {
+		found, err := tok.cache.IsActive(ctx, key.ID)
+		if err != nil {
+			return auth.Key{}, err
+		}
+		if !found {
+			return auth.Key{}, auth.ErrRevokedToken
+		}
+	}
+
+	return key, nil
+}
+
+func (tok *tokenizer) RetrieveJWKS() ([]auth.PublicKeyInfo, error) {
+	publicKeys := make([]auth.PublicKeyInfo, 0, 2)
+
+	if tok.activeKey != nil {
+		if pkInfo := extractPublicKeyInfo(tok.activeKey); pkInfo != nil {
+			publicKeys = append(publicKeys, *pkInfo)
+		}
+	}
+
+	if tok.retiringKey != nil {
+		if pkInfo := extractPublicKeyInfo(tok.retiringKey); pkInfo != nil {
+			publicKeys = append(publicKeys, *pkInfo)
+		}
+	}
+
+	if len(publicKeys) == 0 {
+		return nil, errNoValidPublicKeys
+	}
+
+	return publicKeys, nil
+}
+
+func (tok *tokenizer) Revoke(ctx context.Context, token string) error {
+	key, err := tok.parseToken(token)
+	if err != nil {
+		return err
+	}
+
+	if key.Type == auth.RefreshKey {
+		if err := tok.cache.RemoveActive(ctx, key.ID); err != nil {
+			return errors.Wrap(svcerr.ErrAuthentication, err)
+		}
+	}
+
+	return nil
+}
+
+func (tok *tokenizer) parseToken(tokenString string) (auth.Key, error) {
+	if len(tokenString) >= 3 && tokenString[:3] == smqjwt.PatPrefix {
 		return auth.Key{Type: auth.PersonalAccessToken}, nil
 	}
 
 	set := jwk.NewSet()
-	if err := set.AddKey(km.activeKey.publicKey); err != nil {
+	if err := set.AddKey(tok.activeKey.publicKey); err != nil {
 		return auth.Key{}, err
 	}
-	if km.retiringKey != nil {
-		if err := set.AddKey(km.retiringKey.publicKey); err != nil {
+	if tok.retiringKey != nil {
+		if err := set.AddKey(tok.retiringKey.publicKey); err != nil {
 			return auth.Key{}, err
 		}
 	}
@@ -138,7 +204,10 @@ func (km *tokenizer) Parse(ctx context.Context, tokenString string) (auth.Key, e
 		jwt.WithKeySet(set, jws.WithInferAlgorithmFromKey(true)),
 	)
 	if err != nil {
-		return auth.Key{}, err
+		if errors.Contains(err, smqjwt.ErrJWTExpiryKey) {
+			return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, auth.ErrExpiry)
+		}
+		return auth.Key{}, errors.Wrap(svcerr.ErrAuthentication, err)
 	}
 
 	if tkn.Issuer() != smqjwt.IssuerName {
@@ -146,28 +215,6 @@ func (km *tokenizer) Parse(ctx context.Context, tokenString string) (auth.Key, e
 	}
 
 	return smqjwt.ToKey(tkn)
-}
-
-func (km *tokenizer) RetrieveJWKS() ([]auth.PublicKeyInfo, error) {
-	publicKeys := make([]auth.PublicKeyInfo, 0, 2)
-
-	if km.activeKey != nil {
-		if pkInfo := extractPublicKeyInfo(km.activeKey); pkInfo != nil {
-			publicKeys = append(publicKeys, *pkInfo)
-		}
-	}
-
-	if km.retiringKey != nil {
-		if pkInfo := extractPublicKeyInfo(km.retiringKey); pkInfo != nil {
-			publicKeys = append(publicKeys, *pkInfo)
-		}
-	}
-
-	if len(publicKeys) == 0 {
-		return nil, errNoValidPublicKeys
-	}
-
-	return publicKeys, nil
 }
 
 func extractPublicKeyInfo(kp *keyPair) *auth.PublicKeyInfo {
