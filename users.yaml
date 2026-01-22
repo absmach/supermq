@@ -714,6 +714,10 @@ components:
         metadata:
           type: object
           example: { "domain": "example.com" }
+          description: Arbitrary, object-encoded user's data private to the user.
+        public_metadata:
+          type: object
+          example: { "domain": "example.com" }
           description: Arbitrary, object-encoded user's data.
         profile_picture:
           type: string
@@ -768,6 +772,10 @@ components:
               example: john_doe
               description: User's username for example john_doe for Mr John Doe.
         metadata:
+          type: object
+          example: { "address": "example" }
+          description: Arbitrary, object-encoded user's data private to the user.
+        public_metadata:
           type: object
           example: { "address": "example" }
           description: Arbitrary, object-encoded user's data.
@@ -1252,7 +1260,7 @@ components:
 
     Metadata:
       name: metadata
-      description: Metadata filter. Filtering is performed matching the parameter with metadata on top level. Parameter is json.
+      description: Metadata filter. Filtering is performed matching the parameter with public metadata on top level. Parameter is json.
       in: query
       schema:
         type: object
@@ -1334,7 +1342,7 @@ components:
             $ref: "#/components/schemas/UserReqObj"
 
     UserUpdateReq:
-      description: JSON-formated document describing the metadata and name of user to be update
+      description: JSON-formated document describing the name, metadata and public_metadata of user to be update
       required: true
       content:
         application/json:

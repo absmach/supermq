@@ -943,10 +943,14 @@ components:
               example: bb7edb32-2eac-4aad-aebe-ed96fe073879
               minimum: 8
               description: Free-form account secret used for acquiring auth token(s).
-        metadata:
+        public_metadata:
           type: object
           example: { "model": "example" }
           description: Arbitrary, object-encoded client's data.
+        metadata:
+          type: object
+          example: { "model": "example" }
+          description: Arbitrary, object-encoded client's data, private to the client.
         status:
           type: string
           description: Client Status
@@ -1001,10 +1005,14 @@ components:
               type: string
               example: bb7edb32-2eac-4aad-aebe-ed96fe073879
               description: Client secret password.
-        metadata:
+        public_metadata:
           type: object
           example: { "model": "example" }
           description: Arbitrary, object-encoded client's data.
+        metadata:
+          type: object
+          example: { "model": "example" }
+          description: Arbitrary, object-encoded client's data, private to the client.
         status:
           type: string
           description: Client Status
@@ -1058,10 +1066,14 @@ components:
               type: string
               example: ""
               description: Client secret password.
-        metadata:
+        public_metadata:
           type: object
           example: { "model": "example" }
           description: Arbitrary, object-encoded client's data.
+        metadata:
+          type: object
+          example: { "model": "example" }
+          description: Arbitrary, object-encoded client's data, private to the client.
         status:
           type: string
           description: Client Status
@@ -1113,9 +1125,14 @@ components:
         metadata:
           type: object
           example: { "role": "general" }
-          description: Arbitrary, object-encoded client's data.
+          description: Arbitrary, object-encoded client's data, private to the client.
+        public_metadata:
+          type: object
+          example: { "role": "general" }
+          description: Arbitrary, object-encoded client's data.        
       required:
         - name
+        - public_metadata
         - metadata
 
     ClientTags:
