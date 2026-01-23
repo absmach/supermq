@@ -181,7 +181,7 @@ paths:
 
     patch:
       operationId: updateClient
-      summary: Updates name and metadata of the client.
+      summary: Updates name, metadata, and private metadata of the client.
       description: |
         Update is performed by replacing the current resource data with values
         provided in a request payload. Note that the client's type and ID
@@ -943,14 +943,14 @@ components:
               example: bb7edb32-2eac-4aad-aebe-ed96fe073879
               minimum: 8
               description: Free-form account secret used for acquiring auth token(s).
-        public_metadata:
+        private_metadata:
           type: object
           example: { "model": "example" }
-          description: Arbitrary, object-encoded client's data.
+          description: Arbitrary, object-encoded client's data private to the client.
         metadata:
           type: object
           example: { "model": "example" }
-          description: Arbitrary, object-encoded client's data, private to the client.
+          description: Arbitrary, object-encoded client's data visible to other clients.
         status:
           type: string
           description: Client Status
@@ -1005,14 +1005,14 @@ components:
               type: string
               example: bb7edb32-2eac-4aad-aebe-ed96fe073879
               description: Client secret password.
-        public_metadata:
+        private_metadata:
           type: object
           example: { "model": "example" }
-          description: Arbitrary, object-encoded client's data.
+          description: Arbitrary, object-encoded client's data private to the client.
         metadata:
           type: object
           example: { "model": "example" }
-          description: Arbitrary, object-encoded client's data, private to the client.
+          description: Arbitrary, object-encoded client's data visible to other clients.
         status:
           type: string
           description: Client Status
@@ -1066,14 +1066,14 @@ components:
               type: string
               example: ""
               description: Client secret password.
-        public_metadata:
+        private_metadata:
           type: object
           example: { "model": "example" }
-          description: Arbitrary, object-encoded client's data.
+          description: Arbitrary, object-encoded client's data private to the client.
         metadata:
           type: object
           example: { "model": "example" }
-          description: Arbitrary, object-encoded client's data, private to the client.
+          description: Arbitrary, object-encoded client's data visible to other clients.
         status:
           type: string
           description: Client Status
@@ -1125,14 +1125,14 @@ components:
         metadata:
           type: object
           example: { "role": "general" }
-          description: Arbitrary, object-encoded client's data, private to the client.
-        public_metadata:
+          description: Arbitrary, object-encoded client's data visible to other clients.
+        private_metadata:
           type: object
           example: { "role": "general" }
-          description: Arbitrary, object-encoded client's data.        
+          description: Arbitrary, object-encoded client's data private to the client.
       required:
         - name
-        - public_metadata
+        - private_metadata
         - metadata
 
     ClientTags:
@@ -1185,7 +1185,7 @@ components:
         metadata:
           type: object
           example: { "model": "example" }
-          description: Arbitrary, object-encoded client's data.
+          description: Arbitrary, object-encoded client's data visible to other clients.
         status:
           type: string
           description: Client Status
@@ -1443,7 +1443,7 @@ components:
               $ref: "#/components/schemas/ClientReqObj"
 
     ClientUpdateReq:
-      description: JSON-formated document describing the metadata and name of client to be update
+      description: JSON-formated document describing the metadata, private metadata and name of client to be update
       required: true
       content:
         application/json:

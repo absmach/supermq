@@ -154,10 +154,10 @@ paths:
 
     patch:
       operationId: updateUser
-      summary: Updates first, last name and metadata of the user.
+      summary: Updates first, last name, metadata, and private metadata of the user.
       description: |
-        Updates name and metadata of the user with provided ID. Name and metadata
-        is updated using authorization token and the new received info.
+        Updates name, metadata and private metadata of the user with provided ID. Name, metadata
+        and private metadata are updated using authorization token and the new received info.
       tags:
         - Users
       parameters:
@@ -714,11 +714,11 @@ components:
         metadata:
           type: object
           example: { "domain": "example.com" }
-          description: Arbitrary, object-encoded user's data private to the user.
-        public_metadata:
+          description: Arbitrary, object-encoded user's data visible to other users.
+        private_metadata:
           type: object
           example: { "domain": "example.com" }
-          description: Arbitrary, object-encoded user's data.
+          description: Arbitrary, object-encoded user's data private to the user.
         profile_picture:
           type: string
           example: "https://example.com/profile.jpg"
@@ -774,11 +774,11 @@ components:
         metadata:
           type: object
           example: { "address": "example" }
-          description: Arbitrary, object-encoded user's data private to the user.
-        public_metadata:
+          description: Arbitrary, object-encoded user's data visible to other users.
+        private_metadata:
           type: object
           example: { "address": "example" }
-          description: Arbitrary, object-encoded user's data.
+          description: Arbitrary, object-encoded user's data private to the user.
         profile_picture:
           type: string
           example: "https://example.com/profile.jpg"
@@ -843,7 +843,7 @@ components:
         metadata:
           type: object
           example: { "role": "general" }
-          description: Arbitrary, object-encoded user's data.
+          description: Arbitrary, object-encoded user's data visible to other users.
         status:
           type: string
           description: User Status
@@ -902,7 +902,11 @@ components:
         metadata:
           type: object
           example: { "role": "general" }
-          description: Arbitrary, object-encoded user's data.
+          description: Arbitrary, object-encoded user's data visible to other users.
+        private_metadata:
+          type: object
+          example: { "role": "general" }
+          description: Arbitrary, object-encoded user's data private to the user.
 
     UserTags:
       type: object
@@ -1260,7 +1264,7 @@ components:
 
     Metadata:
       name: metadata
-      description: Metadata filter. Filtering is performed matching the parameter with public metadata on top level. Parameter is json.
+      description: Metadata filter. Filtering is performed matching the parameter with metadata on top level. Parameter is json.
       in: query
       schema:
         type: object
@@ -1342,7 +1346,7 @@ components:
             $ref: "#/components/schemas/UserReqObj"
 
     UserUpdateReq:
-      description: JSON-formated document describing the name, metadata and public_metadata of user to be update
+      description: JSON-formated document describing the name, metadata and private_metadata of user to be update
       required: true
       content:
         application/json:
