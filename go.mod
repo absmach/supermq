@@ -31,7 +31,7 @@ require (
 	github.com/ory/dockertest/v3 v3.12.0
 	github.com/pelletier/go-toml v1.9.5
 	github.com/pion/dtls/v3 v3.0.10
-	github.com/plgd-dev/go-coap/v3 v3.4.1
+	github.com/plgd-dev/go-coap/v3 v3.4.2
 	github.com/prometheus/client_golang v1.23.2
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/redis/go-redis/v9 v9.17.2
