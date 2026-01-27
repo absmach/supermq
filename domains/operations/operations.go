@@ -1,7 +1,7 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package domains
+package operations
 
 import (
 	"github.com/absmach/supermq/pkg/permissions"

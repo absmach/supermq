@@ -125,6 +125,15 @@ func Migration() *migrate.MemoryMigrationSource {
 					`ALTER TABLE pats ALTER COLUMN last_used_at TYPE TIMESTAMP;`,
 				},
 			},
+			{
+				Id: "auth_7",
+				Up: []string{
+					`ALTER TABLE pat_scopes RENAME COLUMN optional_domain_id TO domain_id;`,
+				},
+				Down: []string{
+					`ALTER TABLE pat_scopes RENAME COLUMN domain_id TO optional_domain_id;`,
+				},
+			},
 		},
 	}
 }

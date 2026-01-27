@@ -5,7 +5,9 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/pkg/authn"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	"github.com/absmach/supermq/pkg/errors"
@@ -40,7 +42,7 @@ func NewAuthorization(entityType string, svc roles.RoleManager, authz smqauthz.A
 }
 
 func (ram RoleManagerAuthorizationMiddleware) AddRole(ctx context.Context, session authn.Session, entityID, roleName string, optionalActions []string, optionalMembers []string) (roles.RoleProvision, error) {
-	if err := ram.authorize(ctx, roles.OpAddRole, smqauthz.PolicyReq{
+	if err := ram.authorize(ctx, session, roles.OpAddRole, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
@@ -57,7 +59,7 @@ func (ram RoleManagerAuthorizationMiddleware) AddRole(ctx context.Context, sessi
 }
 
 func (ram RoleManagerAuthorizationMiddleware) RemoveRole(ctx context.Context, session authn.Session, entityID, roleID string) error {
-	if err := ram.authorize(ctx, roles.OpRemoveRole, smqauthz.PolicyReq{
+	if err := ram.authorize(ctx, session, roles.OpRemoveRole, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
@@ -71,7 +73,7 @@ func (ram RoleManagerAuthorizationMiddleware) RemoveRole(ctx context.Context, se
 }
 
 func (ram RoleManagerAuthorizationMiddleware) UpdateRoleName(ctx context.Context, session authn.Session, entityID, roleID, newRoleName string) (roles.Role, error) {
-	if err := ram.authorize(ctx, roles.OpUpdateRoleName, smqauthz.PolicyReq{
+	if err := ram.authorize(ctx, session, roles.OpUpdateRoleName, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
@@ -85,7 +87,7 @@ func (ram RoleManagerAuthorizationMiddleware) UpdateRoleName(ctx context.Context
 }
 
 func (ram RoleManagerAuthorizationMiddleware) RetrieveRole(ctx context.Context, session authn.Session, entityID, roleID string) (roles.Role, error) {
-	if err := ram.authorize(ctx, roles.OpRetrieveRole, smqauthz.PolicyReq{
+	if err := ram.authorize(ctx, session, roles.OpRetrieveRole, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
@@ -99,7 +101,7 @@ func (ram RoleManagerAuthorizationMiddleware) RetrieveRole(ctx context.Context, 
 }
 
 func (ram RoleManagerAuthorizationMiddleware) RetrieveAllRoles(ctx context.Context, session authn.Session, entityID string, limit, offset uint64) (roles.RolePage, error) {
-	if err := ram.authorize(ctx, roles.OpRetrieveAllRoles, smqauthz.PolicyReq{
+	if err := ram.authorize(ctx, session, roles.OpRetrieveAllRoles, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
@@ -117,7 +119,7 @@ func (ram RoleManagerAuthorizationMiddleware) ListAvailableActions(ctx context.C
 }
 
 func (ram RoleManagerAuthorizationMiddleware) RoleAddActions(ctx context.Context, session authn.Session, entityID, roleID string, actions []string) (ops []string, err error) {
-	if err := ram.authorize(ctx, roles.OpRoleAddActions, smqauthz.PolicyReq{
+	if err := ram.authorize(ctx, session, roles.OpRoleAddActions, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
@@ -132,7 +134,7 @@ func (ram RoleManagerAuthorizationMiddleware) RoleAddActions(ctx context.Context
 }
 
 func (ram RoleManagerAuthorizationMiddleware) RoleListActions(ctx context.Context, session authn.Session, entityID, roleID string) ([]string, error) {
-	if err := ram.authorize(ctx, roles.OpRoleListActions, smqauthz.PolicyReq{
+	if err := ram.authorize(ctx, session, roles.OpRoleListActions, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
@@ -147,7 +149,7 @@ func (ram RoleManagerAuthorizationMiddleware) RoleListActions(ctx context.Contex
 }
 
 func (ram RoleManagerAuthorizationMiddleware) RoleCheckActionsExists(ctx context.Context, session authn.Session, entityID, roleID string, actions []string) (bool, error) {
-	if err := ram.authorize(ctx, roles.OpRoleCheckActionsExists, smqauthz.PolicyReq{
+	if err := ram.authorize(ctx, session, roles.OpRoleCheckActionsExists, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
@@ -161,7 +163,7 @@ func (ram RoleManagerAuthorizationMiddleware) RoleCheckActionsExists(ctx context
 }
 
 func (ram RoleManagerAuthorizationMiddleware) RoleRemoveActions(ctx context.Context, session authn.Session, entityID, roleID string, actions []string) (err error) {
-	if err := ram.authorize(ctx, roles.OpRoleRemoveActions, smqauthz.PolicyReq{
+	if err := ram.authorize(ctx, session, roles.OpRoleRemoveActions, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
@@ -176,7 +178,7 @@ func (ram RoleManagerAuthorizationMiddleware) RoleRemoveActions(ctx context.Cont
 }
 
 func (ram RoleManagerAuthorizationMiddleware) RoleRemoveAllActions(ctx context.Context, session authn.Session, entityID, roleID string) error {
-	if err := ram.authorize(ctx, roles.OpRoleRemoveAllActions, smqauthz.PolicyReq{
+	if err := ram.authorize(ctx, session, roles.OpRoleRemoveAllActions, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
@@ -190,7 +192,7 @@ func (ram RoleManagerAuthorizationMiddleware) RoleRemoveAllActions(ctx context.C
 }
 
 func (ram RoleManagerAuthorizationMiddleware) RoleAddMembers(ctx context.Context, session authn.Session, entityID, roleID string, members []string) ([]string, error) {
-	if err := ram.authorize(ctx, roles.OpRoleAddMembers, smqauthz.PolicyReq{
+	if err := ram.authorize(ctx, session, roles.OpRoleAddMembers, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
@@ -208,7 +210,7 @@ func (ram RoleManagerAuthorizationMiddleware) RoleAddMembers(ctx context.Context
 }
 
 func (ram RoleManagerAuthorizationMiddleware) RoleListMembers(ctx context.Context, session authn.Session, entityID, roleID string, limit, offset uint64) (roles.MembersPage, error) {
-	if err := ram.authorize(ctx, roles.OpRoleListMembers, smqauthz.PolicyReq{
+	if err := ram.authorize(ctx, session, roles.OpRoleListMembers, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
@@ -222,7 +224,7 @@ func (ram RoleManagerAuthorizationMiddleware) RoleListMembers(ctx context.Contex
 }
 
 func (ram RoleManagerAuthorizationMiddleware) RoleCheckMembersExists(ctx context.Context, session authn.Session, entityID, roleID string, members []string) (bool, error) {
-	if err := ram.authorize(ctx, roles.OpRoleCheckMembersExists, smqauthz.PolicyReq{
+	if err := ram.authorize(ctx, session, roles.OpRoleCheckMembersExists, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
@@ -236,7 +238,7 @@ func (ram RoleManagerAuthorizationMiddleware) RoleCheckMembersExists(ctx context
 }
 
 func (ram RoleManagerAuthorizationMiddleware) RoleRemoveAllMembers(ctx context.Context, session authn.Session, entityID, roleID string) (err error) {
-	if err := ram.authorize(ctx, roles.OpRoleRemoveAllMembers, smqauthz.PolicyReq{
+	if err := ram.authorize(ctx, session, roles.OpRoleRemoveAllMembers, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
@@ -250,7 +252,7 @@ func (ram RoleManagerAuthorizationMiddleware) RoleRemoveAllMembers(ctx context.C
 }
 
 func (ram RoleManagerAuthorizationMiddleware) ListEntityMembers(ctx context.Context, session authn.Session, entityID string, pageQuery roles.MembersRolePageQuery) (roles.MembersRolePage, error) {
-	if err := ram.authorize(ctx, roles.OpRoleListMembers, smqauthz.PolicyReq{
+	if err := ram.authorize(ctx, session, roles.OpRoleListMembers, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
@@ -264,7 +266,7 @@ func (ram RoleManagerAuthorizationMiddleware) ListEntityMembers(ctx context.Cont
 }
 
 func (ram RoleManagerAuthorizationMiddleware) RemoveEntityMembers(ctx context.Context, session authn.Session, entityID string, members []string) error {
-	if err := ram.authorize(ctx, roles.OpRoleRemoveAllMembers, smqauthz.PolicyReq{
+	if err := ram.authorize(ctx, session, roles.OpRoleRemoveAllMembers, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
@@ -278,7 +280,7 @@ func (ram RoleManagerAuthorizationMiddleware) RemoveEntityMembers(ctx context.Co
 }
 
 func (ram RoleManagerAuthorizationMiddleware) RoleRemoveMembers(ctx context.Context, session authn.Session, entityID, roleID string, members []string) (err error) {
-	if err := ram.authorize(ctx, roles.OpRoleRemoveMembers, smqauthz.PolicyReq{
+	if err := ram.authorize(ctx, session, roles.OpRoleRemoveMembers, smqauthz.PolicyReq{
 		Domain:      session.DomainID,
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
@@ -291,13 +293,33 @@ func (ram RoleManagerAuthorizationMiddleware) RoleRemoveMembers(ctx context.Cont
 	return ram.svc.RoleRemoveMembers(ctx, session, entityID, roleID, members)
 }
 
-func (ram RoleManagerAuthorizationMiddleware) authorize(ctx context.Context, op permissions.RoleOperation, pr smqauthz.PolicyReq) error {
+func (ram RoleManagerAuthorizationMiddleware) authorize(ctx context.Context, session authn.Session, op permissions.RoleOperation, pr smqauthz.PolicyReq) error {
+	pr.UserID = session.UserID
+	pr.PatID = session.PatID
+	pr.Domain = session.DomainID
+
 	perm, err := ram.ops.GetPermission(op)
 	if err != nil {
 		return err
 	}
 
 	pr.Permission = perm.String()
+
+	pr.EntityID = pr.Object
+	opName := ram.ops.OperationName(op)
+	var patEntityType string
+	switch pr.ObjectType {
+	case policies.GroupType:
+		patEntityType = auth.GroupsType.String()
+	case policies.ClientType:
+		patEntityType = auth.ClientsType.String()
+	case policies.ChannelType:
+		patEntityType = auth.ChannelsType.String()
+	default:
+		return errors.Wrap(errors.ErrAuthorization, fmt.Errorf("unsupported entity type for PAT: %s", pr.ObjectType))
+	}
+	pr.EntityType = patEntityType
+	pr.Operation = auth.RoleOperationPrefix + opName
 
 	if err := ram.authz.Authorize(ctx, pr); err != nil {
 		return errors.Wrap(errors.ErrAuthorization, err)

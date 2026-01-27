@@ -25,11 +25,6 @@ const (
 	patSecretSeparator = "_"
 )
 
-const (
-	AccessTokenType uint32 = iota
-	PersonalAccessTokenType
-)
-
 var (
 	// ErrExpiry indicates that the token is expired.
 	ErrExpiry = errors.New("token is expired")
@@ -211,11 +206,14 @@ func (svc service) RetrieveJWKS() []PublicKeyInfo {
 }
 
 func (svc service) Authorize(ctx context.Context, pr policies.Policy) error {
-	if pr.PatID != "" && pr.TokenType == PersonalAccessTokenType {
-		if err := svc.AuthorizePAT(ctx, pr.UserID, pr.PatID, EntityType(pr.EntityType), pr.OptionalDomainID, Operation(pr.Operation), pr.EntityID); err != nil {
+	if pr.PatID != "" {
+		entityType, err := ParseEntityType(pr.EntityType)
+		if err != nil {
 			return err
 		}
-		return nil
+		if err := svc.AuthorizePAT(ctx, pr.UserID, pr.PatID, entityType, pr.Domain, pr.Operation, pr.EntityID); err != nil {
+			return err
+		}
 	}
 
 	if err := svc.PolicyValidation(pr); err != nil {
@@ -735,8 +733,8 @@ func (svc service) IdentifyPAT(ctx context.Context, secret string) (PAT, error) 
 	return pat, nil
 }
 
-func (svc service) AuthorizePAT(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityID string) error {
-	if err := svc.pats.CheckScope(ctx, userID, patID, entityType, optionalDomainID, operation, entityID); err != nil {
+func (svc service) AuthorizePAT(ctx context.Context, userID, patID string, entityType EntityType, domainID string, operation string, entityID string) error {
+	if err := svc.pats.CheckScope(ctx, userID, patID, entityType, domainID, operation, entityID); err != nil {
 		return errors.Wrap(svcerr.ErrAuthorization, err)
 	}
 

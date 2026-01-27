@@ -5,15 +5,9 @@ package authz
 
 import (
 	"context"
-
-	"github.com/absmach/supermq/auth"
-	"github.com/absmach/supermq/pkg/authn"
 )
 
 type PolicyReq struct {
-	// TokenType contains the token type. Used to differentiate between PAT and regular user tokens.
-	TokenType authn.TokenType `json:"token_type,omitempty"`
-
 	// Domain contains the domain ID.
 	Domain string `json:"domain,omitempty"`
 
@@ -50,12 +44,12 @@ type PolicyReq struct {
 	Permission string `json:"permission,omitempty"`
 
 	// PAT authorization fields
-	UserID           string          `json:"user_id,omitempty"`           // UserID who owns the PAT
-	PatID            string          `json:"pat_id,omitempty"`            // PAT ID
-	EntityType       auth.EntityType `json:"entity_type,omitempty"`       // Entity type
-	OptionalDomainID string          `json:"optional_domainID,omitempty"` // Optional domain ID for PAT scope checking
-	Operation        auth.Operation  `json:"operation,omitempty"`         // Operation type
-	EntityID         string          `json:"entityID,omitempty"`          // Entity ID
+	UserID     string `json:"user_id,omitempty"`
+	PatID      string `json:"pat_id,omitempty"`
+	EntityType string `json:"entity_type,omitempty"`
+	DomainID   string `json:"domain_id,omitempty"`
+	Operation  string `json:"operation,omitempty"`
+	EntityID   string `json:"entity_id,omitempty"`
 }
 
 // Authz is supermq authorization library.

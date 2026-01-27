@@ -1,50 +1,55 @@
 // Copyright (c) Abstract Machines
 // SPDX-License-Identifier: Apache-2.0
 
-package channels
+package operations
 
 import (
 	"github.com/absmach/supermq/pkg/permissions"
 )
 
-// Channel Operations.
+// Client Operations.
 const (
-	OpViewChannel permissions.Operation = iota
-	OpUpdateChannel
-	OpUpdateChannelTags
-	OpEnableChannel
-	OpDisableChannel
-	OpDeleteChannel
+	OpViewClient permissions.Operation = iota
+	OpUpdateClient
+	OpUpdateClientTags
+	OpUpdateClientSecret
+	OpEnableClient
+	OpDisableClient
+	OpDeleteClient
 	OpSetParentGroup
 	OpRemoveParentGroup
-	OpConnectClient
-	OpDisconnectClient
-	OpListUserChannels
+	OpConnectToChannel
+	OpDisconnectFromChannel
+	OpListUserClients
 )
 
 func OperationDetails() map[permissions.Operation]permissions.OperationDetails {
 	return map[permissions.Operation]permissions.OperationDetails{
-		OpViewChannel: {
+		OpViewClient: {
 			Name:               "view",
 			PermissionRequired: true,
 		},
-		OpUpdateChannel: {
+		OpUpdateClient: {
 			Name:               "update",
 			PermissionRequired: true,
 		},
-		OpUpdateChannelTags: {
+		OpUpdateClientTags: {
 			Name:               "update_tags",
 			PermissionRequired: true,
 		},
-		OpEnableChannel: {
+		OpUpdateClientSecret: {
+			Name:               "update_secret",
+			PermissionRequired: true,
+		},
+		OpEnableClient: {
 			Name:               "enable",
 			PermissionRequired: true,
 		},
-		OpDisableChannel: {
+		OpDisableClient: {
 			Name:               "disable",
 			PermissionRequired: true,
 		},
-		OpDeleteChannel: {
+		OpDeleteClient: {
 			Name:               "delete",
 			PermissionRequired: true,
 		},
@@ -56,16 +61,16 @@ func OperationDetails() map[permissions.Operation]permissions.OperationDetails {
 			Name:               "remove_parent_group",
 			PermissionRequired: true,
 		},
-		OpConnectClient: {
-			Name:               "connect_client",
+		OpConnectToChannel: {
+			Name:               "connect_to_channel",
 			PermissionRequired: true,
 		},
-		OpDisconnectClient: {
-			Name:               "disconnect_client",
+		OpDisconnectFromChannel: {
+			Name:               "disconnect_from_channel",
 			PermissionRequired: true,
 		},
-		OpListUserChannels: {
-			Name:               "list_user_channels",
+		OpListUserClients: {
+			Name:               "list_user_clients",
 			PermissionRequired: false, // hardcoded to superadmin
 		},
 	}
