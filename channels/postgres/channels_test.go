@@ -1175,6 +1175,82 @@ func TestRemove(t *testing.T) {
 	}
 }
 
+func TestRemoveDomainChannels(t *testing.T) {
+	t.Cleanup(func() {
+		_, err := db.Exec("DELETE FROM channels")
+		require.Nil(t, err, fmt.Sprintf("clean channels unexpected error: %s", err))
+	})
+
+	repo := postgres.NewRepository(database)
+
+	domain1 := testsutil.GenerateUUID(t)
+	domain2 := testsutil.GenerateUUID(t)
+
+	channel1 := channels.Channel{
+		ID:       testsutil.GenerateUUID(t),
+		Domain:   domain1,
+		Name:     namegen.Generate(),
+		Route:    testsutil.GenerateUUID(t),
+		Status:   channels.EnabledStatus,
+		Metadata: map[string]any{"key": "value"},
+	}
+
+	channel2 := channels.Channel{
+		ID:       testsutil.GenerateUUID(t),
+		Domain:   domain1,
+		Name:     namegen.Generate(),
+		Route:    testsutil.GenerateUUID(t),
+		Status:   channels.EnabledStatus,
+		Metadata: map[string]any{"key": "value"},
+	}
+
+	channel3 := channels.Channel{
+		ID:       testsutil.GenerateUUID(t),
+		Domain:   domain2,
+		Name:     namegen.Generate(),
+		Route:    testsutil.GenerateUUID(t),
+		Status:   channels.EnabledStatus,
+		Metadata: map[string]any{"key": "value"},
+	}
+
+	_, err := repo.Save(context.Background(), channel1, channel2, channel3)
+	require.Nil(t, err, fmt.Sprintf("save channels unexpected error: %s", err))
+
+	cases := []struct {
+		desc     string
+		domainID string
+		err      error
+	}{
+		{
+			desc:     "remove domain channels successfully",
+			domainID: domain1,
+			err:      nil,
+		},
+		{
+			desc:     "remove channels from non-existent domain",
+			domainID: testsutil.GenerateUUID(t),
+			err:      nil,
+		},
+		{
+			desc:     "remove channels with invalid domain ID",
+			domainID: invalidID,
+			err:      nil,
+		},
+		{
+			desc:     "remove channels with empty domain ID",
+			domainID: "",
+			err:      nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := repo.RemoveDomainChannels(context.Background(), tc.domainID)
+			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		})
+	}
+}
+
 func TestSetParentGroup(t *testing.T) {
 	t.Cleanup(func() {
 		_, err := db.Exec("DELETE FROM channels")

@@ -63,6 +63,9 @@ type Repository interface {
 	// Delete deletes client with given id
 	Delete(ctx context.Context, clientIDs ...string) error
 
+	// DeleteDomainClients deletes all clients associated with a given domain ID.
+	DeleteDomainClients(ctx context.Context, domainID string) error
+
 	// Save persists the client account. A non-nil error is returned to indicate
 	// operation failure.
 	Save(ctx context.Context, client ...Client) ([]Client, error)

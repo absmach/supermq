@@ -11,6 +11,7 @@ import (
 
 type Service interface {
 	RetrieveById(ctx context.Context, id string) (groups.Group, error)
+	DeleteDomainGroups(ctx context.Context, domainID string) error
 }
 
 var _ Service = (*service)(nil)
@@ -25,4 +26,8 @@ type service struct {
 
 func (svc service) RetrieveById(ctx context.Context, ids string) (groups.Group, error) {
 	return svc.repo.RetrieveByID(ctx, ids)
+}
+
+func (svc service) DeleteDomainGroups(ctx context.Context, domainID string) error {
+	return svc.repo.DeleteDomainGroups(ctx, domainID)
 }

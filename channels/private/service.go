@@ -22,6 +22,7 @@ type Service interface {
 	RemoveClientConnections(ctx context.Context, clientID string) error
 	RetrieveByID(ctx context.Context, id string) (channels.Channel, error)
 	RetrieveIDByRoute(ctx context.Context, route, domainID string) (string, error)
+	DeleteDomainChannels(ctx context.Context, domainID string) error
 }
 
 type service struct {
@@ -137,4 +138,8 @@ func (svc service) RetrieveIDByRoute(ctx context.Context, route, domainID string
 	}
 
 	return chn.ID, nil
+}
+
+func (svc service) DeleteDomainChannels(ctx context.Context, domainID string) error {
+	return svc.repo.RemoveDomainChannels(ctx, domainID)
 }

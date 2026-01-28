@@ -132,8 +132,12 @@ type Repository interface {
 	RetrieveChildrenGroups(ctx context.Context, domainID, userID, groupID string, startLevel, endLevel int64, pm PageMeta) (Page, error)
 
 	RetrieveAllParentGroups(ctx context.Context, domainID, userID, groupID string, pm PageMeta) (Page, error)
+
 	// Delete a group
 	Delete(ctx context.Context, groupID string) error
+
+	// DeleteDomainGroups deletes all groups associated with the given domain ID.
+	DeleteDomainGroups(ctx context.Context, domainID string) error
 
 	roles.Repository
 }

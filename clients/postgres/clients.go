@@ -1030,6 +1030,20 @@ func (repo *clientRepo) Delete(ctx context.Context, clientIDs ...string) error {
 	return nil
 }
 
+func (repo *clientRepo) DeleteDomainClients(ctx context.Context, domainID string) error {
+	q := `DELETE FROM clients AS c WHERE c.domain_id = :domain_id;`
+
+	params := map[string]any{
+		"domain_id": domainID,
+	}
+	_, err := repo.DB.NamedExecContext(ctx, q, params)
+	if err != nil {
+		return repo.eh.HandleError(repoerr.ErrRemoveEntity, err)
+	}
+
+	return nil
+}
+
 type DBClient struct {
 	ID                        string           `db:"id"`
 	Name                      string           `db:"name,omitempty"`

@@ -28,6 +28,8 @@ type Service interface {
 	RemoveChannelConnections(ctx context.Context, channelID string) error
 
 	UnsetParentGroupFromClient(ctx context.Context, parentGroupID string) error
+
+	DeleteDomainClients(ctx context.Context, domainID string) error
 }
 
 var _ Service = (*service)(nil)
@@ -122,4 +124,8 @@ func (svc service) UnsetParentGroupFromClient(ctx context.Context, parentGroupID
 		}
 	}
 	return nil
+}
+
+func (svc service) DeleteDomainClients(ctx context.Context, domainID string) error {
+	return svc.repo.DeleteDomainClients(ctx, domainID)
 }
