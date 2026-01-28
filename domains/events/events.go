@@ -250,8 +250,8 @@ func (lde listDomainsEvent) Encode() (map[string]any, error) {
 	if lde.Metadata != nil {
 		val["metadata"] = lde.Metadata
 	}
-	if lde.Tag != "" {
-		val["tag"] = lde.Tag
+	if len(lde.Tags.Elements) > 0 {
+		val["tag"] = lde.Tags.Elements
 	}
 	if lde.RoleID != "" {
 		val["role_id"] = lde.RoleID

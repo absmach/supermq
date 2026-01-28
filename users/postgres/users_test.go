@@ -430,6 +430,9 @@ func TestRetrieveAll(t *testing.T) {
 			user.Role = users.AdminRole
 			user.Status = users.DisabledStatus
 		}
+		if i%99 == 0 {
+			user.Tags = []string{"tag1", "tag2"}
+		}
 		_, err := repo.Save(context.Background(), user)
 		require.Nil(t, err, fmt.Sprintf("failed to save user %s", user.ID))
 		items = append(items, user)
@@ -700,9 +703,9 @@ func TestRetrieveAll(t *testing.T) {
 			},
 		},
 		{
-			desc: "retrieve by tags",
+			desc: "retrieve by tags with OR operator",
 			pageMeta: users.Page{
-				Tag:    "tag1",
+				Tags:   users.TagsQuery{Operator: users.OrOp, Elements: []string{"tag1"}},
 				Offset: 0,
 				Limit:  200,
 				Role:   users.AllRole,
@@ -715,6 +718,63 @@ func TestRetrieveAll(t *testing.T) {
 					Limit:  200,
 				},
 				Users: items,
+			},
+			err: nil,
+		},
+		{
+			desc: "retrieve by tags with OR operator no match",
+			pageMeta: users.Page{
+				Tags:   users.TagsQuery{Operator: users.OrOp, Elements: []string{"non-existing-tag"}},
+				Offset: 0,
+				Limit:  200,
+				Role:   users.AllRole,
+				Status: users.AllStatus,
+			},
+			page: users.UsersPage{
+				Page: users.Page{
+					Total:  0,
+					Offset: 0,
+					Limit:  200,
+				},
+				Users: []users.User{},
+			},
+			err: nil,
+		},
+		{
+			desc: "retrieve by tags with AND operator",
+			pageMeta: users.Page{
+				Tags:   users.TagsQuery{Operator: users.AndOp, Elements: []string{"tag1", "tag2"}},
+				Offset: 0,
+				Limit:  200,
+				Role:   users.AllRole,
+				Status: users.AllStatus,
+			},
+			page: users.UsersPage{
+				Page: users.Page{
+					Total:  3,
+					Offset: 0,
+					Limit:  200,
+				},
+				Users: []users.User{items[0], items[99], items[198]},
+			},
+			err: nil,
+		},
+		{
+			desc: "retrieve by tags with AND operator no match",
+			pageMeta: users.Page{
+				Tags:   users.TagsQuery{Operator: users.AndOp, Elements: []string{"tag1", "non-existing-tag"}},
+				Offset: 0,
+				Limit:  200,
+				Role:   users.AllRole,
+				Status: users.AllStatus,
+			},
+			page: users.UsersPage{
+				Page: users.Page{
+					Total:  0,
+					Offset: 0,
+					Limit:  200,
+				},
+				Users: []users.User{},
 			},
 			err: nil,
 		},

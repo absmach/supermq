@@ -404,8 +404,8 @@ func (lue listUserEvent) Encode() (map[string]any, error) {
 	if lue.Domain != "" {
 		val["domain"] = lue.Domain
 	}
-	if lue.Tag != "" {
-		val["tag"] = lue.Tag
+	if len(lue.Tags.Elements) > 0 {
+		val["tags"] = lue.Tags.Elements
 	}
 	if lue.Permission != "" {
 		val["permission"] = lue.Permission

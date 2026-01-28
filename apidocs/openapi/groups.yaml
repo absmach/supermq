@@ -92,6 +92,7 @@ paths:
         - $ref: "#/components/parameters/DirectionOrder"
         - $ref: "#/components/parameters/Level"
         - $ref: "#/components/parameters/Tree"
+        - $ref: "#/components/parameters/Tags"
         - $ref: "#/components/parameters/Metadata"
         - $ref: "#/components/parameters/GroupName"
         - $ref: "#/components/parameters/RootGroup"
@@ -1387,16 +1388,12 @@ components:
 
     Tags:
       name: tags
-      description: User tags.
+      description: Group tags. Multiple tags can be specified separated by comma for OR condition and hyphen for AND condition.
       in: query
       schema:
-        type: array
-        minItems: 0
-        uniqueItems: true
-        items:
-          type: string
+        type: string
       required: false
-      example: ["yello", "orange"]
+      example: "orange,yellow"
 
     GroupName:
       name: name

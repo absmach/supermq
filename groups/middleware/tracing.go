@@ -49,7 +49,7 @@ func (tm *tracingMiddleware) ViewGroup(ctx context.Context, session authn.Sessio
 func (tm *tracingMiddleware) ListGroups(ctx context.Context, session authn.Session, pm groups.PageMeta) (groups.Page, error) {
 	attr := []attribute.KeyValue{
 		attribute.String("name", pm.Name),
-		attribute.String("tag", pm.Tag),
+		attribute.StringSlice("tags", pm.Tags.Elements),
 		attribute.String("status", pm.Status.String()),
 		attribute.Int64("offset", int64(pm.Offset)),
 		attribute.Int64("limit", int64(pm.Limit)),
@@ -67,7 +67,7 @@ func (tm *tracingMiddleware) ListUserGroups(ctx context.Context, session authn.S
 	attr := []attribute.KeyValue{
 		attribute.String("user_id", userID),
 		attribute.String("name", pm.Name),
-		attribute.String("tag", pm.Tag),
+		attribute.StringSlice("tag", pm.Tags.Elements),
 		attribute.String("status", pm.Status.String()),
 		attribute.Int64("offset", int64(pm.Offset)),
 		attribute.Int64("limit", int64(pm.Limit)),
@@ -176,7 +176,7 @@ func (tm *tracingMiddleware) ListChildrenGroups(ctx context.Context, session aut
 	attr := []attribute.KeyValue{
 		attribute.String("id", id),
 		attribute.String("name", pm.Name),
-		attribute.String("tag", pm.Tag),
+		attribute.StringSlice("tags", pm.Tags.Elements),
 		attribute.String("status", pm.Status.String()),
 		attribute.Int64("start_level", startLevel),
 		attribute.Int64("end_level", endLevel),

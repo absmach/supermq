@@ -76,6 +76,7 @@ paths:
         - $ref: "#/components/parameters/Order"
         - $ref: "#/components/parameters/Direction"
         - $ref: "#/components/parameters/Metadata"
+        - $ref: "#/components/parameters/Tags"
         - $ref: "#/components/parameters/Status"
         - $ref: "#/components/parameters/DomainName"
         - $ref: "./schemas/roles.yaml#/components/parameters/ActionsQuery"
@@ -1179,6 +1180,14 @@ components:
       schema:
         type: object
         additionalProperties: {}
+    Tags:
+      name: tags
+      description: Domain tags. Multiple tags can be specified separated by comma for OR condition and hyphen for AND condition.
+      in: query
+      schema:
+        type: string
+      required: false
+      example: "orange,yellow"
     Type:
       name: type
       description: The type of the API Key.

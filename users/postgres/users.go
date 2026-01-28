@@ -621,24 +621,29 @@ func ToUser(dbu DBUser) (users.User, error) {
 }
 
 type DBUsersPage struct {
-	Total     uint64       `db:"total"`
-	Limit     uint64       `db:"limit"`
-	Offset    uint64       `db:"offset"`
-	FirstName string       `db:"first_name"`
-	LastName  string       `db:"last_name"`
-	Username  string       `db:"username"`
-	Id        string       `db:"id"`
-	Email     string       `db:"email"`
-	Metadata  []byte       `db:"metadata"`
-	Tag       string       `db:"tag"`
-	GroupID   string       `db:"group_id"`
-	Role      users.Role   `db:"role"`
-	Status    users.Status `db:"status"`
+	Total     uint64           `db:"total"`
+	Limit     uint64           `db:"limit"`
+	Offset    uint64           `db:"offset"`
+	FirstName string           `db:"first_name"`
+	LastName  string           `db:"last_name"`
+	Username  string           `db:"username"`
+	Id        string           `db:"id"`
+	Email     string           `db:"email"`
+	Metadata  []byte           `db:"metadata"`
+	Tags      pgtype.TextArray `db:"tags"`
+	GroupID   string           `db:"group_id"`
+	Role      users.Role       `db:"role"`
+	Status    users.Status     `db:"status"`
 }
 
 func ToDBUsersPage(pm users.Page) (DBUsersPage, error) {
 	_, data, err := postgres.CreateMetadataQuery("", pm.Metadata)
 	if err != nil {
+		return DBUsersPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
+
+	var tags pgtype.TextArray
+	if err := tags.Set(pm.Tags.Elements); err != nil {
 		return DBUsersPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
 
@@ -653,7 +658,7 @@ func ToDBUsersPage(pm users.Page) (DBUsersPage, error) {
 		Offset:    pm.Offset,
 		Limit:     pm.Limit,
 		Status:    pm.Status,
-		Tag:       pm.Tag,
+		Tags:      tags,
 		Role:      pm.Role,
 	}, nil
 }
@@ -675,8 +680,13 @@ func PageQuery(pm users.Page) (string, error) {
 	if pm.Id != "" {
 		query = append(query, "id ILIKE '%' || :id || '%'")
 	}
-	if pm.Tag != "" {
-		query = append(query, "EXISTS (SELECT 1 FROM unnest(tags) AS tag WHERE tag ILIKE '%' || :tag || '%')")
+	if len(pm.Tags.Elements) > 0 {
+		switch pm.Tags.Operator {
+		case users.AndOp:
+			query = append(query, "tags @> :tags")
+		default: // OR
+			query = append(query, "tags && :tags")
+		}
 	}
 	if pm.Role != users.AllRole {
 		query = append(query, "u.role = :role")

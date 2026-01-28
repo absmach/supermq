@@ -1185,6 +1185,10 @@ func ToDBClientsPage(pm clients.Page) (dbClientsPage, error) {
 	if err != nil {
 		return dbClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
 	}
+	var tags pgtype.TextArray
+	if err := tags.Set(pm.Tags.Elements); err != nil {
+		return dbClientsPage{}, errors.Wrap(repoerr.ErrViewEntity, err)
+	}
 	return dbClientsPage{
 		Offset:     pm.Offset,
 		Limit:      pm.Limit,
@@ -1194,7 +1198,7 @@ func ToDBClientsPage(pm clients.Page) (dbClientsPage, error) {
 		Metadata:   data,
 		Domain:     pm.Domain,
 		Status:     pm.Status,
-		Tag:        pm.Tag,
+		Tags:       tags,
 		GroupID:    pm.Group,
 		ChannelID:  pm.Channel,
 		RoleName:   pm.RoleName,
@@ -1206,22 +1210,22 @@ func ToDBClientsPage(pm clients.Page) (dbClientsPage, error) {
 }
 
 type dbClientsPage struct {
-	Limit      uint64         `db:"limit"`
-	Offset     uint64         `db:"offset"`
-	Name       string         `db:"name"`
-	Id         string         `db:"id"`
-	Domain     string         `db:"domain_id"`
-	Identity   string         `db:"identity"`
-	Metadata   []byte         `db:"metadata"`
-	Tag        string         `db:"tag"`
-	Status     clients.Status `db:"status"`
-	GroupID    *string        `db:"group_id"`
-	ChannelID  string         `db:"channel_id"`
-	ConnType   string         `db:"type"`
-	RoleName   string         `db:"role_name"`
-	RoleID     string         `db:"role_id"`
-	Actions    pq.StringArray `db:"actions"`
-	AccessType string         `db:"access_type"`
+	Limit      uint64           `db:"limit"`
+	Offset     uint64           `db:"offset"`
+	Name       string           `db:"name"`
+	Id         string           `db:"id"`
+	Domain     string           `db:"domain_id"`
+	Identity   string           `db:"identity"`
+	Metadata   []byte           `db:"metadata"`
+	Tags       pgtype.TextArray `db:"tags"`
+	Status     clients.Status   `db:"status"`
+	GroupID    *string          `db:"group_id"`
+	ChannelID  string           `db:"channel_id"`
+	ConnType   string           `db:"type"`
+	RoleName   string           `db:"role_name"`
+	RoleID     string           `db:"role_id"`
+	Actions    pq.StringArray   `db:"actions"`
+	AccessType string           `db:"access_type"`
 }
 
 func PageQuery(pm clients.Page) (string, error) {
@@ -1235,10 +1239,14 @@ func PageQuery(pm clients.Page) (string, error) {
 	if pm.ID != "" {
 		query = append(query, "c.id = :id")
 	}
-	if pm.Tag != "" {
-		query = append(query, "EXISTS (SELECT 1 FROM unnest(tags) AS tag WHERE tag ILIKE '%' || :tag || '%')")
+	if len(pm.Tags.Elements) > 0 {
+		switch pm.Tags.Operator {
+		case clients.AndOp:
+			query = append(query, "tags @> :tags")
+		default: // OR
+			query = append(query, "tags && :tags")
+		}
 	}
-
 	if len(pm.IDs) != 0 {
 		query = append(query, fmt.Sprintf("c.id IN ('%s')", strings.Join(pm.IDs, "','")))
 	}

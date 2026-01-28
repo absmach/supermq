@@ -6,6 +6,7 @@ package users
 import (
 	"context"
 	"net/mail"
+	"strings"
 	"time"
 
 	grpcTokenV1 "github.com/absmach/supermq/api/grpc/token/v1"
@@ -142,28 +143,59 @@ func isEmail(email string) bool {
 	return err == nil
 }
 
+type Operator uint8
+
+const (
+	OrOp Operator = iota
+	AndOp
+)
+
+type TagsQuery struct {
+	Elements []string
+	Operator Operator
+}
+
+func ToTagsQuery(s string) TagsQuery {
+	switch {
+	case strings.Contains(s, "-"):
+		elements := strings.Split(s, "-")
+		for i := range elements {
+			elements[i] = strings.TrimSpace(elements[i])
+		}
+		return TagsQuery{Elements: elements, Operator: AndOp}
+	case strings.Contains(s, ","):
+		elements := strings.Split(s, ",")
+		for i := range elements {
+			elements[i] = strings.TrimSpace(elements[i])
+		}
+		return TagsQuery{Elements: elements, Operator: OrOp}
+	default:
+		return TagsQuery{Elements: []string{s}, Operator: OrOp}
+	}
+}
+
 // Page contains page metadata that helps navigation.
 type Page struct {
-	Total      uint64   `json:"total"`
-	Offset     uint64   `json:"offset"`
-	Limit      uint64   `json:"limit"`
-	OnlyTotal  bool     `json:"only_total"`
-	Id         string   `json:"id,omitempty"`
-	Order      string   `json:"order,omitempty"`
-	Dir        string   `json:"dir,omitempty"`
-	Metadata   Metadata `json:"metadata,omitempty"`
-	Domain     string   `json:"domain,omitempty"`
-	Tag        string   `json:"tag,omitempty"`
-	Permission string   `json:"permission,omitempty"`
-	Status     Status   `json:"status,omitempty"`
-	IDs        []string `json:"ids,omitempty"`
-	Role       Role     `json:"-"`
-	ListPerms  bool     `json:"-"`
-	Username   string   `json:"username,omitempty"`
-	FirstName  string   `json:"first_name,omitempty"`
-	LastName   string   `json:"last_name,omitempty"`
-	Email      string   `json:"email,omitempty"`
-	Verified   bool     `json:"verified,omitempty"`
+	Total      uint64    `json:"total"`
+	Offset     uint64    `json:"offset"`
+	Limit      uint64    `json:"limit"`
+	OnlyTotal  bool      `json:"only_total"`
+	Id         string    `json:"id,omitempty"`
+	Order      string    `json:"order,omitempty"`
+	Dir        string    `json:"dir,omitempty"`
+	Metadata   Metadata  `json:"metadata,omitempty"`
+	Domain     string    `json:"domain,omitempty"`
+	Tags       TagsQuery `json:"tag,omitempty"`
+	Permission string    `json:"permission,omitempty"`
+	Status     Status    `json:"status,omitempty"`
+	IDs        []string  `json:"ids,omitempty"`
+	Role       Role      `json:"-"`
+	ListPerms  bool      `json:"-"`
+	Username   string    `json:"username,omitempty"`
+	FirstName  string    `json:"first_name,omitempty"`
+	LastName   string    `json:"last_name,omitempty"`
+	Email      string    `json:"email,omitempty"`
+	Verified   bool      `json:"verified,omitempty"`
 }
 
 // Service specifies an API that must be fullfiled by the domain service

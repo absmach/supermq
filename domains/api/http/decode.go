@@ -130,9 +130,13 @@ func decodePageRequest(_ context.Context, r *http.Request) (domains.Page, error)
 	if err != nil {
 		return domains.Page{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	t, err := apiutil.ReadStringQuery(r, api.TagKey, "")
+	t, err := apiutil.ReadStringQuery(r, api.TagsKey, "")
 	if err != nil {
 		return domains.Page{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	var tq domains.TagsQuery
+	if t != "" {
+		tq = domains.ToTagsQuery(t)
 	}
 
 	allActions, err := apiutil.ReadStringQuery(r, api.ActionsKey, "")
@@ -173,7 +177,7 @@ func decodePageRequest(_ context.Context, r *http.Request) (domains.Page, error)
 		Limit:     l,
 		Name:      n,
 		Metadata:  m,
-		Tag:       t,
+		Tags:      tq,
 		RoleID:    roleID,
 		RoleName:  roleName,
 		Actions:   actions,

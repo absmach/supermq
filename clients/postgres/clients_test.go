@@ -1119,7 +1119,7 @@ func TestRetrieveAll(t *testing.T) {
 				Identity: namegen.Generate() + emailSuffix,
 				Secret:   testsutil.GenerateUUID(t),
 			},
-			Tags: namegen.GenerateMultiple(5),
+			Tags: []string{"tag1", "tag2"},
 			Metadata: clients.Metadata{
 				"department": namegen.Generate(),
 			},
@@ -1129,6 +1129,9 @@ func TestRetrieveAll(t *testing.T) {
 		}
 		if i%50 == 0 {
 			client.Status = clients.DisabledStatus
+		}
+		if i%99 == 0 {
+			client.Tags = []string{"tag1", "tag3"}
 		}
 		_, err := repo.Save(context.Background(), client)
 		if i == 0 {
@@ -1521,22 +1524,56 @@ func TestRetrieveAll(t *testing.T) {
 			},
 		},
 		{
-			desc: "with tag",
+			desc: "with single tag",
 			pm: clients.Page{
 				Offset: 0,
 				Limit:  nClients,
-				Tag:    expectedClients[0].Tags[0],
+				Tags:   clients.TagsQuery{Elements: []string{"tag1"}, Operator: clients.OrOp},
 				Status: clients.AllStatus,
 				Order:  defOrder,
 				Dir:    ascDir,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
-					Total:  1,
+					Total:  200,
 					Offset: 0,
 					Limit:  uint64(nClients),
 				},
-				Clients: []clients.Client{expectedClients[0]},
+				Clients: expectedClients,
+			},
+		},
+		{
+			desc: "with multiple tags and OR operator",
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  nClients,
+				Tags:   clients.TagsQuery{Elements: []string{"tag2", "tag3"}, Operator: clients.OrOp},
+				Status: clients.AllStatus,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  200,
+					Offset: 0,
+					Limit:  uint64(nClients),
+				},
+				Clients: expectedClients,
+			},
+		},
+		{
+			desc: "with multiple tags and AND operator",
+			pm: clients.Page{
+				Offset: 0,
+				Limit:  nClients,
+				Tags:   clients.TagsQuery{Elements: []string{"tag1", "tag3"}, Operator: clients.AndOp},
+				Status: clients.AllStatus,
+			},
+			response: clients.ClientsPage{
+				Page: clients.Page{
+					Total:  3,
+					Offset: 0,
+					Limit:  uint64(nClients),
+				},
+				Clients: []clients.Client{expectedClients[0], expectedClients[99], expectedClients[198]},
 			},
 		},
 		{
@@ -1544,7 +1581,7 @@ func TestRetrieveAll(t *testing.T) {
 			pm: clients.Page{
 				Offset: 0,
 				Limit:  nClients,
-				Tag:    namegen.Generate(),
+				Tags:   clients.TagsQuery{Elements: []string{namegen.Generate(), namegen.Generate()}, Operator: clients.OrOp},
 				Status: clients.AllStatus,
 				Order:  defOrder,
 				Dir:    ascDir,
@@ -1565,7 +1602,7 @@ func TestRetrieveAll(t *testing.T) {
 				Limit:    nClients,
 				Metadata: expectedClients[0].Metadata,
 				Name:     expectedClients[0].Name,
-				Tag:      expectedClients[0].Tags[0],
+				Tags:     clients.TagsQuery{Elements: []string{expectedClients[0].Tags[0]}, Operator: clients.OrOp},
 				Identity: expectedClients[0].Credentials.Identity,
 				Domain:   expectedClients[0].Domain,
 				Status:   clients.AllStatus,
@@ -1707,7 +1744,7 @@ func TestRetrieveAll(t *testing.T) {
 			pm: clients.Page{
 				Offset: 0,
 				Limit:  10,
-				Order:  "created_at",
+				Order:  defOrder,
 				Dir:    ascDir,
 				Status: clients.AllStatus,
 			},
@@ -1725,7 +1762,7 @@ func TestRetrieveAll(t *testing.T) {
 			pm: clients.Page{
 				Offset: 0,
 				Limit:  10,
-				Order:  "created_at",
+				Order:  defOrder,
 				Dir:    descDir,
 				Status: clients.AllStatus,
 			},
@@ -2188,7 +2225,7 @@ func TestRetrieveUserClients(t *testing.T) {
 			pm: clients.Page{
 				Offset: 0,
 				Limit:  nClients,
-				Tag:    directClients[0].Tags[0],
+				Tags:   clients.TagsQuery{Elements: []string{directClients[0].Tags[0]}, Operator: clients.OrOp},
 				Status: clients.AllStatus,
 				Order:  defOrder,
 				Dir:    ascDir,
@@ -2209,7 +2246,7 @@ func TestRetrieveUserClients(t *testing.T) {
 			pm: clients.Page{
 				Offset: 0,
 				Limit:  nClients,
-				Tag:    namegen.Generate(),
+				Tags:   clients.TagsQuery{Elements: []string{namegen.Generate()}, Operator: clients.OrOp},
 				Status: clients.AllStatus,
 				Order:  defOrder,
 				Dir:    ascDir,
@@ -2232,7 +2269,7 @@ func TestRetrieveUserClients(t *testing.T) {
 				Limit:    nClients,
 				Metadata: directClients[0].Metadata,
 				Name:     directClients[0].Name,
-				Tag:      directClients[0].Tags[0],
+				Tags:     clients.TagsQuery{Elements: []string{directClients[0].Tags[0]}, Operator: clients.OrOp},
 				Identity: directClients[0].Credentials.Identity,
 				Status:   clients.AllStatus,
 			},
@@ -2579,7 +2616,7 @@ func TestRetrieveUserClients(t *testing.T) {
 			pm: clients.Page{
 				Offset: 0,
 				Limit:  5,
-				Order:  "created_at",
+				Order:  defOrder,
 				Dir:    ascDir,
 				Status: clients.AllStatus,
 			},
@@ -2599,7 +2636,7 @@ func TestRetrieveUserClients(t *testing.T) {
 			pm: clients.Page{
 				Offset: 0,
 				Limit:  5,
-				Order:  "created_at",
+				Order:  defOrder,
 				Dir:    descDir,
 				Status: clients.AllStatus,
 			},

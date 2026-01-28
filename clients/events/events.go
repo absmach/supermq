@@ -230,8 +230,8 @@ func (lce listClientEvent) Encode() (map[string]any, error) {
 	if lce.Metadata != nil {
 		val["metadata"] = lce.Metadata
 	}
-	if lce.Tag != "" {
-		val["tag"] = lce.Tag
+	if len(lce.Tags.Elements) > 0 {
+		val["tag"] = lce.Tags.Elements
 	}
 	if lce.Status.String() != "" {
 		val["status"] = lce.Status.String()
@@ -278,8 +278,8 @@ func (lce listUserClientEvent) Encode() (map[string]any, error) {
 	if lce.Metadata != nil {
 		val["metadata"] = lce.Metadata
 	}
-	if lce.Tag != "" {
-		val["tag"] = lce.Tag
+	if len(lce.Tags.Elements) > 0 {
+		val["tag"] = lce.Tags.Elements
 	}
 	if lce.Status.String() != "" {
 		val["status"] = lce.Status.String()

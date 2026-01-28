@@ -89,6 +89,7 @@ paths:
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/Order"
         - $ref: "#/components/parameters/Direction"
+        - $ref: "#/components/parameters/Tags"
         - $ref: "#/components/parameters/Metadata"
         - $ref: "#/components/parameters/Status"
         - $ref: "#/components/parameters/ChannelName"
@@ -780,16 +781,12 @@ components:
 
     Tags:
       name: tags
-      description: Client tags.
+      description: Channel tags. Multiple tags can be specified separated by comma for OR condition and hyphen for AND condition.
       in: query
       schema:
-        type: array
-        minItems: 0
-        uniqueItems: true
-        items:
-          type: string
+        type: string
       required: false
-      example: ["yello", "orange"]
+      example: "orange,yellow"
 
     ChannelName:
       name: name

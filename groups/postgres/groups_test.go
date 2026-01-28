@@ -691,6 +691,10 @@ func TestRetrieveAll(t *testing.T) {
 			CreatedAt:   baseTime.Add(time.Duration(i) * time.Microsecond),
 			UpdatedAt:   baseTime.Add(time.Duration(i) * time.Microsecond),
 			Status:      groups.EnabledStatus,
+			Tags:        []string{"tag1", "tag2"},
+		}
+		if i%99 == 0 {
+			group.Tags = []string{"tag1", "tag3"}
 		}
 		_, err := repo.Save(context.Background(), group)
 		require.Nil(t, err, fmt.Sprintf("create group unexpected error: %s", err))
@@ -1096,6 +1100,83 @@ func TestRetrieveAll(t *testing.T) {
 				Groups: reversedGroups[:10],
 			},
 			err: nil,
+		},
+		{
+			desc: "retrieve groups with single tag",
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
+					Offset: 0,
+					Limit:  uint64(num),
+					Tags:   groups.TagsQuery{Elements: []string{"tag1"}, Operator: groups.OrOp},
+					Status: groups.AllStatus,
+				},
+			},
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
+					Total:  200,
+					Offset: 0,
+					Limit:  uint64(num),
+				},
+				Groups: items,
+			},
+			err: nil,
+		},
+		{
+			desc: "retrieve group with multiple tags and OR operator",
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
+					Offset: 0,
+					Limit:  uint64(num),
+					Tags:   groups.TagsQuery{Elements: []string{"tag2", "tag3"}, Operator: groups.OrOp},
+					Status: groups.AllStatus,
+				},
+			},
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
+					Total:  200,
+					Offset: 0,
+					Limit:  uint64(num),
+				},
+				Groups: items,
+			},
+		},
+		{
+			desc: "retrieve group with multiple tags and AND operator",
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
+					Offset: 0,
+					Limit:  uint64(num),
+					Tags:   groups.TagsQuery{Elements: []string{"tag1", "tag3"}, Operator: groups.AndOp},
+					Status: groups.AllStatus,
+				},
+			},
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
+					Total:  3,
+					Offset: 0,
+					Limit:  uint64(num),
+				},
+				Groups: []groups.Group{items[0], items[99], items[198]},
+			},
+		},
+		{
+			desc: "retrieve group with invalid tags",
+			page: groups.Page{
+				PageMeta: groups.PageMeta{
+					Offset: 0,
+					Limit:  uint64(num),
+					Tags:   groups.TagsQuery{Elements: []string{namegen.Generate(), namegen.Generate()}, Operator: groups.OrOp},
+					Status: groups.AllStatus,
+				},
+			},
+			response: groups.Page{
+				PageMeta: groups.PageMeta{
+					Total:  0,
+					Offset: 0,
+					Limit:  uint64(num),
+				},
+				Groups: []groups.Group(nil),
+			},
 		},
 	}
 

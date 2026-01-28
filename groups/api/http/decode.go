@@ -292,6 +292,14 @@ func decodePageMeta(r *http.Request) (groups.PageMeta, error) {
 	if err != nil {
 		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
 	}
+	tags, err := apiutil.ReadStringQuery(r, api.TagsKey, "")
+	if err != nil {
+		return groups.PageMeta{}, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	var tq groups.TagsQuery
+	if tags != "" {
+		tq = groups.ToTagsQuery(tags)
+	}
 
 	ret := groups.PageMeta{
 		Offset:     offset,
@@ -308,6 +316,7 @@ func decodePageMeta(r *http.Request) (groups.PageMeta, error) {
 		OnlyTotal:  ot,
 		Order:      order,
 		Dir:        dir,
+		Tags:       tq,
 	}
 	return ret, nil
 }

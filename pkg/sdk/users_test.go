@@ -485,12 +485,12 @@ func TestListUsers(t *testing.T) {
 			pageMeta: sdk.PageMetadata{
 				Offset: offset,
 				Limit:  limit,
-				Tag:    "tag1",
+				Tags:   sdk.TagsQuery{Elements: []string{"tag1"}, Operator: sdk.OrOp},
 			},
 			svcReq: users.Page{
 				Offset: offset,
 				Limit:  limit,
-				Tag:    "tag1",
+				Tags:   users.TagsQuery{Elements: []string{"tag1"}, Operator: users.OrOp},
 				Order:  api.DefOrder,
 				Dir:    api.DefDir,
 			},

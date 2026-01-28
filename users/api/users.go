@@ -274,9 +274,13 @@ func decodeListUsers(_ context.Context, r *http.Request) (any, error) {
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
 	}
-	t, err := apiutil.ReadStringQuery(r, api.TagKey, "")
+	t, err := apiutil.ReadStringQuery(r, api.TagsKey, "")
 	if err != nil {
 		return nil, errors.Wrap(apiutil.ErrValidation, err)
+	}
+	var tq users.TagsQuery
+	if t != "" {
+		tq = users.ToTagsQuery(t)
 	}
 	order, err := apiutil.ReadStringQuery(r, api.OrderKey, api.DefOrder)
 	if err != nil {
@@ -310,7 +314,7 @@ func decodeListUsers(_ context.Context, r *http.Request) (any, error) {
 		userName:  n,
 		firstName: i,
 		lastName:  f,
-		tag:       t,
+		tags:      tq,
 		order:     order,
 		dir:       dir,
 		id:        id,
