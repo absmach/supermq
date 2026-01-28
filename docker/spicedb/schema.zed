@@ -2,9 +2,9 @@ definition user {}
 
 
 definition role {
-	relation entity: domain | group | channel | client
+	relation entity: domain | group | channel | client | alarm | rule | report
 	relation member: user
-	relation built_in_role: domain | group | channel | client
+	relation built_in_role: domain | group | channel | client | alarm | rule | report
 
 	permission delete = entity->manage_role_permission - built_in_role->manage_role_permission
 	permission update = entity->manage_role_permission - built_in_role->manage_role_permission
@@ -520,4 +520,84 @@ definition platform {
 
   permission admin = administrator
   permission membership = administrator + member
+}
+
+definition alarm {
+	relation domain: domain
+
+	relation update: role#member
+	relation read: role#member
+	relation delete: role#member
+
+	relation manage_role: role#member
+	relation add_role_users: role#member
+	relation remove_role_users: role#member
+	relation view_role_users: role#member
+
+	permission update_permission = update + domain->membership
+	permission read_permission = read + domain->membership
+	permission delete_permission = delete + domain->admin
+
+	permission manage_role_permission = manage_role + domain->admin
+	permission add_role_users_permission = add_role_users + domain->admin
+	permission remove_role_users_permission = remove_role_users + domain->admin
+	permission view_role_users_permission = view_role_users + domain->admin
+}
+
+definition rule {
+	relation domain: domain
+
+	relation create: role#member
+	relation update: role#member
+	relation read: role#member
+	relation delete: role#member
+	relation enable: role#member
+	relation disable: role#member
+
+	relation manage_role: role#member
+	relation add_role_users: role#member
+	relation remove_role_users: role#member
+	relation view_role_users: role#member
+
+	permission create_permission = create + domain->membership
+	permission update_permission = update + domain->membership
+	permission read_permission = read + domain->membership
+	permission delete_permission = delete + domain->membership
+	permission enable_permission = enable + domain->membership
+	permission disable_permission = disable + domain->membership
+
+	permission manage_role_permission = manage_role + domain->admin
+	permission add_role_users_permission = add_role_users + domain->admin
+	permission remove_role_users_permission = remove_role_users + domain->admin
+	permission view_role_users_permission = view_role_users + domain->admin
+}
+
+definition report {
+	relation domain: domain
+
+	relation create: role#member
+	relation update: role#member
+	relation read: role#member
+	relation delete: role#member
+	relation generate: role#member
+	relation enable: role#member
+	relation disable: role#member
+
+	relation manage_role: role#member
+	relation add_role_users: role#member
+	relation remove_role_users: role#member
+	relation view_role_users: role#member
+
+	permission create_permission = create + domain->membership
+	permission update_permission = update + domain->membership
+	permission read_permission = read + domain->membership
+	permission delete_permission = delete + domain->membership
+	permission generate_permission = generate + domain->membership
+	permission enable_permission = enable + domain->membership
+	permission disable_permission = disable + domain->membership
+
+	permission manage_role_permission = manage_role + domain->admin
+	permission add_role_users_permission = add_role_users + domain->admin
+	permission remove_role_users_permission = remove_role_users + domain->admin
+	permission view_role_users_permission = view_role_users + domain->admin
 }
