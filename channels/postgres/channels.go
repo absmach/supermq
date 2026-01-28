@@ -912,6 +912,19 @@ func (cr *channelRepository) Remove(ctx context.Context, ids ...string) error {
 	return nil
 }
 
+func (cr *channelRepository) RemoveDomainChannels(ctx context.Context, domainID string) error {
+	q := "DELETE FROM channels AS c  WHERE c.domain_id = :domain_id ;"
+	params := map[string]any{
+		"domain_id": domainID,
+	}
+	_, err := cr.db.NamedExecContext(ctx, q, params)
+	if err != nil {
+		return cr.eh.HandleError(repoerr.ErrRemoveEntity, err)
+	}
+
+	return nil
+}
+
 func (cr *channelRepository) SetParentGroup(ctx context.Context, ch channels.Channel) error {
 	q := "UPDATE channels SET parent_group_id = :parent_group_id, updated_at = :updated_at, updated_by = :updated_by WHERE id = :id"
 	dbCh, err := toDBChannel(ch)
