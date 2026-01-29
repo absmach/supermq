@@ -44,6 +44,6 @@ type removeChannelConnectionsRes struct{}
 
 type UnsetParentGroupFromClientRes struct{}
 
-type deleteDomainClientsRes struct{
+type deleteDomainClientsRes struct {
 	deleted bool
 }

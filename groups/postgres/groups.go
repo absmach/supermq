@@ -790,17 +790,6 @@ func (repo groupRepository) Delete(ctx context.Context, groupID string) error {
 	return nil
 }
 
-func (repo groupRepository) DeleteDomainGroups(ctx context.Context, domainID string) error {
-	q := "DELETE FROM groups AS g WHERE g.domain_id = $1;"
-
-	_, err := repo.db.ExecContext(ctx, q, domainID)
-	if err != nil {
-		return repo.eh.HandleError(repoerr.ErrRemoveEntity, err)
-	}
-
-	return nil
-}
-
 func (repo groupRepository) RetrieveAllParentGroups(ctx context.Context, domainID, userID, groupID string, pm groups.PageMeta) (groups.Page, error) {
 	cGroup, err := repo.RetrieveByID(ctx, groupID)
 	if err != nil {

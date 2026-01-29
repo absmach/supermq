@@ -28,7 +28,7 @@ func deleteDomainGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return deleteDomainGroupsRes{}, err
 		}
-		
+
 		err := svc.DeleteDomainGroups(ctx, req.domainID)
 		if err != nil {
 			return deleteDomainGroupsRes{}, err

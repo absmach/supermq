@@ -164,9 +164,6 @@ type Repository interface {
 	// Remove removes the channel having the provided identifier
 	Remove(ctx context.Context, ids ...string) error
 
-	// RemoveDomainChannels removes all channels associated with the given domain ID
-	RemoveDomainChannels(ctx context.Context, domainID string) error
-
 	// SetParentGroup set parent group id to a given channel id
 	SetParentGroup(ctx context.Context, ch Channel) error
 

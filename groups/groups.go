@@ -136,9 +136,6 @@ type Repository interface {
 	// Delete a group
 	Delete(ctx context.Context, groupID string) error
 
-	// DeleteDomainGroups deletes all groups associated with the given domain ID.
-	DeleteDomainGroups(ctx context.Context, domainID string) error
-
 	roles.Repository
 }
 
