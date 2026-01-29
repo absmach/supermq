@@ -25,11 +25,12 @@ import (
 	"github.com/absmach/supermq/clients/cache"
 	"github.com/absmach/supermq/clients/events"
 	"github.com/absmach/supermq/clients/middleware"
+	clientsOps "github.com/absmach/supermq/clients/operations"
 	"github.com/absmach/supermq/clients/postgres"
 	pClients "github.com/absmach/supermq/clients/private"
-	"github.com/absmach/supermq/domains"
+	doperations "github.com/absmach/supermq/domains/operations"
 	dpostgres "github.com/absmach/supermq/domains/postgres"
-	svcgroups "github.com/absmach/supermq/groups"
+	goperations "github.com/absmach/supermq/groups/operations"
 	gpostgres "github.com/absmach/supermq/groups/postgres"
 	redisclient "github.com/absmach/supermq/internal/clients/redis"
 	smqlog "github.com/absmach/supermq/logger"
@@ -422,9 +423,9 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, auth
 			policies.GroupType:  groupOps,
 		},
 		permissions.EntitiesOperationDetails[permissions.Operation]{
-			policies.ClientType: clients.OperationDetails(),
-			policies.DomainType: domains.OperationDetails(),
-			policies.GroupType:  svcgroups.OperationDetails(),
+			policies.ClientType: clientsOps.OperationDetails(),
+			policies.DomainType: doperations.OperationDetails(),
+			policies.GroupType:  goperations.OperationDetails(),
 		},
 	)
 	if err != nil {

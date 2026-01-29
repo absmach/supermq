@@ -8,7 +8,8 @@ import (
 	"time"
 
 	"github.com/absmach/supermq/clients"
-	"github.com/absmach/supermq/domains"
+	"github.com/absmach/supermq/clients/operations"
+	dOperations "github.com/absmach/supermq/domains/operations"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/callout"
 	"github.com/absmach/supermq/pkg/permissions"
@@ -52,7 +53,7 @@ func (cm *calloutMiddleware) CreateClients(ctx context.Context, session authn.Se
 		"count":    len(client),
 	}
 
-	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpCreateDomainClients, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.DomainType, dOperations.OpCreateDomainClients, params); err != nil {
 		return []clients.Client{}, []roles.RoleProvision{}, err
 	}
 
@@ -63,7 +64,7 @@ func (cm *calloutMiddleware) View(ctx context.Context, session authn.Session, id
 	params := map[string]any{
 		"entity_id": id,
 	}
-	if err := cm.callOut(ctx, session, policies.ClientType, clients.OpViewClient, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.ClientType, operations.OpViewClient, params); err != nil {
 		return clients.Client{}, err
 	}
 
@@ -75,7 +76,7 @@ func (cm *calloutMiddleware) ListClients(ctx context.Context, session authn.Sess
 		"pagemeta": pm,
 	}
 
-	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpListDomainClients, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.DomainType, dOperations.OpListDomainClients, params); err != nil {
 		return clients.ClientsPage{}, err
 	}
 
@@ -88,7 +89,7 @@ func (cm *calloutMiddleware) ListUserClients(ctx context.Context, session authn.
 		"pagemeta": pm,
 	}
 
-	if err := cm.callOut(ctx, session, policies.ClientType, clients.OpListUserClients, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.ClientType, operations.OpListUserClients, params); err != nil {
 		return clients.ClientsPage{}, err
 	}
 
@@ -100,7 +101,7 @@ func (cm *calloutMiddleware) Update(ctx context.Context, session authn.Session, 
 		"entity_id": client.ID,
 	}
 
-	if err := cm.callOut(ctx, session, policies.ClientType, clients.OpUpdateClient, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.ClientType, operations.OpUpdateClient, params); err != nil {
 		return clients.Client{}, err
 	}
 
@@ -112,7 +113,7 @@ func (cm *calloutMiddleware) UpdateTags(ctx context.Context, session authn.Sessi
 		"entity_id": client.ID,
 	}
 
-	if err := cm.callOut(ctx, session, policies.ClientType, clients.OpUpdateClientTags, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.ClientType, operations.OpUpdateClientTags, params); err != nil {
 		return clients.Client{}, err
 	}
 
@@ -124,7 +125,7 @@ func (cm *calloutMiddleware) UpdateSecret(ctx context.Context, session authn.Ses
 		"entity_id": id,
 	}
 
-	if err := cm.callOut(ctx, session, policies.ClientType, clients.OpUpdateClientSecret, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.ClientType, operations.OpUpdateClientSecret, params); err != nil {
 		return clients.Client{}, err
 	}
 
@@ -136,7 +137,7 @@ func (cm *calloutMiddleware) Enable(ctx context.Context, session authn.Session, 
 		"entity_id": id,
 	}
 
-	if err := cm.callOut(ctx, session, policies.ClientType, clients.OpEnableClient, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.ClientType, operations.OpEnableClient, params); err != nil {
 		return clients.Client{}, err
 	}
 
@@ -148,7 +149,7 @@ func (cm *calloutMiddleware) Disable(ctx context.Context, session authn.Session,
 		"entity_id": id,
 	}
 
-	if err := cm.callOut(ctx, session, policies.ClientType, clients.OpDisableClient, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.ClientType, operations.OpDisableClient, params); err != nil {
 		return clients.Client{}, err
 	}
 
@@ -160,7 +161,7 @@ func (cm *calloutMiddleware) Delete(ctx context.Context, session authn.Session, 
 		"entity_id": id,
 	}
 
-	if err := cm.callOut(ctx, session, policies.ClientType, clients.OpDeleteClient, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.ClientType, operations.OpDeleteClient, params); err != nil {
 		return err
 	}
 
@@ -173,7 +174,7 @@ func (cm *calloutMiddleware) SetParentGroup(ctx context.Context, session authn.S
 		"parent_id": parentGroupID,
 	}
 
-	if err := cm.callOut(ctx, session, policies.ClientType, clients.OpSetParentGroup, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.ClientType, operations.OpSetParentGroup, params); err != nil {
 		return err
 	}
 
@@ -192,7 +193,7 @@ func (cm *calloutMiddleware) RemoveParentGroup(ctx context.Context, session auth
 			"parent_id": th.ParentGroup,
 		}
 
-		if err := cm.callOut(ctx, session, policies.ClientType, clients.OpRemoveParentGroup, params); err != nil {
+		if err := cm.callOut(ctx, session, policies.ClientType, operations.OpRemoveParentGroup, params); err != nil {
 			return err
 		}
 	}

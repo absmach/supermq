@@ -11,8 +11,8 @@ import (
 	"strconv"
 
 	apiutil "github.com/absmach/supermq/api/http/util"
-	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/pkg/errors"
+	"github.com/absmach/supermq/pkg/policies"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -154,7 +154,7 @@ func (a *authnMiddleware) Middleware() func(http.Handler) http.Handler {
 				case AdminRole:
 					resp.DomainUserID = resp.UserID
 				case UserRole:
-					resp.DomainUserID = auth.EncodeDomainUserID(domain, resp.UserID)
+					resp.DomainUserID = policies.EncodeDomainUserID(domain, resp.UserID)
 				}
 			}
 

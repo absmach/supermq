@@ -5,7 +5,6 @@ package authsvc
 
 import (
 	"context"
-	"strings"
 
 	grpcAuthV1 "github.com/absmach/supermq/api/grpc/auth/v1"
 	"github.com/absmach/supermq/auth/api/grpc/auth"
@@ -44,7 +43,7 @@ func (a authentication) Authenticate(ctx context.Context, token string) (authn.S
 		return authn.Session{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
 
-	if strings.HasPrefix(token, authn.PatPrefix) {
+	if res.GetId() != "" {
 		return authn.Session{Type: authn.PersonalAccessToken, PatID: res.GetId(), UserID: res.GetUserId(), Role: authn.Role(res.GetUserRole())}, nil
 	}
 

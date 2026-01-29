@@ -36,21 +36,19 @@ func authorizeEndpoint(svc auth.Service) endpoint.Endpoint {
 		}
 
 		err := svc.Authorize(ctx, policies.Policy{
-			TokenType:        req.TokenType,
-			Domain:           req.Domain,
-			SubjectType:      req.SubjectType,
-			SubjectKind:      req.SubjectKind,
-			Subject:          req.Subject,
-			Relation:         req.Relation,
-			Permission:       req.Permission,
-			ObjectType:       req.ObjectType,
-			Object:           req.Object,
-			UserID:           req.UserID,
-			PatID:            req.PatID,
-			EntityType:       uint32(req.EntityType),
-			OptionalDomainID: req.OptionalDomainID,
-			Operation:        uint32(req.Operation),
-			EntityID:         req.EntityID,
+			Domain:      req.Domain,
+			SubjectType: req.SubjectType,
+			SubjectKind: req.SubjectKind,
+			Subject:     req.Subject,
+			Relation:    req.Relation,
+			Permission:  req.Permission,
+			ObjectType:  req.ObjectType,
+			Object:      req.Object,
+			PatID:       req.PatID,
+			Operation:   req.Operation,
+			UserID:      req.UserID,
+			EntityType:  req.EntityType,
+			EntityID:    req.EntityID,
 		})
 		if err != nil {
 			return authorizeRes{authorized: false}, err

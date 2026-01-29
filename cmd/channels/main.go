@@ -25,12 +25,13 @@ import (
 	"github.com/absmach/supermq/channels/cache"
 	"github.com/absmach/supermq/channels/events"
 	"github.com/absmach/supermq/channels/middleware"
+	channelsOps "github.com/absmach/supermq/channels/operations"
 	"github.com/absmach/supermq/channels/postgres"
 	pChannels "github.com/absmach/supermq/channels/private"
-	"github.com/absmach/supermq/clients"
-	"github.com/absmach/supermq/domains"
+	clientsOps "github.com/absmach/supermq/clients/operations"
+	domainsOps "github.com/absmach/supermq/domains/operations"
 	dpostgres "github.com/absmach/supermq/domains/postgres"
-	"github.com/absmach/supermq/groups"
+	groupsOps "github.com/absmach/supermq/groups/operations"
 	gpostgres "github.com/absmach/supermq/groups/postgres"
 	redisclient "github.com/absmach/supermq/internal/clients/redis"
 	smqlog "github.com/absmach/supermq/logger"
@@ -428,10 +429,10 @@ func newService(ctx context.Context, db *sqlx.DB, dbConfig pgclient.Config, cach
 			policies.ClientType:  clientOps,
 		},
 		permissions.EntitiesOperationDetails[permissions.Operation]{
-			policies.ChannelType: channels.OperationDetails(),
-			policies.DomainType:  domains.OperationDetails(),
-			policies.GroupType:   groups.OperationDetails(),
-			policies.ClientType:  clients.OperationDetails(),
+			policies.ChannelType: channelsOps.OperationDetails(),
+			policies.DomainType:  domainsOps.OperationDetails(),
+			policies.GroupType:   groupsOps.OperationDetails(),
+			policies.ClientType:  clientsOps.OperationDetails(),
 		},
 	)
 	if err != nil {

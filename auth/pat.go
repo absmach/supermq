@@ -12,114 +12,53 @@ import (
 
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/pkg/errors"
-)
-
-const AnyIDs = "*"
-
-type Operation uint32
-
-const (
-	CreateOp Operation = iota
-	ReadOp
-	ListOp
-	UpdateOp
-	DeleteOp
-	ShareOp
-	UnshareOp
-	PublishOp
-	SubscribeOp
+	"github.com/absmach/supermq/pkg/permissions"
 )
 
 const (
-	createOpStr    = "create"
-	readOpStr      = "read"
-	listOpStr      = "list"
-	updateOpStr    = "update"
-	deleteOpStr    = "delete"
-	shareOpStr     = "share"
-	UnshareOpStr   = "unshare"
-	PublishOpStr   = "publish"
-	SubscribeOpStr = "subscribe"
+	AnyIDs              = "*"
+	RoleOperationPrefix = "role_"
 )
 
-func (op Operation) String() string {
-	switch op {
-	case CreateOp:
-		return createOpStr
-	case ReadOp:
-		return readOpStr
-	case ListOp:
-		return listOpStr
-	case UpdateOp:
-		return updateOpStr
-	case DeleteOp:
-		return deleteOpStr
-	case ShareOp:
-		return shareOpStr
-	case UnshareOp:
-		return UnshareOpStr
-	case PublishOp:
-		return PublishOpStr
-	case SubscribeOp:
-		return SubscribeOpStr
-	default:
-		return fmt.Sprintf("unknown operation type %d", op)
-	}
-}
+const (
+	OpCreate = "create"
+	OpList   = "list"
 
-func (op Operation) ValidString() (string, error) {
-	str := op.String()
-	if str == fmt.Sprintf("unknown operation type %d", op) {
-		return "", errors.New(str)
-	}
-	return str, nil
-}
+	OpCreateClients  = "create_clients"
+	OpListClients    = "list_clients"
+	OpCreateChannels = "create_channels"
+	OpListChannels   = "list_channels"
+	OpCreateGroups   = "create_groups"
+	OpListGroups     = "list_groups"
 
-func ParseOperation(op string) (Operation, error) {
-	switch op {
-	case createOpStr:
-		return CreateOp, nil
-	case readOpStr:
-		return ReadOp, nil
-	case listOpStr:
-		return ListOp, nil
-	case updateOpStr:
-		return UpdateOp, nil
-	case deleteOpStr:
-		return DeleteOp, nil
-	case shareOpStr:
-		return ShareOp, nil
-	case UnshareOpStr:
-		return UnshareOp, nil
-	case PublishOpStr:
-		return PublishOp, nil
-	case SubscribeOpStr:
-		return SubscribeOp, nil
-	default:
-		return 0, fmt.Errorf("unknown operation type %s", op)
-	}
-}
+	OpShare   = "share"
+	OpUnshare = "unshare"
 
-func (op Operation) MarshalJSON() ([]byte, error) {
-	return json.Marshal(op.String())
-}
+	OpDashboardShare   = "dashboard_share"
+	OpDashboardUnshare = "dashboard_unshare"
 
-func (op *Operation) UnmarshalJSON(data []byte) error {
-	str := strings.Trim(string(data), "\"")
-	val, err := ParseOperation(str)
-	*op = val
-	return err
-}
+	OpPublish   = "publish"
+	OpSubscribe = "subscribe"
 
-func (op Operation) MarshalText() (text []byte, err error) {
-	return []byte(op.String()), nil
-}
+	OpMessagePublish   = "message_publish"
+	OpMessageSubscribe = "message_subscribe"
+)
 
-func (op *Operation) UnmarshalText(data []byte) (err error) {
-	str := strings.Trim(string(data), "\"")
-	*op, err = ParseOperation(str)
-	return err
-}
+var errInvalidEntityOp = errors.NewRequestError("operation not valid for entity type")
+
+type Operation = permissions.Operation
+
+// Dashboard operations.
+const (
+	DashboardShareOp Operation = iota + 400
+	DashboardUnshareOp
+)
+
+// Messages operations.
+const (
+	MessagePublishOp Operation = iota + 500
+	MessageSubscribeOp
+)
 
 type EntityType uint32
 
@@ -127,20 +66,18 @@ const (
 	GroupsType EntityType = iota
 	ChannelsType
 	ClientsType
-	DomainsType
-	UsersType
 	DashboardType
 	MessagesType
+	DomainsType
 )
 
 const (
 	GroupsScopeStr   = "groups"
 	ChannelsScopeStr = "channels"
 	ClientsScopeStr  = "clients"
-	DomainsStr       = "domains"
-	UsersStr         = "users"
 	DashboardsStr    = "dashboards"
 	MessagesStr      = "messages"
+	DomainsStr       = "domains"
 )
 
 func (et EntityType) String() string {
@@ -151,25 +88,15 @@ func (et EntityType) String() string {
 		return ChannelsScopeStr
 	case ClientsType:
 		return ClientsScopeStr
-	case DomainsType:
-		return DomainsStr
-	case UsersType:
-		return UsersStr
 	case DashboardType:
 		return DashboardsStr
 	case MessagesType:
 		return MessagesStr
+	case DomainsType:
+		return DomainsStr
 	default:
 		return fmt.Sprintf("unknown domain entity type %d", et)
 	}
-}
-
-func (et EntityType) ValidString() (string, error) {
-	str := et.String()
-	if str == fmt.Sprintf("unknown operation type %d", et) {
-		return "", errors.New(str)
-	}
-	return str, nil
 }
 
 func ParseEntityType(et string) (EntityType, error) {
@@ -180,14 +107,12 @@ func ParseEntityType(et string) (EntityType, error) {
 		return ChannelsType, nil
 	case ClientsScopeStr:
 		return ClientsType, nil
-	case DomainsStr:
-		return DomainsType, nil
-	case UsersStr:
-		return UsersType, nil
 	case DashboardsStr:
 		return DashboardType, nil
 	case MessagesStr:
 		return MessagesType, nil
+	case DomainsStr:
+		return DomainsType, nil
 	default:
 		return 0, fmt.Errorf("unknown domain entity type %s", et)
 	}
@@ -214,39 +139,101 @@ func (et *EntityType) UnmarshalText(data []byte) (err error) {
 	return err
 }
 
+func IsValidOperationForEntity(entityType EntityType, operation string) bool {
+	switch entityType {
+	case ClientsType, ChannelsType, GroupsType, DomainsType:
+		return true
+	case DashboardType:
+		return operation == OpDashboardShare || operation == OpDashboardUnshare
+	case MessagesType:
+		return operation == OpMessagePublish || operation == OpMessageSubscribe
+	default:
+		return false
+	}
+}
+
 // Example Scope as JSON
 //
 // [
 //     {
-//         "optional_domain_id": "domain_1",
+//         "domain_id": "domain_1",
 //         "entity_type": "groups",
-//         "operation": "create",
+//         "operation": "view",
 //         "entity_id": "*"
 //     },
 //     {
-//         "optional_domain_id": "domain_1",
+//         "domain_id": "domain_1",
 //         "entity_type": "channels",
 //         "operation": "delete",
 //         "entity_id": "channel1"
 //     },
 //     {
-//         "optional_domain_id": "domain_1",
-//         "entity_type": "things",
+//         "domain_id": "domain_1",
+//         "entity_type": "clients",
 //         "operation": "update",
 //         "entity_id": "*"
 //     }
 // ]
 
 type Scope struct {
-	ID               string     `json:"id"`
-	PatID            string     `json:"pat_id"`
-	OptionalDomainID string     `json:"optional_domain_id"`
-	EntityType       EntityType `json:"entity_type"`
-	EntityID         string     `json:"entity_id"`
-	Operation        Operation  `json:"operation"`
+	ID         string     `json:"id"`
+	PatID      string     `json:"pat_id"`
+	DomainID   string     `json:"domain_id"`
+	EntityType EntityType `json:"entity_type"`
+	EntityID   string     `json:"entity_id"`
+	Operation  string     `json:"operation"`
 }
 
-func (s *Scope) Authorized(entityType EntityType, optionalDomainID string, operation Operation, entityID string) bool {
+func (s *Scope) UnmarshalJSON(data []byte) error {
+	type Alias Scope
+	aux := (*Alias)(s)
+
+	if err := json.Unmarshal(data, aux); err != nil {
+		return err
+	}
+
+	switch s.EntityType {
+	case ClientsType:
+		switch s.Operation {
+		case OpCreate:
+			s.Operation = OpCreateClients
+		case OpList:
+			s.Operation = OpListClients
+		}
+	case ChannelsType:
+		switch s.Operation {
+		case OpCreate:
+			s.Operation = OpCreateChannels
+		case OpList:
+			s.Operation = OpListChannels
+		}
+	case GroupsType:
+		switch s.Operation {
+		case OpCreate:
+			s.Operation = OpCreateGroups
+		case OpList:
+			s.Operation = OpListGroups
+		}
+	case DashboardType:
+		switch s.Operation {
+		case OpShare:
+			s.Operation = OpDashboardShare
+		case OpUnshare:
+			s.Operation = OpDashboardUnshare
+		}
+	case MessagesType:
+		switch s.Operation {
+		case OpPublish:
+			s.Operation = OpMessagePublish
+		case OpSubscribe:
+			s.Operation = OpMessageSubscribe
+		}
+	}
+
+	return nil
+}
+
+func (s *Scope) Authorized(entityType EntityType, domainID string, operation string, entityID string) bool {
 	if s == nil {
 		return false
 	}
@@ -255,7 +242,7 @@ func (s *Scope) Authorized(entityType EntityType, optionalDomainID string, opera
 		return false
 	}
 
-	if optionalDomainID != "" && s.OptionalDomainID != optionalDomainID {
+	if s.DomainID != "" && s.DomainID != domainID {
 		return false
 	}
 
@@ -270,6 +257,7 @@ func (s *Scope) Authorized(entityType EntityType, optionalDomainID string, opera
 	if s.EntityID == entityID {
 		return true
 	}
+
 	return false
 }
 
@@ -281,11 +269,12 @@ func (s *Scope) Validate() error {
 		return apiutil.ErrMissingEntityID
 	}
 
-	switch s.EntityType {
-	case ChannelsType, GroupsType, ClientsType:
-		if s.OptionalDomainID == "" {
-			return apiutil.ErrMissingDomainID
-		}
+	if s.DomainID == "" {
+		return apiutil.ErrMissingDomainID
+	}
+
+	if !IsValidOperationForEntity(s.EntityType, s.Operation) {
+		return errors.Wrap(apiutil.ErrInvalidQueryParams, errInvalidEntityOp)
 	}
 
 	return nil
@@ -358,14 +347,6 @@ func (pat *PAT) Validate() error {
 	return nil
 }
 
-func (pat *PAT) String() string {
-	str, err := json.MarshalIndent(pat, "", "  ")
-	if err != nil {
-		return fmt.Sprintf("failed to convert PAT to string: json marshal error :%s", err.Error())
-	}
-	return string(str)
-}
-
 // PATS specifies function which are required for Personal access Token implementation.
 type PATS interface {
 	// Create function creates new PAT for given valid inputs.
@@ -411,7 +392,7 @@ type PATS interface {
 	IdentifyPAT(ctx context.Context, paToken string) (PAT, error)
 
 	// AuthorizePAT function will valid the secret and check the given scope exists.
-	AuthorizePAT(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityID string) error
+	AuthorizePAT(ctx context.Context, userID, patID string, entityType EntityType, domainID string, operation string, entityID string) error
 }
 
 // PATSRepository specifies PATS persistence API.
@@ -456,7 +437,7 @@ type PATSRepository interface {
 
 	RemoveScope(ctx context.Context, userID string, scopesIDs ...string) error
 
-	CheckScope(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityID string) error
+	CheckScope(ctx context.Context, userID, patID string, entityType EntityType, domainID string, operation string, entityID string) error
 
 	RemoveAllScope(ctx context.Context, patID string) error
 }
@@ -464,7 +445,7 @@ type PATSRepository interface {
 type Cache interface {
 	Save(ctx context.Context, userID string, scopes []Scope) error
 
-	CheckScope(ctx context.Context, userID, patID, optionalDomainID string, entityType EntityType, operation Operation, entityID string) bool
+	CheckScope(ctx context.Context, userID, patID, optionalDomainID string, entityType EntityType, operation string, entityID string) bool
 
 	Remove(ctx context.Context, userID string, scopesID []string) error
 
