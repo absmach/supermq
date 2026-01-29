@@ -306,63 +306,6 @@ func (_c *Repository_Delete_Call) RunAndReturn(run func(ctx context.Context, gro
 	return _c
 }
 
-// DeleteDomainGroups provides a mock function for the type Repository
-func (_mock *Repository) DeleteDomainGroups(ctx context.Context, domainID string) error {
-	ret := _mock.Called(ctx, domainID)
-
-	if len(ret) == 0 {
-		panic("no return value specified for DeleteDomainGroups")
-	}
-
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = returnFunc(ctx, domainID)
-	} else {
-		r0 = ret.Error(0)
-	}
-	return r0
-}
-
-// Repository_DeleteDomainGroups_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteDomainGroups'
-type Repository_DeleteDomainGroups_Call struct {
-	*mock.Call
-}
-
-// DeleteDomainGroups is a helper method to define mock.On call
-//   - ctx context.Context
-//   - domainID string
-func (_e *Repository_Expecter) DeleteDomainGroups(ctx interface{}, domainID interface{}) *Repository_DeleteDomainGroups_Call {
-	return &Repository_DeleteDomainGroups_Call{Call: _e.mock.On("DeleteDomainGroups", ctx, domainID)}
-}
-
-func (_c *Repository_DeleteDomainGroups_Call) Run(run func(ctx context.Context, domainID string)) *Repository_DeleteDomainGroups_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 string
-		if args[1] != nil {
-			arg1 = args[1].(string)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *Repository_DeleteDomainGroups_Call) Return(err error) *Repository_DeleteDomainGroups_Call {
-	_c.Call.Return(err)
-	return _c
-}
-
-func (_c *Repository_DeleteDomainGroups_Call) RunAndReturn(run func(ctx context.Context, domainID string) error) *Repository_DeleteDomainGroups_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // ListEntityMembers provides a mock function for the type Repository
 func (_mock *Repository) ListEntityMembers(ctx context.Context, entityID string, pageQuery roles.MembersRolePageQuery) (roles.MembersRolePage, error) {
 	ret := _mock.Called(ctx, entityID, pageQuery)
