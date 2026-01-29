@@ -11,6 +11,7 @@ DOCKERS_DEV = $(addprefix docker_dev_,$(SERVICES))
 CGO_ENABLED ?= 0
 GOARCH ?= amd64
 GOOS ?= linux
+DETECTED_ARCH := $(shell uname -m)
 VERSION ?= $(shell git describe --abbrev=0 --tags 2>/dev/null || echo 'unknown')
 COMMIT ?= $(shell git rev-parse HEAD)
 TIME ?= $(shell date +%F_%T)
@@ -74,9 +75,49 @@ define make_docker_dev
 		-f docker/Dockerfile.dev ./build
 endef
 
+define run_with_arch_detection
+	@echo "Detecting architecture..."
+	@if [ "$(DETECTED_ARCH)" = "arm64" ] || [ "$(DETECTED_ARCH)" = "aarch64" ]; then \
+		echo "ARM64 architecture detected."; \
+		git checkout $(1); \
+		GOARCH=arm64 $(MAKE) dockers; \
+		for svc in $(SERVICES); do \
+			docker tag supermq/$$svc supermq/$$svc:latest; \
+			docker tag supermq/$$svc docker.io/supermq/$$svc:latest; \
+		done; \
+		sed -i.bak 's/^SMQ_RELEASE_TAG=.*/SMQ_RELEASE_TAG=latest/' docker/.env && rm -f docker/.env.bak; \
+		docker compose -f docker/docker-compose.yaml --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args); \
+	else \
+		echo "x86_64 architecture detected."; \
+		git checkout $(1); \
+		sed -i.bak 's/^SMQ_RELEASE_TAG=.*/SMQ_RELEASE_TAG=$(2)/' docker/.env && rm -f docker/.env.bak; \
+		docker compose -f docker/docker-compose.yaml --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args); \
+	fi
+endef
+
 ADDON_SERVICES = journal certs
 
 EXTERNAL_SERVICES = prometheus
+
+# Detect OS and architecture for cross-platform compatibility
+UNAME_S := $(shell uname -s)
+UNAME_M := $(shell uname -m)
+
+# macOS BSD sed vs GNU sed compatibility
+ifeq ($(UNAME_S),Darwin)
+	SED_INPLACE := sed -i ''
+else
+	SED_INPLACE := sed -i
+endif
+
+# Apple Silicon (arm64) Docker platform compatibility
+# Pre-built images are amd64 only, so we need to use emulation on Apple Silicon
+ifeq ($(UNAME_S),Darwin)
+ifeq ($(UNAME_M),arm64)
+	DOCKER_PLATFORM := DOCKER_DEFAULT_PLATFORM=linux/amd64
+endif
+endif
+DOCKER_PLATFORM ?=
 
 ifneq ($(filter run%,$(firstword $(MAKECMDGOALS))),)
   temp_args := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
@@ -270,25 +311,25 @@ fetch_certs:
 
 run_latest: check_certs
 	git checkout main
-	sed -i 's/^SMQ_RELEASE_TAG=.*/SMQ_RELEASE_TAG=latest/' docker/.env
-	docker compose -f docker/docker-compose.yaml --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
+	$(SED_INPLACE) 's/^SMQ_RELEASE_TAG=.*/SMQ_RELEASE_TAG=latest/' docker/.env
+	$(DOCKER_PLATFORM) docker compose -f docker/docker-compose.yaml --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
 
 run_stable: check_certs
 	$(eval version = $(shell git describe --abbrev=0 --tags))
 	git checkout $(version)
-	sed -i 's/^SMQ_RELEASE_TAG=.*/SMQ_RELEASE_TAG=$(version)/' docker/.env
-	docker compose -f docker/docker-compose.yaml --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
+	$(SED_INPLACE) 's/^SMQ_RELEASE_TAG=.*/SMQ_RELEASE_TAG=$(version)/' docker/.env
+	$(DOCKER_PLATFORM) docker compose -f docker/docker-compose.yaml --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
 
 run_addons: check_certs
 	$(foreach SVC,$(RUN_ADDON_ARGS),$(if $(filter $(SVC),$(ADDON_SERVICES) $(EXTERNAL_SERVICES)),,$(error Invalid Service $(SVC))))
-	@docker compose -f docker/docker-compose.yaml --env-file ./docker/.env -p $(DOCKER_PROJECT) up -d auth domains jaeger
+	@$(DOCKER_PLATFORM) docker compose -f docker/docker-compose.yaml --env-file ./docker/.env -p $(DOCKER_PROJECT) up -d auth domains jaeger
 	@for SVC in $(RUN_ADDON_ARGS); do \
 		if [ "$$SVC" = "certs" ]; then \
-			docker compose -f docker/addons/$$SVC/docker-compose.yaml -f docker/certs-docker-compose-override.yaml --env-file ./docker/.env --env-file ./docker/addons/$$SVC/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args) & \
+			$(DOCKER_PLATFORM) docker compose -f docker/addons/$$SVC/docker-compose.yaml -f docker/certs-docker-compose-override.yaml --env-file ./docker/.env --env-file ./docker/addons/$$SVC/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args) & \
 		else \
-			SMQ_ADDONS_CERTS_PATH_PREFIX="../."  docker compose -f docker/addons/$$SVC/docker-compose.yaml -p $(DOCKER_PROJECT) --env-file ./docker/.env $(DOCKER_COMPOSE_COMMAND) $(args) & \
+			SMQ_ADDONS_CERTS_PATH_PREFIX="../." $(DOCKER_PLATFORM) docker compose -f docker/addons/$$SVC/docker-compose.yaml -p $(DOCKER_PROJECT) --env-file ./docker/.env $(DOCKER_COMPOSE_COMMAND) $(args) & \
 		fi; \
 	done
 
 run_live: check_certs
-	GOPATH=$(go env GOPATH) docker compose  -f docker/docker-compose.yaml -f docker/docker-compose-live.yaml --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
+	GOPATH=$(go env GOPATH) $(DOCKER_PLATFORM) docker compose -f docker/docker-compose.yaml -f docker/docker-compose-live.yaml --env-file docker/.env -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
