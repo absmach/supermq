@@ -23,6 +23,7 @@ import (
 	cache "github.com/absmach/supermq/domains/cache"
 	"github.com/absmach/supermq/domains/events"
 	dmw "github.com/absmach/supermq/domains/middleware"
+	doperations "github.com/absmach/supermq/domains/operations"
 	dpostgres "github.com/absmach/supermq/domains/postgres"
 	"github.com/absmach/supermq/domains/private"
 	redisclient "github.com/absmach/supermq/internal/clients/redis"
@@ -319,7 +320,7 @@ func newDomainService(ctx context.Context, domainsRepo domainsSvc.Repository, ca
 
 	entitiesOps, err := permissions.NewEntitiesOperations(
 		permissions.EntitiesPermission{policies.DomainType: domainOps},
-		permissions.EntitiesOperationDetails[permissions.Operation]{policies.DomainType: domains.OperationDetails()},
+		permissions.EntitiesOperationDetails[permissions.Operation]{policies.DomainType: doperations.OperationDetails()},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create entities operations: %w", err)

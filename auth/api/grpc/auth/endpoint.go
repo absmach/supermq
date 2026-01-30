@@ -35,23 +35,32 @@ func authorizeEndpoint(svc auth.Service) endpoint.Endpoint {
 			return authorizeRes{}, err
 		}
 
+		var pat *auth.PATAuthz
+		if req.PatID != "" {
+			entityType, err := auth.ParseEntityType(req.EntityType)
+			if err != nil {
+				return authorizeRes{authorized: false}, err
+			}
+			pat = &auth.PATAuthz{
+				PatID:      req.PatID,
+				UserID:     req.UserID,
+				EntityType: entityType,
+				EntityID:   req.EntityID,
+				Operation:  req.Operation,
+				Domain:     req.Domain,
+			}
+		}
+
 		err := svc.Authorize(ctx, policies.Policy{
-			TokenType:        req.TokenType,
-			Domain:           req.Domain,
-			SubjectType:      req.SubjectType,
-			SubjectKind:      req.SubjectKind,
-			Subject:          req.Subject,
-			Relation:         req.Relation,
-			Permission:       req.Permission,
-			ObjectType:       req.ObjectType,
-			Object:           req.Object,
-			UserID:           req.UserID,
-			PatID:            req.PatID,
-			EntityType:       uint32(req.EntityType),
-			OptionalDomainID: req.OptionalDomainID,
-			Operation:        uint32(req.Operation),
-			EntityID:         req.EntityID,
-		})
+			Domain:      req.Domain,
+			SubjectType: req.SubjectType,
+			SubjectKind: req.SubjectKind,
+			Subject:     req.Subject,
+			Relation:    req.Relation,
+			Permission:  req.Permission,
+			ObjectType:  req.ObjectType,
+			Object:      req.Object,
+		}, pat)
 		if err != nil {
 			return authorizeRes{authorized: false}, err
 		}

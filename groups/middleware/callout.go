@@ -7,8 +7,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/absmach/supermq/domains"
+	dOperations "github.com/absmach/supermq/domains/operations"
 	"github.com/absmach/supermq/groups"
+	"github.com/absmach/supermq/groups/operations"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/callout"
 	"github.com/absmach/supermq/pkg/errors"
@@ -54,7 +55,7 @@ func (cm *calloutMiddleware) CreateGroup(ctx context.Context, session authn.Sess
 		"count":    1,
 	}
 
-	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpCreateDomainGroups, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.DomainType, dOperations.OpCreateDomainGroups, params); err != nil {
 		return groups.Group{}, nil, err
 	}
 
@@ -67,7 +68,7 @@ func (cm *calloutMiddleware) UpdateGroup(ctx context.Context, session authn.Sess
 		"group":     group,
 	}
 
-	if err := cm.callOut(ctx, session, policies.GroupType, groups.OpUpdateGroup, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.GroupType, operations.OpUpdateGroup, params); err != nil {
 		return groups.Group{}, err
 	}
 
@@ -80,7 +81,7 @@ func (cm *calloutMiddleware) UpdateGroupTags(ctx context.Context, session authn.
 		"tags":      group.Tags,
 	}
 
-	if err := cm.callOut(ctx, session, policies.GroupType, groups.OpUpdateGroupTags, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.GroupType, operations.OpUpdateGroupTags, params); err != nil {
 		return groups.Group{}, err
 	}
 
@@ -92,7 +93,7 @@ func (cm *calloutMiddleware) ViewGroup(ctx context.Context, session authn.Sessio
 		"entity_id": id,
 	}
 
-	if err := cm.callOut(ctx, session, policies.GroupType, groups.OpViewGroup, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.GroupType, operations.OpViewGroup, params); err != nil {
 		return groups.Group{}, err
 	}
 
@@ -104,7 +105,7 @@ func (cm *calloutMiddleware) ListGroups(ctx context.Context, session authn.Sessi
 		"pagemeta": gm,
 	}
 
-	if err := cm.callOut(ctx, session, policies.DomainType, domains.OpListDomainGroups, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.DomainType, dOperations.OpListDomainGroups, params); err != nil {
 		return groups.Page{}, err
 	}
 
@@ -117,7 +118,7 @@ func (cm *calloutMiddleware) ListUserGroups(ctx context.Context, session authn.S
 		"pagemeta": gm,
 	}
 
-	if err := cm.callOut(ctx, session, policies.GroupType, groups.OpListUserGroups, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.GroupType, operations.OpListUserGroups, params); err != nil {
 		return groups.Page{}, err
 	}
 
@@ -129,7 +130,7 @@ func (cm *calloutMiddleware) EnableGroup(ctx context.Context, session authn.Sess
 		"entity_id": id,
 	}
 
-	if err := cm.callOut(ctx, session, policies.GroupType, groups.OpEnableGroup, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.GroupType, operations.OpEnableGroup, params); err != nil {
 		return groups.Group{}, err
 	}
 
@@ -141,7 +142,7 @@ func (cm *calloutMiddleware) DisableGroup(ctx context.Context, session authn.Ses
 		"entity_id": id,
 	}
 
-	if err := cm.callOut(ctx, session, policies.GroupType, groups.OpDisableGroup, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.GroupType, operations.OpDisableGroup, params); err != nil {
 		return groups.Group{}, err
 	}
 
@@ -153,7 +154,7 @@ func (cm *calloutMiddleware) DeleteGroup(ctx context.Context, session authn.Sess
 		"entity_id": id,
 	}
 
-	if err := cm.callOut(ctx, session, policies.GroupType, groups.OpDeleteGroup, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.GroupType, operations.OpDeleteGroup, params); err != nil {
 		return err
 	}
 
@@ -166,7 +167,7 @@ func (cm *calloutMiddleware) RetrieveGroupHierarchy(ctx context.Context, session
 		"hierarchy_pagemeta": hm,
 	}
 
-	if err := cm.callOut(ctx, session, policies.GroupType, groups.OpRetrieveGroupHierarchy, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.GroupType, operations.OpRetrieveGroupHierarchy, params); err != nil {
 		return groups.HierarchyPage{}, err
 	}
 
@@ -179,7 +180,7 @@ func (cm *calloutMiddleware) AddParentGroup(ctx context.Context, session authn.S
 		"parent_id": parentID,
 	}
 
-	if err := cm.callOut(ctx, session, policies.GroupType, groups.OpAddParentGroup, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.GroupType, operations.OpAddParentGroup, params); err != nil {
 		return err
 	}
 
@@ -197,7 +198,7 @@ func (cm *calloutMiddleware) RemoveParentGroup(ctx context.Context, session auth
 		"parent_id": group.Parent,
 	}
 
-	if err := cm.callOut(ctx, session, policies.GroupType, groups.OpRemoveParentGroup, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.GroupType, operations.OpRemoveParentGroup, params); err != nil {
 		return err
 	}
 
@@ -210,7 +211,7 @@ func (cm *calloutMiddleware) AddChildrenGroups(ctx context.Context, session auth
 		"children_group_ids": childrenGroupIDs,
 	}
 
-	if err := cm.callOut(ctx, session, policies.GroupType, groups.OpAddChildrenGroups, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.GroupType, operations.OpAddChildrenGroups, params); err != nil {
 		return err
 	}
 
@@ -223,7 +224,7 @@ func (cm *calloutMiddleware) RemoveChildrenGroups(ctx context.Context, session a
 		"children_group_ids": childrenGroupIDs,
 	}
 
-	if err := cm.callOut(ctx, session, policies.GroupType, groups.OpRemoveChildrenGroups, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.GroupType, operations.OpRemoveChildrenGroups, params); err != nil {
 		return err
 	}
 
@@ -235,7 +236,7 @@ func (cm *calloutMiddleware) RemoveAllChildrenGroups(ctx context.Context, sessio
 		"entity_id": id,
 	}
 
-	if err := cm.callOut(ctx, session, policies.GroupType, groups.OpRemoveAllChildrenGroups, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.GroupType, operations.OpRemoveAllChildrenGroups, params); err != nil {
 		return err
 	}
 
@@ -250,7 +251,7 @@ func (cm *calloutMiddleware) ListChildrenGroups(ctx context.Context, session aut
 		"pagemeta":    pm,
 	}
 
-	if err := cm.callOut(ctx, session, policies.GroupType, groups.OpListChildrenGroups, params); err != nil {
+	if err := cm.callOut(ctx, session, policies.GroupType, operations.OpListChildrenGroups, params); err != nil {
 		return groups.Page{}, err
 	}
 

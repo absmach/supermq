@@ -110,7 +110,7 @@ func (lm *loggingMiddleware) RetrieveJWKS() (jwks []auth.PublicKeyInfo) {
 	return lm.svc.RetrieveJWKS()
 }
 
-func (lm *loggingMiddleware) Authorize(ctx context.Context, pr policies.Policy) (err error) {
+func (lm *loggingMiddleware) Authorize(ctx context.Context, pr policies.Policy, patAuthz *auth.PATAuthz) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
@@ -125,6 +125,18 @@ func (lm *loggingMiddleware) Authorize(ctx context.Context, pr policies.Policy) 
 			),
 			slog.String("permission", pr.Permission),
 		}
+		if patAuthz != nil {
+			args = append(args,
+				slog.Group("pat",
+					slog.String("pat_id", patAuthz.PatID),
+					slog.String("user_id", patAuthz.UserID),
+					slog.String("entity_type", patAuthz.EntityType.String()),
+					slog.String("entity_id", patAuthz.EntityID),
+					slog.String("operation", patAuthz.Operation),
+					slog.String("domain", patAuthz.Domain),
+				),
+			)
+		}
 		if err != nil {
 			args = append(args, slog.String("error", err.Error()))
 			lm.logger.Warn("Authorize failed", args...)
@@ -132,7 +144,7 @@ func (lm *loggingMiddleware) Authorize(ctx context.Context, pr policies.Policy) 
 		}
 		lm.logger.Info("Authorize completed successfully", args...)
 	}(time.Now())
-	return lm.svc.Authorize(ctx, pr)
+	return lm.svc.Authorize(ctx, pr, patAuthz)
 }
 
 func (lm *loggingMiddleware) CreatePAT(ctx context.Context, token, name, description string, duration time.Duration) (pa auth.PAT, err error) {
@@ -307,8 +319,8 @@ func (lm *loggingMiddleware) AddScope(ctx context.Context, token, patID string, 
 		var groupArgs []any
 		for _, s := range scopes {
 			groupArgs = append(groupArgs, slog.String("entity_type", s.EntityType.String()))
-			groupArgs = append(groupArgs, slog.String("optional_domain_id", s.OptionalDomainID))
-			groupArgs = append(groupArgs, slog.String("operation", s.Operation.String()))
+			groupArgs = append(groupArgs, slog.String("domain_id", s.DomainID))
+			groupArgs = append(groupArgs, slog.String("operation", s.Operation))
 			groupArgs = append(groupArgs, slog.String("entity_id", s.EntityID))
 		}
 
@@ -379,13 +391,13 @@ func (lm *loggingMiddleware) IdentifyPAT(ctx context.Context, paToken string) (p
 	return lm.svc.IdentifyPAT(ctx, paToken)
 }
 
-func (lm *loggingMiddleware) AuthorizePAT(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityID string) (err error) {
+func (lm *loggingMiddleware) AuthorizePAT(ctx context.Context, userID, patID string, entityType auth.EntityType, domainID string, operation string, entityID string) (err error) {
 	defer func(begin time.Time) {
 		args := []any{
 			slog.String("duration", time.Since(begin).String()),
 			slog.String("entity_type", entityType.String()),
-			slog.String("optional_domain_id", optionalDomainID),
-			slog.String("operation", operation.String()),
+			slog.String("domain_id", domainID),
+			slog.String("operation", operation),
 			slog.String("entities", entityID),
 		}
 		if err != nil {
@@ -395,5 +407,5 @@ func (lm *loggingMiddleware) AuthorizePAT(ctx context.Context, userID, patID str
 		}
 		lm.logger.Info("Authorize PAT completed successfully", args...)
 	}(time.Now())
-	return lm.svc.AuthorizePAT(ctx, userID, patID, entityType, optionalDomainID, operation, entityID)
+	return lm.svc.AuthorizePAT(ctx, userID, patID, entityType, domainID, operation, entityID)
 }

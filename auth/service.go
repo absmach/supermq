@@ -25,11 +25,6 @@ const (
 	patSecretSeparator = "_"
 )
 
-const (
-	AccessTokenType uint32 = iota
-	PersonalAccessTokenType
-)
-
 var (
 	// ErrExpiry indicates that the token is expired.
 	ErrExpiry = errors.New("token is expired")
@@ -61,7 +56,7 @@ type Authz interface {
 	// `object`. Authorize returns a non-nil error if the subject has
 	// no relation on the object (which simply means the operation is
 	// denied).
-	Authorize(ctx context.Context, pr policies.Policy) error
+	Authorize(ctx context.Context, pr policies.Policy, patAuthz *PATAuthz) error
 }
 
 // Authn specifies an API that must be fulfilled by the domain service
@@ -210,12 +205,11 @@ func (svc service) RetrieveJWKS() []PublicKeyInfo {
 	return keys
 }
 
-func (svc service) Authorize(ctx context.Context, pr policies.Policy) error {
-	if pr.PatID != "" && pr.TokenType == PersonalAccessTokenType {
-		if err := svc.AuthorizePAT(ctx, pr.UserID, pr.PatID, EntityType(pr.EntityType), pr.OptionalDomainID, Operation(pr.Operation), pr.EntityID); err != nil {
+func (svc service) Authorize(ctx context.Context, pr policies.Policy, patAuthz *PATAuthz) error {
+	if patAuthz != nil {
+		if err := svc.AuthorizePAT(ctx, patAuthz.UserID, patAuthz.PatID, patAuthz.EntityType, patAuthz.Domain, patAuthz.Operation, patAuthz.EntityID); err != nil {
 			return err
 		}
-		return nil
 	}
 
 	if err := svc.PolicyValidation(pr); err != nil {
@@ -378,7 +372,7 @@ func (svc service) checkUserRole(ctx context.Context, key Key) (err error) {
 			Permission:  policies.AdminPermission,
 			Object:      policies.SuperMQObject,
 			ObjectType:  policies.PlatformType,
-		}); err != nil {
+		}, nil); err != nil {
 			return errRoleAuth
 		}
 		return nil
@@ -389,7 +383,7 @@ func (svc service) checkUserRole(ctx context.Context, key Key) (err error) {
 			Permission:  policies.MembershipPermission,
 			Object:      policies.SuperMQObject,
 			ObjectType:  policies.PlatformType,
-		}); err != nil {
+		}, nil); err != nil {
 			return errRoleAuth
 		}
 		return nil
@@ -406,7 +400,7 @@ func (svc service) getUserRole(ctx context.Context, userID string) (role Role) {
 		Permission:  policies.AdminPermission,
 		Object:      policies.SuperMQObject,
 		ObjectType:  policies.PlatformType,
-	}); err == nil {
+	}, nil); err == nil {
 		rl = AdminRole
 	}
 
@@ -735,8 +729,8 @@ func (svc service) IdentifyPAT(ctx context.Context, secret string) (PAT, error) 
 	return pat, nil
 }
 
-func (svc service) AuthorizePAT(ctx context.Context, userID, patID string, entityType EntityType, optionalDomainID string, operation Operation, entityID string) error {
-	if err := svc.pats.CheckScope(ctx, userID, patID, entityType, optionalDomainID, operation, entityID); err != nil {
+func (svc service) AuthorizePAT(ctx context.Context, userID, patID string, entityType EntityType, domainID string, operation string, entityID string) error {
+	if err := svc.pats.CheckScope(ctx, userID, patID, entityType, domainID, operation, entityID); err != nil {
 		return errors.Wrap(svcerr.ErrAuthorization, err)
 	}
 

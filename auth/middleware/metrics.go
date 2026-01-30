@@ -75,12 +75,12 @@ func (ms *metricsMiddleware) RetrieveJWKS() []auth.PublicKeyInfo {
 	return ms.svc.RetrieveJWKS()
 }
 
-func (ms *metricsMiddleware) Authorize(ctx context.Context, pr policies.Policy) error {
+func (ms *metricsMiddleware) Authorize(ctx context.Context, pr policies.Policy, patAuthz *auth.PATAuthz) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "authorize").Add(1)
 		ms.latency.With("method", "authorize").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.Authorize(ctx, pr)
+	return ms.svc.Authorize(ctx, pr, patAuthz)
 }
 
 func (ms *metricsMiddleware) CreatePAT(ctx context.Context, token, name, description string, duration time.Duration) (auth.PAT, error) {
@@ -195,10 +195,10 @@ func (ms *metricsMiddleware) IdentifyPAT(ctx context.Context, paToken string) (a
 	return ms.svc.IdentifyPAT(ctx, paToken)
 }
 
-func (ms *metricsMiddleware) AuthorizePAT(ctx context.Context, userID, patID string, entityType auth.EntityType, optionalDomainID string, operation auth.Operation, entityID string) error {
+func (ms *metricsMiddleware) AuthorizePAT(ctx context.Context, userID, patID string, entityType auth.EntityType, domainID string, operation string, entityID string) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "authorize_pat").Add(1)
 		ms.latency.With("method", "authorize_pat").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.AuthorizePAT(ctx, userID, patID, entityType, optionalDomainID, operation, entityID)
+	return ms.svc.AuthorizePAT(ctx, userID, patID, entityType, domainID, operation, entityID)
 }

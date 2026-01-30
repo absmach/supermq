@@ -8,6 +8,7 @@ import (
 
 	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/domains"
+	"github.com/absmach/supermq/domains/operations"
 	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/authz"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
@@ -61,8 +62,7 @@ func (am *authorizationMiddleware) RetrieveDomain(ctx context.Context, session a
 		return am.svc.RetrieveDomain(ctx, session, id, withRoles)
 	}
 
-	if err := am.authorize(ctx, policies.DomainType, domains.OpRetrieveDomain, authz.PolicyReq{
-		TokenType:   session.Type,
+	if err := am.authorize(ctx, policies.DomainType, operations.OpRetrieveDomain, authz.PolicyReq{
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
@@ -76,8 +76,7 @@ func (am *authorizationMiddleware) RetrieveDomain(ctx context.Context, session a
 }
 
 func (am *authorizationMiddleware) UpdateDomain(ctx context.Context, session authn.Session, id string, d domains.DomainReq) (domains.Domain, error) {
-	if err := am.authorize(ctx, policies.DomainType, domains.OpUpdateDomain, authz.PolicyReq{
-		TokenType:   session.Type,
+	if err := am.authorize(ctx, policies.DomainType, operations.OpUpdateDomain, authz.PolicyReq{
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
@@ -91,8 +90,7 @@ func (am *authorizationMiddleware) UpdateDomain(ctx context.Context, session aut
 }
 
 func (am *authorizationMiddleware) EnableDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
-	if err := am.authorize(ctx, policies.DomainType, domains.OpEnableDomain, authz.PolicyReq{
-		TokenType:   session.Type,
+	if err := am.authorize(ctx, policies.DomainType, operations.OpEnableDomain, authz.PolicyReq{
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
@@ -106,8 +104,7 @@ func (am *authorizationMiddleware) EnableDomain(ctx context.Context, session aut
 }
 
 func (am *authorizationMiddleware) DisableDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
-	if err := am.authorize(ctx, policies.DomainType, domains.OpDisableDomain, authz.PolicyReq{
-		TokenType:   session.Type,
+	if err := am.authorize(ctx, policies.DomainType, operations.OpDisableDomain, authz.PolicyReq{
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
@@ -123,14 +120,13 @@ func (am *authorizationMiddleware) DisableDomain(ctx context.Context, session au
 func (am *authorizationMiddleware) FreezeDomain(ctx context.Context, session authn.Session, id string) (domains.Domain, error) {
 	// Only SuperAdmin can freeze the domain
 	if err := am.authz.Authorize(ctx, authz.PolicyReq{
-		TokenType:   session.Type,
 		Subject:     session.UserID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
 		Permission:  policies.AdminPermission,
 		Object:      policies.SuperMQObject,
 		ObjectType:  policies.PlatformType,
-	}); err != nil {
+	}, nil); err != nil {
 		return domains.Domain{}, err
 	}
 
@@ -148,7 +144,6 @@ func (am *authorizationMiddleware) ListDomains(ctx context.Context, session auth
 func (am *authorizationMiddleware) SendInvitation(ctx context.Context, session authn.Session, invitation domains.Invitation) (domains.Invitation, error) {
 	domainUserId := auth.EncodeDomainUserID(invitation.DomainID, invitation.InviteeUserID)
 	req := authz.PolicyReq{
-		TokenType:   session.Type,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
 		Subject:     domainUserId,
@@ -156,7 +151,7 @@ func (am *authorizationMiddleware) SendInvitation(ctx context.Context, session a
 		ObjectType:  policies.DomainType,
 		Object:      invitation.DomainID,
 	}
-	if err := am.authz.Authorize(ctx, req); err != nil {
+	if err := am.authz.Authorize(ctx, req, nil); err != nil {
 		// return error if the user is already a member of the domain
 		return domains.Invitation{}, errors.Wrap(svcerr.ErrConflict, ErrMemberExist)
 	}
@@ -173,8 +168,7 @@ func (am *authorizationMiddleware) ListInvitations(ctx context.Context, session 
 }
 
 func (am *authorizationMiddleware) ListDomainInvitations(ctx context.Context, session authn.Session, page domains.InvitationPageMeta) (invs domains.InvitationPage, err error) {
-	if err := am.authorize(ctx, policies.DomainType, domains.OpListDomainInvitations, authz.PolicyReq{
-		TokenType:   session.Type,
+	if err := am.authorize(ctx, policies.DomainType, operations.OpListDomainInvitations, authz.PolicyReq{
 		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
@@ -212,7 +206,7 @@ func (am *authorizationMiddleware) authorize(ctx context.Context, entityType str
 
 	authReq.Permission = perm.String()
 
-	if err := am.authz.Authorize(ctx, authReq); err != nil {
+	if err := am.authz.Authorize(ctx, authReq, nil); err != nil {
 		return err
 	}
 
@@ -222,7 +216,6 @@ func (am *authorizationMiddleware) authorize(ctx context.Context, entityType str
 // checkAdmin checks if the given user is a domain or platform administrator.
 func (am *authorizationMiddleware) checkAdmin(ctx context.Context, session authn.Session) error {
 	req := smqauthz.PolicyReq{
-		TokenType:   session.Type,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
 		Subject:     session.DomainUserID,
@@ -230,12 +223,11 @@ func (am *authorizationMiddleware) checkAdmin(ctx context.Context, session authn
 		ObjectType:  policies.DomainType,
 		Object:      session.DomainID,
 	}
-	if err := am.authz.Authorize(ctx, req); err == nil {
+	if err := am.authz.Authorize(ctx, req, nil); err == nil {
 		return nil
 	}
 
 	req = smqauthz.PolicyReq{
-		TokenType:   session.Type,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
 		Subject:     session.UserID,
@@ -244,7 +236,7 @@ func (am *authorizationMiddleware) checkAdmin(ctx context.Context, session authn
 		Object:      policies.SuperMQObject,
 	}
 
-	if err := am.authz.Authorize(ctx, req); err == nil {
+	if err := am.authz.Authorize(ctx, req, nil); err == nil {
 		return nil
 	}
 
@@ -256,13 +248,12 @@ func (am *authorizationMiddleware) checkSuperAdmin(ctx context.Context, session 
 		return svcerr.ErrSuperAdminAction
 	}
 	if err := am.authz.Authorize(ctx, smqauthz.PolicyReq{
-		TokenType:   session.Type,
 		SubjectType: policies.UserType,
 		Subject:     session.UserID,
 		Permission:  policies.AdminPermission,
 		ObjectType:  policies.PlatformType,
 		Object:      policies.SuperMQObject,
-	}); err != nil {
+	}, nil); err != nil {
 		return err
 	}
 	return nil
