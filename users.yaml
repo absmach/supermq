@@ -83,7 +83,7 @@ paths:
         - $ref: "#/components/parameters/LastName"
         - $ref: "#/components/parameters/Username"
         - $ref: "#/components/parameters/Email"
-        - $ref: "#/components/parameters/Tag"
+        - $ref: "#/components/parameters/Tags"
         - $ref: "#/components/parameters/OnlyTotal"
       security:
         - bearerAuth: []
@@ -1145,14 +1145,14 @@ components:
       required: false
       example: enabled
 
-    Tag:
-      name: tag
-      description: User tag.
+    Tags:
+      name: tags
+      description: User tags. Multiple tags can be specified separated by comma for OR condition and hyphen for AND condition.
       in: query
       schema:
         type: string
       required: false
-      example: "orange"
+      example: "orange,yellow"
 
     GroupName:
       name: name
