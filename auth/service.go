@@ -46,7 +46,6 @@ var (
 	errRetrievePAT         = errors.NewServiceError("failed to retrieve PAT")
 	errDeletePAT           = errors.NewServiceError("failed to delete PAT")
 	errInvalidScope        = errors.New("invalid scope")
-	errEmptySubject        = errors.New("subject is empty")
 )
 
 // Authz represents a authorization service. It exposes
