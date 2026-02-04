@@ -209,36 +209,6 @@ func (am *authorizationMiddleware) authorize(ctx context.Context, entityType str
 	return nil
 }
 
-// checkAdmin checks if the given user is a domain or platform administrator.
-func (am *authorizationMiddleware) checkAdmin(ctx context.Context, session authn.Session) error {
-	req := smqauthz.PolicyReq{
-		SubjectType: policies.UserType,
-		SubjectKind: policies.UsersKind,
-		Subject:     session.DomainUserID,
-		Permission:  policies.AdminPermission,
-		ObjectType:  policies.DomainType,
-		Object:      session.DomainID,
-	}
-	if err := am.authz.Authorize(ctx, req); err == nil {
-		return nil
-	}
-
-	req = smqauthz.PolicyReq{
-		SubjectType: policies.UserType,
-		SubjectKind: policies.UsersKind,
-		Subject:     session.UserID,
-		Permission:  policies.AdminPermission,
-		ObjectType:  policies.PlatformType,
-		Object:      policies.SuperMQObject,
-	}
-
-	if err := am.authz.Authorize(ctx, req); err == nil {
-		return nil
-	}
-
-	return svcerr.ErrAuthorization
-}
-
 func (am *authorizationMiddleware) checkSuperAdmin(ctx context.Context, session authn.Session) error {
 	if session.Role != authn.AdminRole {
 		return svcerr.ErrSuperAdminAction
