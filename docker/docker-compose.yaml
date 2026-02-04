@@ -107,6 +107,7 @@ services:
     restart: on-failure
     environment:
       SMQ_AUTH_LOG_LEVEL: ${SMQ_AUTH_LOG_LEVEL}
+      SMQ_PERMISSIONS_FILE: ${SMQ_PERMISSIONS_FILE}
       SMQ_SPICEDB_SCHEMA_FILE: ${SMQ_SPICEDB_SCHEMA_FILE}
       SMQ_SPICEDB_PRE_SHARED_KEY: ${SMQ_SPICEDB_PRE_SHARED_KEY}
       SMQ_SPICEDB_HOST: ${SMQ_SPICEDB_HOST}
@@ -152,6 +153,7 @@ services:
       - supermq-base-net
     volumes:
       - ./spicedb/schema.zed:${SMQ_SPICEDB_SCHEMA_FILE}
+      - ./permission.yaml:${SMQ_PERMISSIONS_FILE}
       - supermq-pat-db-volume:/supermq-data
       # Auth active private key file
       - type: bind

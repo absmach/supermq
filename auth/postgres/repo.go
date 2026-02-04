@@ -420,7 +420,7 @@ func (pr *patRepo) processScope(ctx context.Context, sc auth.Scope) (auth.Scope,
 	params := dbScope{
 		PatID:      sc.PatID,
 		DomainID:   sc.DomainID,
-		EntityType: sc.EntityType.String(),
+		EntityType: string(sc.EntityType),
 		Operation:  sc.Operation,
 		EntityID:   auth.AnyIDs,
 	}
@@ -446,7 +446,7 @@ func (pr *patRepo) processScope(ctx context.Context, sc auth.Scope) (auth.Scope,
 		newParams := dbScope{
 			PatID:      sc.PatID,
 			DomainID:   sc.DomainID,
-			EntityType: sc.EntityType.String(),
+			EntityType: string(sc.EntityType),
 			Operation:  sc.Operation,
 		}
 
@@ -531,7 +531,7 @@ func (pr *patRepo) CheckScope(ctx context.Context, userID, patID string, entityT
 
 	scope := dbScope{
 		PatID:      patID,
-		EntityType: entityType.String(),
+		EntityType: string(entityType),
 		DomainID:   domainID,
 		Operation:  operation,
 		EntityID:   entityID,
@@ -549,15 +549,11 @@ func (pr *patRepo) CheckScope(ctx context.Context, userID, patID string, entityT
 			return errors.Wrap(repoerr.ErrViewEntity, err)
 		}
 
-		entityType, err := auth.ParseEntityType(sc.EntityType)
-		if err != nil {
-			return errors.Wrap(repoerr.ErrViewEntity, err)
-		}
 		authScope := auth.Scope{
 			ID:         sc.ID,
 			PatID:      sc.PatID,
 			DomainID:   sc.DomainID,
-			EntityType: entityType,
+			EntityType: auth.EntityType(sc.EntityType),
 			EntityID:   sc.EntityID,
 			Operation:  sc.Operation,
 		}
@@ -566,7 +562,7 @@ func (pr *patRepo) CheckScope(ctx context.Context, userID, patID string, entityT
 			return err
 		}
 
-		if authScope.Authorized(entityType, domainID, operation, entityID) {
+		if authScope.Authorized(auth.EntityType(sc.EntityType), domainID, operation, entityID) {
 			return nil
 		}
 	}

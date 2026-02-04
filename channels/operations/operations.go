@@ -4,7 +4,15 @@
 package operations
 
 import (
+	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/pkg/permissions"
+)
+
+const ChannelsType auth.EntityType = "channels"
+
+const (
+	OpCreate = "create"
+	OpList   = "list"
 )
 
 // Channel Operations.

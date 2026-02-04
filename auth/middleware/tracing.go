@@ -65,8 +65,8 @@ func (tm *tracingMiddleware) RetrieveJWKS() []auth.PublicKeyInfo {
 	return tm.svc.RetrieveJWKS()
 }
 
-func (tm *tracingMiddleware) Authorize(ctx context.Context, pr policies.Policy) error {
-	ctx, span := tm.tracer.Start(ctx, "authorize", trace.WithAttributes(
+func (tm *tracingMiddleware) Authorize(ctx context.Context, pr policies.Policy, patAuthz *auth.PATAuthz) error {
+	attributes := []attribute.KeyValue{
 		attribute.String("subject", pr.Subject),
 		attribute.String("subject_type", pr.SubjectType),
 		attribute.String("subject_relation", pr.SubjectRelation),
@@ -74,10 +74,23 @@ func (tm *tracingMiddleware) Authorize(ctx context.Context, pr policies.Policy) 
 		attribute.String("object_type", pr.ObjectType),
 		attribute.String("relation", pr.Relation),
 		attribute.String("permission", pr.Permission),
-	))
+	}
+
+	if patAuthz != nil {
+		attributes = append(attributes,
+			attribute.String("pat_id", patAuthz.PatID),
+			attribute.String("pat_user_id", patAuthz.UserID),
+			attribute.String("pat_entity_type", string(patAuthz.EntityType)),
+			attribute.String("pat_entity_id", patAuthz.EntityID),
+			attribute.String("pat_operation", patAuthz.Operation),
+			attribute.String("pat_domain", patAuthz.Domain),
+		)
+	}
+
+	ctx, span := tm.tracer.Start(ctx, "authorize", trace.WithAttributes(attributes...))
 	defer span.End()
 
-	return tm.svc.Authorize(ctx, pr)
+	return tm.svc.Authorize(ctx, pr, patAuthz)
 }
 
 func (tm *tracingMiddleware) CreatePAT(ctx context.Context, token, name, description string, duration time.Duration) (auth.PAT, error) {
@@ -168,7 +181,7 @@ func (tm *tracingMiddleware) RemoveAllPAT(ctx context.Context, token string) err
 func (tm *tracingMiddleware) AddScope(ctx context.Context, token, patID string, scopes []auth.Scope) error {
 	var attributes []attribute.KeyValue
 	for _, s := range scopes {
-		attributes = append(attributes, attribute.String("entity_type", s.EntityType.String()))
+		attributes = append(attributes, attribute.String("entity_type", string(s.EntityType)))
 		attributes = append(attributes, attribute.String("domain_id", s.DomainID))
 		attributes = append(attributes, attribute.String("operation", s.Operation))
 		attributes = append(attributes, attribute.String("entity_id", s.EntityID))
@@ -211,7 +224,7 @@ func (tm *tracingMiddleware) IdentifyPAT(ctx context.Context, paToken string) (a
 func (tm *tracingMiddleware) AuthorizePAT(ctx context.Context, userID, patID string, entityType auth.EntityType, domainID string, operation string, entityID string) error {
 	ctx, span := tm.tracer.Start(ctx, "authorize_pat", trace.WithAttributes(
 		attribute.String("pat_id", patID),
-		attribute.String("entity_type", entityType.String()),
+		attribute.String("entity_type", string(entityType)),
 		attribute.String("domain_id", domainID),
 		attribute.String("operation", operation),
 		attribute.String("entities", entityID),

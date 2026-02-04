@@ -6,7 +6,6 @@ package auth
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 	"time"
 
@@ -20,136 +19,98 @@ const (
 	RoleOperationPrefix = "role_"
 )
 
-const (
-	OpCreate = "create"
-	OpList   = "list"
-
-	OpCreateClients  = "create_clients"
-	OpListClients    = "list_clients"
-	OpCreateChannels = "create_channels"
-	OpListChannels   = "list_channels"
-	OpCreateGroups   = "create_groups"
-	OpListGroups     = "list_groups"
-
-	OpShare   = "share"
-	OpUnshare = "unshare"
-
-	OpDashboardShare   = "dashboard_share"
-	OpDashboardUnshare = "dashboard_unshare"
-
-	OpPublish   = "publish"
-	OpSubscribe = "subscribe"
-
-	OpMessagePublish   = "message_publish"
-	OpMessageSubscribe = "message_subscribe"
-)
-
 var errInvalidEntityOp = errors.NewRequestError("operation not valid for entity type")
 
 type Operation = permissions.Operation
 
-// Dashboard operations.
-const (
-	DashboardShareOp Operation = iota + 400
-	DashboardUnshareOp
-)
+type EntityType string
 
-// Messages operations.
-const (
-	MessagePublishOp Operation = iota + 500
-	MessageSubscribeOp
-)
+type PATEntities struct {
+	Operations map[EntityType][]string
+}
 
-type EntityType uint32
-
-const (
-	GroupsType EntityType = iota
-	ChannelsType
-	ClientsType
-	DashboardType
-	MessagesType
-	DomainsType
-)
-
-const (
-	GroupsScopeStr   = "groups"
-	ChannelsScopeStr = "channels"
-	ClientsScopeStr  = "clients"
-	DashboardsStr    = "dashboards"
-	MessagesStr      = "messages"
-	DomainsStr       = "domains"
-)
-
-func (et EntityType) String() string {
-	switch et {
-	case GroupsType:
-		return GroupsScopeStr
-	case ChannelsType:
-		return ChannelsScopeStr
-	case ClientsType:
-		return ClientsScopeStr
-	case DashboardType:
-		return DashboardsStr
-	case MessagesType:
-		return MessagesStr
-	case DomainsType:
-		return DomainsStr
-	default:
-		return fmt.Sprintf("unknown domain entity type %d", et)
+func (pe *PATEntities) ValidateOperation(et EntityType, operation string) error {
+	if pe == nil {
+		return errInvalidEntityOp
 	}
-}
-
-func ParseEntityType(et string) (EntityType, error) {
-	switch et {
-	case GroupsScopeStr:
-		return GroupsType, nil
-	case ChannelsScopeStr:
-		return ChannelsType, nil
-	case ClientsScopeStr:
-		return ClientsType, nil
-	case DashboardsStr:
-		return DashboardType, nil
-	case MessagesStr:
-		return MessagesType, nil
-	case DomainsStr:
-		return DomainsType, nil
-	default:
-		return 0, fmt.Errorf("unknown domain entity type %s", et)
+	ops, ok := pe.Operations[et]
+	if !ok {
+		return errInvalidEntityOp
 	}
+	for _, op := range ops {
+		if op == operation {
+			return nil
+		}
+	}
+	return errInvalidEntityOp
 }
 
-func (et EntityType) MarshalJSON() ([]byte, error) {
-	return json.Marshal(et.String())
-}
-
-func (et *EntityType) UnmarshalJSON(data []byte) error {
-	str := strings.Trim(string(data), "\"")
-	val, err := ParseEntityType(str)
-	*et = val
-	return err
-}
-
-func (et EntityType) MarshalText() ([]byte, error) {
-	return []byte(et.String()), nil
-}
-
-func (et *EntityType) UnmarshalText(data []byte) (err error) {
-	str := strings.Trim(string(data), "\"")
-	*et, err = ParseEntityType(str)
-	return err
-}
-
-func IsValidOperationForEntity(entityType EntityType, operation string) bool {
-	switch entityType {
-	case ClientsType, ChannelsType, GroupsType, DomainsType:
-		return true
-	case DashboardType:
-		return operation == OpDashboardShare || operation == OpDashboardUnshare
-	case MessagesType:
-		return operation == OpMessagePublish || operation == OpMessageSubscribe
-	default:
+func (pe *PATEntities) IsEnabled(et EntityType) bool {
+	if pe == nil {
 		return false
 	}
+	_, ok := pe.Operations[et]
+	return ok
+}
+
+func BuildPATEntitiesFromConfig(config *permissions.PermissionConfig) (*PATEntities, error) {
+	entities := &PATEntities{
+		Operations: make(map[EntityType][]string),
+	}
+
+	for entityName, entityPerms := range config.Entities {
+		if entityPerms.PATEnabled != nil && !*entityPerms.PATEnabled {
+			continue
+		}
+
+		entityType := EntityType(entityName)
+
+		operations := make([]string, 0)
+
+		for _, op := range entityPerms.Operations {
+			switch v := op.(type) {
+			case map[string]interface{}:
+				for opName := range v {
+					operations = append(operations, opName)
+				}
+			case string:
+				operations = append(operations, v)
+			}
+		}
+
+		for _, roleOpMap := range entityPerms.RolesOperations {
+			for opName := range roleOpMap {
+				operations = append(operations, "role_"+opName)
+			}
+		}
+
+		if len(operations) > 0 {
+			entities.Operations[entityType] = operations
+		}
+	}
+
+	if domainPerms, ok := config.Entities["domains"]; ok {
+		for _, op := range domainPerms.Operations {
+			if opMap, ok := op.(map[string]interface{}); ok {
+				for opName := range opMap {
+					prefix, entityName, found := strings.Cut(opName, "_")
+					if !found || entityName == "" {
+						continue
+					}
+
+					switch prefix {
+					case "create", "list":
+						entityType := EntityType(entityName)
+						if ops, exists := entities.Operations[entityType]; exists {
+							entities.Operations[entityType] = append(ops, prefix)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return entities, nil
 }
 
 // Example Scope as JSON
@@ -182,55 +143,6 @@ type Scope struct {
 	EntityType EntityType `json:"entity_type"`
 	EntityID   string     `json:"entity_id"`
 	Operation  string     `json:"operation"`
-}
-
-func (s *Scope) UnmarshalJSON(data []byte) error {
-	type Alias Scope
-	aux := (*Alias)(s)
-
-	if err := json.Unmarshal(data, aux); err != nil {
-		return err
-	}
-
-	switch s.EntityType {
-	case ClientsType:
-		switch s.Operation {
-		case OpCreate:
-			s.Operation = OpCreateClients
-		case OpList:
-			s.Operation = OpListClients
-		}
-	case ChannelsType:
-		switch s.Operation {
-		case OpCreate:
-			s.Operation = OpCreateChannels
-		case OpList:
-			s.Operation = OpListChannels
-		}
-	case GroupsType:
-		switch s.Operation {
-		case OpCreate:
-			s.Operation = OpCreateGroups
-		case OpList:
-			s.Operation = OpListGroups
-		}
-	case DashboardType:
-		switch s.Operation {
-		case OpShare:
-			s.Operation = OpDashboardShare
-		case OpUnshare:
-			s.Operation = OpDashboardUnshare
-		}
-	case MessagesType:
-		switch s.Operation {
-		case OpPublish:
-			s.Operation = OpMessagePublish
-		case OpSubscribe:
-			s.Operation = OpMessageSubscribe
-		}
-	}
-
-	return nil
 }
 
 func (s *Scope) Authorized(entityType EntityType, domainID string, operation string, entityID string) bool {
@@ -273,11 +185,17 @@ func (s *Scope) Validate() error {
 		return apiutil.ErrMissingDomainID
 	}
 
-	if !IsValidOperationForEntity(s.EntityType, s.Operation) {
-		return errors.Wrap(apiutil.ErrInvalidQueryParams, errInvalidEntityOp)
-	}
-
 	return nil
+}
+
+// PATAuthz represents the PAT authorization request fields.
+type PATAuthz struct {
+	PatID      string
+	UserID     string
+	EntityType EntityType
+	EntityID   string
+	Operation  string
+	Domain     string
 }
 
 // PAT represents Personal Access Token.

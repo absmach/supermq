@@ -10,6 +10,7 @@ import (
 
 	apiutil "github.com/absmach/supermq/api/http/util"
 	"github.com/absmach/supermq/auth"
+	gOperations "github.com/absmach/supermq/groups/operations"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -509,14 +510,14 @@ func TestClearAllPATReqValidate(t *testing.T) {
 func TestAddScopeReqValidate(t *testing.T) {
 	validScope := auth.Scope{
 		DomainID:   "domain1",
-		EntityType: auth.GroupsType,
+		EntityType: auth.EntityType(gOperations.GroupsType),
 		EntityID:   "entity1",
 		Operation:  "create",
 	}
 
 	invalidScope := auth.Scope{
 		DomainID:   "",
-		EntityType: auth.GroupsType,
+		EntityType: auth.EntityType(gOperations.GroupsType),
 		EntityID:   "",
 		Operation:  "view",
 	}

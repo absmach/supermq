@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"strings"
 	"time"
 
@@ -56,7 +57,7 @@ type Authz interface {
 	// `object`. Authorize returns a non-nil error if the subject has
 	// no relation on the object (which simply means the operation is
 	// denied).
-	Authorize(ctx context.Context, pr policies.Policy) error
+	Authorize(ctx context.Context, pr policies.Policy, patAuthz *PATAuthz) error
 }
 
 // Authn specifies an API that must be fulfilled by the domain service
@@ -108,10 +109,11 @@ type service struct {
 	loginDuration      time.Duration
 	refreshDuration    time.Duration
 	invitationDuration time.Duration
+	patEntities        *PATEntities
 }
 
 // New instantiates the auth service implementation.
-func New(keys KeyRepository, pats PATSRepository, cache Cache, hasher Hasher, idp supermq.IDProvider, tokenizer Tokenizer, policyEvaluator policies.Evaluator, policyService policies.Service, loginDuration, refreshDuration, invitationDuration time.Duration) Service {
+func New(keys KeyRepository, pats PATSRepository, cache Cache, hasher Hasher, idp supermq.IDProvider, tokenizer Tokenizer, policyEvaluator policies.Evaluator, policyService policies.Service, loginDuration, refreshDuration, invitationDuration time.Duration, patEntities *PATEntities) Service {
 	return &service{
 		tokenizer:          tokenizer,
 		keys:               keys,
@@ -124,6 +126,7 @@ func New(keys KeyRepository, pats PATSRepository, cache Cache, hasher Hasher, id
 		loginDuration:      loginDuration,
 		refreshDuration:    refreshDuration,
 		invitationDuration: invitationDuration,
+		patEntities:        patEntities,
 	}
 }
 
@@ -205,13 +208,9 @@ func (svc service) RetrieveJWKS() []PublicKeyInfo {
 	return keys
 }
 
-func (svc service) Authorize(ctx context.Context, pr policies.Policy) error {
-	if pr.PatID != "" {
-		entityType, err := ParseEntityType(pr.EntityType)
-		if err != nil {
-			return err
-		}
-		if err := svc.AuthorizePAT(ctx, pr.UserID, pr.PatID, entityType, pr.Domain, pr.Operation, pr.EntityID); err != nil {
+func (svc service) Authorize(ctx context.Context, pr policies.Policy, patAuthz *PATAuthz) error {
+	if patAuthz != nil {
+		if err := svc.AuthorizePAT(ctx, patAuthz.UserID, patAuthz.PatID, patAuthz.EntityType, patAuthz.Domain, patAuthz.Operation, patAuthz.EntityID); err != nil {
 			return err
 		}
 	}
@@ -376,7 +375,7 @@ func (svc service) checkUserRole(ctx context.Context, key Key) (err error) {
 			Permission:  policies.AdminPermission,
 			Object:      policies.SuperMQObject,
 			ObjectType:  policies.PlatformType,
-		}); err != nil {
+		}, nil); err != nil {
 			return errRoleAuth
 		}
 		return nil
@@ -387,7 +386,7 @@ func (svc service) checkUserRole(ctx context.Context, key Key) (err error) {
 			Permission:  policies.MembershipPermission,
 			Object:      policies.SuperMQObject,
 			ObjectType:  policies.PlatformType,
-		}); err != nil {
+		}, nil); err != nil {
 			return errRoleAuth
 		}
 		return nil
@@ -404,7 +403,7 @@ func (svc service) getUserRole(ctx context.Context, userID string) (role Role) {
 		Permission:  policies.AdminPermission,
 		Object:      policies.SuperMQObject,
 		ObjectType:  policies.PlatformType,
-	}); err == nil {
+	}, nil); err == nil {
 		rl = AdminRole
 	}
 
@@ -654,6 +653,18 @@ func (svc service) AddScope(ctx context.Context, token, patID string, scopes []S
 	}
 
 	for i := range len(scopes) {
+		if !svc.patEntities.IsEnabled(scopes[i].EntityType) {
+			return errors.Wrap(svcerr.ErrMalformedEntity, fmt.Errorf("entity type %s not enabled for PAT", scopes[i].EntityType))
+		}
+
+		if err := svc.patEntities.ValidateOperation(scopes[i].EntityType, scopes[i].Operation); err != nil {
+			return errors.Wrap(svcerr.ErrMalformedEntity, fmt.Errorf("operation %s not allowed for entity type %s", scopes[i].Operation, scopes[i].EntityType))
+		}
+
+		if !strings.HasPrefix(scopes[i].Operation, string(scopes[i].EntityType)+"_") {
+			scopes[i].Operation = string(scopes[i].EntityType) + "_" + scopes[i].Operation
+		}
+
 		scopes[i].ID, err = svc.idProvider.ID()
 		if err != nil {
 			return errors.Wrap(svcerr.ErrCreateEntity, err)
@@ -734,6 +745,10 @@ func (svc service) IdentifyPAT(ctx context.Context, secret string) (PAT, error) 
 }
 
 func (svc service) AuthorizePAT(ctx context.Context, userID, patID string, entityType EntityType, domainID string, operation string, entityID string) error {
+	if !strings.HasPrefix(operation, string(entityType)+"_") {
+		operation = string(entityType) + "_" + operation
+	}
+
 	if err := svc.pats.CheckScope(ctx, userID, patID, entityType, domainID, operation, entityID); err != nil {
 		return errors.Wrap(svcerr.ErrAuthorization, err)
 	}

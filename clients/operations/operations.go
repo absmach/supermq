@@ -4,7 +4,15 @@
 package operations
 
 import (
+	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/pkg/permissions"
+)
+
+const ClientsType auth.EntityType = "clients"
+
+const (
+	OpCreate = "create"
+	OpList   = "list"
 )
 
 // Client Operations.

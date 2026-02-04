@@ -117,7 +117,10 @@ jobs:
         run: make all -j $(nproc) && make dockers_dev -j $(nproc)
 
       - name: Start containers
-        run: make run_latest up args="-d" && make run_addons up args="-d"
+        run: |
+          DOCKER_PROJECT=$(git remote get-url origin | sed -E "s@.*/([^/]+)/([^/.]+)(\.git)?@\1_\2@" | sed -E "s/[^a-zA-Z0-9]/_/g" | tr "[:upper:]" "[:lower:]" | tr -d " ")
+          docker compose -f docker/docker-compose.yaml --env-file docker/.env -p $DOCKER_PROJECT up -d
+          make run_addons up args="-d"
 
       - name: Wait for services to be ready
         run: |
@@ -216,4 +219,7 @@ jobs:
 
       - name: Stop containers
         if: always()
-        run: make run_latest down args="-v" && make run_addons down args="-v"
+        run: |
+          DOCKER_PROJECT=$(git remote get-url origin | sed -E "s@.*/([^/]+)/([^/.]+)(\.git)?@\1_\2@" | sed -E "s/[^a-zA-Z0-9]/_/g" | tr "[:upper:]" "[:lower:]" | tr -d " ")
+          docker compose -f docker/docker-compose.yaml --env-file docker/.env -p $DOCKER_PROJECT down -v
+          make run_addons down args="-v"

@@ -4,8 +4,11 @@
 package operations
 
 import (
+	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/pkg/permissions"
 )
+
+const DomainsType auth.EntityType = "domains"
 
 const (
 	OpCreateDomain permissions.Operation = iota

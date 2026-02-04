@@ -8,6 +8,9 @@ import (
 	"fmt"
 
 	"github.com/absmach/supermq/auth"
+	"github.com/absmach/supermq/channels/operations"
+	clientops "github.com/absmach/supermq/clients/operations"
+	groupops "github.com/absmach/supermq/groups/operations"
 	"github.com/absmach/supermq/pkg/authn"
 	smqauthz "github.com/absmach/supermq/pkg/authz"
 	"github.com/absmach/supermq/pkg/errors"
@@ -294,8 +297,6 @@ func (ram RoleManagerAuthorizationMiddleware) RoleRemoveMembers(ctx context.Cont
 }
 
 func (ram RoleManagerAuthorizationMiddleware) authorize(ctx context.Context, session authn.Session, op permissions.RoleOperation, pr smqauthz.PolicyReq) error {
-	pr.UserID = session.UserID
-	pr.PatID = session.PatID
 	pr.Domain = session.DomainID
 
 	perm, err := ram.ops.GetPermission(op)
@@ -305,23 +306,31 @@ func (ram RoleManagerAuthorizationMiddleware) authorize(ctx context.Context, ses
 
 	pr.Permission = perm.String()
 
-	pr.EntityID = pr.Object
-	opName := ram.ops.OperationName(op)
-	var patEntityType string
-	switch pr.ObjectType {
-	case policies.GroupType:
-		patEntityType = auth.GroupsType.String()
-	case policies.ClientType:
-		patEntityType = auth.ClientsType.String()
-	case policies.ChannelType:
-		patEntityType = auth.ChannelsType.String()
-	default:
-		return errors.Wrap(errors.ErrAuthorization, fmt.Errorf("unsupported entity type for PAT: %s", pr.ObjectType))
+	var pat *smqauthz.PATReq
+	if session.PatID != "" {
+		opName := ram.ops.OperationName(op)
+		var patEntityType string
+		switch pr.ObjectType {
+		case policies.GroupType:
+			patEntityType = string(groupops.GroupsType)
+		case policies.ClientType:
+			patEntityType = string(clientops.ClientsType)
+		case policies.ChannelType:
+			patEntityType = string(operations.ChannelsType)
+		default:
+			return errors.Wrap(errors.ErrAuthorization, fmt.Errorf("unsupported entity type for PAT: %s", pr.ObjectType))
+		}
+		pat = &smqauthz.PATReq{
+			UserID:     session.UserID,
+			PatID:      session.PatID,
+			EntityID:   pr.Object,
+			EntityType: patEntityType,
+			Operation:  auth.RoleOperationPrefix + opName,
+			Domain:     session.DomainID,
+		}
 	}
-	pr.EntityType = patEntityType
-	pr.Operation = auth.RoleOperationPrefix + opName
 
-	if err := ram.authz.Authorize(ctx, pr); err != nil {
+	if err := ram.authz.Authorize(ctx, pr, pat); err != nil {
 		return errors.Wrap(errors.ErrAuthorization, err)
 	}
 
@@ -343,7 +352,7 @@ func (ram RoleManagerAuthorizationMiddleware) validateMembers(ctx context.Contex
 				SubjectKind: policies.UsersKind,
 				Object:      policies.SuperMQObject,
 				ObjectType:  policies.PlatformType,
-			}); err != nil {
+			}, nil); err != nil {
 				return errors.Wrap(errors.ErrMissingMember, err)
 			}
 		}
@@ -358,7 +367,7 @@ func (ram RoleManagerAuthorizationMiddleware) validateMembers(ctx context.Contex
 				SubjectKind: policies.UsersKind,
 				Object:      session.DomainID,
 				ObjectType:  policies.DomainType,
-			}); err != nil {
+			}, nil); err != nil {
 				return errors.Wrap(errors.ErrMissingDomainMember, err)
 			}
 		}

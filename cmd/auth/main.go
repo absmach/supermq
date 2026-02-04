@@ -29,6 +29,7 @@ import (
 	redisclient "github.com/absmach/supermq/internal/clients/redis"
 	smqlog "github.com/absmach/supermq/logger"
 	"github.com/absmach/supermq/pkg/jaeger"
+	"github.com/absmach/supermq/pkg/permissions"
 	"github.com/absmach/supermq/pkg/policies/spicedb"
 	pgclient "github.com/absmach/supermq/pkg/postgres"
 	"github.com/absmach/supermq/pkg/prometheus"
@@ -81,6 +82,7 @@ type config struct {
 	CacheKeyDuration              time.Duration `env:"SMQ_AUTH_CACHE_KEY_DURATION"                envDefault:"10m"`
 	JWKSCacheMaxAge               int           `env:"SMQ_AUTH_JWKS_CACHE_MAX_AGE"                envDefault:"900"`
 	JWKSCacheStaleWhileRevalidate int           `env:"SMQ_AUTH_JWKS_CACHE_STALE_WHILE_REVALIDATE" envDefault:"60"`
+	PermissionsFile               string        `env:"SMQ_PERMISSIONS_FILE"                       envDefault:"permission.yaml"`
 }
 
 func main() {
@@ -183,7 +185,21 @@ func main() {
 		}
 	}
 
-	svc, err := newService(db, tracer, cfg, dbConfig, logger, spicedbclient, cacheclient, cfg.CacheKeyDuration, tokenizer, idProvider)
+	permConfig, err := permissions.ParsePermissionsFile(cfg.PermissionsFile)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to parse permissions file: %s", err.Error()))
+		exitCode = 1
+		return
+	}
+
+	patEntities, err := auth.BuildPATEntitiesFromConfig(permConfig)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to build PAT entities: %s", err.Error()))
+		exitCode = 1
+		return
+	}
+
+	svc, err := newService(db, tracer, cfg, dbConfig, logger, spicedbclient, cacheclient, cfg.CacheKeyDuration, tokenizer, idProvider, patEntities)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to create service : %s\n", err.Error()))
 		exitCode = 1
@@ -291,7 +307,7 @@ func validateKeyConfig(isSymmetric bool, cfg config, l *slog.Logger) error {
 	return nil
 }
 
-func newService(db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, logger *slog.Logger, spicedbClient *authzed.ClientWithExperimental, cacheClient *redis.Client, keyDuration time.Duration, tokenizer auth.Tokenizer, idProvider supermq.IDProvider) (auth.Service, error) {
+func newService(db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.Config, logger *slog.Logger, spicedbClient *authzed.ClientWithExperimental, cacheClient *redis.Client, keyDuration time.Duration, tokenizer auth.Tokenizer, idProvider supermq.IDProvider, patEntities *auth.PATEntities) (auth.Service, error) {
 	cache := cache.NewPatsCache(cacheClient, keyDuration)
 
 	database := pgclient.NewDatabase(db, dbConfig, tracer)
@@ -302,7 +318,7 @@ func newService(db *sqlx.DB, tracer trace.Tracer, cfg config, dbConfig pgclient.
 	pEvaluator := spicedb.NewPolicyEvaluator(spicedbClient, logger)
 	pService := spicedb.NewPolicyService(spicedbClient, logger)
 
-	svc := auth.New(keysRepo, patsRepo, nil, hasher, idProvider, tokenizer, pEvaluator, pService, cfg.AccessDuration, cfg.RefreshDuration, cfg.InvitationDuration)
+	svc := auth.New(keysRepo, patsRepo, nil, hasher, idProvider, tokenizer, pEvaluator, pService, cfg.AccessDuration, cfg.RefreshDuration, cfg.InvitationDuration, patEntities)
 	svc = middleware.NewLogging(svc, logger)
 	counter, latency := prometheus.MakeMetrics("auth", "api")
 	svc = middleware.NewMetrics(svc, counter, latency)

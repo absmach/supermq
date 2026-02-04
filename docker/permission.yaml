@@ -97,6 +97,7 @@ groups:
     - remove_all_members: remove_role_users_permission
 
 domains:
+  pat_enabled: false
   operations:
     - create: create_permission
     - update: update_permission
@@ -130,3 +131,14 @@ domains:
     - check_members_exists: view_role_users_permission
     - remove_members: remove_role_users_permission
     - remove_all_members: remove_role_users_permission
+
+messages:
+  operations:
+    - publish
+    - subscribe
+
+dashboards:
+  operations:
+    - share
+    - unshare
+  
