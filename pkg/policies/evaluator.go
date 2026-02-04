@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	TokenKind      = "token"
 	GroupsKind     = "groups"
 	NewGroupKind   = "new_group"
 	ChannelsKind   = "channels"

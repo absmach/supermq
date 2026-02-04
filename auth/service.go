@@ -220,16 +220,6 @@ func (svc service) Authorize(ctx context.Context, pr policies.Policy) error {
 	if err := svc.PolicyValidation(pr); err != nil {
 		return errors.Wrap(svcerr.ErrMalformedEntity, err)
 	}
-	if pr.SubjectKind == policies.TokenKind {
-		key, err := svc.Identify(ctx, pr.Subject)
-		if err != nil {
-			return errors.Wrap(svcerr.ErrAuthentication, err)
-		}
-		if key.Subject == "" {
-			return errors.Wrap(svcerr.ErrAuthentication, errEmptySubject)
-		}
-		pr.Subject = key.Subject
-	}
 	if err := svc.checkPolicy(ctx, pr); err != nil {
 		return err
 	}
