@@ -662,6 +662,7 @@ func TestAuthorize(t *testing.T) {
 	cases := []struct {
 		desc                 string
 		policyReq            policies.Policy
+		patAuthz             *auth.PATAuthz
 		checkDomainPolicyReq policies.Policy
 		checkPolicyReq       policies.Policy
 		parseReq             string
@@ -670,6 +671,7 @@ func TestAuthorize(t *testing.T) {
 		callBackErr          error
 		checkPolicyErr       error
 		checkDomainPolicyErr error
+		authorizePATErr      error
 		err                  error
 	}{
 		{
@@ -892,19 +894,161 @@ func TestAuthorize(t *testing.T) {
 			parseRes: emptySubjectKey,
 			err:      svcerr.ErrDomainAuthorization,
 		},
+		{
+			desc: "authorize with PAT successfully",
+			policyReq: policies.Policy{
+				SubjectType: policies.UserType,
+				SubjectKind: policies.UsersKind,
+				Subject:     userID,
+				Object:      validID,
+				ObjectType:  policies.ClientType,
+				Permission:  policies.ViewPermission,
+				Domain:      domainID,
+			},
+			patAuthz: &auth.PATAuthz{
+				PatID:      validID,
+				UserID:     userID,
+				EntityType: auth.ClientsType,
+				EntityID:   validID,
+				Operation:  "read",
+				Domain:     domainID,
+			},
+			checkDomainPolicyReq: policies.Policy{
+				Subject:     userID,
+				SubjectType: policies.UserType,
+				Object:      domainID,
+				ObjectType:  policies.DomainType,
+				Permission:  policies.MembershipPermission,
+			},
+			checkPolicyReq: policies.Policy{
+				SubjectType: policies.UserType,
+				SubjectKind: policies.UsersKind,
+				Subject:     userID,
+				Object:      validID,
+				ObjectType:  policies.ClientType,
+				Permission:  policies.ViewPermission,
+				Domain:      domainID,
+			},
+			err: nil,
+		},
+		{
+			desc: "authorize with PAT but PAT authorization fails",
+			policyReq: policies.Policy{
+				SubjectType: policies.UserType,
+				SubjectKind: policies.UsersKind,
+				Subject:     userID,
+				Object:      validID,
+				ObjectType:  policies.ClientType,
+				Permission:  policies.ViewPermission,
+			},
+			patAuthz: &auth.PATAuthz{
+				PatID:      validID,
+				UserID:     userID,
+				EntityType: auth.ClientsType,
+				EntityID:   validID,
+				Operation:  "read",
+				Domain:     domainID,
+			},
+			checkPolicyReq:  policies.Policy{},
+			authorizePATErr: svcerr.ErrAuthorization,
+			err:             svcerr.ErrAuthorization,
+		},
+		{
+			desc: "authorize with PAT and token successfully",
+			policyReq: policies.Policy{
+				Subject:     accessToken,
+				SubjectType: policies.UserType,
+				SubjectKind: policies.TokenKind,
+				Object:      validID,
+				ObjectType:  policies.ClientType,
+				Permission:  policies.ViewPermission,
+				Domain:      domainID,
+			},
+			patAuthz: &auth.PATAuthz{
+				PatID:      validID,
+				UserID:     userID,
+				EntityType: auth.ClientsType,
+				EntityID:   validID,
+				Operation:  "read",
+				Domain:     domainID,
+			},
+			checkDomainPolicyReq: policies.Policy{
+				Subject:     userID,
+				SubjectType: policies.UserType,
+				Object:      domainID,
+				ObjectType:  policies.DomainType,
+				Permission:  policies.MembershipPermission,
+			},
+			checkPolicyReq: policies.Policy{
+				Subject:     userID,
+				SubjectType: policies.UserType,
+				SubjectKind: policies.TokenKind,
+				Object:      validID,
+				ObjectType:  policies.ClientType,
+				Permission:  policies.ViewPermission,
+				Domain:      domainID,
+			},
+			parseReq: accessToken,
+			parseRes: accessKey,
+			err:      nil,
+		},
+		{
+			desc: "authorize with PAT - PAT authorization fails but policy check not reached",
+			policyReq: policies.Policy{
+				SubjectType: policies.UserType,
+				SubjectKind: policies.UsersKind,
+				Subject:     userID,
+				Object:      validID,
+				ObjectType:  policies.ClientType,
+				Permission:  policies.ViewPermission,
+			},
+			patAuthz: &auth.PATAuthz{
+				PatID:      validID,
+				UserID:     userID,
+				EntityType: auth.ClientsType,
+				EntityID:   validID,
+				Operation:  "write",
+				Domain:     domainID,
+			},
+			checkPolicyReq:  policies.Policy{},
+			authorizePATErr: svcerr.ErrAuthorization,
+			err:             svcerr.ErrAuthorization,
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			tokenizerCall := tokenizer.On("Parse", mock.Anything, tc.parseReq).Return(tc.parseRes, tc.parseErr)
-			policyCall := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPolicyReq).Return(tc.checkPolicyErr)
-			policyCall1 := pEvaluator.On("CheckPolicy", mock.Anything, tc.checkDomainPolicyReq).Return(tc.checkDomainPolicyErr)
-			repoCall := krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-			err := svc.Authorize(context.Background(), tc.policyReq)
+			var tokenizerCall, policyCall, policyCall1, repoCall, patRepoCall *mock.Call
+
+			if tc.parseReq != "" {
+				tokenizerCall = tokenizer.On("Parse", mock.Anything, tc.parseReq).Return(tc.parseRes, tc.parseErr)
+			}
+			if tc.checkPolicyReq != (policies.Policy{}) {
+				policyCall = pEvaluator.On("CheckPolicy", mock.Anything, tc.checkPolicyReq).Return(tc.checkPolicyErr)
+			}
+			if tc.checkDomainPolicyReq != (policies.Policy{}) {
+				policyCall1 = pEvaluator.On("CheckPolicy", mock.Anything, tc.checkDomainPolicyReq).Return(tc.checkDomainPolicyErr)
+			}
+			repoCall = krepo.On("Remove", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			if tc.patAuthz != nil {
+				patRepoCall = patsrepo.On("CheckScope", mock.Anything, tc.patAuthz.UserID, tc.patAuthz.PatID, tc.patAuthz.EntityType, tc.patAuthz.Domain, tc.patAuthz.Operation, tc.patAuthz.EntityID).Return(tc.authorizePATErr)
+			}
+
+			err := svc.Authorize(context.Background(), tc.policyReq, tc.patAuthz)
 			assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
-			tokenizerCall.Unset()
-			policyCall.Unset()
-			policyCall1.Unset()
+
+			if tokenizerCall != nil {
+				tokenizerCall.Unset()
+			}
+			if policyCall != nil {
+				policyCall.Unset()
+			}
+			if policyCall1 != nil {
+				policyCall1.Unset()
+			}
 			repoCall.Unset()
+			if patRepoCall != nil {
+				patRepoCall.Unset()
+			}
 		})
 	}
 }

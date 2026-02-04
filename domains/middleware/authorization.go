@@ -126,7 +126,7 @@ func (am *authorizationMiddleware) FreezeDomain(ctx context.Context, session aut
 		Permission:  policies.AdminPermission,
 		Object:      policies.SuperMQObject,
 		ObjectType:  policies.PlatformType,
-	}); err != nil {
+	}, nil); err != nil {
 		return domains.Domain{}, err
 	}
 
@@ -151,7 +151,7 @@ func (am *authorizationMiddleware) SendInvitation(ctx context.Context, session a
 		ObjectType:  policies.DomainType,
 		Object:      invitation.DomainID,
 	}
-	if err := am.authz.Authorize(ctx, req); err != nil {
+	if err := am.authz.Authorize(ctx, req, nil); err != nil {
 		// return error if the user is already a member of the domain
 		return domains.Invitation{}, errors.Wrap(svcerr.ErrConflict, ErrMemberExist)
 	}
@@ -206,7 +206,7 @@ func (am *authorizationMiddleware) authorize(ctx context.Context, entityType str
 
 	authReq.Permission = perm.String()
 
-	if err := am.authz.Authorize(ctx, authReq); err != nil {
+	if err := am.authz.Authorize(ctx, authReq, nil); err != nil {
 		return err
 	}
 
@@ -223,7 +223,7 @@ func (am *authorizationMiddleware) checkAdmin(ctx context.Context, session authn
 		ObjectType:  policies.DomainType,
 		Object:      session.DomainID,
 	}
-	if err := am.authz.Authorize(ctx, req); err == nil {
+	if err := am.authz.Authorize(ctx, req, nil); err == nil {
 		return nil
 	}
 
@@ -236,7 +236,7 @@ func (am *authorizationMiddleware) checkAdmin(ctx context.Context, session authn
 		Object:      policies.SuperMQObject,
 	}
 
-	if err := am.authz.Authorize(ctx, req); err == nil {
+	if err := am.authz.Authorize(ctx, req, nil); err == nil {
 		return nil
 	}
 
@@ -253,7 +253,7 @@ func (am *authorizationMiddleware) checkSuperAdmin(ctx context.Context, session 
 		Permission:  policies.AdminPermission,
 		ObjectType:  policies.PlatformType,
 		Object:      policies.SuperMQObject,
-	}); err != nil {
+	}, nil); err != nil {
 		return err
 	}
 	return nil
