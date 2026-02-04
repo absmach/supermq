@@ -46,6 +46,7 @@ var (
 	errRetrievePAT         = errors.NewServiceError("failed to retrieve PAT")
 	errDeletePAT           = errors.NewServiceError("failed to delete PAT")
 	errInvalidScope        = errors.New("invalid scope")
+	errEmptySubject        = errors.New("subject is empty")
 )
 
 // Authz represents a authorization service. It exposes
@@ -225,10 +226,7 @@ func (svc service) Authorize(ctx context.Context, pr policies.Policy) error {
 			return errors.Wrap(svcerr.ErrAuthentication, err)
 		}
 		if key.Subject == "" {
-			if pr.ObjectType == policies.GroupType || pr.ObjectType == policies.ClientType || pr.ObjectType == policies.DomainType {
-				return svcerr.ErrDomainAuthorization
-			}
-			return svcerr.ErrAuthentication
+			return errors.Wrap(svcerr.ErrAuthentication, errEmptySubject)
 		}
 		pr.Subject = key.Subject
 	}
@@ -240,36 +238,9 @@ func (svc service) Authorize(ctx context.Context, pr policies.Policy) error {
 }
 
 func (svc service) checkPolicy(ctx context.Context, pr policies.Policy) error {
-	// Domain status is required for if user sent authorization request on clients, channels, groups and domains
-	if pr.SubjectType == policies.UserType && (pr.ObjectType == policies.GroupType || pr.ObjectType == policies.ClientType || pr.ObjectType == policies.DomainType) {
-		domainID := pr.Domain
-		if domainID == "" {
-			if pr.ObjectType != policies.DomainType {
-				return svcerr.ErrDomainAuthorization
-			}
-			domainID = pr.Object
-		}
-		if err := svc.checkDomain(ctx, pr.SubjectType, pr.Subject, domainID); err != nil {
-			return err
-		}
-	}
 	if err := svc.evaluator.CheckPolicy(ctx, pr); err != nil {
 		return errors.Wrap(svcerr.ErrAuthorization, err)
 	}
-	return nil
-}
-
-func (svc service) checkDomain(ctx context.Context, subjectType, subject, domainID string) error {
-	if err := svc.evaluator.CheckPolicy(ctx, policies.Policy{
-		Subject:     subject,
-		SubjectType: subjectType,
-		Permission:  policies.MembershipPermission,
-		Object:      domainID,
-		ObjectType:  policies.DomainType,
-	}); err != nil {
-		return svcerr.ErrDomainAuthorization
-	}
-
 	return nil
 }
 

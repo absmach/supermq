@@ -6,7 +6,6 @@ package middleware
 import (
 	"context"
 
-	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/domains"
 	"github.com/absmach/supermq/domains/operations"
 	"github.com/absmach/supermq/pkg/authn"
@@ -142,21 +141,13 @@ func (am *authorizationMiddleware) ListDomains(ctx context.Context, session auth
 }
 
 func (am *authorizationMiddleware) SendInvitation(ctx context.Context, session authn.Session, invitation domains.Invitation) (domains.Invitation, error) {
-	domainUserId := auth.EncodeDomainUserID(invitation.DomainID, invitation.InviteeUserID)
-	req := authz.PolicyReq{
+	if err := am.authorize(ctx, policies.DomainType, operations.OpSendDomainInvitation, authz.PolicyReq{
+		Subject:     session.DomainUserID,
 		SubjectType: policies.UserType,
 		SubjectKind: policies.UsersKind,
-		Subject:     domainUserId,
-		Permission:  policies.MembershipPermission,
+		Object:      session.DomainID,
 		ObjectType:  policies.DomainType,
-		Object:      invitation.DomainID,
-	}
-	if err := am.authz.Authorize(ctx, req); err != nil {
-		// return error if the user is already a member of the domain
-		return domains.Invitation{}, errors.Wrap(svcerr.ErrConflict, ErrMemberExist)
-	}
-
-	if err := am.checkAdmin(ctx, session); err != nil {
+	}); err != nil {
 		return domains.Invitation{}, err
 	}
 
@@ -190,8 +181,13 @@ func (am *authorizationMiddleware) RejectInvitation(ctx context.Context, session
 }
 
 func (am *authorizationMiddleware) DeleteInvitation(ctx context.Context, session authn.Session, inviteeUserID, domainID string) (err error) {
-	session.DomainUserID = auth.EncodeDomainUserID(session.DomainID, session.UserID)
-	if err := am.checkAdmin(ctx, session); err != nil {
+	if err := am.authorize(ctx, policies.DomainType, operations.OpDeleteDomainInvitation, authz.PolicyReq{
+		Subject:     session.DomainUserID,
+		SubjectType: policies.UserType,
+		SubjectKind: policies.UsersKind,
+		Object:      session.DomainID,
+		ObjectType:  policies.DomainType,
+	}); err != nil {
 		return err
 	}
 

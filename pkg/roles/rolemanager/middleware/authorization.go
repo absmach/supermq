@@ -5,7 +5,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/absmach/supermq/auth"
 	"github.com/absmach/supermq/pkg/authn"
@@ -307,18 +306,14 @@ func (ram RoleManagerAuthorizationMiddleware) authorize(ctx context.Context, ses
 
 	pr.EntityID = pr.Object
 	opName := ram.ops.OperationName(op)
-	var patEntityType string
 	switch pr.ObjectType {
 	case policies.GroupType:
-		patEntityType = auth.GroupsType.String()
+		pr.EntityType = auth.GroupsType.String()
 	case policies.ClientType:
-		patEntityType = auth.ClientsType.String()
+		pr.EntityType = auth.ClientsType.String()
 	case policies.ChannelType:
-		patEntityType = auth.ChannelsType.String()
-	default:
-		return errors.Wrap(errors.ErrAuthorization, fmt.Errorf("unsupported entity type for PAT: %s", pr.ObjectType))
+		pr.EntityType = auth.ChannelsType.String()
 	}
-	pr.EntityType = patEntityType
 	pr.Operation = auth.RoleOperationPrefix + opName
 
 	if err := ram.authz.Authorize(ctx, pr); err != nil {
