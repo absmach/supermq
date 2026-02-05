@@ -25,8 +25,9 @@ const (
 	CheckRoleMembers         = "role.members.check"
 	RemoveRoleMembers        = "role.members.remove"
 	RemoveRoleAllMembers     = "role.members.remove_all"
+	RemoveMemberFromDomain   = "role.domain.member.remove"
 	ListEntityMembers        = "members.list"
-	RemoveEntityMembers      = "members.remove"
+	RemoveEntityMembers      = "role.members.remove"
 	RemoveMemberFromAllRoles = "role.members.remove_from_all_roles"
 )
 
@@ -376,6 +377,8 @@ func (leme listEntityMembersEvent) Encode() (map[string]any, error) {
 type removeEntityMembersEvent struct {
 	operationPrefix string
 	entityID        string
+	domainID        string
+	userID          string
 	members         []string
 	requestID       string
 }
@@ -384,6 +387,8 @@ func (reme removeEntityMembersEvent) Encode() (map[string]any, error) {
 	val := map[string]any{
 		"operation":  reme.operationPrefix + RemoveEntityMembers,
 		"entity_id":  reme.entityID,
+		"domain_id":  reme.domainID,
+		"user_id":    reme.userID,
 		"members":    reme.members,
 		"request_id": reme.requestID,
 	}

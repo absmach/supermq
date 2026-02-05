@@ -627,8 +627,26 @@ func (r ProvisionManageService) ListEntityMembers(ctx context.Context, session a
 	return mp, nil
 }
 
-func (r ProvisionManageService) RemoveEntityMembers(ctx context.Context, session authn.Session, entityID string, members []string) error {
-	if err := r.repo.RemoveEntityMembers(ctx, entityID, members); err != nil {
+func (r ProvisionManageService) RemoveEntityMembers(ctx context.Context, session authn.Session, entityID string, memberIDs []string) error {
+	deletePolicies := []policies.Policy{}
+	for _, memberID := range memberIDs {
+		roleID, err := r.repo.RetrieveRoleByEntityMember(ctx, entityID, memberID)
+		if err != nil {
+			return errors.Wrap(svcerr.ErrRemoveEntity, err)
+		}
+		deletePolicies = append(deletePolicies, policies.Policy{
+			Subject:     policies.EncodeDomainUserID(session.DomainID, memberID),
+			SubjectType: policies.UserType,
+			Relation:    policies.MemberRelation,
+			ObjectType:  policies.RoleType,
+			Object:      roleID,
+		})
+	}
+
+	if err := r.policy.DeletePolicies(ctx, deletePolicies); err != nil {
+		return errors.Wrap(svcerr.ErrDeletePolicies, err)
+	}
+	if err := r.repo.RemoveEntityMembers(ctx, session.UserID, entityID, memberIDs); err != nil {
 		return err
 	}
 	return nil

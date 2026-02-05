@@ -355,6 +355,8 @@ func (rmes *RoleManagerEventStore) RemoveEntityMembers(ctx context.Context, sess
 	e := removeEntityMembersEvent{
 		operationPrefix: rmes.operationPrefix,
 		entityID:        entityID,
+		domainID:        session.DomainID,
+		userID:          session.UserID,
 		members:         members,
 		requestID:       middleware.GetReqID(ctx),
 	}

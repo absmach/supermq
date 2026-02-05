@@ -790,16 +790,16 @@ func (_c *Repository_RemoveConnections_Call) RunAndReturn(run func(ctx context.C
 }
 
 // RemoveEntityMembers provides a mock function for the type Repository
-func (_mock *Repository) RemoveEntityMembers(ctx context.Context, entityID string, members []string) error {
-	ret := _mock.Called(ctx, entityID, members)
+func (_mock *Repository) RemoveEntityMembers(ctx context.Context, userID string, entityID string, members []string) error {
+	ret := _mock.Called(ctx, userID, entityID, members)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RemoveEntityMembers")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, []string) error); ok {
-		r0 = returnFunc(ctx, entityID, members)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, []string) error); ok {
+		r0 = returnFunc(ctx, userID, entityID, members)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -813,13 +813,14 @@ type Repository_RemoveEntityMembers_Call struct {
 
 // RemoveEntityMembers is a helper method to define mock.On call
 //   - ctx context.Context
+//   - userID string
 //   - entityID string
 //   - members []string
-func (_e *Repository_Expecter) RemoveEntityMembers(ctx interface{}, entityID interface{}, members interface{}) *Repository_RemoveEntityMembers_Call {
-	return &Repository_RemoveEntityMembers_Call{Call: _e.mock.On("RemoveEntityMembers", ctx, entityID, members)}
+func (_e *Repository_Expecter) RemoveEntityMembers(ctx interface{}, userID interface{}, entityID interface{}, members interface{}) *Repository_RemoveEntityMembers_Call {
+	return &Repository_RemoveEntityMembers_Call{Call: _e.mock.On("RemoveEntityMembers", ctx, userID, entityID, members)}
 }
 
-func (_c *Repository_RemoveEntityMembers_Call) Run(run func(ctx context.Context, entityID string, members []string)) *Repository_RemoveEntityMembers_Call {
+func (_c *Repository_RemoveEntityMembers_Call) Run(run func(ctx context.Context, userID string, entityID string, members []string)) *Repository_RemoveEntityMembers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -829,14 +830,19 @@ func (_c *Repository_RemoveEntityMembers_Call) Run(run func(ctx context.Context,
 		if args[1] != nil {
 			arg1 = args[1].(string)
 		}
-		var arg2 []string
+		var arg2 string
 		if args[2] != nil {
-			arg2 = args[2].([]string)
+			arg2 = args[2].(string)
+		}
+		var arg3 []string
+		if args[3] != nil {
+			arg3 = args[3].([]string)
 		}
 		run(
 			arg0,
 			arg1,
 			arg2,
+			arg3,
 		)
 	})
 	return _c
@@ -847,7 +853,7 @@ func (_c *Repository_RemoveEntityMembers_Call) Return(err error) *Repository_Rem
 	return _c
 }
 
-func (_c *Repository_RemoveEntityMembers_Call) RunAndReturn(run func(ctx context.Context, entityID string, members []string) error) *Repository_RemoveEntityMembers_Call {
+func (_c *Repository_RemoveEntityMembers_Call) RunAndReturn(run func(ctx context.Context, userID string, entityID string, members []string) error) *Repository_RemoveEntityMembers_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1655,6 +1661,150 @@ func (_c *Repository_RetrieveRole_Call) Return(role roles.Role, err error) *Repo
 }
 
 func (_c *Repository_RetrieveRole_Call) RunAndReturn(run func(ctx context.Context, roleID string) (roles.Role, error)) *Repository_RetrieveRole_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RetrieveRoleByDomainMember provides a mock function for the type Repository
+func (_mock *Repository) RetrieveRoleByDomainMember(ctx context.Context, domainID string, memberID string) (string, error) {
+	ret := _mock.Called(ctx, domainID, memberID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveRoleByDomainMember")
+	}
+
+	var r0 string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) (string, error)); ok {
+		return returnFunc(ctx, domainID, memberID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) string); ok {
+		r0 = returnFunc(ctx, domainID, memberID)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = returnFunc(ctx, domainID, memberID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Repository_RetrieveRoleByDomainMember_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RetrieveRoleByDomainMember'
+type Repository_RetrieveRoleByDomainMember_Call struct {
+	*mock.Call
+}
+
+// RetrieveRoleByDomainMember is a helper method to define mock.On call
+//   - ctx context.Context
+//   - domainID string
+//   - memberID string
+func (_e *Repository_Expecter) RetrieveRoleByDomainMember(ctx interface{}, domainID interface{}, memberID interface{}) *Repository_RetrieveRoleByDomainMember_Call {
+	return &Repository_RetrieveRoleByDomainMember_Call{Call: _e.mock.On("RetrieveRoleByDomainMember", ctx, domainID, memberID)}
+}
+
+func (_c *Repository_RetrieveRoleByDomainMember_Call) Run(run func(ctx context.Context, domainID string, memberID string)) *Repository_RetrieveRoleByDomainMember_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *Repository_RetrieveRoleByDomainMember_Call) Return(s string, err error) *Repository_RetrieveRoleByDomainMember_Call {
+	_c.Call.Return(s, err)
+	return _c
+}
+
+func (_c *Repository_RetrieveRoleByDomainMember_Call) RunAndReturn(run func(ctx context.Context, domainID string, memberID string) (string, error)) *Repository_RetrieveRoleByDomainMember_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RetrieveRoleByEntityMember provides a mock function for the type Repository
+func (_mock *Repository) RetrieveRoleByEntityMember(ctx context.Context, entityID string, memberID string) (string, error) {
+	ret := _mock.Called(ctx, entityID, memberID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RetrieveRoleByEntityMember")
+	}
+
+	var r0 string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) (string, error)); ok {
+		return returnFunc(ctx, entityID, memberID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) string); ok {
+		r0 = returnFunc(ctx, entityID, memberID)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = returnFunc(ctx, entityID, memberID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Repository_RetrieveRoleByEntityMember_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RetrieveRoleByEntityMember'
+type Repository_RetrieveRoleByEntityMember_Call struct {
+	*mock.Call
+}
+
+// RetrieveRoleByEntityMember is a helper method to define mock.On call
+//   - ctx context.Context
+//   - entityID string
+//   - memberID string
+func (_e *Repository_Expecter) RetrieveRoleByEntityMember(ctx interface{}, entityID interface{}, memberID interface{}) *Repository_RetrieveRoleByEntityMember_Call {
+	return &Repository_RetrieveRoleByEntityMember_Call{Call: _e.mock.On("RetrieveRoleByEntityMember", ctx, entityID, memberID)}
+}
+
+func (_c *Repository_RetrieveRoleByEntityMember_Call) Run(run func(ctx context.Context, entityID string, memberID string)) *Repository_RetrieveRoleByEntityMember_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *Repository_RetrieveRoleByEntityMember_Call) Return(s string, err error) *Repository_RetrieveRoleByEntityMember_Call {
+	_c.Call.Return(s, err)
+	return _c
+}
+
+func (_c *Repository_RetrieveRoleByEntityMember_Call) RunAndReturn(run func(ctx context.Context, entityID string, memberID string) (string, error)) *Repository_RetrieveRoleByEntityMember_Call {
 	_c.Call.Return(run)
 	return _c
 }

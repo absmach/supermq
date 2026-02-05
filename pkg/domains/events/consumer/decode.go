@@ -4,10 +4,10 @@
 package consumer
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/absmach/supermq/domains"
+	"github.com/absmach/supermq/pkg/authn"
 	"github.com/absmach/supermq/pkg/errors"
 	"github.com/absmach/supermq/pkg/roles"
 	rconsumer "github.com/absmach/supermq/pkg/roles/rolemanager/events/consumer"
@@ -34,6 +34,11 @@ var (
 	errCreatedBy     = errors.New("missing or invalid 'created_by'")
 	errCreatedAt     = errors.New("failed to parse 'created_at' time")
 	errUpdatedAt     = errors.New("failed to parse 'updated_at' time")
+	errEntityID      = errors.New("missing or invalid 'entity_id'")
+	errUserID        = errors.New("missing or invalid 'user_id'")
+	errDomainID      = errors.New("missing or invalid 'domain_id'")
+	errMembers       = errors.New("missing or invalid 'members'")
+	errNotString     = errors.New("not string type")
 )
 
 func ToDomains(data map[string]any) (domains.Domain, error) {
@@ -256,8 +261,33 @@ func decodeFreezeDomainEvent(data map[string]any) (domains.Domain, error) {
 	return d, nil
 }
 
-func decodeUserDeleteDomainEvent(_ map[string]any) (domains.Domain, error) {
-	return domains.Domain{}, fmt.Errorf("not implemented decode domain user delete event ")
+func decodeRemoveDomainMembersEvent(data map[string]any) (authn.Session, string, []string, error) {
+	entityID, ok := data["entity_id"].(string)
+	if !ok {
+		return authn.Session{}, "", nil, errors.Wrap(errRemoveDomainMembersEvent, errEntityID)
+	}
+	userID, ok := data["user_id"].(string)
+	if !ok {
+		return authn.Session{}, "", nil, errors.Wrap(errRemoveDomainMembersEvent, errUserID)
+	}
+	domainID, ok := data["domain_id"].(string)
+	if !ok {
+		return authn.Session{}, "", nil, errors.Wrap(errRemoveDomainMembersEvent, errDomainID)
+	}
+	session := authn.Session{
+		UserID:   userID,
+		DomainID: domainID,
+	}
+	imems, ok := data["members"].([]any)
+	if !ok {
+		return authn.Session{}, "", nil, errors.Wrap(errRemoveDomainMembersEvent, errMembers)
+	}
+	mems, err := toStrings(imems)
+	if err != nil {
+		return authn.Session{}, "", nil, errors.Wrap(errRemoveDomainMembersEvent, err)
+	}
+
+	return session, entityID, mems, nil
 }
 
 func decodeDeleteDomainEvent(data map[string]any) (domains.Domain, error) {
@@ -268,4 +298,16 @@ func decodeDeleteDomainEvent(data map[string]any) (domains.Domain, error) {
 	}
 	d.ID = id
 	return d, nil
+}
+
+func toStrings(data []any) ([]string, error) {
+	var strs []string
+	for _, i := range data {
+		str, ok := i.(string)
+		if !ok {
+			return []string{}, errNotString
+		}
+		strs = append(strs, str)
+	}
+	return strs, nil
 }
