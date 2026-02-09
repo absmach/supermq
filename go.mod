@@ -1,6 +1,6 @@
 module github.com/absmach/supermq
 
-go 1.25.5
+go 1.25.6
 
 require (
 	github.com/0x6flab/namegenerator v1.4.0
@@ -9,7 +9,7 @@ require (
 	github.com/absmach/senml v1.0.8
 	github.com/authzed/authzed-go v1.7.0
 	github.com/authzed/grpcutil v0.0.0-20250221190651-1985b19b35b8
-	github.com/authzed/spicedb v1.48.0
+	github.com/authzed/spicedb v1.49.0
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/dgraph-io/ristretto/v2 v2.4.0
