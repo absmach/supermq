@@ -52,7 +52,7 @@ func NewPubSub(ctx context.Context, url string, logger *slog.Logger, opts ...mes
 		}
 	}
 
-	conn, err := broker.Connect(url, broker.MaxReconnects(maxReconnects))
+	conn, err := broker.Connect(url, broker.MaxReconnects(maxReconnects), broker.ErrorHandler(ps.natsErrorHandler))
 	if err != nil {
 		return nil, err
 	}
@@ -72,6 +72,30 @@ func NewPubSub(ctx context.Context, url string, logger *slog.Logger, opts ...mes
 	return ps, nil
 }
 
+func (ps *pubsub) natsErrorHandler(nc *broker.Conn, sub *broker.Subscription, natsErr error) {
+	ps.logger.Error("NATS error occurred",
+		slog.String("error", natsErr.Error()),
+		slog.String("subject", sub.Subject),
+	)
+
+	if natsErr == broker.ErrSlowConsumer {
+		pendingMsgs, pendingBytes, err := sub.Pending()
+		if err != nil {
+			ps.logger.Error("couldn't get pending messages for slow consumer",
+				slog.String("error", err.Error()),
+				slog.String("subject", sub.Subject),
+			)
+			return
+		}
+
+		ps.logger.Warn("Slow consumer detected",
+			slog.String("subject", sub.Subject),
+			slog.Int("pending_messages", pendingMsgs),
+			slog.Int("pending_bytes", pendingBytes),
+		)
+	}
+}
+
 func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig) error {
 	if cfg.ID == "" {
 		return ErrEmptyID
@@ -89,6 +113,23 @@ func (ps *pubsub) Subscribe(ctx context.Context, cfg messaging.SubscriberConfig)
 		Description:   fmt.Sprintf("SuperMQ consumer of id %s for cfg.Topic %s", cfg.ID, cfg.Topic),
 		DeliverPolicy: jetstream.DeliverNewPolicy,
 		FilterSubject: cfg.Topic,
+	}
+
+	if ps.slowConsumerConfig != nil && ps.slowConsumerConfig.MaxPendingMsgs > 0 {
+		consumerConfig.MaxAckPending = ps.slowConsumerConfig.MaxPendingMsgs
+	}
+
+	if ps.slowConsumerConfig != nil && ps.slowConsumerConfig.MaxPendingBytes > 0 {
+		consumerConfig.MaxRequestMaxBytes = ps.slowConsumerConfig.MaxPendingBytes
+	}
+
+	if ps.slowConsumerConfig != nil && ps.slowConsumerConfig.MaxPendingMsgs > 0 {
+		ps.logger.Info("Applied slow consumer throttling to JetStream consumer",
+			slog.String("consumer", consumerConfig.Name),
+			slog.Int("max_ack_pending", consumerConfig.MaxAckPending),
+			slog.Int("max_request_max_bytes", consumerConfig.MaxRequestMaxBytes),
+			slog.Bool("dropped_msg_tracking", ps.slowConsumerConfig.EnableDroppedMsgTracking),
+		)
 	}
 
 	if cfg.Ordered {
@@ -145,6 +186,16 @@ func (ps *pubsub) natsHandler(h messaging.MessageHandler) func(m jetstream.Msg) 
 				slog.Uint64("stream_seq", meta.Sequence.Stream),
 				slog.Uint64("consumer_seq", meta.Sequence.Consumer),
 			)
+
+			if ps.slowConsumerConfig != nil && ps.slowConsumerConfig.EnableDroppedMsgTracking {
+				if meta.NumDelivered > 1 {
+					args = append(args,
+						slog.Uint64("delivery_count", meta.NumDelivered),
+						slog.String("redelivery_reason", "slow_consumer_or_ack_timeout"),
+					)
+					ps.logger.Warn("Message redelivered (potential slow consumer)", args...)
+				}
+			}
 		default:
 			args = append(args,
 				slog.String("metadata_error", err.Error()),
