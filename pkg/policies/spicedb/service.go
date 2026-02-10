@@ -63,6 +63,30 @@ var (
 		policies.AdminPermission,
 		policies.MembershipPermission,
 	}
+
+	defAlarmFilterPermissions = []string{
+		policies.AdminPermission,
+		policies.DeletePermission,
+		policies.EditPermission,
+		policies.ViewPermission,
+		policies.MembershipPermission,
+	}
+
+	defRuleFilterPermissions = []string{
+		policies.AdminPermission,
+		policies.DeletePermission,
+		policies.EditPermission,
+		policies.ViewPermission,
+		policies.MembershipPermission,
+	}
+
+	defReportFilterPermissions = []string{
+		policies.AdminPermission,
+		policies.DeletePermission,
+		policies.EditPermission,
+		policies.ViewPermission,
+		policies.MembershipPermission,
+	}
 )
 
 type policyService struct {
@@ -305,6 +329,12 @@ func (ps *policyService) ListPermissions(ctx context.Context, pr policies.Policy
 			permissionsFilter = defPlatformFilterPermissions
 		case policies.DomainType:
 			permissionsFilter = defDomainsFilterPermissions
+		case policies.AlarmType:
+			permissionsFilter = defAlarmFilterPermissions
+		case policies.RuleType:
+			permissionsFilter = defRuleFilterPermissions
+		case policies.ReportType:
+			permissionsFilter = defReportFilterPermissions
 		default:
 			return nil, svcerr.ErrMalformedEntity
 		}
@@ -348,6 +378,13 @@ func (ps *policyService) addPolicyPreCondition(ctx context.Context, pr policies.
 	case pr.SubjectType == policies.UserType && pr.ObjectType == policies.ClientType:
 		return ps.userClientPreConditions(ctx, pr)
 
+	// 2a.) user -> alarm, user -> rule, user -> report
+	// Checks :
+	// - USER with ANY RELATION to DOMAIN
+	// - ENTITY with DOMAIN RELATION to DOMAIN
+	case pr.SubjectType == policies.UserType && (pr.ObjectType == policies.AlarmType || pr.ObjectType == policies.RuleType || pr.ObjectType == policies.ReportType):
+		return ps.userEntityPreConditions(ctx, pr)
+
 	// 3.) group -> group (both for adding parent_group and channels)
 	// Checks :
 	// - CHILD_GROUP with out PARENT_GROUP RELATION with any GROUP
@@ -368,8 +405,8 @@ func (ps *policyService) addPolicyPreCondition(ctx context.Context, pr policies.
 	case pr.SubjectType == policies.UserType && pr.ObjectType == policies.DomainType:
 		return ps.userDomainPreConditions(ctx, pr)
 
-	// Check client and group not belongs to other domain before adding to domain
-	case pr.SubjectType == policies.DomainType && pr.Relation == policies.DomainRelation && (pr.ObjectType == policies.ClientType || pr.ObjectType == policies.GroupType):
+	// Check client, group, alarm, rule, and report not belongs to other domain before adding to domain
+	case pr.SubjectType == policies.DomainType && pr.Relation == policies.DomainRelation && (pr.ObjectType == policies.ClientType || pr.ObjectType == policies.GroupType || pr.ObjectType == policies.AlarmType || pr.ObjectType == policies.RuleType || pr.ObjectType == policies.ReportType):
 		preconds := []*v1.Precondition{
 			{
 				Operation: v1.Precondition_OPERATION_MUST_NOT_MATCH,
@@ -538,6 +575,66 @@ func (ps *policyService) userClientPreConditions(ctx context.Context, pr policie
 			},
 		)
 	}
+
+	return preconds, nil
+}
+
+func (ps *policyService) userEntityPreConditions(ctx context.Context, pr policies.Policy) ([]*v1.Precondition, error) {
+	var preconds []*v1.Precondition
+
+	// user should not have any relation with entity (alarm/rule/report)
+	preconds = append(preconds, &v1.Precondition{
+		Operation: v1.Precondition_OPERATION_MUST_NOT_MATCH,
+		Filter: &v1.RelationshipFilter{
+			ResourceType:       pr.ObjectType,
+			OptionalResourceId: pr.Object,
+			OptionalSubjectFilter: &v1.SubjectFilter{
+				SubjectType:       policies.UserType,
+				OptionalSubjectId: pr.Subject,
+			},
+		},
+	})
+
+	isSuperAdmin := false
+	if err := ps.checkPolicy(ctx, policies.Policy{
+		Subject:     pr.Subject,
+		SubjectType: pr.SubjectType,
+		Permission:  policies.AdminPermission,
+		Object:      policies.SuperMQObject,
+		ObjectType:  policies.PlatformType,
+	}); err == nil {
+		isSuperAdmin = true
+	}
+
+	if !isSuperAdmin {
+		preconds = append(preconds, &v1.Precondition{
+			Operation: v1.Precondition_OPERATION_MUST_MATCH,
+			Filter: &v1.RelationshipFilter{
+				ResourceType:       policies.DomainType,
+				OptionalResourceId: pr.Domain,
+				OptionalSubjectFilter: &v1.SubjectFilter{
+					SubjectType:       policies.UserType,
+					OptionalSubjectId: pr.Subject,
+				},
+			},
+		})
+	}
+
+	// Entity (alarm/rule/report) with DOMAIN RELATION to DOMAIN
+	preconds = append(preconds,
+		&v1.Precondition{
+			Operation: v1.Precondition_OPERATION_MUST_MATCH,
+			Filter: &v1.RelationshipFilter{
+				ResourceType:       pr.ObjectType,
+				OptionalResourceId: pr.Object,
+				OptionalRelation:   policies.DomainRelation,
+				OptionalSubjectFilter: &v1.SubjectFilter{
+					SubjectType:       policies.DomainType,
+					OptionalSubjectId: pr.Domain,
+				},
+			},
+		},
+	)
 
 	return preconds, nil
 }
