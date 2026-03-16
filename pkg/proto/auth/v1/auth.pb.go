@@ -24,22 +24,78 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Protocol identifies which messaging protocol the client connected with.
+type Protocol int32
+
+const (
+	Protocol_Unspecified Protocol = 0
+	Protocol_MQTT        Protocol = 1
+	Protocol_AMQP_1_0    Protocol = 2
+	Protocol_AMQP_0_9_1  Protocol = 3
+)
+
+// Enum value maps for Protocol.
+var (
+	Protocol_name = map[int32]string{
+		0: "Unspecified",
+		1: "MQTT",
+		2: "AMQP_1_0",
+		3: "AMQP_0_9_1",
+	}
+	Protocol_value = map[string]int32{
+		"Unspecified": 0,
+		"MQTT":        1,
+		"AMQP_1_0":    2,
+		"AMQP_0_9_1":  3,
+	}
+)
+
+func (x Protocol) Enum() *Protocol {
+	p := new(Protocol)
+	*p = x
+	return p
+}
+
+func (x Protocol) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Protocol) Descriptor() protoreflect.EnumDescriptor {
+	return file_auth_v1_auth_proto_enumTypes[0].Descriptor()
+}
+
+func (Protocol) Type() protoreflect.EnumType {
+	return &file_auth_v1_auth_proto_enumTypes[0]
+}
+
+func (x Protocol) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Protocol.Descriptor instead.
+func (Protocol) EnumDescriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{0}
+}
+
 type Action int32
 
 const (
-	Action_ACTION_PUBLISH   Action = 0
-	Action_ACTION_SUBSCRIBE Action = 1
+	Action_None      Action = 0
+	Action_Publish   Action = 1
+	Action_Subscribe Action = 2
 )
 
 // Enum value maps for Action.
 var (
 	Action_name = map[int32]string{
-		0: "ACTION_PUBLISH",
-		1: "ACTION_SUBSCRIBE",
+		0: "None",
+		1: "Publish",
+		2: "Subscribe",
 	}
 	Action_value = map[string]int32{
-		"ACTION_PUBLISH":   0,
-		"ACTION_SUBSCRIBE": 1,
+		"None":      0,
+		"Publish":   1,
+		"Subscribe": 2,
 	}
 )
 
@@ -54,11 +110,11 @@ func (x Action) String() string {
 }
 
 func (Action) Descriptor() protoreflect.EnumDescriptor {
-	return file_auth_v1_auth_proto_enumTypes[0].Descriptor()
+	return file_auth_v1_auth_proto_enumTypes[1].Descriptor()
 }
 
 func (Action) Type() protoreflect.EnumType {
-	return &file_auth_v1_auth_proto_enumTypes[0]
+	return &file_auth_v1_auth_proto_enumTypes[1]
 }
 
 func (x Action) Number() protoreflect.EnumNumber {
@@ -67,17 +123,19 @@ func (x Action) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Action.Descriptor instead.
 func (Action) EnumDescriptor() ([]byte, []int) {
-	return file_auth_v1_auth_proto_rawDescGZIP(), []int{0}
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{1}
 }
 
 type AuthnReq struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// MQTT ClientID from the CONNECT packet.
+	// Client identifier from the connection handshake.
 	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	// Username from the CONNECT packet.
+	// Username credential.
 	Username string `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
-	// Password from the CONNECT packet.
-	Password      string `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
+	// Password credential.
+	Password string `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
+	// Protocol the client connected with.
+	Protocol      Protocol `protobuf:"varint,4,opt,name=protocol,proto3,enum=fluxmq.auth.v1.Protocol" json:"protocol,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -131,6 +189,13 @@ func (x *AuthnReq) GetPassword() string {
 		return x.Password
 	}
 	return ""
+}
+
+func (x *AuthnReq) GetProtocol() Protocol {
+	if x != nil {
+		return x.Protocol
+	}
+	return Protocol_Unspecified
 }
 
 type AuthnRes struct {
@@ -210,7 +275,7 @@ type AuthzReq struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// External identity returned from AuthnRes.id.
 	ExternalId string `protobuf:"bytes,1,opt,name=external_id,json=externalId,proto3" json:"external_id,omitempty"`
-	// Raw topic or topic filter from the PUBLISH/SUBSCRIBE packet.
+	// Raw topic or topic filter from the publish/subscribe operation.
 	Topic string `protobuf:"bytes,2,opt,name=topic,proto3" json:"topic,omitempty"`
 	// The action being requested.
 	Action        Action `protobuf:"varint,3,opt,name=action,proto3,enum=fluxmq.auth.v1.Action" json:"action,omitempty"`
@@ -266,7 +331,7 @@ func (x *AuthzReq) GetAction() Action {
 	if x != nil {
 		return x.Action
 	}
-	return Action_ACTION_PUBLISH
+	return Action_None
 }
 
 type AuthzRes struct {
@@ -336,11 +401,12 @@ var File_auth_v1_auth_proto protoreflect.FileDescriptor
 
 const file_auth_v1_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x12auth/v1/auth.proto\x12\x0efluxmq.auth.v1\"_\n" +
+	"\x12auth/v1/auth.proto\x12\x0efluxmq.auth.v1\"\x95\x01\n" +
 	"\bAuthnReq\x12\x1b\n" +
 	"\tclient_id\x18\x01 \x01(\tR\bclientId\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x1a\n" +
-	"\bpassword\x18\x03 \x01(\tR\bpassword\"y\n" +
+	"\bpassword\x18\x03 \x01(\tR\bpassword\x124\n" +
+	"\bprotocol\x18\x04 \x01(\x0e2\x18.fluxmq.auth.v1.ProtocolR\bprotocol\"y\n" +
 	"\bAuthnRes\x12$\n" +
 	"\rauthenticated\x18\x01 \x01(\bR\rauthenticated\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\tR\x02id\x12\x1f\n" +
@@ -358,10 +424,17 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"authorized\x12\x1f\n" +
 	"\vreason_code\x18\x02 \x01(\rR\n" +
 	"reasonCode\x12\x16\n" +
-	"\x06reason\x18\x03 \x01(\tR\x06reason*2\n" +
-	"\x06Action\x12\x12\n" +
-	"\x0eACTION_PUBLISH\x10\x00\x12\x14\n" +
-	"\x10ACTION_SUBSCRIBE\x10\x012\x92\x01\n" +
+	"\x06reason\x18\x03 \x01(\tR\x06reason*C\n" +
+	"\bProtocol\x12\x0f\n" +
+	"\vUnspecified\x10\x00\x12\b\n" +
+	"\x04MQTT\x10\x01\x12\f\n" +
+	"\bAMQP_1_0\x10\x02\x12\x0e\n" +
+	"\n" +
+	"AMQP_0_9_1\x10\x03*.\n" +
+	"\x06Action\x12\b\n" +
+	"\x04None\x10\x00\x12\v\n" +
+	"\aPublish\x10\x01\x12\r\n" +
+	"\tSubscribe\x10\x022\x92\x01\n" +
 	"\vAuthService\x12B\n" +
 	"\fAuthenticate\x12\x18.fluxmq.auth.v1.AuthnReq\x1a\x18.fluxmq.auth.v1.AuthnRes\x12?\n" +
 	"\tAuthorize\x12\x18.fluxmq.auth.v1.AuthzReq\x1a\x18.fluxmq.auth.v1.AuthzResB\xad\x01\n" +
@@ -379,26 +452,28 @@ func file_auth_v1_auth_proto_rawDescGZIP() []byte {
 	return file_auth_v1_auth_proto_rawDescData
 }
 
-var file_auth_v1_auth_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_auth_v1_auth_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_auth_v1_auth_proto_goTypes = []any{
-	(Action)(0),      // 0: fluxmq.auth.v1.Action
-	(*AuthnReq)(nil), // 1: fluxmq.auth.v1.AuthnReq
-	(*AuthnRes)(nil), // 2: fluxmq.auth.v1.AuthnRes
-	(*AuthzReq)(nil), // 3: fluxmq.auth.v1.AuthzReq
-	(*AuthzRes)(nil), // 4: fluxmq.auth.v1.AuthzRes
+	(Protocol)(0),    // 0: fluxmq.auth.v1.Protocol
+	(Action)(0),      // 1: fluxmq.auth.v1.Action
+	(*AuthnReq)(nil), // 2: fluxmq.auth.v1.AuthnReq
+	(*AuthnRes)(nil), // 3: fluxmq.auth.v1.AuthnRes
+	(*AuthzReq)(nil), // 4: fluxmq.auth.v1.AuthzReq
+	(*AuthzRes)(nil), // 5: fluxmq.auth.v1.AuthzRes
 }
 var file_auth_v1_auth_proto_depIdxs = []int32{
-	0, // 0: fluxmq.auth.v1.AuthzReq.action:type_name -> fluxmq.auth.v1.Action
-	1, // 1: fluxmq.auth.v1.AuthService.Authenticate:input_type -> fluxmq.auth.v1.AuthnReq
-	3, // 2: fluxmq.auth.v1.AuthService.Authorize:input_type -> fluxmq.auth.v1.AuthzReq
-	2, // 3: fluxmq.auth.v1.AuthService.Authenticate:output_type -> fluxmq.auth.v1.AuthnRes
-	4, // 4: fluxmq.auth.v1.AuthService.Authorize:output_type -> fluxmq.auth.v1.AuthzRes
-	3, // [3:5] is the sub-list for method output_type
-	1, // [1:3] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	0, // 0: fluxmq.auth.v1.AuthnReq.protocol:type_name -> fluxmq.auth.v1.Protocol
+	1, // 1: fluxmq.auth.v1.AuthzReq.action:type_name -> fluxmq.auth.v1.Action
+	2, // 2: fluxmq.auth.v1.AuthService.Authenticate:input_type -> fluxmq.auth.v1.AuthnReq
+	4, // 3: fluxmq.auth.v1.AuthService.Authorize:input_type -> fluxmq.auth.v1.AuthzReq
+	3, // 4: fluxmq.auth.v1.AuthService.Authenticate:output_type -> fluxmq.auth.v1.AuthnRes
+	5, // 5: fluxmq.auth.v1.AuthService.Authorize:output_type -> fluxmq.auth.v1.AuthzRes
+	4, // [4:6] is the sub-list for method output_type
+	2, // [2:4] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_auth_v1_auth_proto_init() }
@@ -411,7 +486,7 @@ func file_auth_v1_auth_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_auth_v1_auth_proto_rawDesc), len(file_auth_v1_auth_proto_rawDesc)),
-			NumEnums:      1,
+			NumEnums:      2,
 			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,

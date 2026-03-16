@@ -45,7 +45,7 @@ const (
 
 // AuthServiceClient is a client for the fluxmq.auth.v1.AuthService service.
 type AuthServiceClient interface {
-	// Authenticate validates client credentials presented during CONNECT.
+	// Authenticate validates client credentials presented during connection.
 	// The server resolves the credentials to an external identity (e.g. a UUID)
 	// which the broker stores on the session and passes in subsequent Authorize
 	// calls.
@@ -100,7 +100,7 @@ func (c *authServiceClient) Authorize(ctx context.Context, req *connect.Request[
 
 // AuthServiceHandler is an implementation of the fluxmq.auth.v1.AuthService service.
 type AuthServiceHandler interface {
-	// Authenticate validates client credentials presented during CONNECT.
+	// Authenticate validates client credentials presented during connection.
 	// The server resolves the credentials to an external identity (e.g. a UUID)
 	// which the broker stores on the session and passes in subsequent Authorize
 	// calls.

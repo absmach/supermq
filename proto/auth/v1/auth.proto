@@ -6,11 +6,11 @@ syntax = "proto3";
 package fluxmq.auth.v1;
 
 // AuthService is a callout service for external authentication and
-// authorization. Broker implementations call this service during CONNECT,
-// PUBLISH, and SUBSCRIBE to delegate credential validation and topic-level
-// access control to an external provider.
+// authorization. Broker implementations call this service during connection
+// establishment, publish, and subscribe to delegate credential validation
+// and topic-level access control to an external provider.
 service AuthService {
-  // Authenticate validates client credentials presented during CONNECT.
+  // Authenticate validates client credentials presented during connection.
   // The server resolves the credentials to an external identity (e.g. a UUID)
   // which the broker stores on the session and passes in subsequent Authorize
   // calls.
@@ -22,13 +22,23 @@ service AuthService {
   rpc Authorize(AuthzReq) returns (AuthzRes);
 }
 
+// Protocol identifies which messaging protocol the client connected with.
+enum Protocol {
+  Unspecified = 0;
+  MQTT = 1;
+  AMQP_1_0 = 2;
+  AMQP_0_9_1 = 3;
+}
+
 message AuthnReq {
-  // MQTT ClientID from the CONNECT packet.
+  // Client identifier from the connection handshake.
   string client_id = 1;
-  // Username from the CONNECT packet.
+  // Username credential.
   string username = 2;
-  // Password from the CONNECT packet.
+  // Password credential.
   string password = 3;
+  // Protocol the client connected with.
+  Protocol protocol = 4;
 }
 
 message AuthnRes {
@@ -46,15 +56,16 @@ message AuthnRes {
 message AuthzReq {
   // External identity returned from AuthnRes.id.
   string external_id = 1;
-  // Raw topic or topic filter from the PUBLISH/SUBSCRIBE packet.
+  // Raw topic or topic filter from the publish/subscribe operation.
   string topic = 2;
   // The action being requested.
   Action action = 3;
 }
 
 enum Action {
-  ACTION_PUBLISH = 0;
-  ACTION_SUBSCRIBE = 1;
+  None = 0;
+  Publish = 1;
+  Subscribe = 2;
 }
 
 message AuthzRes {

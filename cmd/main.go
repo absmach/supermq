@@ -312,15 +312,43 @@ func main() {
 
 	// Configure auth callout
 	if cfg.Auth.URL != "" {
-		calloutClient := authcallout.NewClient(nil, cfg.Auth.URL,
+		transport := cfg.Auth.Transport
+		if transport == "" {
+			transport = "grpc"
+		}
+
+		cb := authcallout.DefaultCircuitBreaker(logger)
+		sharedOpts := []authcallout.Option{
 			authcallout.WithTimeout(cfg.Auth.Timeout),
 			authcallout.WithLogger(logger),
-		)
-		authEngine := corebroker.NewAuthEngine(calloutClient, calloutClient)
-		b.SetAuthEngine(authEngine)
-		amqpBroker.SetAuthEngine(authEngine)
-		amqp091Broker.SetAuthEngine(authEngine)
-		slog.Info("Auth callout enabled", "url", cfg.Auth.URL, "timeout", cfg.Auth.Timeout)
+			authcallout.WithCircuitBreaker(cb),
+		}
+
+		newClient := func(proto authcallout.Protocol) (corebroker.Authenticator, corebroker.Authorizer) {
+			opts := append(sharedOpts, authcallout.WithProtocol(proto))
+			switch transport {
+			case "http":
+				c := authcallout.NewHTTPClient(nil, cfg.Auth.URL, opts...)
+				return c, c
+			default:
+				c := authcallout.NewGRPCClient(nil, cfg.Auth.URL, opts...)
+				return c, c
+			}
+		}
+
+		mqttAuthn, mqttAuthz := newClient(authcallout.ProtocolMQTT)
+		b.SetAuthEngine(corebroker.NewAuthEngine(mqttAuthn, mqttAuthz))
+
+		amqpAuthn, amqpAuthz := newClient(authcallout.ProtocolAMQP10)
+		amqpBroker.SetAuthEngine(corebroker.NewAuthEngine(amqpAuthn, amqpAuthz))
+
+		amqp091Authn, amqp091Authz := newClient(authcallout.ProtocolAMQP091)
+		amqp091Broker.SetAuthEngine(corebroker.NewAuthEngine(amqp091Authn, amqp091Authz))
+
+		slog.Info("Auth callout enabled",
+			"url", cfg.Auth.URL,
+			"transport", transport,
+			"timeout", cfg.Auth.Timeout)
 	} else {
 		slog.Info("Auth callout disabled")
 	}

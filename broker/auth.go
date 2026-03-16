@@ -93,24 +93,3 @@ func (e *AuthEngine) resolveID(clientID string) string {
 	}
 	return clientID
 }
-
-// AuthContinuation represents the state of an ongoing enhanced authentication.
-// This is used in V5.
-type AuthContinuation struct {
-	ResponseData []byte
-	State        any
-	ReasonString string
-	ReasonCode   byte
-	Complete     bool
-}
-
-// AuthenticatorV5 extends Authenticator with MQTT v5 enhanced authentication.
-type AuthenticatorV5 interface {
-	Authenticator
-
-	StartAuth(clientID, authMethod string, authData []byte) (*AuthContinuation, error)
-
-	ContinueAuth(clientID string, authData []byte, state *AuthContinuation) (*AuthContinuation, error)
-
-	CompleteAuth(clientID string, state *AuthContinuation) (bool, error)
-}

@@ -40,7 +40,7 @@ func (f *fakeAuthServer) Authorize(_ context.Context, req *connect.Request[authv
 	return connect.NewResponse(f.authzResult), nil
 }
 
-func startTestServer(t *testing.T, handler authv1connect.AuthServiceHandler) (*httptest.Server, *Client) {
+func startTestServer(t *testing.T, handler authv1connect.AuthServiceHandler) (*httptest.Server, *GRPCClient) {
 	t.Helper()
 	mux := http.NewServeMux()
 	path, h := authv1connect.NewAuthServiceHandler(handler)
@@ -48,13 +48,13 @@ func startTestServer(t *testing.T, handler authv1connect.AuthServiceHandler) (*h
 	srv := httptest.NewServer(mux)
 	t.Cleanup(srv.Close)
 
-	client := NewClient(srv.Client(), srv.URL,
+	client := NewGRPCClient(srv.Client(), srv.URL,
 		WithLogger(slog.New(slog.NewTextHandler(io.Discard, nil))),
 	)
 	return srv, client
 }
 
-func TestClient_Authenticate_Success(t *testing.T) {
+func TestGRPCClient_Authenticate_Success(t *testing.T) {
 	_, client := startTestServer(t, &fakeAuthServer{
 		authnResult: &authv1.AuthnRes{
 			Authenticated: true,
@@ -68,7 +68,7 @@ func TestClient_Authenticate_Success(t *testing.T) {
 	assert.Equal(t, "ext-id-1", result.ID)
 }
 
-func TestClient_Authenticate_Denied(t *testing.T) {
+func TestGRPCClient_Authenticate_Denied(t *testing.T) {
 	_, client := startTestServer(t, &fakeAuthServer{
 		authnResult: &authv1.AuthnRes{
 			Authenticated: false,
@@ -82,7 +82,7 @@ func TestClient_Authenticate_Denied(t *testing.T) {
 	assert.False(t, result.Authenticated)
 }
 
-func TestClient_Authenticate_ServerError(t *testing.T) {
+func TestGRPCClient_Authenticate_ServerError(t *testing.T) {
 	_, client := startTestServer(t, &fakeAuthServer{
 		authnErr: connect.NewError(connect.CodeInternal, nil),
 	})
@@ -92,7 +92,7 @@ func TestClient_Authenticate_ServerError(t *testing.T) {
 	assert.False(t, result.Authenticated)
 }
 
-func TestClient_CanPublish_Allowed(t *testing.T) {
+func TestGRPCClient_CanPublish_Allowed(t *testing.T) {
 	_, client := startTestServer(t, &fakeAuthServer{
 		authzResult: &authv1.AuthzRes{Authorized: true},
 	})
@@ -100,7 +100,7 @@ func TestClient_CanPublish_Allowed(t *testing.T) {
 	assert.True(t, client.CanPublish("ext-id-1", "m/domain/c/channel/temp"))
 }
 
-func TestClient_CanPublish_Denied(t *testing.T) {
+func TestGRPCClient_CanPublish_Denied(t *testing.T) {
 	_, client := startTestServer(t, &fakeAuthServer{
 		authzResult: &authv1.AuthzRes{
 			Authorized: false,
@@ -112,7 +112,7 @@ func TestClient_CanPublish_Denied(t *testing.T) {
 	assert.False(t, client.CanPublish("ext-id-1", "m/domain/c/channel/temp"))
 }
 
-func TestClient_CanSubscribe_Allowed(t *testing.T) {
+func TestGRPCClient_CanSubscribe_Allowed(t *testing.T) {
 	_, client := startTestServer(t, &fakeAuthServer{
 		authzResult: &authv1.AuthzRes{Authorized: true},
 	})
@@ -120,7 +120,7 @@ func TestClient_CanSubscribe_Allowed(t *testing.T) {
 	assert.True(t, client.CanSubscribe("ext-id-1", "m/domain/c/channel/#"))
 }
 
-func TestClient_CanSubscribe_ServerError(t *testing.T) {
+func TestGRPCClient_CanSubscribe_ServerError(t *testing.T) {
 	_, client := startTestServer(t, &fakeAuthServer{
 		authzErr: connect.NewError(connect.CodeUnavailable, nil),
 	})
@@ -128,7 +128,7 @@ func TestClient_CanSubscribe_ServerError(t *testing.T) {
 	assert.False(t, client.CanSubscribe("ext-id-1", "m/domain/c/channel"))
 }
 
-func TestClient_ImplementsInterfaces(t *testing.T) {
+func TestGRPCClient_ImplementsInterfaces(t *testing.T) {
 	_, client := startTestServer(t, &fakeAuthServer{
 		authnResult: &authv1.AuthnRes{Authenticated: true, Id: "x"},
 		authzResult: &authv1.AuthzRes{Authorized: true},

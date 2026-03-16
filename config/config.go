@@ -37,10 +37,12 @@ type Config struct {
 
 // AuthConfig configures the external authentication/authorization callout.
 type AuthConfig struct {
-	// URL is the ConnectRPC/gRPC server address (e.g. "http://localhost:9090").
+	// URL is the auth service address (e.g. "http://localhost:9090").
 	// When empty, auth callout is disabled.
-	URL     string        `yaml:"url"`
-	Timeout time.Duration `yaml:"timeout"`
+	URL string `yaml:"url"`
+	// Transport selects the callout wire format: "grpc" (default) or "http".
+	Transport string        `yaml:"transport"`
+	Timeout   time.Duration `yaml:"timeout"`
 }
 
 // QueueConfig defines configuration for a persistent queue.
