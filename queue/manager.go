@@ -657,14 +657,17 @@ func (m *Manager) publishLocalToTargets(ctx context.Context, publish types.Publi
 		}
 
 		// Create message for this queue
+		now := time.Now()
 		msg := &types.Message{
 			ID:         generateMessageID(),
 			Payload:    publish.Payload,
 			Topic:      publish.Topic,
 			Properties: cleanProps,
 			State:      types.StateQueued,
-			CreatedAt:  time.Now(),
-			ExpiresAt:  time.Now().Add(queueConfig.MessageTTL),
+			CreatedAt:  now,
+		}
+		if queueConfig.MessageTTL > 0 {
+			msg.ExpiresAt = now.Add(queueConfig.MessageTTL)
 		}
 
 		var (

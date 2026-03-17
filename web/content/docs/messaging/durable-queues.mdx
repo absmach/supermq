@@ -620,6 +620,25 @@ A background retention loop computes a **safe truncation offset** and truncates 
 
 See [Storage internals](/docs/architecture/storage) for on-disk format and retention behavior details.
 
+### Per-Message TTL
+
+In addition to queue-level retention, each message can have an individual time-to-live controlled by the `message_ttl` queue setting. When a message's TTL expires, it is silently skipped during delivery — consumers never see it.
+
+```yaml
+queues:
+  - name: "tasks"
+    topics: ["$queue/tasks/#"]
+    limits:
+      message_ttl: "30m"   # messages expire 30 minutes after publish
+```
+
+Key behavior:
+
+- The expiry timestamp is computed at publish time (`created_at + message_ttl`) and persisted with the message.
+- Both classic (queue-mode) and stream consumers skip expired messages. In queue mode, expired messages never enter the pending entry list.
+- Setting `message_ttl` to `0` disables per-message expiry. Messages then live until queue-level retention truncates them.
+- Per-message TTL and queue-level retention are complementary. TTL prevents delivery of stale individual messages; retention reclaims storage by truncating the head of the log in bulk.
+
 ## Clustering and Replication Notes
 
 In clustered deployments, queue behavior depends on `cluster.raft.*`:

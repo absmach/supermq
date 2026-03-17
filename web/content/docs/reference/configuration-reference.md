@@ -294,11 +294,11 @@ queues:
 
 ### `queues[].limits`
 
-| Field              | Description                            |
-| ------------------ | -------------------------------------- |
-| `max_message_size` | Queue-level max payload size in bytes. |
-| `max_depth`        | Max queued message count.              |
-| `message_ttl`      | Per-message TTL in queue.              |
+| Field              | Description                                                                                                                |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `max_message_size` | Queue-level max payload size in bytes.                                                                                     |
+| `max_depth`        | Max queued message count.                                                                                                  |
+| `message_ttl`      | Per-message TTL. Messages older than this are skipped at delivery time. `0` disables per-message expiry (default: `168h`). |
 
 ### `queues[].retry`
 
