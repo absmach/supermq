@@ -33,6 +33,7 @@ Top-level keys:
 - `queues`
 - `storage`
 - `cluster`
+- `auth`
 - `webhook`
 - `ratelimit`
 - `log`
@@ -629,6 +630,32 @@ ratelimit:
 | `subscribe.enabled`           | Enables per-client subscribe limiter.                  |
 | `subscribe.rate`              | Allowed subscribe operations per second per client.    |
 | `subscribe.burst`             | Token-bucket burst for subscribe limiter.              |
+
+## Auth
+
+```yaml
+auth:
+  url: "auth-service:7016"
+  transport: "grpc"
+  timeout: 5s
+  protocols:
+    mqtt: true
+    http: true
+    coap: true
+    amqp: true
+    amqp091: false
+```
+
+| Field       | Default | Description                                                                                               |
+| ----------- | ------- | --------------------------------------------------------------------------------------------------------- |
+| `url`       | `""`    | Auth service address. Empty disables auth callout entirely.                                               |
+| `transport` | `grpc`  | Wire format for callout: `grpc` or `http`.                                                                |
+| `timeout`   | `0`     | Per-call timeout (e.g. `5s`). Zero uses the transport default.                                            |
+| `protocols` | `{}`    | Per-protocol auth toggle. Empty map = all protocols require auth. When set, only `true` entries get auth. |
+
+Valid `protocols` keys: `mqtt`, `amqp`, `amqp091`, `http`, `coap`.
+
+See [Security configuration](/docs/configuration/security) for detailed examples.
 
 ## Logging
 
