@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	mqttbroker "github.com/absmach/fluxmq/mqtt/broker"
 	"github.com/absmach/fluxmq/pkg/proto/queue/v1/queuev1connect"
 	"github.com/absmach/fluxmq/queue"
 	"github.com/absmach/fluxmq/queue/storage"
@@ -29,14 +30,21 @@ type Config struct {
 // Server provides the HTTP/gRPC API server using Connect protocol.
 type Server struct {
 	config     Config
+	broker     *mqttbroker.Broker
 	httpServer *http.Server
 	logger     *slog.Logger
 }
 
 // New creates a new API server.
-func New(config Config, manager *queue.Manager, queueStore storage.QueueStore, groupStore storage.ConsumerGroupStore, logger *slog.Logger) *Server {
+func New(config Config, broker *mqttbroker.Broker, manager *queue.Manager, queueStore storage.QueueStore, groupStore storage.ConsumerGroupStore, logger *slog.Logger) *Server {
 	if logger == nil {
 		logger = slog.Default()
+	}
+
+	s := &Server{
+		config: config,
+		broker: broker,
+		logger: logger,
 	}
 
 	mux := http.NewServeMux()
@@ -44,6 +52,8 @@ func New(config Config, manager *queue.Manager, queueStore storage.QueueStore, g
 	queueHandler := serverqueue.NewHandler(manager, queueStore, groupStore, logger)
 	path, handler := queuev1connect.NewQueueServiceHandler(queueHandler)
 	mux.Handle(path, handler)
+	mux.HandleFunc("/api/v1/sessions", s.handleSessions)
+	mux.HandleFunc("/api/v1/sessions/", s.handleSession)
 
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -58,11 +68,8 @@ func New(config Config, manager *queue.Manager, queueStore storage.QueueStore, g
 		WriteTimeout: 30 * time.Second,
 	}
 
-	return &Server{
-		config:     config,
-		httpServer: httpServer,
-		logger:     logger,
-	}
+	s.httpServer = httpServer
+	return s
 }
 
 // Listen starts the API server.
