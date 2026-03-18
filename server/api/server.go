@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/absmach/fluxmq/cluster"
 	mqttbroker "github.com/absmach/fluxmq/mqtt/broker"
 	"github.com/absmach/fluxmq/pkg/proto/queue/v1/queuev1connect"
 	"github.com/absmach/fluxmq/queue"
@@ -31,20 +32,22 @@ type Config struct {
 type Server struct {
 	config     Config
 	broker     *mqttbroker.Broker
+	cluster    cluster.Cluster
 	httpServer *http.Server
 	logger     *slog.Logger
 }
 
 // New creates a new API server.
-func New(config Config, broker *mqttbroker.Broker, manager *queue.Manager, queueStore storage.QueueStore, groupStore storage.ConsumerGroupStore, logger *slog.Logger) *Server {
+func New(config Config, broker *mqttbroker.Broker, cl cluster.Cluster, manager *queue.Manager, queueStore storage.QueueStore, groupStore storage.ConsumerGroupStore, logger *slog.Logger) *Server {
 	if logger == nil {
 		logger = slog.Default()
 	}
 
 	s := &Server{
-		config: config,
-		broker: broker,
-		logger: logger,
+		config:  config,
+		broker:  broker,
+		cluster: cl,
+		logger:  logger,
 	}
 
 	mux := http.NewServeMux()
@@ -54,6 +57,9 @@ func New(config Config, broker *mqttbroker.Broker, manager *queue.Manager, queue
 	mux.Handle(path, handler)
 	mux.HandleFunc("/api/v1/sessions", s.handleSessions)
 	mux.HandleFunc("/api/v1/sessions/", s.handleSession)
+	mux.HandleFunc("/api/v1/stats", s.handleStats)
+	mux.HandleFunc("/api/v1/cluster", s.handleCluster)
+	mux.HandleFunc("/api/v1/overview", s.handleOverview)
 
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

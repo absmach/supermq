@@ -181,7 +181,7 @@ func TestSessionsTrailingSlashDelegatesToList(t *testing.T) {
 }
 
 func TestSessionsNilBrokerReturnsServiceUnavailable(t *testing.T) {
-	srv := New(Config{}, nil, nil, nil, nil, slog.Default())
+	srv := New(Config{}, nil, nil, nil, nil, nil, slog.Default())
 
 	tests := []struct {
 		name string
@@ -319,7 +319,7 @@ func newTestAPIServer(t *testing.T) *Server {
 	createSession(t, b, store, "bravo-offline", false, "bravo/one")
 	createSession(t, b, store, "tenant/a/client-1", true, "devices/+/events")
 
-	return New(Config{}, b, nil, nil, nil, slog.Default())
+	return New(Config{}, b, nil, nil, nil, nil, slog.Default())
 }
 
 func createSession(t *testing.T, b *mqttbroker.Broker, store *memory.Store, clientID string, connected bool, filter string) {
