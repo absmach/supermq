@@ -321,7 +321,7 @@ components:
           type: string
           example: broker not available
 
-    # ── Stats ──
+    # ── Stats (aggregated + per-protocol) ──
 
     ConnectionStats:
       type: object
@@ -329,7 +329,7 @@ components:
         current:
           type: integer
           format: uint64
-          description: Currently connected clients
+          description: Currently connected clients (sum across protocols)
           example: 342
         total:
           type: integer
@@ -344,27 +344,16 @@ components:
 
     MessageStats:
       type: object
+      description: Aggregated message counters across all protocols
       properties:
         received:
           type: integer
           format: uint64
-          description: Total MQTT packets received
           example: 1250000
         sent:
           type: integer
           format: uint64
-          description: Total MQTT packets sent
           example: 980000
-        publish_received:
-          type: integer
-          format: uint64
-          description: PUBLISH packets received
-          example: 1100000
-        publish_sent:
-          type: integer
-          format: uint64
-          description: PUBLISH packets sent
-          example: 850000
 
     ByteStats:
       type: object
@@ -378,13 +367,44 @@ components:
           format: uint64
           example: 412000000
 
-    SubscriptionStats:
+    ErrorStats:
+      type: object
+      description: Aggregated protocol error count
+      properties:
+        protocol:
+          type: integer
+          format: uint64
+          example: 12
+
+    MQTTMessageStats:
+      type: object
+      properties:
+        received:
+          type: integer
+          format: uint64
+          example: 1100000
+        sent:
+          type: integer
+          format: uint64
+          example: 850000
+        publish_received:
+          type: integer
+          format: uint64
+          description: PUBLISH packets received
+          example: 1000000
+        publish_sent:
+          type: integer
+          format: uint64
+          description: PUBLISH packets sent
+          example: 800000
+
+    MQTTSubscriptionStats:
       type: object
       properties:
         active:
           type: integer
           format: uint64
-          description: Currently active subscriptions
+          description: Currently active MQTT subscriptions
           example: 1200
         retained_messages:
           type: integer
@@ -392,13 +412,12 @@ components:
           description: Number of retained messages stored
           example: 45
 
-    ErrorStats:
+    MQTTErrorStats:
       type: object
       properties:
         protocol:
           type: integer
           format: uint64
-          description: MQTT protocol violations
           example: 12
         auth:
           type: integer
@@ -416,8 +435,58 @@ components:
           description: Malformed packet errors
           example: 8
 
+    MQTTStats:
+      type: object
+      description: MQTT-specific counters
+      properties:
+        connections:
+          $ref: "#/components/schemas/ConnectionStats"
+        messages:
+          $ref: "#/components/schemas/MQTTMessageStats"
+        bytes:
+          $ref: "#/components/schemas/ByteStats"
+        subscriptions:
+          $ref: "#/components/schemas/MQTTSubscriptionStats"
+        errors:
+          $ref: "#/components/schemas/MQTTErrorStats"
+
+    AMQPStats:
+      type: object
+      description: AMQP 0.9.1-specific counters
+      properties:
+        connections:
+          $ref: "#/components/schemas/ConnectionStats"
+        messages:
+          $ref: "#/components/schemas/MessageStats"
+        bytes:
+          $ref: "#/components/schemas/ByteStats"
+        channels:
+          type: integer
+          format: uint64
+          description: Currently open AMQP channels
+          example: 42
+        consumers:
+          type: integer
+          format: uint64
+          description: Currently active AMQP consumers
+          example: 15
+        errors:
+          $ref: "#/components/schemas/ErrorStats"
+
+    ByProtocolStats:
+      type: object
+      properties:
+        mqtt:
+          $ref: "#/components/schemas/MQTTStats"
+        amqp:
+          $ref: "#/components/schemas/AMQPStats"
+
     StatsResponse:
       type: object
+      description: |
+        Top-level fields are aggregated totals across all protocols.
+        The `by_protocol` section contains per-protocol breakdowns with
+        protocol-specific fields (e.g. MQTT subscriptions, AMQP channels).
       properties:
         uptime_seconds:
           type: number
@@ -430,10 +499,10 @@ components:
           $ref: "#/components/schemas/MessageStats"
         bytes:
           $ref: "#/components/schemas/ByteStats"
-        subscriptions:
-          $ref: "#/components/schemas/SubscriptionStats"
         errors:
           $ref: "#/components/schemas/ErrorStats"
+        by_protocol:
+          $ref: "#/components/schemas/ByProtocolStats"
 
     # ── Cluster ──
 

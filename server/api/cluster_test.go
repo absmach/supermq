@@ -30,7 +30,7 @@ func (c *clusterStub) Nodes() []cluster.NodeInfo { return c.nodes }
 func TestClusterNilClusterReturnsSingleNode(t *testing.T) {
 	store := memory.New()
 	b := mqttbroker.NewBroker(store, nil, mqttbroker.WithLogger(slog.Default()))
-	srv := New(Config{}, b, nil, nil, nil, nil, slog.Default())
+	srv := New(Config{}, b, nil, nil, nil, nil, nil, slog.Default())
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/cluster", nil)
 	rec := httptest.NewRecorder()
@@ -71,7 +71,7 @@ func TestClusterWithStub(t *testing.T) {
 			{ID: "node-2", Address: "10.0.0.2:7946", Healthy: true, Leader: false, Uptime: 12 * time.Hour},
 		},
 	}
-	srv := New(Config{}, b, stub, nil, nil, nil, slog.Default())
+	srv := New(Config{}, b, nil, stub, nil, nil, nil, slog.Default())
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/cluster", nil)
 	rec := httptest.NewRecorder()
@@ -107,7 +107,7 @@ func TestClusterWithStub(t *testing.T) {
 }
 
 func TestClusterNilBrokerReturns503(t *testing.T) {
-	srv := New(Config{}, nil, nil, nil, nil, nil, slog.Default())
+	srv := New(Config{}, nil, nil, nil, nil, nil, nil, slog.Default())
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/cluster", nil)
 	rec := httptest.NewRecorder()
@@ -121,7 +121,7 @@ func TestClusterNilBrokerReturns503(t *testing.T) {
 func TestClusterRejectsPost(t *testing.T) {
 	store := memory.New()
 	b := mqttbroker.NewBroker(store, nil, mqttbroker.WithLogger(slog.Default()))
-	srv := New(Config{}, b, nil, nil, nil, nil, slog.Default())
+	srv := New(Config{}, b, nil, nil, nil, nil, nil, slog.Default())
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/cluster", nil)
 	rec := httptest.NewRecorder()

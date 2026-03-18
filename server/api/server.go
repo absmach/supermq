@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	amqpbroker "github.com/absmach/fluxmq/amqp/broker"
 	"github.com/absmach/fluxmq/cluster"
 	mqttbroker "github.com/absmach/fluxmq/mqtt/broker"
 	"github.com/absmach/fluxmq/pkg/proto/queue/v1/queuev1connect"
@@ -32,22 +33,24 @@ type Config struct {
 type Server struct {
 	config     Config
 	broker     *mqttbroker.Broker
+	amqpBroker *amqpbroker.Broker
 	cluster    cluster.Cluster
 	httpServer *http.Server
 	logger     *slog.Logger
 }
 
 // New creates a new API server.
-func New(config Config, broker *mqttbroker.Broker, cl cluster.Cluster, manager *queue.Manager, queueStore storage.QueueStore, groupStore storage.ConsumerGroupStore, logger *slog.Logger) *Server {
+func New(config Config, broker *mqttbroker.Broker, amqp *amqpbroker.Broker, cl cluster.Cluster, manager *queue.Manager, queueStore storage.QueueStore, groupStore storage.ConsumerGroupStore, logger *slog.Logger) *Server {
 	if logger == nil {
 		logger = slog.Default()
 	}
 
 	s := &Server{
-		config:  config,
-		broker:  broker,
-		cluster: cl,
-		logger:  logger,
+		config:     config,
+		broker:     broker,
+		amqpBroker: amqp,
+		cluster:    cl,
+		logger:     logger,
 	}
 
 	mux := http.NewServeMux()

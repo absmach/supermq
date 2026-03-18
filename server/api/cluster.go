@@ -54,7 +54,7 @@ func (s *Server) handleCluster(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, http.StatusMethodNotAllowed, "method not allowed")
 		return
 	}
-	if s.broker == nil {
+	if s.broker == nil && s.amqpBroker == nil {
 		writeAPIError(w, http.StatusServiceUnavailable, "broker not available")
 		return
 	}

@@ -48,7 +48,7 @@ func TestOverviewCombinesStatsClusterSessions(t *testing.T) {
 			{ID: "node-1", Address: "10.0.0.1:7946", Healthy: true, Leader: true, Uptime: time.Hour},
 		},
 	}
-	srv := New(Config{}, b, stub, nil, nil, nil, slog.Default())
+	srv := New(Config{}, b, nil, stub, nil, nil, nil, slog.Default())
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/overview", nil)
 	rec := httptest.NewRecorder()
@@ -75,8 +75,14 @@ func TestOverviewCombinesStatsClusterSessions(t *testing.T) {
 	if resp.Sessions.Total != 2 {
 		t.Fatalf("expected 2 total sessions, got %d", resp.Sessions.Total)
 	}
-	if resp.Stats.Messages.PublishReceived != 1 {
-		t.Fatalf("expected publish_received 1, got %d", resp.Stats.Messages.PublishReceived)
+	if resp.Stats.Messages.Received != 1 {
+		t.Fatalf("expected messages received 1, got %d", resp.Stats.Messages.Received)
+	}
+	if resp.Stats.ByProtocol.MQTT == nil {
+		t.Fatal("expected mqtt in by_protocol")
+	}
+	if resp.Stats.ByProtocol.MQTT.Messages.PublishReceived != 1 {
+		t.Fatalf("expected mqtt publish_received 1, got %d", resp.Stats.ByProtocol.MQTT.Messages.PublishReceived)
 	}
 	if len(resp.Cluster.Nodes) != 1 {
 		t.Fatalf("expected 1 cluster node, got %d", len(resp.Cluster.Nodes))
@@ -86,8 +92,8 @@ func TestOverviewCombinesStatsClusterSessions(t *testing.T) {
 	}
 }
 
-func TestOverviewNilBrokerReturns503(t *testing.T) {
-	srv := New(Config{}, nil, nil, nil, nil, nil, slog.Default())
+func TestOverviewNilBrokersReturns503(t *testing.T) {
+	srv := New(Config{}, nil, nil, nil, nil, nil, nil, slog.Default())
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/overview", nil)
 	rec := httptest.NewRecorder()
@@ -101,7 +107,7 @@ func TestOverviewNilBrokerReturns503(t *testing.T) {
 func TestOverviewRejectsPost(t *testing.T) {
 	store := memory.New()
 	b := mqttbroker.NewBroker(store, nil, mqttbroker.WithLogger(slog.Default()))
-	srv := New(Config{}, b, nil, nil, nil, nil, slog.Default())
+	srv := New(Config{}, b, nil, nil, nil, nil, nil, slog.Default())
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/overview", nil)
 	rec := httptest.NewRecorder()

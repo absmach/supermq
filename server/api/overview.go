@@ -29,7 +29,7 @@ func (s *Server) handleOverview(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, http.StatusMethodNotAllowed, "method not allowed")
 		return
 	}
-	if s.broker == nil {
+	if s.broker == nil && s.amqpBroker == nil {
 		writeAPIError(w, http.StatusServiceUnavailable, "broker not available")
 		return
 	}
@@ -37,16 +37,19 @@ func (s *Server) handleOverview(w http.ResponseWriter, r *http.Request) {
 	stats := s.buildStatsResponse()
 	cl := s.buildClusterResponse()
 
+	var sessions sessionSummary
+	if s.broker != nil {
+		sessions.Connected = int(s.broker.Stats().GetCurrentConnections())
+		sessions.Total = s.broker.SessionCount()
+	}
+
 	resp := overviewResponse{
 		NodeID:        cl.NodeID,
 		ClusterMode:   cl.ClusterMode,
 		IsLeader:      cl.IsLeader,
 		UptimeSeconds: stats.UptimeSeconds,
-		Sessions: sessionSummary{
-			Connected: int(s.broker.Stats().GetCurrentConnections()),
-			Total:     s.broker.SessionCount(),
-		},
-		Stats: stats,
+		Sessions:      sessions,
+		Stats:         stats,
 		Cluster: overviewCluster{
 			Nodes: cl.Nodes,
 		},
