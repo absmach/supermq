@@ -1,141 +1,679 @@
 export interface BrokerStatus {
-  node_id: string;
-  is_leader: boolean;
-  cluster_mode: boolean;
-  node_count?: number;
-  sessions: number;
-  messages_received: number;
-  messages_sent: number;
-  bytes_received: number;
-  bytes_sent: number;
-  subscriptions: number;
-  retained_messages: number;
-  uptime_seconds: number;
-  auth_errors: number;
+	node_id: string;
+	is_leader: boolean;
+	cluster_mode: boolean;
+	node_count?: number;
+	sessions: number;
+	messages_received: number;
+	messages_sent: number;
+	bytes_received: number;
+	bytes_sent: number;
+	subscriptions: number;
+	retained_messages: number;
+	uptime_seconds: number;
+	auth_errors: number;
 }
 
 export interface NodeInfo {
-  node_id: string;
-  is_leader: boolean;
-  addr: string;
-  sessions: number;
-  subscriptions: number;
-  messages_received: number;
-  messages_sent: number;
-  bytes_received: number;
-  bytes_sent: number;
-  uptime_seconds: number;
+	node_id: string;
+	is_leader: boolean;
+	addr: string;
+	uptime_seconds: number;
+	// Per-node traffic stats — available in mock/cluster mode only, not from single-node backend
+	sessions?: number;
+	subscriptions?: number;
+	messages_received?: number;
+	messages_sent?: number;
+	bytes_received?: number;
+	bytes_sent?: number;
 }
 
 export interface ClientInfo {
-  client_id: string;
-  connected: boolean;
-  subscriptions: number;
-  connected_at: string;
-  protocol?: string;
-  remote?: string;
+	client_id: string;
+	connected: boolean;
+	subscriptions: number;
+	connected_at: string;
+	protocol?: string;
+	remote?: string;
 }
 
-export const MOCK_CLIENTS: ClientInfo[] = [
-  { client_id: 'mqtt-client-001',   connected: true,  subscriptions: 5, connected_at: '2026-03-16T07:00:00Z', protocol: 'MQTT', remote: '192.168.1.100:54321' },
-  { client_id: 'mqtt-client-002',   connected: true,  subscriptions: 3, connected_at: '2026-03-16T08:30:00Z', protocol: 'MQTT', remote: '192.168.1.101:54322' },
-  { client_id: 'mqtt-client-003',   connected: false, subscriptions: 0, connected_at: '2026-03-16T06:00:00Z', protocol: 'MQTT', remote: '192.168.1.102:54323' },
-  { client_id: 'sensor-device-001', connected: true,  subscriptions: 1, connected_at: '2026-03-16T09:00:00Z', protocol: 'MQTT', remote: '10.0.0.10:50001' },
-  { client_id: 'amqp-conn-1',       connected: true,  subscriptions: 2, connected_at: '2026-03-16T04:00:00Z', protocol: 'AMQP', remote: '10.0.0.50:5672' },
+export interface SessionSubscription {
+	filter: string;
+	qos: number;
+	no_local: boolean;
+	retain_as_published: boolean;
+	retain_handling: number;
+	consumer_group?: string;
+	subscription_id?: number;
+}
+
+export interface SessionInfo {
+	client_id: string;
+	state: string; // "connected" | "disconnected"
+	connected: boolean;
+	protocol: string;
+	version: number;
+	clean_start: boolean;
+	expiry_interval: number;
+	connected_at?: string;
+	disconnected_at?: string;
+	receive_maximum: number;
+	max_packet_size: number;
+	topic_alias_max: number;
+	request_response: boolean;
+	request_problem: boolean;
+	has_will: boolean;
+	subscription_count: number;
+	inflight_count: number;
+	offline_queue_depth: number;
+	subscriptions?: SessionSubscription[];
+}
+
+export interface TopicInfo {
+	name: string;
+	subscribers: number;
+	messages_per_min: number;
+	retained: boolean;
+	created: string;
+}
+
+export const MOCK_TOPICS: TopicInfo[] = [
+	{
+		name: "sensors/temperature",
+		subscribers: 5,
+		messages_per_min: 120,
+		retained: true,
+		created: "2024-01-15",
+	},
+	{
+		name: "sensors/humidity",
+		subscribers: 3,
+		messages_per_min: 85,
+		retained: true,
+		created: "2024-01-15",
+	},
+	{
+		name: "sensors/pressure",
+		subscribers: 2,
+		messages_per_min: 60,
+		retained: true,
+		created: "2024-01-15",
+	},
+	{
+		name: "devices/online",
+		subscribers: 12,
+		messages_per_min: 240,
+		retained: false,
+		created: "2024-01-10",
+	},
+	{
+		name: "devices/offline",
+		subscribers: 12,
+		messages_per_min: 18,
+		retained: false,
+		created: "2024-01-10",
+	},
+	{
+		name: "devices/telemetry",
+		subscribers: 7,
+		messages_per_min: 310,
+		retained: false,
+		created: "2024-01-12",
+	},
+	{
+		name: "alerts/critical",
+		subscribers: 8,
+		messages_per_min: 45,
+		retained: false,
+		created: "2024-01-20",
+	},
+	{
+		name: "alerts/warning",
+		subscribers: 6,
+		messages_per_min: 30,
+		retained: false,
+		created: "2024-01-20",
+	},
+	{
+		name: "alerts/info",
+		subscribers: 4,
+		messages_per_min: 12,
+		retained: false,
+		created: "2024-01-20",
+	},
+	{
+		name: "system/status",
+		subscribers: 2,
+		messages_per_min: 30,
+		retained: true,
+		created: "2024-01-01",
+	},
+	{
+		name: "system/heartbeat",
+		subscribers: 1,
+		messages_per_min: 60,
+		retained: false,
+		created: "2024-01-01",
+	},
+	{
+		name: "system/metrics",
+		subscribers: 3,
+		messages_per_min: 120,
+		retained: false,
+		created: "2024-01-05",
+	},
+	{
+		name: "gateway/upstream",
+		subscribers: 5,
+		messages_per_min: 200,
+		retained: false,
+		created: "2024-02-01",
+	},
+	{
+		name: "gateway/downstream",
+		subscribers: 5,
+		messages_per_min: 185,
+		retained: false,
+		created: "2024-02-01",
+	},
+	{
+		name: "logs/application",
+		subscribers: 2,
+		messages_per_min: 450,
+		retained: false,
+		created: "2024-01-08",
+	},
+	{
+		name: "logs/audit",
+		subscribers: 1,
+		messages_per_min: 22,
+		retained: true,
+		created: "2024-01-08",
+	},
+	{
+		name: "config/updates",
+		subscribers: 9,
+		messages_per_min: 4,
+		retained: true,
+		created: "2024-01-03",
+	},
+	{
+		name: "config/rollback",
+		subscribers: 4,
+		messages_per_min: 1,
+		retained: true,
+		created: "2024-01-03",
+	},
+	{
+		name: "edge/reports",
+		subscribers: 3,
+		messages_per_min: 75,
+		retained: false,
+		created: "2024-02-10",
+	},
+	{
+		name: "edge/commands",
+		subscribers: 3,
+		messages_per_min: 10,
+		retained: false,
+		created: "2024-02-10",
+	},
 ];
 
-const NODE_RATES: Record<string, { msgsIn: number; msgsOut: number; bytesIn: number; bytesOut: number; sessions: number }> = {
-  'broker-1': { msgsIn: 12, msgsOut: 11, bytesIn: 4_800, bytesOut: 4_200, sessions: 20 },
-  'broker-2': { msgsIn:  7, msgsOut:  6, bytesIn: 2_800, bytesOut: 2_400, sessions: 12 },
-  'broker-3': { msgsIn:  5, msgsOut:  4, bytesIn: 2_000, bytesOut: 1_700, sessions: 10 },
+export const MOCK_SESSIONS: SessionInfo[] = [
+	{
+		client_id: "mqtt-client-001",
+		state: "connected",
+		connected: true,
+		protocol: "mqtt5",
+		version: 5,
+		clean_start: true,
+		expiry_interval: 0,
+		connected_at: "2026-03-18T07:00:00Z",
+		receive_maximum: 65535,
+		max_packet_size: 0,
+		topic_alias_max: 10,
+		request_response: false,
+		request_problem: false,
+		has_will: false,
+		subscription_count: 5,
+		inflight_count: 0,
+		offline_queue_depth: 0,
+	},
+	{
+		client_id: "mqtt-client-002",
+		state: "connected",
+		connected: true,
+		protocol: "mqtt3.1.1",
+		version: 4,
+		clean_start: true,
+		expiry_interval: 0,
+		connected_at: "2026-03-18T08:30:00Z",
+		receive_maximum: 65535,
+		max_packet_size: 0,
+		topic_alias_max: 0,
+		request_response: false,
+		request_problem: false,
+		has_will: false,
+		subscription_count: 3,
+		inflight_count: 2,
+		offline_queue_depth: 2,
+	},
+	{
+		client_id: "mqtt-client-003",
+		state: "disconnected",
+		connected: false,
+		protocol: "mqtt3.1.1",
+		version: 4,
+		clean_start: false,
+		expiry_interval: 300,
+		connected_at: "2026-03-18T06:00:00Z",
+		disconnected_at: "2026-03-18T10:14:00Z",
+		receive_maximum: 65535,
+		max_packet_size: 0,
+		topic_alias_max: 0,
+		request_response: false,
+		request_problem: false,
+		has_will: false,
+		subscription_count: 0,
+		inflight_count: 0,
+		offline_queue_depth: 7,
+	},
+	{
+		client_id: "sensor-device-001",
+		state: "connected",
+		connected: true,
+		protocol: "mqtt5",
+		version: 5,
+		clean_start: true,
+		expiry_interval: 0,
+		connected_at: "2026-03-18T09:00:00Z",
+		receive_maximum: 65535,
+		max_packet_size: 1048576,
+		topic_alias_max: 5,
+		request_response: false,
+		request_problem: false,
+		has_will: true,
+		subscription_count: 1,
+		inflight_count: 0,
+		offline_queue_depth: 0,
+	},
+	{
+		client_id: "sensor-device-002",
+		state: "connected",
+		connected: true,
+		protocol: "mqtt5",
+		version: 5,
+		clean_start: true,
+		expiry_interval: 0,
+		connected_at: "2026-03-18T09:01:00Z",
+		receive_maximum: 65535,
+		max_packet_size: 1048576,
+		topic_alias_max: 5,
+		request_response: false,
+		request_problem: false,
+		has_will: true,
+		subscription_count: 1,
+		inflight_count: 0,
+		offline_queue_depth: 0,
+	},
+	{
+		client_id: "gateway-node-alpha",
+		state: "connected",
+		connected: true,
+		protocol: "mqtt5",
+		version: 5,
+		clean_start: false,
+		expiry_interval: 3600,
+		connected_at: "2026-03-17T22:00:00Z",
+		receive_maximum: 1000,
+		max_packet_size: 0,
+		topic_alias_max: 0,
+		request_response: true,
+		request_problem: true,
+		has_will: true,
+		subscription_count: 8,
+		inflight_count: 3,
+		offline_queue_depth: 0,
+	},
+	{
+		client_id: "gateway-node-beta",
+		state: "disconnected",
+		connected: false,
+		protocol: "mqtt5",
+		version: 5,
+		clean_start: false,
+		expiry_interval: 3600,
+		connected_at: "2026-03-17T22:05:00Z",
+		disconnected_at: "2026-03-18T09:52:00Z",
+		receive_maximum: 1000,
+		max_packet_size: 0,
+		topic_alias_max: 0,
+		request_response: true,
+		request_problem: true,
+		has_will: true,
+		subscription_count: 0,
+		inflight_count: 0,
+		offline_queue_depth: 14,
+	},
+	{
+		client_id: "logger-service",
+		state: "connected",
+		connected: true,
+		protocol: "mqtt3.1.1",
+		version: 4,
+		clean_start: true,
+		expiry_interval: 0,
+		connected_at: "2026-03-18T00:00:00Z",
+		receive_maximum: 65535,
+		max_packet_size: 0,
+		topic_alias_max: 0,
+		request_response: false,
+		request_problem: false,
+		has_will: false,
+		subscription_count: 12,
+		inflight_count: 0,
+		offline_queue_depth: 0,
+	},
+	{
+		client_id: "edge-reporter-01",
+		state: "disconnected",
+		connected: false,
+		protocol: "mqtt3.1.1",
+		version: 4,
+		clean_start: false,
+		expiry_interval: 300,
+		connected_at: "2026-03-18T05:00:00Z",
+		disconnected_at: "2026-03-18T08:30:00Z",
+		receive_maximum: 65535,
+		max_packet_size: 0,
+		topic_alias_max: 0,
+		request_response: false,
+		request_problem: false,
+		has_will: false,
+		subscription_count: 0,
+		inflight_count: 0,
+		offline_queue_depth: 3,
+	},
+	{
+		client_id: "dashboard-ingest",
+		state: "connected",
+		connected: true,
+		protocol: "mqtt5",
+		version: 5,
+		clean_start: true,
+		expiry_interval: 0,
+		connected_at: "2026-03-18T06:30:00Z",
+		receive_maximum: 65535,
+		max_packet_size: 0,
+		topic_alias_max: 10,
+		request_response: true,
+		request_problem: true,
+		has_will: false,
+		subscription_count: 6,
+		inflight_count: 1,
+		offline_queue_depth: 0,
+	},
+	{
+		client_id: "monitoring-agent",
+		state: "connected",
+		connected: true,
+		protocol: "mqtt3.1",
+		version: 3,
+		clean_start: true,
+		expiry_interval: 0,
+		connected_at: "2026-03-18T03:00:00Z",
+		receive_maximum: 65535,
+		max_packet_size: 0,
+		topic_alias_max: 0,
+		request_response: false,
+		request_problem: false,
+		has_will: false,
+		subscription_count: 4,
+		inflight_count: 0,
+		offline_queue_depth: 0,
+	},
+	{
+		client_id: "config-pusher",
+		state: "disconnected",
+		connected: false,
+		protocol: "mqtt5",
+		version: 5,
+		clean_start: false,
+		expiry_interval: 86400,
+		connected_at: "2026-03-17T18:00:00Z",
+		disconnected_at: "2026-03-18T01:00:00Z",
+		receive_maximum: 100,
+		max_packet_size: 65536,
+		topic_alias_max: 0,
+		request_response: false,
+		request_problem: false,
+		has_will: false,
+		subscription_count: 2,
+		inflight_count: 0,
+		offline_queue_depth: 0,
+	},
+];
+
+export const MOCK_CLIENTS: ClientInfo[] = [
+	{
+		client_id: "mqtt-client-001",
+		connected: true,
+		subscriptions: 5,
+		connected_at: "2026-03-16T07:00:00Z",
+		protocol: "MQTT",
+		remote: "192.168.1.100:54321",
+	},
+	{
+		client_id: "mqtt-client-002",
+		connected: true,
+		subscriptions: 3,
+		connected_at: "2026-03-16T08:30:00Z",
+		protocol: "MQTT",
+		remote: "192.168.1.101:54322",
+	},
+	{
+		client_id: "mqtt-client-003",
+		connected: false,
+		subscriptions: 0,
+		connected_at: "2026-03-16T06:00:00Z",
+		protocol: "MQTT",
+		remote: "192.168.1.102:54323",
+	},
+	{
+		client_id: "sensor-device-001",
+		connected: true,
+		subscriptions: 1,
+		connected_at: "2026-03-16T09:00:00Z",
+		protocol: "MQTT",
+		remote: "10.0.0.10:50001",
+	},
+	{
+		client_id: "amqp-conn-1",
+		connected: true,
+		subscriptions: 2,
+		connected_at: "2026-03-16T04:00:00Z",
+		protocol: "AMQP",
+		remote: "10.0.0.50:5672",
+	},
+];
+
+const NODE_RATES: Record<
+	string,
+	{
+		msgsIn: number;
+		msgsOut: number;
+		bytesIn: number;
+		bytesOut: number;
+		sessions: number;
+	}
+> = {
+	"broker-1": {
+		msgsIn: 12,
+		msgsOut: 11,
+		bytesIn: 4_800,
+		bytesOut: 4_200,
+		sessions: 20,
+	},
+	"broker-2": {
+		msgsIn: 7,
+		msgsOut: 6,
+		bytesIn: 2_800,
+		bytesOut: 2_400,
+		sessions: 12,
+	},
+	"broker-3": {
+		msgsIn: 5,
+		msgsOut: 4,
+		bytesIn: 2_000,
+		bytesOut: 1_700,
+		sessions: 10,
+	},
 };
 
 function jitter(base: number, pct = 0.25): number {
-  return Math.round(base * (1 + (Math.random() * 2 - 1) * pct));
+	return Math.round(base * (1 + (Math.random() * 2 - 1) * pct));
 }
 
 const _nodes: NodeInfo[] = [
-  { node_id: 'broker-1', is_leader: true,  addr: '10.0.0.1:4001', sessions: 20, subscriptions: 87,  messages_received: 58_200,  messages_sent: 56_100,  bytes_received: 23_068_672, bytes_sent: 21_233_664, uptime_seconds: 86_400 },
-  { node_id: 'broker-2', is_leader: false, addr: '10.0.0.2:4001', sessions: 12, subscriptions: 62,  messages_received: 41_750,  messages_sent: 40_320,  bytes_received: 17_825_792, bytes_sent: 16_252_928, uptime_seconds: 82_800 },
-  { node_id: 'broker-3', is_leader: false, addr: '10.0.0.3:4001', sessions: 10, subscriptions: 38,  messages_received: 28_500,  messages_sent: 27_900,  bytes_received: 11_534_336, bytes_sent: 10_747_904, uptime_seconds: 79_200 },
+	{
+		node_id: "broker-1",
+		is_leader: true,
+		addr: "10.0.0.1:4001",
+		sessions: 20,
+		subscriptions: 87,
+		messages_received: 58_200,
+		messages_sent: 56_100,
+		bytes_received: 23_068_672,
+		bytes_sent: 21_233_664,
+		uptime_seconds: 86_400,
+	},
+	{
+		node_id: "broker-2",
+		is_leader: false,
+		addr: "10.0.0.2:4001",
+		sessions: 12,
+		subscriptions: 62,
+		messages_received: 41_750,
+		messages_sent: 40_320,
+		bytes_received: 17_825_792,
+		bytes_sent: 16_252_928,
+		uptime_seconds: 82_800,
+	},
+	{
+		node_id: "broker-3",
+		is_leader: false,
+		addr: "10.0.0.3:4001",
+		sessions: 10,
+		subscriptions: 38,
+		messages_received: 28_500,
+		messages_sent: 27_900,
+		bytes_received: 11_534_336,
+		bytes_sent: 10_747_904,
+		uptime_seconds: 79_200,
+	},
 ];
 
 const POLL_S = 5;
 
 function aggregateStatus(): BrokerStatus {
-  return {
-    node_id: 'broker-1',
-    is_leader: true,
-    cluster_mode: true,
-    node_count: _nodes.length,
-    sessions:          _nodes.reduce((s, n) => s + n.sessions, 0),
-    subscriptions:     _nodes.reduce((s, n) => s + n.subscriptions, 0),
-    messages_received: _nodes.reduce((s, n) => s + n.messages_received, 0),
-    messages_sent:     _nodes.reduce((s, n) => s + n.messages_sent, 0),
-    bytes_received:    _nodes.reduce((s, n) => s + n.bytes_received, 0),
-    bytes_sent:        _nodes.reduce((s, n) => s + n.bytes_sent, 0),
-    retained_messages: 34,
-    uptime_seconds:    _nodes[0].uptime_seconds,
-    auth_errors:       3,
-  };
+	return {
+		node_id: "broker-1",
+		is_leader: true,
+		cluster_mode: true,
+		node_count: _nodes.length,
+		sessions: _nodes.reduce((s, n) => s + (n.sessions ?? 0), 0),
+		subscriptions: _nodes.reduce((s, n) => s + (n.subscriptions ?? 0), 0),
+		messages_received: _nodes.reduce(
+			(s, n) => s + (n.messages_received ?? 0),
+			0,
+		),
+		messages_sent: _nodes.reduce((s, n) => s + (n.messages_sent ?? 0), 0),
+		bytes_received: _nodes.reduce((s, n) => s + (n.bytes_received ?? 0), 0),
+		bytes_sent: _nodes.reduce((s, n) => s + (n.bytes_sent ?? 0), 0),
+		retained_messages: 34,
+		uptime_seconds: _nodes[0].uptime_seconds,
+		auth_errors: 3,
+	};
 }
 
 export const MOCK_STATUS: BrokerStatus = aggregateStatus();
 export const MOCK_NODES: NodeInfo[] = _nodes.map((n) => ({ ...n }));
 
 export interface MockHistoryPoint {
-  time: string;
-  sessions: number;
-  msgsIn: number;
-  msgsOut: number;
-  bytesIn: number;
-  bytesOut: number;
+	time: string;
+	sessions: number;
+	msgsIn: number;
+	msgsOut: number;
+	bytesIn: number;
+	bytesOut: number;
 }
 
-export function generateMockHistory(nodeId: string | null, points = 30): MockHistoryPoint[] {
-  const rates = nodeId
-    ? NODE_RATES[nodeId] ?? NODE_RATES['broker-1']
-    : { msgsIn: 24, msgsOut: 21, bytesIn: 9_600, bytesOut: 8_300, sessions: 42 };
+export function generateMockHistory(
+	nodeId: string | null,
+	points = 30,
+): MockHistoryPoint[] {
+	const rates = nodeId
+		? (NODE_RATES[nodeId] ?? NODE_RATES["broker-1"])
+		: {
+				msgsIn: 24,
+				msgsOut: 21,
+				bytesIn: 9_600,
+				bytesOut: 8_300,
+				sessions: 42,
+			};
 
-  const baseSessions = rates.sessions;
-  const history: MockHistoryPoint[] = [];
-  const nowMs = Date.now();
+	const baseSessions = rates.sessions;
+	const history: MockHistoryPoint[] = [];
+	const nowMs = Date.now();
 
-  for (let i = points; i >= 1; i--) {
-    const t = new Date(nowMs - i * POLL_S * 1000);
-    const timeStr = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+	for (let i = points; i >= 1; i--) {
+		const t = new Date(nowMs - i * POLL_S * 1000);
+		const timeStr = t.toLocaleTimeString([], {
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit",
+		});
 
-    const wave = Math.sin((points - i) / points * Math.PI) * 0.3 + 0.85;
-    history.push({
-      time:     timeStr,
-      sessions: Math.round(baseSessions * (1 + (Math.random() * 0.1 - 0.05))),
-      msgsIn:   Math.round(rates.msgsIn   * wave * (1 + (Math.random() * 0.3 - 0.15))),
-      msgsOut:  Math.round(rates.msgsOut  * wave * (1 + (Math.random() * 0.3 - 0.15))),
-      bytesIn:  Math.round(rates.bytesIn  * wave * (1 + (Math.random() * 0.3 - 0.15))),
-      bytesOut: Math.round(rates.bytesOut * wave * (1 + (Math.random() * 0.3 - 0.15))),
-    });
-  }
-  return history;
+		const wave = Math.sin(((points - i) / points) * Math.PI) * 0.3 + 0.85;
+		history.push({
+			time: timeStr,
+			sessions: Math.round(baseSessions * (1 + (Math.random() * 0.1 - 0.05))),
+			msgsIn: Math.round(
+				rates.msgsIn * wave * (1 + (Math.random() * 0.3 - 0.15)),
+			),
+			msgsOut: Math.round(
+				rates.msgsOut * wave * (1 + (Math.random() * 0.3 - 0.15)),
+			),
+			bytesIn: Math.round(
+				rates.bytesIn * wave * (1 + (Math.random() * 0.3 - 0.15)),
+			),
+			bytesOut: Math.round(
+				rates.bytesOut * wave * (1 + (Math.random() * 0.3 - 0.15)),
+			),
+		});
+	}
+	return history;
 }
 
 export function formatCount(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return String(n);
+	if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+	if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+	return String(n);
 }
 
 export function formatBytes(bytes: number): string {
-  if (bytes >= 1_073_741_824) return `${(bytes / 1_073_741_824).toFixed(1)} GB`;
-  if (bytes >= 1_048_576) return `${(bytes / 1_048_576).toFixed(1)} MB`;
-  if (bytes >= 1_024) return `${(bytes / 1_024).toFixed(1)} KB`;
-  return `${bytes} B`;
+	if (bytes >= 1_073_741_824) return `${(bytes / 1_073_741_824).toFixed(1)} GB`;
+	if (bytes >= 1_048_576) return `${(bytes / 1_048_576).toFixed(1)} MB`;
+	if (bytes >= 1_024) return `${(bytes / 1_024).toFixed(1)} KB`;
+	return `${bytes} B`;
 }
 
 export function formatUptime(seconds: number): string {
-  const d = Math.floor(seconds / 86400);
-  const h = Math.floor((seconds % 86400) / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  if (d > 0) return `${d}d ${h}h`;
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
+	const d = Math.floor(seconds / 86400);
+	const h = Math.floor((seconds % 86400) / 3600);
+	const m = Math.floor((seconds % 3600) / 60);
+	if (d > 0) return `${d}d ${h}h`;
+	if (h > 0) return `${h}h ${m}m`;
+	return `${m}m`;
 }
