@@ -3,6 +3,7 @@
 import {
 	Activity,
 	AlertTriangle,
+	ArrowRight,
 	BookOpen,
 	Clock,
 	HardDrive,
@@ -14,6 +15,7 @@ import {
 	Wifi,
 	WifiOff,
 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
 	CartesianGrid,
@@ -73,14 +75,22 @@ function nodeToStatus(node: NodeInfo): BrokerStatus {
 		is_leader: node.is_leader,
 		cluster_mode: false,
 		sessions: node.sessions ?? 0,
+		sessions_total: 0,
+		connections_total: 0,
+		connections_disconnections: 0,
 		messages_received: node.messages_received ?? 0,
 		messages_sent: node.messages_sent ?? 0,
+		publish_received: 0,
+		publish_sent: 0,
 		bytes_received: node.bytes_received ?? 0,
 		bytes_sent: node.bytes_sent ?? 0,
 		subscriptions: node.subscriptions ?? 0,
 		retained_messages: 0,
 		uptime_seconds: node.uptime_seconds,
 		auth_errors: 0,
+		authz_errors: 0,
+		protocol_errors: 0,
+		packet_errors: 0,
 	};
 }
 
@@ -342,7 +352,7 @@ export default function DashboardClient() {
 			</div>
 			{error && (
 				<div className="rounded-lg border border-flux-red/30 bg-flux-red/10 px-4 py-3 text-sm text-flux-red">
-					⚠ {error} — showing last known data, retrying every {POLL_MS / 1000}s
+					⚠ {error}
 				</div>
 			)}
 			<div className="flex items-center gap-2 flex-wrap">
@@ -508,63 +518,81 @@ export default function DashboardClient() {
 					</CardContent>
 				</Card>
 
-				<Card className="border-flux-card-border bg-flux-card lg:col-span-2">
-					<CardHeader className="pb-2">
-						<CardTitle className="text-base text-flux-text">
-							Active Connections
-						</CardTitle>
-						<p className="text-xs text-flux-text-muted">
-							{scopeLabel} · connected clients over time
-						</p>
-					</CardHeader>
-					<CardContent>
-						<div className="relative">
-							{!loaded && <ChartLoadingSkeleton height={200} />}
-							<ResponsiveContainer width="100%" height={200}>
-								<LineChart
-									data={displayHistory}
-									margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
-								>
-									<CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-									<XAxis
-										dataKey="time"
-										stroke={axisColor}
-										tick={{ fontSize: 10 }}
-										interval="preserveStartEnd"
-									/>
-									<YAxis
-										stroke={axisColor}
-										tick={{ fontSize: 10 }}
-										allowDecimals={false}
-									/>
-									<Tooltip contentStyle={tooltipStyle} />
-									<Line
-										type="monotone"
-										dataKey="sessions"
-										name="Connections"
-										stroke="#3b82f6"
-										strokeWidth={2}
-										dot={false}
-										isAnimationActive={false}
-									/>
-								</LineChart>
-							</ResponsiveContainer>
-							{error && <ChartErrorOverlay />}
-						</div>
-					</CardContent>
-				</Card>
+				{selectedNodeId === null && (
+					<Card className="border-flux-card-border bg-flux-card lg:col-span-2">
+						<CardHeader className="pb-2">
+							<CardTitle className="text-base text-flux-text">
+								Active Connections
+							</CardTitle>
+							<p className="text-xs text-flux-text-muted">
+								Cluster · connected clients over time
+							</p>
+						</CardHeader>
+						<CardContent>
+							<div className="relative">
+								{!loaded && <ChartLoadingSkeleton height={200} />}
+								<ResponsiveContainer width="100%" height={200}>
+									<LineChart
+										data={displayHistory}
+										margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
+									>
+										<CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+										<XAxis
+											dataKey="time"
+											stroke={axisColor}
+											tick={{ fontSize: 10 }}
+											interval="preserveStartEnd"
+										/>
+										<YAxis
+											stroke={axisColor}
+											tick={{ fontSize: 10 }}
+											allowDecimals={false}
+										/>
+										<Tooltip contentStyle={tooltipStyle} />
+										<Line
+											type="monotone"
+											dataKey="sessions"
+											name="Connections"
+											stroke="#3b82f6"
+											strokeWidth={2}
+											dot={false}
+											isAnimationActive={false}
+										/>
+									</LineChart>
+								</ResponsiveContainer>
+								{error && <ChartErrorOverlay />}
+							</div>
+						</CardContent>
+					</Card>
+				)}
 			</div>
 
 			{nodes.length > 0 && (
 				<Card className="border-flux-card-border bg-flux-card">
 					<CardHeader className="pb-3">
-						<CardTitle className="text-base text-flux-text">
-							Cluster Nodes
-						</CardTitle>
-						<p className="text-xs text-flux-text-muted mt-0.5">
-							{nodes.length} node{nodes.length !== 1 ? "s" : ""} · click a row
-							to inspect
-						</p>
+						<div className="flex items-center justify-between">
+							<div>
+								<CardTitle className="text-base text-flux-text">
+									Cluster Nodes
+								</CardTitle>
+								<p className="text-xs text-flux-text-muted mt-0.5">
+									{nodes.length} node{nodes.length !== 1 ? "s" : ""} · click a
+									row to inspect
+								</p>
+							</div>
+							{nodes.length > 5 && (
+								<Link href="/dashboard/clients">
+									<Button
+										variant="ghost"
+										size="sm"
+										className="flex items-center gap-1.5 text-xs text-flux-blue hover:text-flux-blue hover:bg-flux-blue/10"
+									>
+										View All
+										<ArrowRight className="w-3.5 h-3.5" />
+									</Button>
+								</Link>
+							)}
+						</div>
 					</CardHeader>
 					<CardContent className="p-0">
 						<Table>
@@ -581,7 +609,7 @@ export default function DashboardClient() {
 								</TableRow>
 							</TableHeader>
 							<TableBody>
-								{nodes.map((node) => {
+								{nodes.slice(0, 5).map((node) => {
 									const isSelected = selectedNodeId === node.node_id;
 									return (
 										<TableRow
@@ -595,7 +623,7 @@ export default function DashboardClient() {
 												setSelectedNodeId(isSelected ? null : node.node_id)
 											}
 										>
-											<TableCell className="pl-6">
+											<TableCell className="pl-6 py-4">
 												<div className="flex items-center gap-2">
 													<span className="inline-block w-2 h-2 rounded-full bg-flux-green shrink-0" />
 													<span className="text-flux-text font-medium text-sm">
@@ -611,45 +639,45 @@ export default function DashboardClient() {
 													)}
 												</div>
 											</TableCell>
-											<TableCell className="text-flux-text-muted font-mono text-xs">
+											<TableCell className="text-flux-text-muted font-mono text-xs py-4">
 												{node.addr}
 											</TableCell>
-											<TableCell className="text-flux-text text-sm text-right">
+											<TableCell className="text-flux-text text-sm text-right py-4">
 												{node.sessions !== undefined ? (
 													formatCount(node.sessions)
 												) : (
 													<span className="text-flux-text-muted">—</span>
 												)}
 											</TableCell>
-											<TableCell className="text-flux-text text-sm text-right">
+											<TableCell className="text-flux-text text-sm text-right py-4">
 												{node.subscriptions !== undefined ? (
 													formatCount(node.subscriptions)
 												) : (
 													<span className="text-flux-text-muted">—</span>
 												)}
 											</TableCell>
-											<TableCell className="text-flux-text text-sm text-right">
+											<TableCell className="text-flux-text text-sm text-right py-4">
 												{node.messages_received !== undefined ? (
 													formatCount(node.messages_received)
 												) : (
 													<span className="text-flux-text-muted">—</span>
 												)}
 											</TableCell>
-											<TableCell className="text-flux-text text-sm text-right">
+											<TableCell className="text-flux-text text-sm text-right py-4">
 												{node.messages_sent !== undefined ? (
 													formatCount(node.messages_sent)
 												) : (
 													<span className="text-flux-text-muted">—</span>
 												)}
 											</TableCell>
-											<TableCell className="text-flux-text text-sm text-right">
+											<TableCell className="text-flux-text text-sm text-right py-4">
 												{node.bytes_received !== undefined ? (
 													formatBytes(node.bytes_received)
 												) : (
 													<span className="text-flux-text-muted">—</span>
 												)}
 											</TableCell>
-											<TableCell className="text-flux-text-muted text-sm text-right pr-6">
+											<TableCell className="text-flux-text-muted text-sm text-right pr-6 py-4">
 												{formatUptime(node.uptime_seconds)}
 											</TableCell>
 										</TableRow>
@@ -657,6 +685,23 @@ export default function DashboardClient() {
 								})}
 							</TableBody>
 						</Table>
+						{nodes.length > 5 && (
+							<div className="flex items-center justify-between px-6 py-3 border-t border-flux-card-border">
+								<p className="text-xs text-flux-text-muted">
+									Showing 5 of {nodes.length} nodes
+								</p>
+								<Link href="/dashboard/clients">
+									<Button
+										variant="ghost"
+										size="sm"
+										className="flex items-center gap-1.5 text-xs text-flux-blue hover:text-flux-blue hover:bg-flux-blue/10"
+									>
+										View All Nodes
+										<ArrowRight className="w-3.5 h-3.5" />
+									</Button>
+								</Link>
+							</div>
+						)}
 					</CardContent>
 				</Card>
 			)}

@@ -4,37 +4,36 @@ export interface BrokerStatus {
 	cluster_mode: boolean;
 	node_count?: number;
 	sessions: number;
+	sessions_total: number;
+	connections_total: number;
+	connections_disconnections: number;
 	messages_received: number;
 	messages_sent: number;
+	publish_received: number;
+	publish_sent: number;
 	bytes_received: number;
 	bytes_sent: number;
 	subscriptions: number;
 	retained_messages: number;
 	uptime_seconds: number;
 	auth_errors: number;
+	authz_errors: number;
+	protocol_errors: number;
+	packet_errors: number;
 }
 
 export interface NodeInfo {
 	node_id: string;
 	is_leader: boolean;
+	healthy?: boolean;
 	addr: string;
 	uptime_seconds: number;
-	// Per-node traffic stats — available in mock/cluster mode only, not from single-node backend
 	sessions?: number;
 	subscriptions?: number;
 	messages_received?: number;
 	messages_sent?: number;
 	bytes_received?: number;
 	bytes_sent?: number;
-}
-
-export interface ClientInfo {
-	client_id: string;
-	connected: boolean;
-	subscriptions: number;
-	connected_at: string;
-	protocol?: string;
-	remote?: string;
 }
 
 export interface SessionSubscription {
@@ -68,157 +67,6 @@ export interface SessionInfo {
 	offline_queue_depth: number;
 	subscriptions?: SessionSubscription[];
 }
-
-export interface TopicInfo {
-	name: string;
-	subscribers: number;
-	messages_per_min: number;
-	retained: boolean;
-	created: string;
-}
-
-export const MOCK_TOPICS: TopicInfo[] = [
-	{
-		name: "sensors/temperature",
-		subscribers: 5,
-		messages_per_min: 120,
-		retained: true,
-		created: "2024-01-15",
-	},
-	{
-		name: "sensors/humidity",
-		subscribers: 3,
-		messages_per_min: 85,
-		retained: true,
-		created: "2024-01-15",
-	},
-	{
-		name: "sensors/pressure",
-		subscribers: 2,
-		messages_per_min: 60,
-		retained: true,
-		created: "2024-01-15",
-	},
-	{
-		name: "devices/online",
-		subscribers: 12,
-		messages_per_min: 240,
-		retained: false,
-		created: "2024-01-10",
-	},
-	{
-		name: "devices/offline",
-		subscribers: 12,
-		messages_per_min: 18,
-		retained: false,
-		created: "2024-01-10",
-	},
-	{
-		name: "devices/telemetry",
-		subscribers: 7,
-		messages_per_min: 310,
-		retained: false,
-		created: "2024-01-12",
-	},
-	{
-		name: "alerts/critical",
-		subscribers: 8,
-		messages_per_min: 45,
-		retained: false,
-		created: "2024-01-20",
-	},
-	{
-		name: "alerts/warning",
-		subscribers: 6,
-		messages_per_min: 30,
-		retained: false,
-		created: "2024-01-20",
-	},
-	{
-		name: "alerts/info",
-		subscribers: 4,
-		messages_per_min: 12,
-		retained: false,
-		created: "2024-01-20",
-	},
-	{
-		name: "system/status",
-		subscribers: 2,
-		messages_per_min: 30,
-		retained: true,
-		created: "2024-01-01",
-	},
-	{
-		name: "system/heartbeat",
-		subscribers: 1,
-		messages_per_min: 60,
-		retained: false,
-		created: "2024-01-01",
-	},
-	{
-		name: "system/metrics",
-		subscribers: 3,
-		messages_per_min: 120,
-		retained: false,
-		created: "2024-01-05",
-	},
-	{
-		name: "gateway/upstream",
-		subscribers: 5,
-		messages_per_min: 200,
-		retained: false,
-		created: "2024-02-01",
-	},
-	{
-		name: "gateway/downstream",
-		subscribers: 5,
-		messages_per_min: 185,
-		retained: false,
-		created: "2024-02-01",
-	},
-	{
-		name: "logs/application",
-		subscribers: 2,
-		messages_per_min: 450,
-		retained: false,
-		created: "2024-01-08",
-	},
-	{
-		name: "logs/audit",
-		subscribers: 1,
-		messages_per_min: 22,
-		retained: true,
-		created: "2024-01-08",
-	},
-	{
-		name: "config/updates",
-		subscribers: 9,
-		messages_per_min: 4,
-		retained: true,
-		created: "2024-01-03",
-	},
-	{
-		name: "config/rollback",
-		subscribers: 4,
-		messages_per_min: 1,
-		retained: true,
-		created: "2024-01-03",
-	},
-	{
-		name: "edge/reports",
-		subscribers: 3,
-		messages_per_min: 75,
-		retained: false,
-		created: "2024-02-10",
-	},
-	{
-		name: "edge/commands",
-		subscribers: 3,
-		messages_per_min: 10,
-		retained: false,
-		created: "2024-02-10",
-	},
-];
 
 export const MOCK_SESSIONS: SessionInfo[] = [
 	{
@@ -455,49 +303,6 @@ export const MOCK_SESSIONS: SessionInfo[] = [
 	},
 ];
 
-export const MOCK_CLIENTS: ClientInfo[] = [
-	{
-		client_id: "mqtt-client-001",
-		connected: true,
-		subscriptions: 5,
-		connected_at: "2026-03-16T07:00:00Z",
-		protocol: "MQTT",
-		remote: "192.168.1.100:54321",
-	},
-	{
-		client_id: "mqtt-client-002",
-		connected: true,
-		subscriptions: 3,
-		connected_at: "2026-03-16T08:30:00Z",
-		protocol: "MQTT",
-		remote: "192.168.1.101:54322",
-	},
-	{
-		client_id: "mqtt-client-003",
-		connected: false,
-		subscriptions: 0,
-		connected_at: "2026-03-16T06:00:00Z",
-		protocol: "MQTT",
-		remote: "192.168.1.102:54323",
-	},
-	{
-		client_id: "sensor-device-001",
-		connected: true,
-		subscriptions: 1,
-		connected_at: "2026-03-16T09:00:00Z",
-		protocol: "MQTT",
-		remote: "10.0.0.10:50001",
-	},
-	{
-		client_id: "amqp-conn-1",
-		connected: true,
-		subscriptions: 2,
-		connected_at: "2026-03-16T04:00:00Z",
-		protocol: "AMQP",
-		remote: "10.0.0.50:5672",
-	},
-];
-
 const NODE_RATES: Record<
 	string,
 	{
@@ -591,9 +396,20 @@ function aggregateStatus(): BrokerStatus {
 		messages_sent: _nodes.reduce((s, n) => s + (n.messages_sent ?? 0), 0),
 		bytes_received: _nodes.reduce((s, n) => s + (n.bytes_received ?? 0), 0),
 		bytes_sent: _nodes.reduce((s, n) => s + (n.bytes_sent ?? 0), 0),
+		sessions_total: _nodes.reduce((s, n) => s + (n.sessions ?? 0), 0) + 12,
+		connections_total: 1042,
+		connections_disconnections: 87,
+		publish_received: _nodes.reduce(
+			(s, n) => s + (n.messages_received ?? 0),
+			0,
+		),
+		publish_sent: _nodes.reduce((s, n) => s + (n.messages_sent ?? 0), 0),
 		retained_messages: 34,
 		uptime_seconds: _nodes[0].uptime_seconds,
 		auth_errors: 3,
+		authz_errors: 1,
+		protocol_errors: 2,
+		packet_errors: 0,
 	};
 }
 

@@ -2,16 +2,15 @@
 
 import {
 	Activity,
-	Database,
+	BookMarked,
 	Globe,
 	Home,
+	Info,
 	Menu,
 	Moon,
-	Settings,
+	Network,
 	Sun,
-	Users,
 	X,
-	Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -30,10 +29,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 		{ label: "Overview", href: "/dashboard", icon: Home },
 		{ label: "Connections", href: "/dashboard/connections", icon: Globe },
 		{ label: "Sessions", href: "/dashboard/sessions", icon: Activity },
-		{ label: "Topics", href: "/dashboard/topics", icon: Zap },
-		{ label: "Clients", href: "/dashboard/clients", icon: Users },
-		{ label: "Storage", href: "/dashboard/storage", icon: Database },
-		{ label: "Configuration", href: "/dashboard/config", icon: Settings },
+		{ label: "Subscriptions", href: "/dashboard/topics", icon: BookMarked },
+		{ label: "Cluster", href: "/dashboard/clients", icon: Network },
+		{ label: "Broker Info", href: "/dashboard/config", icon: Info },
 	];
 
 	const isActive = (href: string) => {

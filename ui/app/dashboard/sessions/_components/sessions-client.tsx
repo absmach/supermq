@@ -12,7 +12,7 @@ import {
 	Wifi,
 	WifiOff,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/table";
 import { TablePagination } from "@/components/ui/table-pagination";
 import type { SessionInfo } from "@/lib/api";
-import { getSessions } from "@/lib/services/sessions";
+import { getSessions, type SessionsParams } from "@/lib/services/sessions";
 
 type Filter = "all" | "connected" | "disconnected";
 
@@ -280,6 +280,35 @@ function SessionDetailDialog({
 									{session.has_will ? "Yes" : "No"}
 								</Badge>
 							</DetailRow>
+							{session.topic_alias_max > 0 && (
+								<DetailRow label="Topic Alias Max">
+									<span className="font-mono">{session.topic_alias_max}</span>
+								</DetailRow>
+							)}
+							<DetailRow label="Request/Response">
+								<Badge
+									variant="outline"
+									className={
+										session.request_response
+											? "bg-flux-green/10 text-flux-green border-flux-green/20"
+											: "bg-flux-text-muted/10 text-flux-text-muted border-flux-card-border"
+									}
+								>
+									{session.request_response ? "Enabled" : "Disabled"}
+								</Badge>
+							</DetailRow>
+							<DetailRow label="Problem Info">
+								<Badge
+									variant="outline"
+									className={
+										session.request_problem
+											? "bg-flux-green/10 text-flux-green border-flux-green/20"
+											: "bg-flux-text-muted/10 text-flux-text-muted border-flux-card-border"
+									}
+								>
+									{session.request_problem ? "Enabled" : "Disabled"}
+								</Badge>
+							</DetailRow>
 
 							{/* Subscription list */}
 							{session.subscriptions && session.subscriptions.length > 0 && (
@@ -337,8 +366,13 @@ const SessionsClient = () => {
 	const [limit, setLimit] = useState(10);
 
 	useEffect(() => {
-		getSessions().then(setSessions).catch(console.error);
-	}, []);
+		const params: SessionsParams = {};
+		if (filter !== "all") params.state = filter;
+		if (search) params.prefix = search;
+		getSessions(params)
+			.then(({ sessions }) => setSessions(sessions))
+			.catch(console.error);
+	}, [filter, search]);
 
 	const totalQueued = sessions.reduce(
 		(s, sess) => s + sess.offline_queue_depth,
@@ -347,18 +381,11 @@ const SessionsClient = () => {
 	const connectedCount = sessions.filter((s) => s.connected).length;
 	const disconnectedCount = sessions.length - connectedCount;
 
-	const filtered = useMemo(() => {
+	// Filtering is handled server-side; reset page when results change
+	const filtered = sessions;
+	useEffect(() => {
 		setPage(1);
-		return sessions.filter((s) => {
-			if (filter === "connected" && !s.connected) return false;
-			if (filter === "disconnected" && s.connected) return false;
-			if (search) {
-				return s.client_id.toLowerCase().includes(search.toLowerCase());
-			}
-			return true;
-		});
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [filter, search, sessions]);
+	}, [filter, search]);
 
 	const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
 	const paginated = filtered.slice((page - 1) * limit, page * limit);
@@ -510,7 +537,7 @@ const SessionsClient = () => {
 										/>
 									</TableCell>
 
-									<TableCell className="font-medium text-sm text-flux-text font-mono">
+									<TableCell className="font-medium text-sm text-flux-text font-mono py-4">
 										{session.client_id}
 									</TableCell>
 
@@ -539,11 +566,11 @@ const SessionsClient = () => {
 										</Badge>
 									</TableCell>
 
-									<TableCell className="text-right text-sm text-flux-text tabular-nums">
+									<TableCell className="text-right text-sm text-flux-text tabular-nums py-4">
 										{session.subscription_count}
 									</TableCell>
 
-									<TableCell className="text-right text-sm tabular-nums">
+									<TableCell className="text-right text-sm tabular-nums py-4">
 										{session.inflight_count > 0 ? (
 											<span className="text-flux-orange font-medium">
 												{session.inflight_count}
@@ -553,7 +580,7 @@ const SessionsClient = () => {
 										)}
 									</TableCell>
 
-									<TableCell className="text-right text-sm tabular-nums">
+									<TableCell className="text-right text-sm tabular-nums py-4">
 										{session.offline_queue_depth > 0 ? (
 											<span className="text-flux-orange font-medium">
 												{session.offline_queue_depth}
@@ -576,7 +603,7 @@ const SessionsClient = () => {
 										</Badge>
 									</TableCell>
 
-									<TableCell className="text-right">
+									<TableCell className="text-right py-4">
 										<Button
 											variant="ghost"
 											size="sm"
@@ -590,7 +617,7 @@ const SessionsClient = () => {
 							))}
 
 							{paginated.length === 0 && (
-								<TableRow>
+								<TableRow className="hover:bg-transparent">
 									<TableCell
 										colSpan={9}
 										className="text-center text-flux-text-muted py-12"

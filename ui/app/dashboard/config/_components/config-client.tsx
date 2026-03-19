@@ -1,129 +1,186 @@
 "use client";
 
-import { Edit, X } from "lucide-react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import type { BrokerStatus } from "@/lib/api";
+import { formatBytes, formatCount, formatUptime } from "@/lib/api";
+import { getBrokerOverview } from "@/lib/services/broker";
 
-const configItems = [
-	{ key: "server.tcp.plain.addr", value: ":1883", category: "Server" },
-	{ key: "server.health_addr", value: ":8081", category: "Server" },
-	{ key: "server.shutdown_timeout", value: "30s", category: "Server" },
-	{ key: "broker.max_message_size", value: "1048576", category: "Broker" },
-	{ key: "broker.max_retained_messages", value: "10000", category: "Broker" },
-	{ key: "session.max_sessions", value: "10000", category: "Session" },
-	{ key: "session.max_offline_queue_size", value: "1000", category: "Session" },
-	{ key: "storage.type", value: "badger", category: "Storage" },
-	{ key: "storage.badger_dir", value: "/tmp/fluxmq/data", category: "Storage" },
-	{ key: "cluster.enabled", value: "false", category: "Cluster" },
-	{ key: "cluster.node_id", value: "broker-1", category: "Cluster" },
-	{ key: "log.level", value: "debug", category: "Logging" },
-	{ key: "log.format", value: "text", category: "Logging" },
-];
+interface InfoRow {
+	label: string;
+	value: string | React.ReactNode;
+}
+
+function InfoSection({ title, rows }: { title: string; rows: InfoRow[] }) {
+	return (
+		<Card className="border-flux-card-border bg-flux-card overflow-hidden">
+			<div className="px-6 py-3 border-b border-flux-card-border bg-flux-hover">
+				<h2 className="text-sm font-semibold text-flux-text-muted uppercase tracking-wide">
+					{title}
+				</h2>
+			</div>
+			<CardContent className="p-0">
+				<div className="divide-y divide-flux-card-border">
+					{rows.map((row) => (
+						<div
+							key={row.label}
+							className="px-6 py-3 flex items-center justify-between gap-4"
+						>
+							<p className="text-flux-text-muted text-sm">{row.label}</p>
+							<span className="text-flux-text text-sm font-mono text-right">
+								{row.value}
+							</span>
+						</div>
+					))}
+				</div>
+			</CardContent>
+		</Card>
+	);
+}
 
 const ConfigClient = () => {
-	const [isEditing, setIsEditing] = useState(false);
+	const [status, setStatus] = useState<BrokerStatus | null>(null);
+	const [loading, setLoading] = useState(true);
 
-	const grouped = configItems.reduce(
-		(acc: Record<string, typeof configItems>, item) => {
-			(acc[item.category] ??= []).push(item);
-			return acc;
-		},
-		{},
+	useEffect(() => {
+		getBrokerOverview()
+			.then(({ status }) => setStatus(status))
+			.catch(console.error)
+			.finally(() => setLoading(false));
+	}, []);
+
+	const roleBadge = status ? (
+		status.is_leader ? (
+			<Badge
+				variant="outline"
+				className="text-xs bg-flux-blue/10 text-flux-blue border-flux-blue/20"
+			>
+				Leader
+			</Badge>
+		) : (
+			<Badge
+				variant="outline"
+				className="text-xs bg-flux-text-muted/10 text-flux-text-muted border-flux-card-border"
+			>
+				Follower
+			</Badge>
+		)
+	) : (
+		"—"
 	);
+
+	const modeBadge = status ? (
+		status.cluster_mode ? (
+			<Badge
+				variant="outline"
+				className="text-xs bg-flux-purple/10 text-flux-purple border-flux-purple/20"
+			>
+				Cluster
+			</Badge>
+		) : (
+			<Badge
+				variant="outline"
+				className="text-xs bg-flux-teal/10 text-flux-teal border-flux-teal/20"
+			>
+				Single Node
+			</Badge>
+		)
+	) : (
+		"—"
+	);
+
+	const v = (n: number | undefined) => (n !== undefined ? formatCount(n) : "—");
+	const b = (n: number | undefined) => (n !== undefined ? formatBytes(n) : "—");
+
+	const sections = status
+		? [
+				{
+					title: "Identity",
+					rows: [
+						{ label: "Node ID", value: status.node_id },
+						{ label: "Role", value: roleBadge },
+						{ label: "Mode", value: modeBadge },
+						{ label: "Uptime", value: formatUptime(status.uptime_seconds) },
+						...(status.cluster_mode
+							? [{ label: "Cluster Nodes", value: v(status.node_count) }]
+							: []),
+					],
+				},
+				{
+					title: "Sessions",
+					rows: [
+						{ label: "Connected", value: v(status.sessions) },
+						{ label: "Total (incl. offline)", value: v(status.sessions_total) },
+						{ label: "Active Subscriptions", value: v(status.subscriptions) },
+						{ label: "Retained Messages", value: v(status.retained_messages) },
+					],
+				},
+				{
+					title: "Connections",
+					rows: [
+						{ label: "Current", value: v(status.sessions) },
+						{
+							label: "Total Ever Connected",
+							value: v(status.connections_total),
+						},
+						{
+							label: "Disconnections",
+							value: v(status.connections_disconnections),
+						},
+					],
+				},
+				{
+					title: "Messages",
+					rows: [
+						{ label: "Received", value: v(status.messages_received) },
+						{ label: "Sent", value: v(status.messages_sent) },
+						{ label: "Publish Received", value: v(status.publish_received) },
+						{ label: "Publish Sent", value: v(status.publish_sent) },
+					],
+				},
+				{
+					title: "Bandwidth",
+					rows: [
+						{ label: "Bytes In", value: b(status.bytes_received) },
+						{ label: "Bytes Out", value: b(status.bytes_sent) },
+					],
+				},
+				{
+					title: "Errors",
+					rows: [
+						{ label: "Protocol Errors", value: v(status.protocol_errors) },
+						{ label: "Auth Errors", value: v(status.auth_errors) },
+						{ label: "Authz Errors", value: v(status.authz_errors) },
+						{ label: "Packet Errors", value: v(status.packet_errors) },
+					],
+				},
+			]
+		: [];
 
 	return (
 		<div className="p-8 space-y-6">
-			<div className="flex items-center justify-between">
-				<div>
-					<h1 className="text-3xl font-bold text-flux-text mb-1">
-						Configuration
-					</h1>
-					<p className="text-flux-text-muted">
-						Broker settings from running config
-					</p>
+			<div>
+				<h1 className="text-3xl font-bold text-flux-text mb-1">Broker Info</h1>
+				<p className="text-flux-text-muted">
+					Runtime state of the connected broker node
+				</p>
+			</div>
+
+			{loading && <div className="text-flux-text-muted text-sm">Loading…</div>}
+
+			{!loading && !status && (
+				<div className="rounded-lg border border-flux-red/30 bg-flux-red/10 px-4 py-3 text-sm text-flux-red">
+					Could not reach the broker. Check that{" "}
+					<span className="font-mono">FLUXMQ_API_URL</span> is set correctly.
 				</div>
-				<Button
-					variant="outline"
-					size="sm"
-					onClick={() => setIsEditing(!isEditing)}
-					className={
-						isEditing
-							? "bg-flux-red/10 text-flux-red border-flux-red/30 hover:bg-flux-red/20 hover:text-flux-red"
-							: "bg-flux-blue/10 text-flux-blue border-flux-blue/30 hover:bg-flux-blue/20 hover:text-flux-blue"
-					}
-				>
-					{isEditing ? (
-						<>
-							<X size={16} />
-							Cancel
-						</>
-					) : (
-						<>
-							<Edit size={16} />
-							Edit
-						</>
-					)}
-				</Button>
-			</div>
+			)}
 
-			<div className="space-y-4">
-				{Object.entries(grouped).map(([category, items]) => (
-					<Card
-						key={category}
-						className="border-flux-card-border bg-flux-card overflow-hidden"
-					>
-						<div className="px-6 py-3 border-b border-flux-card-border bg-flux-hover">
-							<h2 className="text-sm font-semibold text-flux-text-muted uppercase tracking-wide">
-								{category}
-							</h2>
-						</div>
-						<CardContent className="p-0">
-							<div className="divide-y divide-flux-card-border">
-								{items.map((item, i) => (
-									<div
-										key={i}
-										className="px-6 py-3 flex items-center justify-between"
-									>
-										<p className="text-flux-text text-sm font-mono">
-											{item.key}
-										</p>
-										{isEditing ? (
-											<Input
-												type="text"
-												defaultValue={item.value}
-												className="w-56 bg-flux-bg border-flux-card-border text-flux-text text-sm focus-visible:ring-flux-blue"
-											/>
-										) : (
-											<span className="text-flux-text-muted text-sm font-mono">
-												{item.value}
-											</span>
-										)}
-									</div>
-								))}
-							</div>
-						</CardContent>
-					</Card>
-				))}
-			</div>
-
-			{isEditing && (
-				<div className="flex gap-3 justify-end">
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => setIsEditing(false)}
-						className="border-flux-card-border text-flux-text-muted hover:text-flux-text hover:bg-flux-hover"
-					>
-						Cancel
-					</Button>
-					<Button
-						size="sm"
-						className="bg-flux-green hover:bg-green-600 text-white border-0"
-					>
-						Save Changes
-					</Button>
+			{!loading && status && (
+				<div className="space-y-4">
+					{sections.map((s) => (
+						<InfoSection key={s.title} title={s.title} rows={s.rows} />
+					))}
 				</div>
 			)}
 		</div>
