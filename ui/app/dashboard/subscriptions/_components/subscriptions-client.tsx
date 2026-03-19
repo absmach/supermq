@@ -29,7 +29,7 @@ const QOS_COLORS = [
 	"bg-flux-orange/10 text-flux-orange border-flux-orange/20",
 ];
 
-const TopicsClient = () => {
+const SubsClient = () => {
 	const [subscriptions, setSubscriptions] = useState<AggregatedSubscription[]>(
 		[],
 	);
@@ -212,4 +212,4 @@ const TopicsClient = () => {
 	);
 };
 
-export default TopicsClient;
+export default SubsClient;

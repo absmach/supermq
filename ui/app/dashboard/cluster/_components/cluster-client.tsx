@@ -17,7 +17,7 @@ import type { NodeInfo } from "@/lib/api";
 import { formatBytes, formatCount, formatUptime } from "@/lib/api";
 import { getBrokerOverview } from "@/lib/services/broker";
 
-const ClientsClient = () => {
+const ClusterClient = () => {
 	const [nodes, setNodes] = useState<NodeInfo[]>([]);
 	const [nodeId, setNodeId] = useState<string>("");
 	const [clusterMode, setClusterMode] = useState(false);
@@ -235,4 +235,4 @@ const ClientsClient = () => {
 	);
 };
 
-export default ClientsClient;
+export default ClusterClient;

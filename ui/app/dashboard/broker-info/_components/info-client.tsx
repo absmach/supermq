@@ -39,7 +39,7 @@ function InfoSection({ title, rows }: { title: string; rows: InfoRow[] }) {
 	);
 }
 
-const ConfigClient = () => {
+const InfoClient = () => {
 	const [status, setStatus] = useState<BrokerStatus | null>(null);
 	const [loading, setLoading] = useState(true);
 
@@ -187,4 +187,4 @@ const ConfigClient = () => {
 	);
 };
 
-export default ConfigClient;
+export default InfoClient;

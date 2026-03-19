@@ -29,9 +29,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 		{ label: "Overview", href: "/dashboard", icon: Home },
 		{ label: "Connections", href: "/dashboard/connections", icon: Globe },
 		{ label: "Sessions", href: "/dashboard/sessions", icon: Activity },
-		{ label: "Subscriptions", href: "/dashboard/topics", icon: BookMarked },
-		{ label: "Cluster", href: "/dashboard/clients", icon: Network },
-		{ label: "Broker Info", href: "/dashboard/config", icon: Info },
+		{ label: "Subscriptions", href: "/dashboard/subscriptions", icon: BookMarked },
+		{ label: "Cluster", href: "/dashboard/cluster", icon: Network },
+		{ label: "Broker Info", href: "/dashboard/broker-info", icon: Info },
 	];
 
 	const isActive = (href: string) => {

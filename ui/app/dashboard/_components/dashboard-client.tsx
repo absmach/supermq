@@ -581,7 +581,7 @@ export default function DashboardClient() {
 								</p>
 							</div>
 							{nodes.length > 5 && (
-								<Link href="/dashboard/clients">
+								<Link href="/dashboard/cluster">
 									<Button
 										variant="ghost"
 										size="sm"
@@ -690,7 +690,7 @@ export default function DashboardClient() {
 								<p className="text-xs text-flux-text-muted">
 									Showing 5 of {nodes.length} nodes
 								</p>
-								<Link href="/dashboard/clients">
+								<Link href="/dashboard/cluster">
 									<Button
 										variant="ghost"
 										size="sm"
