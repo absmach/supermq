@@ -160,9 +160,7 @@ const InfoClient = () => {
 				</p>
 			</div>
 
-			{loading && (
-				<div className="text-flux-text-muted text-sm">Loading…</div>
-			)}
+			{loading && <div className="text-flux-text-muted text-sm">Loading…</div>}
 
 			{!loading && !status && (
 				<div className="rounded-lg border border-flux-red/30 bg-flux-red/10 px-4 py-3 text-sm text-flux-red">
@@ -181,9 +179,7 @@ const InfoClient = () => {
 									<Heart
 										size={18}
 										className={
-											totalErrors === 0
-												? "text-flux-green"
-												: "text-flux-orange"
+											totalErrors === 0 ? "text-flux-green" : "text-flux-orange"
 										}
 									/>
 									<span className="text-sm font-semibold text-flux-text">

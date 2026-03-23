@@ -9,23 +9,27 @@ import {
 	Mail,
 	Menu,
 	Moon,
+	PanelLeftClose,
+	PanelLeftOpen,
 	Sun,
 	X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { FluxLogo } from "@/components/flux-logo";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "@/lib/theme-provider";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
-	const [sidebarOpen, setSidebarOpen] = useState(false);
+	const [sidebarOpen, setSidebarOpen] = useState(true);
+	const [mounted, setMounted] = useState(false);
 	const pathname = usePathname();
-	const { theme, toggleTheme } = useTheme();
+	const { resolvedTheme, setTheme } = useTheme();
 
 	useEffect(() => {
+		setMounted(true);
 		const mediaQuery = window.matchMedia("(min-width: 1024px)");
 		const syncSidebar = () => setSidebarOpen(mediaQuery.matches);
 		syncSidebar();
@@ -70,13 +74,20 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 						<Button
 							variant="ghost"
 							size="icon"
-							onClick={toggleTheme}
+							onClick={() =>
+								setTheme(resolvedTheme === "dark" ? "light" : "dark")
+							}
 							className={`text-flux-text-muted hover:text-flux-text hover:bg-flux-hover ${
 								sidebarOpen ? "hidden lg:inline-flex" : ""
 							}`}
 							aria-label="Toggle theme"
 						>
-							{theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
+							{mounted &&
+								(resolvedTheme === "light" ? (
+									<Moon size={18} />
+								) : (
+									<Sun size={18} />
+								))}
 						</Button>
 						<Button
 							variant="ghost"
@@ -85,7 +96,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 							className="text-flux-text hover:bg-flux-hover"
 							aria-label="Toggle sidebar"
 						>
-							{sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+							{sidebarOpen ? <PanelLeftClose size={20} /> : <PanelLeftOpen size={20} />}
 						</Button>
 					</div>
 				</div>
@@ -166,11 +177,18 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 					<Button
 						variant="ghost"
 						size="icon"
-						onClick={toggleTheme}
+						onClick={() =>
+							setTheme(resolvedTheme === "dark" ? "light" : "dark")
+						}
 						className="hover:bg-flux-hover"
 						aria-label="Toggle theme"
 					>
-						{theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
+						{mounted &&
+							(resolvedTheme === "light" ? (
+								<Moon size={20} />
+							) : (
+								<Sun size={20} />
+							))}
 					</Button>
 				</div>
 				{children}
