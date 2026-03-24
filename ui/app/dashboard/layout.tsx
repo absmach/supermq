@@ -21,6 +21,12 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { FluxLogo } from "@/components/flux-logo";
 import { Button } from "@/components/ui/button";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 	const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -108,42 +114,67 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 					})}
 				</nav>
 
-				{/* Footer Links */}
-				<div className="border-t border-flux-card-border p-4 space-y-1">
-					<a
-						href="https://fluxmq.absmach.eu/docs"
-						target="_blank"
-						rel="noopener noreferrer"
-						aria-label="Documentation"
-						className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-flux-text-muted hover:bg-flux-hover hover:text-flux-text transition-colors text-sm"
-					>
-						<BookOpen size={18} />
-						{sidebarOpen && <span>Documentation</span>}
-					</a>
-					<a
-						href="mailto:info@absmach.eu"
-						aria-label="Contact"
-						className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-flux-text-muted hover:bg-flux-hover hover:text-flux-text transition-colors text-sm"
-					>
-						<Mail size={18} />
-						{sidebarOpen && <span>Contact</span>}
-					</a>
-					<Button
-						variant="ghost"
-						size="icon"
-						onClick={() =>
-							setTheme(resolvedTheme === "dark" ? "light" : "dark")
-						}
-						className="flex items-center hover:bg-flux-hover"
-						aria-label="Toggle theme"
-					>
-						{mounted &&
-							(resolvedTheme === "light" ? (
-								<Moon size={20} />
-							) : (
-								<Sun size={20} />
-							))}
-					</Button>
+				{/* Footer */}
+				<div className="border-t border-flux-card-border p-4">
+					<TooltipProvider delayDuration={300}>
+						<div className={`flex items-center ${sidebarOpen ? "justify-between" : "justify-center"}`}>
+							{sidebarOpen && (
+								<div className="flex items-center gap-1">
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<a
+												href="https://fluxmq.absmach.eu/docs"
+												target="_blank"
+												rel="noopener noreferrer"
+												aria-label="Documentation"
+												className="flex h-8 w-8 items-center justify-center rounded-lg text-flux-text-muted hover:bg-flux-hover hover:text-flux-text transition-colors"
+											>
+												<BookOpen size={18} />
+											</a>
+										</TooltipTrigger>
+										<TooltipContent side="top">Documentation</TooltipContent>
+									</Tooltip>
+
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<a
+												href="mailto:info@absmach.eu"
+												aria-label="Contact"
+												className="flex h-8 w-8 items-center justify-center rounded-lg text-flux-text-muted hover:bg-flux-hover hover:text-flux-text transition-colors"
+											>
+												<Mail size={18} />
+											</a>
+										</TooltipTrigger>
+										<TooltipContent side="top">Contact</TooltipContent>
+									</Tooltip>
+								</div>
+							)}
+
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										variant="ghost"
+										size="icon"
+										onClick={() =>
+											setTheme(resolvedTheme === "dark" ? "light" : "dark")
+										}
+										className="h-8 w-8 hover:bg-flux-hover"
+										aria-label="Toggle theme"
+									>
+										{mounted &&
+											(resolvedTheme === "light" ? (
+												<Moon size={16} />
+											) : (
+												<Sun size={16} />
+											))}
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent side="top">
+									{resolvedTheme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+								</TooltipContent>
+							</Tooltip>
+						</div>
+					</TooltipProvider>
 				</div>
 			</aside>
 
