@@ -28,5 +28,7 @@ Thumbs.db
 # UI
 ui/.next
 ui/node_modules
+ui/.env
+ui/.env.local
 ui/tsconfig.tsbuildinfo
 

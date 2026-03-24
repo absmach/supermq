@@ -15,19 +15,13 @@ A Next.js dashboard for real-time monitoring of the FluxMQ message broker. Displ
 
 ## Environment Setup
 
-A `.env` file with default values is committed to the repo. Edit it to match your environment:
+Copy the example and edit it to match your environment:
 
-```env
-# Primary FluxMQ admin API URL (required to connect to a real broker)
-# When unset, the dashboard falls back to mock data.
-FLUXMQ_API_URL=http://localhost:9081
-
-# Comma-separated admin API URLs for every node in the cluster.
-# Used to fan out per-node stats (sessions, messages, bytes per node).
-# For a single-node setup, set this to the same value as FLUXMQ_API_URL.
-FLUXMQ_NODE_URLS=http://localhost:9081,http://localhost:9082,http://localhost:9083
-
+```bash
+cp .env.example .env.local
 ```
+
+`.env.local` is not tracked by git. Available variables:
 
 ### Single-node setup
 
