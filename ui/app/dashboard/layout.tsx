@@ -56,7 +56,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 	};
 
 	return (
-		<div className="flex h-screen bg-flux-bg text-flux-text">
+		<div className="flex h-screen overflow-hidden bg-flux-bg text-flux-text">
 			{/* Sidebar */}
 			<aside
 				className={`${
@@ -70,35 +70,18 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 					className={`p-4 border-b border-flux-card-border flex items-center ${sidebarOpen ? "justify-between" : "justify-center"}`}
 				>
 					{sidebarOpen && <FluxLogo className="text-2xl font-bold" />}
-					<div className="flex items-center gap-1">
-						<Button
-							variant="ghost"
-							size="icon"
-							onClick={() =>
-								setTheme(resolvedTheme === "dark" ? "light" : "dark")
-							}
-							className={`text-flux-text-muted hover:text-flux-text hover:bg-flux-hover ${
-								sidebarOpen ? "hidden lg:inline-flex" : ""
-							}`}
-							aria-label="Toggle theme"
-						>
-							{mounted &&
-								(resolvedTheme === "light" ? (
-									<Moon size={18} />
-								) : (
-									<Sun size={18} />
-								))}
-						</Button>
-						<Button
-							variant="ghost"
-							size="icon"
-							onClick={() => setSidebarOpen(!sidebarOpen)}
-							className="text-flux-text hover:bg-flux-hover"
-							aria-label="Toggle sidebar"
-						>
-							{sidebarOpen ? <PanelLeftClose size={20} /> : <PanelLeftOpen size={20} />}
-						</Button>
-					</div>
+					<button
+						type="button"
+						onClick={() => setSidebarOpen(!sidebarOpen)}
+						aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+						className="hidden lg:flex h-8 w-8 items-center justify-center rounded-lg text-flux-text-muted hover:bg-flux-hover hover:text-flux-text transition-colors"
+					>
+						{sidebarOpen ? (
+							<PanelLeftClose size={16} />
+						) : (
+							<PanelLeftOpen size={16} />
+						)}
+					</button>
 				</div>
 
 				{/* Navigation */}
@@ -145,6 +128,22 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 						<Mail size={18} />
 						{sidebarOpen && <span>Contact</span>}
 					</a>
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={() =>
+							setTheme(resolvedTheme === "dark" ? "light" : "dark")
+						}
+						className="flex items-center hover:bg-flux-hover"
+						aria-label="Toggle theme"
+					>
+						{mounted &&
+							(resolvedTheme === "light" ? (
+								<Moon size={20} />
+							) : (
+								<Sun size={20} />
+							))}
+					</Button>
 				</div>
 			</aside>
 
@@ -159,8 +158,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 			)}
 
 			{/* Main Content */}
-			<main className="flex-1 overflow-auto">
-				{/* Top Bar for Mobile */}
+			<main className="relative flex-1 overflow-y-auto">
+				{/* Top Bar */}
 				<div className="lg:hidden bg-flux-card border-b border-flux-card-border p-4 flex items-center justify-between shadow-sm">
 					<div className="flex items-center gap-2">
 						<Button

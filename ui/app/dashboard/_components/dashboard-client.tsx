@@ -446,7 +446,9 @@ export default function DashboardClient() {
 									/>
 									<Tooltip
 										contentStyle={tooltipStyle}
-										formatter={(v: number) => [`${v.toFixed(1)}/s`]}
+										formatter={(v) => [
+											typeof v === "number" ? `${v.toFixed(1)}/s` : "",
+										]}
 									/>
 									<Legend wrapperStyle={{ fontSize: 11 }} />
 									<Line
@@ -511,7 +513,9 @@ export default function DashboardClient() {
 									/>
 									<Tooltip
 										contentStyle={tooltipStyle}
-										formatter={(v: number) => [`${formatBytes(v)}/s`]}
+										formatter={(v) => [
+											typeof v === "number" ? `${formatBytes(v)}/s` : "",
+										]}
 									/>
 									<Legend wrapperStyle={{ fontSize: 11 }} />
 									<Line
