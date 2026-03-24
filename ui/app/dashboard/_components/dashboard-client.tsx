@@ -6,8 +6,6 @@ import {
 	Clock,
 	Database,
 	Download,
-	Pause,
-	Play,
 	Plug,
 	Rss,
 	Share2,
