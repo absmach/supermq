@@ -83,3 +83,45 @@ Open [http://localhost:3000/dashboard](http://localhost:3000/dashboard).
 pnpm build
 pnpm start
 ```
+
+## Running with Docker
+
+### Build the image
+
+```bash
+docker compose -f ui/docker/docker-compose.yaml build
+```
+
+### Run standalone (point at an existing broker)
+
+```bash
+FLUXMQ_API_URL=http://localhost:8082 \
+FLUXMQ_NODE_URLS=http://localhost:8082 \
+docker compose -f ui/docker/docker-compose.yaml up
+```
+
+### Run with the full single-node stack
+
+Starts FluxMQ and the dashboard together:
+
+```bash
+docker compose -f deployments/docker/compose.yaml up -d
+```
+
+The dashboard is available at [http://localhost:3000/dashboard](http://localhost:3000/dashboard).
+
+Override the broker URL if needed:
+
+```bash
+FLUXMQ_API_URL=http://my-broker:8082 \
+docker compose -f deployments/docker/compose.yaml up -d
+```
+
+### Run with the Docker cluster
+
+```bash
+make docker-cluster-up
+docker compose -f deployments/cluster/docker-compose.yaml up -d dashboard
+```
+
+The dashboard connects to node 1 (`http://127.0.0.1:9081`) by default and fans out stats across all three nodes.

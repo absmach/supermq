@@ -17,5 +17,16 @@ services:
       - fluxmq-data:/tmp/fluxmq
     restart: unless-stopped
 
+  dashboard:
+    image: ghcr.io/absmach/fluxmq-dashboard:latest
+    ports:
+      - "3000:3000"
+    environment:
+      FLUXMQ_API_URL: ${FLUXMQ_API_URL:-http://fluxmq:8082}
+      FLUXMQ_NODE_URLS: ${FLUXMQ_NODE_URLS:-http://fluxmq:8082}
+    depends_on:
+      - fluxmq
+    restart: unless-stopped
+
 volumes:
   fluxmq-data:

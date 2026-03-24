@@ -29,9 +29,18 @@ docker run --rm \
 
 ## Docker Compose
 
-Use `deployments/docker/compose.yaml`:
+Use `deployments/docker/compose.yaml` to start FluxMQ and the dashboard together:
 
 ```bash
+docker compose -f deployments/docker/compose.yaml up -d
+```
+
+The dashboard is available at [http://localhost:3000/dashboard](http://localhost:3000/dashboard).
+
+By default the dashboard connects to the `fluxmq` service on port `8082`. Override with environment variables if needed:
+
+```bash
+FLUXMQ_API_URL=http://my-broker:8082 \
 docker compose -f deployments/docker/compose.yaml up -d
 ```
 
