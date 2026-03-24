@@ -40,6 +40,10 @@ jobs:
         run: pnpm run lint
         working-directory: ./ui
 
+      - name: Test
+        run: pnpm run test --if-present
+        working-directory: ./ui
+
       - name: Build
         run: pnpm run build
         working-directory: ./ui

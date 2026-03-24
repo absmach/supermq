@@ -15,13 +15,7 @@ A Next.js dashboard for real-time monitoring of the FluxMQ message broker. Displ
 
 ## Environment Setup
 
-Copy the example file and edit it:
-
-```bash
-cp .env.local.example .env.local
-```
-
-Then open `.env.local` and set the values for your environment:
+A `.env` file with default values is committed to the repo. Edit it to match your environment:
 
 ```env
 # Primary FluxMQ admin API URL (required to connect to a real broker)
@@ -33,11 +27,6 @@ FLUXMQ_API_URL=http://localhost:9081
 # For a single-node setup, set this to the same value as FLUXMQ_API_URL.
 FLUXMQ_NODE_URLS=http://localhost:9081,http://localhost:9082,http://localhost:9083
 
-# MQTT broker URL for direct browser connections (embedded in the client bundle)
-NEXT_PUBLIC_BROKER_URL=mqtt://localhost:1883
-
-# WebSocket URL for MQTT-over-WebSocket connections
-NEXT_PUBLIC_WS_URL=ws://localhost:8080
 ```
 
 ### Single-node setup

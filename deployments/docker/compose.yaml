@@ -25,7 +25,8 @@ services:
       FLUXMQ_API_URL: ${FLUXMQ_API_URL:-http://fluxmq:8082}
       FLUXMQ_NODE_URLS: ${FLUXMQ_NODE_URLS:-http://fluxmq:8082}
     depends_on:
-      - fluxmq
+      fluxmq:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:

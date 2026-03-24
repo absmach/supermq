@@ -7,6 +7,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      FLUXMQ_API_URL: ${FLUXMQ_API_URL:-http://localhost:8082}
-      FLUXMQ_NODE_URLS: ${FLUXMQ_NODE_URLS:-http://localhost:8082}
+      # These must be set — localhost inside a container refers to the container itself.
+      # Example: FLUXMQ_API_URL=http://host.docker.internal:8082 docker compose up
+      FLUXMQ_API_URL: ${FLUXMQ_API_URL:?FLUXMQ_API_URL must be set}
+      FLUXMQ_NODE_URLS: ${FLUXMQ_NODE_URLS:?FLUXMQ_NODE_URLS must be set}
     restart: unless-stopped
