@@ -3,8 +3,8 @@
 import {
 	AlertTriangle,
 	Clock,
-	Globe,
-	Heart,
+	Cpu,
+	MapPin,
 	Shield,
 	ShieldAlert,
 } from "lucide-react";
@@ -57,7 +57,7 @@ function NodeCard({ node }: { node: NodeInfo }) {
 				<div className="space-y-2.5">
 					<div className="flex items-center justify-between">
 						<span className="flex items-center gap-2 text-xs text-flux-text-muted">
-							<Globe size={13} />
+							<MapPin size={13} />
 							Address
 						</span>
 						<span className="text-xs font-mono text-flux-text">
@@ -176,7 +176,7 @@ const InfoClient = () => {
 						<CardContent className="p-5">
 							<div className="flex flex-wrap items-center gap-x-6 gap-y-3">
 								<div className="flex items-center gap-2.5">
-									<Heart
+									<Cpu
 										size={18}
 										className={
 											totalErrors === 0 ? "text-flux-green" : "text-flux-orange"

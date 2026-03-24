@@ -1,16 +1,16 @@
 "use client";
 
 import {
-	Activity,
-	BookMarked,
 	BookOpen,
-	HeartPulse,
-	Home,
+	Cable,
+	Gauge,
+	LayoutDashboard,
 	Mail,
 	Menu,
 	Moon,
 	PanelLeftClose,
 	PanelLeftOpen,
+	Rss,
 	Sun,
 	X,
 } from "lucide-react";
@@ -44,14 +44,14 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 	}, []);
 
 	const navigationItems = [
-		{ label: "Overview", href: "/dashboard", icon: Home },
-		{ label: "Sessions", href: "/dashboard/sessions", icon: Activity },
+		{ label: "Overview", href: "/dashboard", icon: LayoutDashboard },
+		{ label: "Sessions", href: "/dashboard/sessions", icon: Cable },
 		{
 			label: "Subscriptions",
 			href: "/dashboard/subscriptions",
-			icon: BookMarked,
+			icon: Rss,
 		},
-		{ label: "Health", href: "/dashboard/broker-info", icon: HeartPulse },
+		{ label: "Health", href: "/dashboard/broker-info", icon: Gauge },
 	];
 
 	const isActive = (href: string) => {
