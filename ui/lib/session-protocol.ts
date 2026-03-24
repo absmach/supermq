@@ -32,7 +32,8 @@ const FALLBACK_BADGE =
 	"bg-flux-text-muted/10 text-flux-text-muted border-flux-card-border";
 
 export const PROTOCOL_BADGE_CLASSES = new Proxy(PROTOCOL_BADGE_MAP, {
-	get(target, key: string) {
+	get(target, key: PropertyKey) {
+		if (typeof key !== "string") return FALLBACK_BADGE;
 		return target[key] ?? FALLBACK_BADGE;
 	},
 });

@@ -175,6 +175,7 @@
 
 	p {
 		color: var(--flux-text);
+		margin-bottom: 1rem;
 	}
 }
 

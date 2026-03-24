@@ -161,16 +161,23 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 										className="h-8 w-8 hover:bg-flux-hover"
 										aria-label="Toggle theme"
 									>
-										{mounted &&
-											(resolvedTheme === "light" ? (
+										{mounted ? (
+											resolvedTheme === "light" ? (
 												<Moon size={16} />
 											) : (
 												<Sun size={16} />
-											))}
+											)
+										) : (
+											<span className="inline-block h-4 w-4" />
+										)}
 									</Button>
 								</TooltipTrigger>
 								<TooltipContent side="top">
-									{resolvedTheme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+									{mounted
+										? resolvedTheme === "light"
+											? "Switch to dark mode"
+											: "Switch to light mode"
+										: "Toggle theme"}
 								</TooltipContent>
 							</Tooltip>
 						</div>
@@ -213,12 +220,15 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 						className="hover:bg-flux-hover"
 						aria-label="Toggle theme"
 					>
-						{mounted &&
-							(resolvedTheme === "light" ? (
+						{mounted ? (
+							resolvedTheme === "light" ? (
 								<Moon size={20} />
 							) : (
 								<Sun size={20} />
-							))}
+							)
+						) : (
+							<span className="inline-block h-5 w-5" />
+						)}
 					</Button>
 				</div>
 				{children}
