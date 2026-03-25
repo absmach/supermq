@@ -283,8 +283,8 @@ help:
 	@echo ""
 	@echo "Build:"
 	@echo "  build              Build the broker binary to $(BUILD_DIR)/$(BINARY)"
-	@echo "  docker             Build Docker image ($(DOCKER_IMAGE_LATEST))
-  docker-dashboard   Build dashboard Docker image ($(DASHBOARD_IMAGE_LATEST))"
+	@echo "  docker             Build Docker image ($(DOCKER_IMAGE_LATEST))"
+	@echo "  docker-dashboard   Build dashboard Docker image ($(DASHBOARD_IMAGE_LATEST))"
 	@echo ""
 	@echo "Run (single node):"
 	@echo "  run                Build and run with default config"

@@ -5,7 +5,10 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm install -g corepack && corepack enable
+RUN rm -f /usr/local/bin/yarn
+RUN rm -rf /usr/local/bin/yarnpkg
+RUN npm install -g corepack
+RUN corepack enable
 RUN apk add --no-cache libc6-compat
 
 # Install dependencies
@@ -33,8 +36,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 
-ENV PORT=3000
+ENV PORT=3001
 ENV HOSTNAME="0.0.0.0"
-EXPOSE 3000
+EXPOSE 3001
 
 CMD ["node", "server.js"]

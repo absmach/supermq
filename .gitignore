@@ -25,10 +25,6 @@ Thumbs.db
 *.tmp
 *.log
 
-# UI
-ui/.next
-ui/node_modules
-ui/.env
-ui/.env.local
-ui/tsconfig.tsbuildinfo
-
+# Deployments
+deployments/docker/.env
+deployments/docker/.env.local

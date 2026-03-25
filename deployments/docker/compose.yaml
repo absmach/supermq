@@ -20,13 +20,13 @@ services:
   dashboard:
     image: ghcr.io/absmach/fluxmq-dashboard:latest
     ports:
-      - "3000:3000"
+      - "3001:3001"
     environment:
       FLUXMQ_API_URL: ${FLUXMQ_API_URL:-http://fluxmq:8082}
       FLUXMQ_NODE_URLS: ${FLUXMQ_NODE_URLS:-http://fluxmq:8082}
     depends_on:
       fluxmq:
-        condition: service_healthy
+        condition: service_started
     restart: unless-stopped
 
 volumes:

@@ -3,7 +3,11 @@
 ## Build Images
 
 ```bash
+# Broker
 make docker
+
+# Dashboard
+make docker-dashboard
 ```
 
 ## Docker Run
@@ -32,16 +36,17 @@ docker run --rm \
 Use `deployments/docker/compose.yaml` to start FluxMQ and the dashboard together:
 
 ```bash
+cp deployments/docker/.env.example deployments/docker/.env
 docker compose -f deployments/docker/compose.yaml up -d
 ```
 
-The dashboard is available at [http://localhost:3000/dashboard](http://localhost:3000/dashboard).
+The dashboard is available at [http://localhost:3001](http://localhost:3001).
 
-By default the dashboard connects to the `fluxmq` service on port `8082`. Override with environment variables if needed:
+By default the dashboard connects to the `fluxmq` service on port `8082`. To override, edit `deployments/docker/.env` before starting:
 
 ```bash
-FLUXMQ_API_URL=http://my-broker:8082 \
-docker compose -f deployments/docker/compose.yaml up -d
+FLUXMQ_API_URL=http://my-broker:8082
+FLUXMQ_NODE_URLS=http://my-broker:8082
 ```
 
 ## 3-Node Cluster

@@ -7,10 +7,8 @@ A Next.js dashboard for real-time monitoring of the FluxMQ message broker. Displ
 | Route                      | Description                                                                    |
 | -------------------------- | ------------------------------------------------------------------------------ |
 | `/dashboard`               | Overview — live metrics, message traffic charts, bandwidth, cluster node table |
-| `/dashboard/connections`   | Active connections — connected sessions with protocol, subscriptions, inflight |
 | `/dashboard/sessions`      | All sessions — connected and disconnected, filterable, with detail dialog      |
 | `/dashboard/subscriptions` | Subscriptions — active topic filters aggregated from connected sessions        |
-| `/dashboard/cluster`       | Cluster — node topology with per-node health, sessions, messages, bytes        |
 | `/dashboard/broker-info`   | Broker Info — runtime identity, session counts, error counters                 |
 
 ## Environment Setup
@@ -21,7 +19,9 @@ Copy the example and edit it to match your environment:
 cp .env.example .env.local
 ```
 
-`.env.local` is not tracked by git. Available variables:
+`.env.local` is not tracked by git. 
+
+Available variables:
 
 ### Single-node setup
 
@@ -30,7 +30,7 @@ FLUXMQ_API_URL=http://localhost:9081
 FLUXMQ_NODE_URLS=http://localhost:9081
 ```
 
-### 3-node cluster (default ports)
+### 3-node cluster
 
 ```env
 FLUXMQ_API_URL=http://localhost:9081
@@ -72,15 +72,7 @@ pnpm start
 ### Build the image
 
 ```bash
-docker compose -f ui/docker/docker-compose.yaml build
-```
-
-### Run standalone (point at an existing broker)
-
-```bash
-FLUXMQ_API_URL=http://localhost:8082 \
-FLUXMQ_NODE_URLS=http://localhost:8082 \
-docker compose -f ui/docker/docker-compose.yaml up
+make docker-dashboard
 ```
 
 ### Run with the full single-node stack
@@ -88,10 +80,11 @@ docker compose -f ui/docker/docker-compose.yaml up
 Starts FluxMQ and the dashboard together:
 
 ```bash
+cp deployments/docker/.env.example deployments/docker/.env
 docker compose -f deployments/docker/compose.yaml up -d
 ```
 
-The dashboard is available at [http://localhost:3000/dashboard](http://localhost:3000/dashboard).
+The dashboard is available at [http://localhost:3001](http://localhost:3001).
 
 Override the broker URL if needed:
 
