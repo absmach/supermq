@@ -77,14 +77,19 @@ make docker-dashboard
 
 ### Run with the full single-node stack
 
-Starts FluxMQ and the dashboard together:
+Starts FluxMQ and the dashboard together. Both images must be available locally — build them first if needed:
+
+```bash
+make docker
+make docker-dashboard
+```
 
 ```bash
 cp deployments/docker/.env.example deployments/docker/.env
 docker compose -f deployments/docker/compose.yaml up -d
 ```
 
-The dashboard is available at [http://localhost:3001](http://localhost:3001).
+The dashboard is available at [http://localhost:3001/dashboard](http://localhost:3001/dashboard).
 
 Override the broker URL if needed:
 
@@ -97,7 +102,7 @@ docker compose -f deployments/docker/compose.yaml up -d
 
 ```bash
 make docker-cluster-up
-docker compose -f deployments/cluster/docker-compose.yaml up -d dashboard
+docker compose -f deployments/cluster/docker-compose.yaml up -d
 ```
 
 The dashboard connects to node 1 (`http://127.0.0.1:9081`) by default and fans out stats across all three nodes.
