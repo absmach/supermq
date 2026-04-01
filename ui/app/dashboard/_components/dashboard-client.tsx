@@ -136,14 +136,11 @@ export default function DashboardClient() {
 					bytesRx: number,
 					bytesTx: number,
 					key: string,
-				): ChartPoint {
-					const p = prev[key] ?? {
-						msgsRx: 0,
-						msgsTx: 0,
-						bytesRx: 0,
-						bytesTx: 0,
-					};
-					const point: ChartPoint = {
+				): ChartPoint | null {
+					const p = prev[key];
+					prev[key] = { msgsRx, msgsTx, bytesRx, bytesTx };
+					if (!p) return null;
+					return {
 						time: ts,
 						sessions,
 						msgsIn: Math.max(0, (msgsRx - p.msgsRx) / POLL_S),
@@ -151,34 +148,32 @@ export default function DashboardClient() {
 						bytesIn: Math.max(0, (bytesRx - p.bytesRx) / POLL_S),
 						bytesOut: Math.max(0, (bytesTx - p.bytesTx) / POLL_S),
 					};
-					prev[key] = { msgsRx, msgsTx, bytesRx, bytesTx };
-					return point;
 				}
 
-				histories[""] = [
-					...(histories[""] ?? []),
-					makePoint(
-						status.sessions,
-						status.messages_received,
-						status.messages_sent,
-						status.bytes_received,
-						status.bytes_sent,
-						"",
-					),
-				].slice(-MAX_POINTS);
+				const clusterPoint = makePoint(
+					status.sessions,
+					status.messages_received,
+					status.messages_sent,
+					status.bytes_received,
+					status.bytes_sent,
+					"",
+				);
+				if (clusterPoint) {
+					histories[""] = [...(histories[""] ?? []), clusterPoint].slice(-MAX_POINTS);
+				}
 
 				for (const node of fetchedNodes) {
-					histories[node.node_id] = [
-						...(histories[node.node_id] ?? []),
-						makePoint(
-							node.sessions as number,
-							node.messages_received as number,
-							node.messages_sent as number,
-							node.bytes_received as number,
-							node.bytes_sent as number,
-							node.node_id,
-						),
-					].slice(-MAX_POINTS);
+					const nodePoint = makePoint(
+						node.sessions as number,
+						node.messages_received as number,
+						node.messages_sent as number,
+						node.bytes_received as number,
+						node.bytes_sent as number,
+						node.node_id,
+					);
+					if (nodePoint) {
+						histories[node.node_id] = [...(histories[node.node_id] ?? []), nodePoint].slice(-MAX_POINTS);
+					}
 				}
 
 				forceRender((n) => n + 1);
