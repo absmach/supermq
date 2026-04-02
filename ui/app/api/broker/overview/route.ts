@@ -65,7 +65,7 @@ export async function GET() {
 			if (!res.ok) {
 				return NextResponse.json(
 					{ error: "Broker request failed" },
-					{ status: 502 },
+					{ status: res.status },
 				);
 			}
 			const data = await res.json();
