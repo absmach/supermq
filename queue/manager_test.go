@@ -1188,7 +1188,7 @@ func TestSubscribeDefaultsProxyNodeIDFromCluster(t *testing.T) {
 		mockCl,
 	)
 
-	if err := manager.Subscribe(context.Background(), "demo-orders", "#", "amqp091-conn-1", "demo-workers", ""); err != nil {
+	if err := manager.Subscribe(context.Background(), "demo-orders", "#", "amqp091:conn-1", "demo-workers", ""); err != nil {
 		t.Fatalf("Subscribe failed: %v", err)
 	}
 
@@ -1292,7 +1292,7 @@ func TestRemoteStreamBacklogDeliveredByFallbackSweep(t *testing.T) {
 			QueueName:    "events",
 			GroupID:      "demo-readers@#",
 			ConsumerID:   "remote-consumer-1",
-			ClientID:     "amqp091-conn-remote",
+			ClientID:     "amqp091:conn-remote",
 			Pattern:      "#",
 			Mode:         string(types.GroupModeStream),
 			ProxyNodeID:  "node-2",
@@ -1342,7 +1342,7 @@ func TestSubscribeWithCursorDefaultsProxyNodeIDFromCluster(t *testing.T) {
 		Position: types.CursorEarliest,
 		Mode:     types.GroupModeStream,
 	}
-	if err := manager.SubscribeWithCursor(context.Background(), "demo-events", "#", "amqp091-conn-1", "demo-readers", "", cursor); err != nil {
+	if err := manager.SubscribeWithCursor(context.Background(), "demo-events", "#", "amqp091:conn-1", "demo-readers", "", cursor); err != nil {
 		t.Fatalf("SubscribeWithCursor failed: %v", err)
 	}
 
@@ -2156,8 +2156,8 @@ func TestOnConsumerRemovedCallbackFires(t *testing.T) {
 
 	staleTime := time.Now().Add(-time.Hour)
 	info := &types.ConsumerInfo{
-		ID:            "amqp091-10.0.0.1:5000",
-		ClientID:      "amqp091-10.0.0.1:5000",
+		ID:            "amqp091:10.0.0.1:5000",
+		ClientID:      "amqp091:10.0.0.1:5000",
 		RegisteredAt:  staleTime,
 		LastHeartbeat: staleTime,
 	}
@@ -2175,7 +2175,7 @@ func TestOnConsumerRemovedCallbackFires(t *testing.T) {
 	if gotGroup != "workers" {
 		t.Fatalf("expected group 'workers', got %q", gotGroup)
 	}
-	if len(gotConsumerIDs) != 1 || gotConsumerIDs[0] != "amqp091-10.0.0.1:5000" {
+	if len(gotConsumerIDs) != 1 || gotConsumerIDs[0] != "amqp091:10.0.0.1:5000" {
 		t.Fatalf("expected [amqp091-10.0.0.1:5000], got %v", gotConsumerIDs)
 	}
 }
